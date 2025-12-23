@@ -1,0 +1,1134 @@
+{
+  "metadata": {
+    "season": 2025,
+    "data_source": "FIA Official Documents (fiadoc)",
+    "analysis_date": "2025-11-06",
+    "total_records": 37,
+    "evidence_types": {
+      "Parc Fermé 變更": 37
+    },
+    "note": "僅包含 Parc Fermé 變更記錄，動力單元升級已排除"
+  },
+  "summary": {
+    "total_teams": 11,
+    "total_races": 16,
+    "component_distribution": {
+      "floor": 16,
+      "cooling": 10,
+      "nose": 6,
+      "suspension": 3,
+      "sidepod": 1,
+      "front wing": 1
+    }
+  },
+  "by_team": {
+    "RB": {
+      "team_name": "RB",
+      "total_upgrades": 2,
+      "races": [
+        {
+          "race": "Australian",
+          "date": "2025-03-16",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "14.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 14:           Floor assembly"
+            }
+          ]
+        },
+        {
+          "race": "Belgian",
+          "date": "2025-08-03",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "43.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 43:         LHS rearward floor stay"
+            }
+          ]
+        }
+      ]
+    },
+    "Ferrari": {
+      "team_name": "Ferrari",
+      "total_upgrades": 5,
+      "races": [
+        {
+          "race": "Australian",
+          "date": "2025-03-16",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "22.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 22:           ICE water cooling system PRV"
+            }
+          ]
+        },
+        {
+          "race": "Saudi Arabian",
+          "date": "2025-05-18",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:           Driver cooling store"
+            }
+          ]
+        },
+        {
+          "race": "Miami",
+          "date": "2025-06-01",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:         Driver’s cooling medium"
+            }
+          ]
+        },
+        {
+          "race": "Austrian",
+          "date": "2025-07-06",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "race": "Hungarian",
+          "date": "2025-08-17",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "sidepod",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:           RHS sidepod"
+            }
+          ]
+        }
+      ]
+    },
+    "Mercedes": {
+      "team_name": "Mercedes",
+      "total_upgrades": 6,
+      "races": [
+        {
+          "race": "Bahrain",
+          "date": "2025-05-04",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:         Floor film"
+            }
+          ]
+        },
+        {
+          "race": "Spanish",
+          "date": "2025-06-20",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:           Floor stay fixings"
+            }
+          ]
+        },
+        {
+          "race": "Monaco",
+          "date": "2025-06-29",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:           Front wing / nose assembly"
+            }
+          ]
+        },
+        {
+          "race": "Austrian",
+          "date": "2025-07-06",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "10.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 10:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "race": "Hungarian",
+          "date": "2025-08-17",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "10.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 10:           Front wing/nose assembly"
+            }
+          ]
+        },
+        {
+          "race": "Azerbaijan",
+          "date": "2025-09-28",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:           Front wing/nose assembly"
+            }
+          ]
+        }
+      ]
+    },
+    "Williams": {
+      "team_name": "Williams",
+      "total_upgrades": 2,
+      "races": [
+        {
+          "race": "Austrian",
+          "date": "2025-07-06",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "87.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 87:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "race": "Singapore",
+          "date": "2025-10-12",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "87.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 87: RHS floor stay "
+            }
+          ]
+        }
+      ]
+    },
+    "Haas": {
+      "team_name": "Haas",
+      "total_upgrades": 6,
+      "races": [
+        {
+          "race": "Saudi Arabian",
+          "date": "2025-05-18",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           Driver cooling store"
+            }
+          ]
+        },
+        {
+          "race": "Miami",
+          "date": "2025-06-01",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:         Driver’s cooling medium"
+            }
+          ]
+        },
+        {
+          "race": "Austrian",
+          "date": "2025-07-06",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "race": "British",
+          "date": "2025-07-20",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           RHS floor MEMS box cover"
+            }
+          ]
+        },
+        {
+          "race": "Azerbaijan",
+          "date": "2025-09-28",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "suspension",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           LHS front outboard suspension assembly"
+            }
+          ]
+        },
+        {
+          "race": "United States",
+          "date": "2025-10-26",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           Wastegate cooling duct retention clip"
+            }
+          ]
+        }
+      ]
+    },
+    "Kick Sauber": {
+      "team_name": "Kick Sauber",
+      "total_upgrades": 4,
+      "races": [
+        {
+          "race": "Dutch",
+          "date": "2025-08-31",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "18.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 18:           Front wing/nose assembly"
+            }
+          ]
+        },
+        {
+          "race": "Azerbaijan",
+          "date": "2025-09-28",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "suspension",
+              "car_number": "16.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 16:           RHS front outboard suspension assembly"
+            }
+          ]
+        },
+        {
+          "race": "Singapore",
+          "date": "2025-10-12",
+          "component_count": 2,
+          "components": [
+            {
+              "component": "front wing",
+              "car_number": "16.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 16: Front wing/nose assembly  Car 44: DCS loom connector   Red Bull Racing Honda RBPT: "
+            },
+            {
+              "component": "nose",
+              "car_number": "16.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 16: Front wing/nose assembly  Car 44: DCS loom connector   Red Bull Racing Honda RBPT: "
+            }
+          ]
+        }
+      ]
+    },
+    "Unknown": {
+      "team_name": "Unknown",
+      "total_upgrades": 6,
+      "races": [
+        {
+          "race": "Monaco",
+          "date": "2025-06-29",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "4.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 04:           ICE water cooling pipe and associated Wiggins connector"
+            }
+          ]
+        },
+        {
+          "race": "British",
+          "date": "2025-07-20",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "6.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 06:           Floor assembly (excluding plank and skids)"
+            }
+          ]
+        },
+        {
+          "race": "Belgian",
+          "date": "2025-08-03",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "5.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 05:         LHS floor stay clamp"
+            }
+          ]
+        },
+        {
+          "race": "Italian",
+          "date": "2025-09-14",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "1.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 01:           LHS rear upright cooling exit duct"
+            }
+          ]
+        },
+        {
+          "race": "Singapore",
+          "date": "2025-10-12",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "1.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 01: ICE cooling water pipe separator  Driver cooling pump   Mercedes: "
+            }
+          ]
+        },
+        {
+          "race": "United States",
+          "date": "2025-10-26",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "6.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 06:           Front wing/nose assembly"
+            }
+          ]
+        }
+      ]
+    },
+    "McLaren": {
+      "team_name": "McLaren",
+      "total_upgrades": 3,
+      "races": [
+        {
+          "race": "Saudi Arabian",
+          "date": "2025-05-18",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "63.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 63:           Driver cooling store"
+            }
+          ]
+        },
+        {
+          "race": "Miami",
+          "date": "2025-06-01",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "81.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 81:         Floor bolt"
+            }
+          ]
+        },
+        {
+          "race": "British",
+          "date": "2025-07-20",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "81.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 81:           Floor assembly (excluding plank and skids)"
+            }
+          ]
+        }
+      ]
+    },
+    "Red Bull Racing": {
+      "team_name": "Red Bull Racing",
+      "total_upgrades": 1,
+      "races": [
+        {
+          "race": "Chinese",
+          "date": "2025-04-06",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "31.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 31:           Floor fastener inserts"
+            }
+          ]
+        }
+      ]
+    },
+    "Alpine": {
+      "team_name": "Alpine",
+      "total_upgrades": 1,
+      "races": [
+        {
+          "race": "Italian",
+          "date": "2025-09-14",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "30.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 30:           LHS floor edge winglet array"
+            }
+          ]
+        }
+      ]
+    },
+    "Aston Martin": {
+      "team_name": "Aston Martin",
+      "total_upgrades": 1,
+      "races": [
+        {
+          "race": "Monaco",
+          "date": "2025-06-29",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "suspension",
+              "car_number": "12.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 12:           LHS and RHS front outboard suspension assemblies"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "by_race": [
+    {
+      "race": "Australian",
+      "date": "2025-03-16",
+      "total_teams": 2,
+      "total_components": 2,
+      "teams": [
+        {
+          "team": "RB",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "14.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 14:           Floor assembly"
+            }
+          ]
+        },
+        {
+          "team": "Ferrari",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "22.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 22:           ICE water cooling system PRV"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Chinese",
+      "date": "2025-04-06",
+      "total_teams": 1,
+      "total_components": 1,
+      "teams": [
+        {
+          "team": "Red Bull Racing",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "31.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 31:           Floor fastener inserts"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Bahrain",
+      "date": "2025-05-04",
+      "total_teams": 1,
+      "total_components": 1,
+      "teams": [
+        {
+          "team": "Mercedes",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:         Floor film"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Saudi Arabian",
+      "date": "2025-05-18",
+      "total_teams": 3,
+      "total_components": 3,
+      "teams": [
+        {
+          "team": "McLaren",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "63.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 63:           Driver cooling store"
+            }
+          ]
+        },
+        {
+          "team": "Ferrari",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:           Driver cooling store"
+            }
+          ]
+        },
+        {
+          "team": "Haas",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           Driver cooling store"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Miami",
+      "date": "2025-06-01",
+      "total_teams": 3,
+      "total_components": 3,
+      "teams": [
+        {
+          "team": "Ferrari",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:         Driver’s cooling medium"
+            }
+          ]
+        },
+        {
+          "team": "McLaren",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "81.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 81:         Floor bolt"
+            }
+          ]
+        },
+        {
+          "team": "Haas",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:         Driver’s cooling medium"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Spanish",
+      "date": "2025-06-20",
+      "total_teams": 1,
+      "total_components": 1,
+      "teams": [
+        {
+          "team": "Mercedes",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:           Floor stay fixings"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Monaco",
+      "date": "2025-06-29",
+      "total_teams": 3,
+      "total_components": 3,
+      "teams": [
+        {
+          "team": "Mercedes",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:           Front wing / nose assembly"
+            }
+          ]
+        },
+        {
+          "team": "Aston Martin",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "suspension",
+              "car_number": "12.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 12:           LHS and RHS front outboard suspension assemblies"
+            }
+          ]
+        },
+        {
+          "team": "Unknown",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "4.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 04:           ICE water cooling pipe and associated Wiggins connector"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Austrian",
+      "date": "2025-07-06",
+      "total_teams": 4,
+      "total_components": 4,
+      "teams": [
+        {
+          "team": "Mercedes",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "10.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 10:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "team": "Ferrari",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "team": "Williams",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "87.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 87:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        },
+        {
+          "team": "Haas",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           Floor assembly (excluding skids and plank)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "British",
+      "date": "2025-07-20",
+      "total_teams": 3,
+      "total_components": 3,
+      "teams": [
+        {
+          "team": "Unknown",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "6.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 06:           Floor assembly (excluding plank and skids)"
+            }
+          ]
+        },
+        {
+          "team": "McLaren",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "81.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 81:           Floor assembly (excluding plank and skids)"
+            }
+          ]
+        },
+        {
+          "team": "Haas",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           RHS floor MEMS box cover"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Belgian",
+      "date": "2025-08-03",
+      "total_teams": 2,
+      "total_components": 2,
+      "teams": [
+        {
+          "team": "Unknown",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "5.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 05:         LHS floor stay clamp"
+            }
+          ]
+        },
+        {
+          "team": "RB",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "43.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 43:         LHS rearward floor stay"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Hungarian",
+      "date": "2025-08-17",
+      "total_teams": 2,
+      "total_components": 2,
+      "teams": [
+        {
+          "team": "Mercedes",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "10.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 10:           Front wing/nose assembly"
+            }
+          ]
+        },
+        {
+          "team": "Ferrari",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "sidepod",
+              "car_number": "55.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 55:           RHS sidepod"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Dutch",
+      "date": "2025-08-31",
+      "total_teams": 1,
+      "total_components": 1,
+      "teams": [
+        {
+          "team": "Kick Sauber",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "18.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 18:           Front wing/nose assembly"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Italian",
+      "date": "2025-09-14",
+      "total_teams": 2,
+      "total_components": 2,
+      "teams": [
+        {
+          "team": "Alpine",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "30.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 30:           LHS floor edge winglet array"
+            }
+          ]
+        },
+        {
+          "team": "Unknown",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "1.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 01:           LHS rear upright cooling exit duct"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Azerbaijan",
+      "date": "2025-09-28",
+      "total_teams": 3,
+      "total_components": 3,
+      "teams": [
+        {
+          "team": "Mercedes",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "27.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 27:           Front wing/nose assembly"
+            }
+          ]
+        },
+        {
+          "team": "Kick Sauber",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "suspension",
+              "car_number": "16.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 16:           RHS front outboard suspension assembly"
+            }
+          ]
+        },
+        {
+          "team": "Haas",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "suspension",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           LHS front outboard suspension assembly"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "Singapore",
+      "date": "2025-10-12",
+      "total_teams": 3,
+      "total_components": 4,
+      "teams": [
+        {
+          "team": "Williams",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "floor",
+              "car_number": "87.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 87: RHS floor stay "
+            }
+          ]
+        },
+        {
+          "team": "Unknown",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "1.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 01: ICE cooling water pipe separator  Driver cooling pump   Mercedes: "
+            }
+          ]
+        },
+        {
+          "team": "Kick Sauber",
+          "component_count": 2,
+          "components": [
+            {
+              "component": "front wing",
+              "car_number": "16.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 16: Front wing/nose assembly  Car 44: DCS loom connector   Red Bull Racing Honda RBPT: "
+            },
+            {
+              "component": "nose",
+              "car_number": "16.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 16: Front wing/nose assembly  Car 44: DCS loom connector   Red Bull Racing Honda RBPT: "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "race": "United States",
+      "date": "2025-10-26",
+      "total_teams": 2,
+      "total_components": 2,
+      "teams": [
+        {
+          "team": "Unknown",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "nose",
+              "car_number": "6.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 06:           Front wing/nose assembly"
+            }
+          ]
+        },
+        {
+          "team": "Haas",
+          "component_count": 1,
+          "components": [
+            {
+              "component": "cooling",
+              "car_number": "23.0",
+              "evidence_type": "Parc Fermé 變更",
+              "context": "Car 23:           Wastegate cooling duct retention clip"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

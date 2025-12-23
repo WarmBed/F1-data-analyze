@@ -1,0 +1,4125 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "F1 賽道進站策略資料庫 - 預計算的進站窗口與策略推薦",
+    "last_updated": "2025-12-04",
+    "generated_by": "generate_pit_strategy_database.py",
+    "sources": [
+      "tire_degradation_database.json",
+      "pit_loss_database.json",
+      "Cappello & Hoegh 2025: Time-Varying Linear Degradation Model"
+    ],
+    "model": {
+      "type": "Time-Varying Linear Degradation",
+      "formula": "degradation(t) = base_rate + acceleration * tire_age",
+      "crossover_formula": "optimal_pit = solve(cumulative_degradation = pit_loss)"
+    },
+    "usage": {
+      "pit_windows": "各輪胎的最佳進站時機區間",
+      "recommended_strategy": "基於計算的最佳策略",
+      "all_strategies": "所有策略的時間預測排名"
+    }
+  },
+  "circuits": {
+    "Bahrain": {
+      "official_name": "Bahrain International Circuit",
+      "track_length_km": 5.412,
+      "typical_race_laps": 57,
+      "base_lap_time_seconds": 92.004,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 18,
+          "pit_window": {
+            "start": 15,
+            "end": 21
+          },
+          "max_stint_laps": 28,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 28,
+          "pit_window": {
+            "start": 25,
+            "end": 31
+          },
+          "max_stint_laps": 38,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 40,
+          "pit_window": {
+            "start": 37,
+            "end": 43
+          },
+          "max_stint_laps": 50,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 28
+          },
+          {
+            "compound": "HARD",
+            "laps": 29
+          }
+        ],
+        "predicted_time": "1:28:31.630",
+        "predicted_time_seconds": 5311.63
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 28
+            },
+            {
+              "compound": "HARD",
+              "laps": 29
+            }
+          ],
+          "predicted_time": "1:28:31.630",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "HARD",
+              "laps": 39
+            }
+          ],
+          "predicted_time": "1:28:36.223",
+          "gap_to_optimal": "+4.6s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:37.192",
+          "gap_to_optimal": "+5.6s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:39.481",
+          "gap_to_optimal": "+7.9s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:40.981",
+          "gap_to_optimal": "+9.4s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 39
+            }
+          ],
+          "predicted_time": "1:28:50.289",
+          "gap_to_optimal": "+18.7s"
+        }
+      ],
+      "notes": "高溫沙漠賽道，夜間比賽但輪胎仍承受高溫"
+    },
+    "Jeddah": {
+      "official_name": "Jeddah Corniche Circuit",
+      "track_length_km": 6.174,
+      "typical_race_laps": 50,
+      "base_lap_time_seconds": 104.95800000000001,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 16,
+          "pit_window": {
+            "start": 13,
+            "end": 19
+          },
+          "max_stint_laps": 26,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 26,
+          "pit_window": {
+            "start": 23,
+            "end": 29
+          },
+          "max_stint_laps": 36,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 38,
+          "pit_window": {
+            "start": 35,
+            "end": 41
+          },
+          "max_stint_laps": 48,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 26
+          },
+          {
+            "compound": "HARD",
+            "laps": 24
+          }
+        ],
+        "predicted_time": "1:28:20.581",
+        "predicted_time_seconds": 5300.581
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "HARD",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:28:20.581",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 34
+            }
+          ],
+          "predicted_time": "1:28:22.227",
+          "gap_to_optimal": "+1.6s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 34
+            }
+          ],
+          "predicted_time": "1:28:29.910",
+          "gap_to_optimal": "+9.3s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 12
+            },
+            {
+              "compound": "HARD",
+              "laps": 20
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:28:31.488",
+          "gap_to_optimal": "+10.9s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 12
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            },
+            {
+              "compound": "SOFT",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:28:31.797",
+          "gap_to_optimal": "+11.2s"
+        },
+        {
+          "rank": 6,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 12
+            },
+            {
+              "compound": "HARD",
+              "laps": 20
+            },
+            {
+              "compound": "SOFT",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:28:31.869",
+          "gap_to_optimal": "+11.3s"
+        }
+      ],
+      "notes": "高速街道賽，高橫向負荷"
+    },
+    "Melbourne": {
+      "official_name": "Albert Park Circuit",
+      "track_length_km": 5.278,
+      "typical_race_laps": 58,
+      "base_lap_time_seconds": 89.726,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 22,
+          "pit_window": {
+            "start": 19,
+            "end": 25
+          },
+          "max_stint_laps": 32,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 32,
+          "pit_window": {
+            "start": 29,
+            "end": 35
+          },
+          "max_stint_laps": 42,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 45,
+          "pit_window": {
+            "start": 42,
+            "end": 48
+          },
+          "max_stint_laps": 55,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (S→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "SOFT",
+            "laps": 22
+          },
+          {
+            "compound": "HARD",
+            "laps": 36
+          }
+        ],
+        "predicted_time": "1:27:38.330",
+        "predicted_time_seconds": 5258.33
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 22
+            },
+            {
+              "compound": "HARD",
+              "laps": 36
+            }
+          ],
+          "predicted_time": "1:27:38.330",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 32
+            },
+            {
+              "compound": "HARD",
+              "laps": 26
+            }
+          ],
+          "predicted_time": "1:27:39.435",
+          "gap_to_optimal": "+1.1s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 22
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 36
+            }
+          ],
+          "predicted_time": "1:27:42.850",
+          "gap_to_optimal": "+4.5s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:27:45.537",
+          "gap_to_optimal": "+7.2s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 24
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:27:46.167",
+          "gap_to_optimal": "+7.8s"
+        },
+        {
+          "rank": 6,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 24
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:27:47.757",
+          "gap_to_optimal": "+9.4s"
+        }
+      ],
+      "notes": "滑順街道賽，低衰退"
+    },
+    "Suzuka": {
+      "official_name": "Suzuka International Racing Course",
+      "track_length_km": 5.807,
+      "typical_race_laps": 53,
+      "base_lap_time_seconds": 98.71900000000001,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 20,
+          "pit_window": {
+            "start": 17,
+            "end": 23
+          },
+          "max_stint_laps": 30,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 30,
+          "pit_window": {
+            "start": 27,
+            "end": 33
+          },
+          "max_stint_laps": 40,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 42,
+          "pit_window": {
+            "start": 39,
+            "end": 45
+          },
+          "max_stint_laps": 52,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (S→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "SOFT",
+            "laps": 20
+          },
+          {
+            "compound": "HARD",
+            "laps": 33
+          }
+        ],
+        "predicted_time": "1:28:02.099",
+        "predicted_time_seconds": 5282.099
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 20
+            },
+            {
+              "compound": "HARD",
+              "laps": 33
+            }
+          ],
+          "predicted_time": "1:28:02.099",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:03.420",
+          "gap_to_optimal": "+1.3s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 20
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 33
+            }
+          ],
+          "predicted_time": "1:28:05.461",
+          "gap_to_optimal": "+3.4s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 13
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 21
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:28:10.989",
+          "gap_to_optimal": "+8.9s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 13
+            },
+            {
+              "compound": "HARD",
+              "laps": 21
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:28:12.012",
+          "gap_to_optimal": "+9.9s"
+        },
+        {
+          "rank": 6,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 13
+            },
+            {
+              "compound": "HARD",
+              "laps": 21
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:28:13.310",
+          "gap_to_optimal": "+11.2s"
+        }
+      ],
+      "notes": "高速技術賽道，8字形設計對輪胎平衡"
+    },
+    "Shanghai": {
+      "official_name": "Shanghai International Circuit",
+      "track_length_km": 5.451,
+      "typical_race_laps": 56,
+      "base_lap_time_seconds": 92.66699999999999,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 18,
+          "pit_window": {
+            "start": 15,
+            "end": 21
+          },
+          "max_stint_laps": 28,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 28,
+          "pit_window": {
+            "start": 25,
+            "end": 31
+          },
+          "max_stint_laps": 38,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 40,
+          "pit_window": {
+            "start": 37,
+            "end": 43
+          },
+          "max_stint_laps": 50,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 28
+          },
+          {
+            "compound": "HARD",
+            "laps": 28
+          }
+        ],
+        "predicted_time": "1:27:26.830",
+        "predicted_time_seconds": 5246.83
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 28
+            },
+            {
+              "compound": "HARD",
+              "laps": 28
+            }
+          ],
+          "predicted_time": "1:27:26.830",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "HARD",
+              "laps": 38
+            }
+          ],
+          "predicted_time": "1:27:30.159",
+          "gap_to_optimal": "+3.3s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:35.035",
+          "gap_to_optimal": "+8.2s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:35.348",
+          "gap_to_optimal": "+8.5s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:35.607",
+          "gap_to_optimal": "+8.8s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 38
+            }
+          ],
+          "predicted_time": "1:27:37.480",
+          "gap_to_optimal": "+10.7s"
+        }
+      ],
+      "notes": "長直道和長彎角組合，對後胎負擔大"
+    },
+    "Miami": {
+      "official_name": "Miami International Autodrome",
+      "track_length_km": 5.412,
+      "typical_race_laps": 57,
+      "base_lap_time_seconds": 92.004,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 14,
+          "pit_window": {
+            "start": 11,
+            "end": 17
+          },
+          "max_stint_laps": 24,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 24,
+          "pit_window": {
+            "start": 21,
+            "end": 27
+          },
+          "max_stint_laps": 34,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 36,
+          "pit_window": {
+            "start": 33,
+            "end": 39
+          },
+          "max_stint_laps": 46,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 24
+          },
+          {
+            "compound": "HARD",
+            "laps": 33
+          }
+        ],
+        "predicted_time": "1:28:38.790",
+        "predicted_time_seconds": 5318.79
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            },
+            {
+              "compound": "HARD",
+              "laps": 33
+            }
+          ],
+          "predicted_time": "1:28:38.790",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:42.397",
+          "gap_to_optimal": "+3.6s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:45.631",
+          "gap_to_optimal": "+6.8s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:48.115",
+          "gap_to_optimal": "+9.3s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 43
+            }
+          ],
+          "predicted_time": "1:28:51.124",
+          "gap_to_optimal": "+12.3s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 43
+            }
+          ],
+          "predicted_time": "1:29:14.903",
+          "gap_to_optimal": "+36.1s"
+        }
+      ],
+      "notes": "新鋪路面粗糙，高溫高濕度環境"
+    },
+    "Imola": {
+      "official_name": "Autodromo Enzo e Dino Ferrari",
+      "track_length_km": 4.909,
+      "typical_race_laps": 63,
+      "base_lap_time_seconds": 83.453,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 19,
+          "pit_window": {
+            "start": 16,
+            "end": 22
+          },
+          "max_stint_laps": 29,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 29,
+          "pit_window": {
+            "start": 26,
+            "end": 32
+          },
+          "max_stint_laps": 39,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 41,
+          "pit_window": {
+            "start": 38,
+            "end": 44
+          },
+          "max_stint_laps": 51,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 29
+          },
+          {
+            "compound": "HARD",
+            "laps": 34
+          }
+        ],
+        "predicted_time": "1:28:42.229",
+        "predicted_time_seconds": 5322.229
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 29
+            },
+            {
+              "compound": "HARD",
+              "laps": 34
+            }
+          ],
+          "predicted_time": "1:28:42.229",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 19
+            },
+            {
+              "compound": "HARD",
+              "laps": 44
+            }
+          ],
+          "predicted_time": "1:28:47.967",
+          "gap_to_optimal": "+5.7s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 15
+            },
+            {
+              "compound": "HARD",
+              "laps": 26
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 22
+            }
+          ],
+          "predicted_time": "1:28:48.723",
+          "gap_to_optimal": "+6.5s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 15
+            },
+            {
+              "compound": "HARD",
+              "laps": 26
+            },
+            {
+              "compound": "SOFT",
+              "laps": 22
+            }
+          ],
+          "predicted_time": "1:28:49.329",
+          "gap_to_optimal": "+7.1s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 15
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "SOFT",
+              "laps": 22
+            }
+          ],
+          "predicted_time": "1:28:49.954",
+          "gap_to_optimal": "+7.7s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 19
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 44
+            }
+          ],
+          "predicted_time": "1:29:00.627",
+          "gap_to_optimal": "+18.4s"
+        }
+      ],
+      "notes": "傳統賽道，中等衰退"
+    },
+    "Monaco": {
+      "official_name": "Circuit de Monaco",
+      "track_length_km": 3.337,
+      "typical_race_laps": 78,
+      "base_lap_time_seconds": 56.729000000000006,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 35,
+          "pit_window": {
+            "start": 32,
+            "end": 38
+          },
+          "max_stint_laps": 45,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 50,
+          "pit_window": {
+            "start": 47,
+            "end": 53
+          },
+          "max_stint_laps": 60,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 70,
+          "pit_window": {
+            "start": 67,
+            "end": 73
+          },
+          "max_stint_laps": 78,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "2-Stop (S→H→S)",
+        "stops": 2,
+        "stints": [
+          {
+            "compound": "SOFT",
+            "laps": 19
+          },
+          {
+            "compound": "HARD",
+            "laps": 34
+          },
+          {
+            "compound": "SOFT",
+            "laps": 25
+          }
+        ],
+        "predicted_time": "1:14:52.274",
+        "predicted_time_seconds": 4492.274
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 19
+            },
+            {
+              "compound": "HARD",
+              "laps": 34
+            },
+            {
+              "compound": "SOFT",
+              "laps": 25
+            }
+          ],
+          "predicted_time": "1:14:52.274",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 19
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 34
+            },
+            {
+              "compound": "SOFT",
+              "laps": 25
+            }
+          ],
+          "predicted_time": "1:14:52.461",
+          "gap_to_optimal": "+0.2s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 35
+            },
+            {
+              "compound": "HARD",
+              "laps": 43
+            }
+          ],
+          "predicted_time": "1:14:53.003",
+          "gap_to_optimal": "+0.7s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 19
+            },
+            {
+              "compound": "HARD",
+              "laps": 34
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 25
+            }
+          ],
+          "predicted_time": "1:14:55.095",
+          "gap_to_optimal": "+2.8s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 35
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 43
+            }
+          ],
+          "predicted_time": "1:14:57.200",
+          "gap_to_optimal": "+4.9s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 50
+            },
+            {
+              "compound": "HARD",
+              "laps": 28
+            }
+          ],
+          "predicted_time": "1:15:03.147",
+          "gap_to_optimal": "+10.9s"
+        }
+      ],
+      "notes": "最低衰退賽道，低速街道賽，輪胎難以達到工作溫度"
+    },
+    "Montreal": {
+      "official_name": "Circuit Gilles Villeneuve",
+      "track_length_km": 4.361,
+      "typical_race_laps": 70,
+      "base_lap_time_seconds": 74.137,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 17,
+          "pit_window": {
+            "start": 14,
+            "end": 20
+          },
+          "max_stint_laps": 27,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 27,
+          "pit_window": {
+            "start": 24,
+            "end": 30
+          },
+          "max_stint_laps": 37,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 40,
+          "pit_window": {
+            "start": 37,
+            "end": 43
+          },
+          "max_stint_laps": 50,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "2-Stop (M→H→M)",
+        "stops": 2,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 17
+          },
+          {
+            "compound": "HARD",
+            "laps": 30
+          },
+          {
+            "compound": "MEDIUM",
+            "laps": 23
+          }
+        ],
+        "predicted_time": "1:27:51.623",
+        "predicted_time_seconds": 5271.623
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:27:51.623",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 27
+            },
+            {
+              "compound": "HARD",
+              "laps": 43
+            }
+          ],
+          "predicted_time": "1:27:52.593",
+          "gap_to_optimal": "+1.0s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:27:53.992",
+          "gap_to_optimal": "+2.4s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:27:57.706",
+          "gap_to_optimal": "+6.1s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 53
+            }
+          ],
+          "predicted_time": "1:28:06.442",
+          "gap_to_optimal": "+14.8s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 53
+            }
+          ],
+          "predicted_time": "1:28:35.383",
+          "gap_to_optimal": "+43.8s"
+        }
+      ],
+      "notes": "走停特性賽道，對前胎煞車負擔大"
+    },
+    "Barcelona": {
+      "official_name": "Circuit de Barcelona-Catalunya",
+      "track_length_km": 4.657,
+      "typical_race_laps": 66,
+      "base_lap_time_seconds": 79.169,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 16,
+          "pit_window": {
+            "start": 13,
+            "end": 19
+          },
+          "max_stint_laps": 26,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 26,
+          "pit_window": {
+            "start": 23,
+            "end": 29
+          },
+          "max_stint_laps": 36,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 38,
+          "pit_window": {
+            "start": 35,
+            "end": 41
+          },
+          "max_stint_laps": 48,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 26
+          },
+          {
+            "compound": "HARD",
+            "laps": 40
+          }
+        ],
+        "predicted_time": "1:28:23.500",
+        "predicted_time_seconds": 5303.5
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "HARD",
+              "laps": 40
+            }
+          ],
+          "predicted_time": "1:28:23.500",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 28
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 22
+            }
+          ],
+          "predicted_time": "1:28:24.323",
+          "gap_to_optimal": "+0.8s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 28
+            },
+            {
+              "compound": "SOFT",
+              "laps": 22
+            }
+          ],
+          "predicted_time": "1:28:26.555",
+          "gap_to_optimal": "+3.1s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 28
+            },
+            {
+              "compound": "SOFT",
+              "laps": 22
+            }
+          ],
+          "predicted_time": "1:28:28.751",
+          "gap_to_optimal": "+5.3s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 50
+            }
+          ],
+          "predicted_time": "1:28:37.327",
+          "gap_to_optimal": "+13.8s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 50
+            }
+          ],
+          "predicted_time": "1:29:00.251",
+          "gap_to_optimal": "+36.8s"
+        }
+      ],
+      "notes": "標準測試賽道，高速長彎對左前胎特別苛刻"
+    },
+    "Spielberg": {
+      "official_name": "Red Bull Ring",
+      "track_length_km": 4.318,
+      "typical_race_laps": 71,
+      "base_lap_time_seconds": 73.40599999999999,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 20,
+          "pit_window": {
+            "start": 17,
+            "end": 23
+          },
+          "max_stint_laps": 30,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 30,
+          "pit_window": {
+            "start": 27,
+            "end": 33
+          },
+          "max_stint_laps": 40,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 45,
+          "pit_window": {
+            "start": 42,
+            "end": 48
+          },
+          "max_stint_laps": 55,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 30
+          },
+          {
+            "compound": "HARD",
+            "laps": 41
+          }
+        ],
+        "predicted_time": "1:28:10.240",
+        "predicted_time_seconds": 5290.24
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "HARD",
+              "laps": 41
+            }
+          ],
+          "predicted_time": "1:28:10.240",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:28:11.343",
+          "gap_to_optimal": "+1.1s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:28:13.043",
+          "gap_to_optimal": "+2.8s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:28:15.355",
+          "gap_to_optimal": "+5.1s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 20
+            },
+            {
+              "compound": "HARD",
+              "laps": 51
+            }
+          ],
+          "predicted_time": "1:28:20.048",
+          "gap_to_optimal": "+9.8s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 20
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 51
+            }
+          ],
+          "predicted_time": "1:28:40.846",
+          "gap_to_optimal": "+30.6s"
+        }
+      ],
+      "notes": "短圈高海拔，後胎牽引區負擔"
+    },
+    "Silverstone": {
+      "official_name": "Silverstone Circuit",
+      "track_length_km": 5.891,
+      "typical_race_laps": 52,
+      "base_lap_time_seconds": 100.147,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 15,
+          "pit_window": {
+            "start": 12,
+            "end": 18
+          },
+          "max_stint_laps": 25,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 25,
+          "pit_window": {
+            "start": 22,
+            "end": 28
+          },
+          "max_stint_laps": 35,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 37,
+          "pit_window": {
+            "start": 34,
+            "end": 40
+          },
+          "max_stint_laps": 47,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 25
+          },
+          {
+            "compound": "HARD",
+            "laps": 27
+          }
+        ],
+        "predicted_time": "1:27:43.525",
+        "predicted_time_seconds": 5263.525
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 25
+            },
+            {
+              "compound": "HARD",
+              "laps": 27
+            }
+          ],
+          "predicted_time": "1:27:43.525",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 15
+            },
+            {
+              "compound": "HARD",
+              "laps": 37
+            }
+          ],
+          "predicted_time": "1:27:48.512",
+          "gap_to_optimal": "+5.0s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 13
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 21
+            },
+            {
+              "compound": "SOFT",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:27:53.138",
+          "gap_to_optimal": "+9.6s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 13
+            },
+            {
+              "compound": "HARD",
+              "laps": 21
+            },
+            {
+              "compound": "SOFT",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:27:53.302",
+          "gap_to_optimal": "+9.8s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 13
+            },
+            {
+              "compound": "HARD",
+              "laps": 21
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:27:53.385",
+          "gap_to_optimal": "+9.9s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 15
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 37
+            }
+          ],
+          "predicted_time": "1:27:57.364",
+          "gap_to_optimal": "+13.8s"
+        }
+      ],
+      "notes": "高速彎角多，對所有輪胎高負荷"
+    },
+    "Budapest": {
+      "official_name": "Hungaroring",
+      "track_length_km": 4.381,
+      "typical_race_laps": 70,
+      "base_lap_time_seconds": 74.477,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 18,
+          "pit_window": {
+            "start": 15,
+            "end": 21
+          },
+          "max_stint_laps": 28,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 28,
+          "pit_window": {
+            "start": 25,
+            "end": 31
+          },
+          "max_stint_laps": 38,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 40,
+          "pit_window": {
+            "start": 37,
+            "end": 43
+          },
+          "max_stint_laps": 50,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "2-Stop (M→H→M)",
+        "stops": 2,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 17
+          },
+          {
+            "compound": "HARD",
+            "laps": 30
+          },
+          {
+            "compound": "MEDIUM",
+            "laps": 23
+          }
+        ],
+        "predicted_time": "1:28:14.260",
+        "predicted_time_seconds": 5294.26
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:14.260",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 28
+            },
+            {
+              "compound": "HARD",
+              "laps": 42
+            }
+          ],
+          "predicted_time": "1:28:14.714",
+          "gap_to_optimal": "+0.5s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:16.200",
+          "gap_to_optimal": "+1.9s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:18.511",
+          "gap_to_optimal": "+4.3s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "HARD",
+              "laps": 52
+            }
+          ],
+          "predicted_time": "1:28:27.807",
+          "gap_to_optimal": "+13.5s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 52
+            }
+          ],
+          "predicted_time": "1:28:49.946",
+          "gap_to_optimal": "+35.7s"
+        }
+      ],
+      "notes": "高溫慢速技術賽道，難以超車"
+    },
+    "Spa": {
+      "official_name": "Circuit de Spa-Francorchamps",
+      "track_length_km": 7.004,
+      "typical_race_laps": 44,
+      "base_lap_time_seconds": 119.068,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 17,
+          "pit_window": {
+            "start": 14,
+            "end": 20
+          },
+          "max_stint_laps": 27,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 26,
+          "pit_window": {
+            "start": 23,
+            "end": 29
+          },
+          "max_stint_laps": 36,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 38,
+          "pit_window": {
+            "start": 35,
+            "end": 41
+          },
+          "max_stint_laps": 44,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (S→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "SOFT",
+            "laps": 17
+          },
+          {
+            "compound": "HARD",
+            "laps": 27
+          }
+        ],
+        "predicted_time": "1:28:02.200",
+        "predicted_time_seconds": 5282.2
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 27
+            }
+          ],
+          "predicted_time": "1:28:02.200",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 27
+            }
+          ],
+          "predicted_time": "1:28:04.301",
+          "gap_to_optimal": "+2.1s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "HARD",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:28:04.444",
+          "gap_to_optimal": "+2.2s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 11
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 17
+            },
+            {
+              "compound": "SOFT",
+              "laps": 16
+            }
+          ],
+          "predicted_time": "1:28:14.489",
+          "gap_to_optimal": "+12.3s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 11
+            },
+            {
+              "compound": "HARD",
+              "laps": 17
+            },
+            {
+              "compound": "SOFT",
+              "laps": 16
+            }
+          ],
+          "predicted_time": "1:28:15.513",
+          "gap_to_optimal": "+13.3s"
+        },
+        {
+          "rank": 6,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 11
+            },
+            {
+              "compound": "HARD",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 16
+            }
+          ],
+          "predicted_time": "1:28:16.920",
+          "gap_to_optimal": "+14.7s"
+        }
+      ],
+      "notes": "最長賽道，高速賽道但圈數少減少累計衰退"
+    },
+    "Zandvoort": {
+      "official_name": "Circuit Zandvoort",
+      "track_length_km": 4.259,
+      "typical_race_laps": 72,
+      "base_lap_time_seconds": 72.403,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 16,
+          "pit_window": {
+            "start": 13,
+            "end": 19
+          },
+          "max_stint_laps": 26,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 26,
+          "pit_window": {
+            "start": 23,
+            "end": 29
+          },
+          "max_stint_laps": 36,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 38,
+          "pit_window": {
+            "start": 35,
+            "end": 41
+          },
+          "max_stint_laps": 48,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "2-Stop (M→H→M)",
+        "stops": 2,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 18
+          },
+          {
+            "compound": "HARD",
+            "laps": 31
+          },
+          {
+            "compound": "MEDIUM",
+            "laps": 23
+          }
+        ],
+        "predicted_time": "1:28:19.613",
+        "predicted_time_seconds": 5299.613
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 18
+            },
+            {
+              "compound": "HARD",
+              "laps": 31
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:19.613",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "HARD",
+              "laps": 31
+            },
+            {
+              "compound": "SOFT",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:23.056",
+          "gap_to_optimal": "+3.4s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "HARD",
+              "laps": 46
+            }
+          ],
+          "predicted_time": "1:28:25.968",
+          "gap_to_optimal": "+6.4s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 31
+            },
+            {
+              "compound": "SOFT",
+              "laps": 23
+            }
+          ],
+          "predicted_time": "1:28:26.888",
+          "gap_to_optimal": "+7.3s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 56
+            }
+          ],
+          "predicted_time": "1:28:44.916",
+          "gap_to_optimal": "+25.3s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 56
+            }
+          ],
+          "predicted_time": "1:29:17.492",
+          "gap_to_optimal": "+57.9s"
+        }
+      ],
+      "notes": "傾斜彎角對輪胎施加額外負荷"
+    },
+    "Monza": {
+      "official_name": "Autodromo Nazionale di Monza",
+      "track_length_km": 5.793,
+      "typical_race_laps": 53,
+      "base_lap_time_seconds": 98.48100000000001,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 22,
+          "pit_window": {
+            "start": 19,
+            "end": 25
+          },
+          "max_stint_laps": 32,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 35,
+          "pit_window": {
+            "start": 32,
+            "end": 38
+          },
+          "max_stint_laps": 45,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 48,
+          "pit_window": {
+            "start": 45,
+            "end": 50
+          },
+          "max_stint_laps": 53,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (S→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "SOFT",
+            "laps": 22
+          },
+          {
+            "compound": "HARD",
+            "laps": 31
+          }
+        ],
+        "predicted_time": "1:27:47.149",
+        "predicted_time_seconds": 5267.149
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 22
+            },
+            {
+              "compound": "HARD",
+              "laps": 31
+            }
+          ],
+          "predicted_time": "1:27:47.149",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 22
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 31
+            }
+          ],
+          "predicted_time": "1:27:48.451",
+          "gap_to_optimal": "+1.3s"
+        },
+        {
+          "rank": 3,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 35
+            },
+            {
+              "compound": "HARD",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:27:53.493",
+          "gap_to_optimal": "+6.3s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 13
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 21
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:56.246",
+          "gap_to_optimal": "+9.1s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 13
+            },
+            {
+              "compound": "HARD",
+              "laps": 21
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:57.665",
+          "gap_to_optimal": "+10.5s"
+        },
+        {
+          "rank": 6,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 13
+            },
+            {
+              "compound": "HARD",
+              "laps": 21
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:59.408",
+          "gap_to_optimal": "+12.3s"
+        }
+      ],
+      "notes": "最高速賽道，低下壓力設定減少輪胎磨損"
+    },
+    "Baku": {
+      "official_name": "Baku City Circuit",
+      "track_length_km": 6.003,
+      "typical_race_laps": 51,
+      "base_lap_time_seconds": 102.051,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 14,
+          "pit_window": {
+            "start": 11,
+            "end": 17
+          },
+          "max_stint_laps": 24,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 24,
+          "pit_window": {
+            "start": 21,
+            "end": 27
+          },
+          "max_stint_laps": 34,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 36,
+          "pit_window": {
+            "start": 33,
+            "end": 39
+          },
+          "max_stint_laps": 46,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 24
+          },
+          {
+            "compound": "HARD",
+            "laps": 27
+          }
+        ],
+        "predicted_time": "1:27:44.851",
+        "predicted_time_seconds": 5264.851
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            },
+            {
+              "compound": "HARD",
+              "laps": 27
+            }
+          ],
+          "predicted_time": "1:27:44.851",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 37
+            }
+          ],
+          "predicted_time": "1:27:51.471",
+          "gap_to_optimal": "+6.6s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 12
+            },
+            {
+              "compound": "HARD",
+              "laps": 20
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:53.972",
+          "gap_to_optimal": "+9.1s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 12
+            },
+            {
+              "compound": "HARD",
+              "laps": 20
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:55.798",
+          "gap_to_optimal": "+10.9s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 12
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:27:56.290",
+          "gap_to_optimal": "+11.4s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 37
+            }
+          ],
+          "predicted_time": "1:28:04.190",
+          "gap_to_optimal": "+19.3s"
+        }
+      ],
+      "notes": "街道賽路面粗糙，長直道後重煞車"
+    },
+    "Singapore": {
+      "official_name": "Marina Bay Street Circuit",
+      "track_length_km": 4.94,
+      "typical_race_laps": 62,
+      "base_lap_time_seconds": 83.98,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 14,
+          "pit_window": {
+            "start": 11,
+            "end": 17
+          },
+          "max_stint_laps": 24,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 23,
+          "pit_window": {
+            "start": 20,
+            "end": 26
+          },
+          "max_stint_laps": 33,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 35,
+          "pit_window": {
+            "start": 32,
+            "end": 38
+          },
+          "max_stint_laps": 45,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "2-Stop (M→H→M)",
+        "stops": 2,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 15
+          },
+          {
+            "compound": "HARD",
+            "laps": 26
+          },
+          {
+            "compound": "MEDIUM",
+            "laps": 21
+          }
+        ],
+        "predicted_time": "1:28:10.972",
+        "predicted_time_seconds": 5290.972
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 15
+            },
+            {
+              "compound": "HARD",
+              "laps": 26
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 21
+            }
+          ],
+          "predicted_time": "1:28:10.972",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            },
+            {
+              "compound": "HARD",
+              "laps": 39
+            }
+          ],
+          "predicted_time": "1:28:13.364",
+          "gap_to_optimal": "+2.4s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 15
+            },
+            {
+              "compound": "HARD",
+              "laps": 26
+            },
+            {
+              "compound": "SOFT",
+              "laps": 21
+            }
+          ],
+          "predicted_time": "1:28:15.441",
+          "gap_to_optimal": "+4.5s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 15
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "SOFT",
+              "laps": 21
+            }
+          ],
+          "predicted_time": "1:28:18.751",
+          "gap_to_optimal": "+7.8s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 48
+            }
+          ],
+          "predicted_time": "1:28:30.588",
+          "gap_to_optimal": "+19.6s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 48
+            }
+          ],
+          "predicted_time": "1:28:59.219",
+          "gap_to_optimal": "+48.2s"
+        }
+      ],
+      "notes": "夜間街道賽，高濕度高溫，最長比賽時間"
+    },
+    "Austin": {
+      "official_name": "Circuit of the Americas",
+      "track_length_km": 5.513,
+      "typical_race_laps": 56,
+      "base_lap_time_seconds": 93.721,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 16,
+          "pit_window": {
+            "start": 13,
+            "end": 19
+          },
+          "max_stint_laps": 26,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 26,
+          "pit_window": {
+            "start": 23,
+            "end": 29
+          },
+          "max_stint_laps": 36,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 38,
+          "pit_window": {
+            "start": 35,
+            "end": 41
+          },
+          "max_stint_laps": 48,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 26
+          },
+          {
+            "compound": "HARD",
+            "laps": 30
+          }
+        ],
+        "predicted_time": "1:28:32.628",
+        "predicted_time_seconds": 5312.628
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            }
+          ],
+          "predicted_time": "1:28:32.628",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 40
+            }
+          ],
+          "predicted_time": "1:28:39.436",
+          "gap_to_optimal": "+6.8s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:28:39.500",
+          "gap_to_optimal": "+6.9s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:28:40.891",
+          "gap_to_optimal": "+8.3s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 19
+            }
+          ],
+          "predicted_time": "1:28:41.838",
+          "gap_to_optimal": "+9.2s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 40
+            }
+          ],
+          "predicted_time": "1:28:53.052",
+          "gap_to_optimal": "+20.4s"
+        }
+      ],
+      "notes": "高海拔粗糙路面，多種彎角類型"
+    },
+    "Mexico": {
+      "official_name": "Autodromo Hermanos Rodriguez",
+      "track_length_km": 4.304,
+      "typical_race_laps": 71,
+      "base_lap_time_seconds": 73.168,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 20,
+          "pit_window": {
+            "start": 17,
+            "end": 23
+          },
+          "max_stint_laps": 30,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 32,
+          "pit_window": {
+            "start": 29,
+            "end": 35
+          },
+          "max_stint_laps": 42,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 45,
+          "pit_window": {
+            "start": 42,
+            "end": 48
+          },
+          "max_stint_laps": 55,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 32
+          },
+          {
+            "compound": "HARD",
+            "laps": 39
+          }
+        ],
+        "predicted_time": "1:27:51.987",
+        "predicted_time_seconds": 5271.987
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 32
+            },
+            {
+              "compound": "HARD",
+              "laps": 39
+            }
+          ],
+          "predicted_time": "1:27:51.987",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:27:53.528",
+          "gap_to_optimal": "+1.5s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:27:54.774",
+          "gap_to_optimal": "+2.8s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:27:57.086",
+          "gap_to_optimal": "+5.1s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 20
+            },
+            {
+              "compound": "HARD",
+              "laps": 51
+            }
+          ],
+          "predicted_time": "1:28:01.404",
+          "gap_to_optimal": "+9.4s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 20
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 51
+            }
+          ],
+          "predicted_time": "1:28:22.202",
+          "gap_to_optimal": "+30.2s"
+        }
+      ],
+      "notes": "高海拔 (2200m) 降低空氣阻力和下壓力，減少輪胎負荷"
+    },
+    "Interlagos": {
+      "official_name": "Autodromo Jose Carlos Pace",
+      "track_length_km": 4.309,
+      "typical_race_laps": 71,
+      "base_lap_time_seconds": 73.253,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 22,
+          "pit_window": {
+            "start": 19,
+            "end": 25
+          },
+          "max_stint_laps": 32,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 34,
+          "pit_window": {
+            "start": 31,
+            "end": 37
+          },
+          "max_stint_laps": 44,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 48,
+          "pit_window": {
+            "start": 45,
+            "end": 51
+          },
+          "max_stint_laps": 58,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 34
+          },
+          {
+            "compound": "HARD",
+            "laps": 37
+          }
+        ],
+        "predicted_time": "1:27:52.573",
+        "predicted_time_seconds": 5272.573
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 34
+            },
+            {
+              "compound": "HARD",
+              "laps": 37
+            }
+          ],
+          "predicted_time": "1:27:52.573",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:27:55.679",
+          "gap_to_optimal": "+3.1s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:27:56.139",
+          "gap_to_optimal": "+3.6s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 17
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 30
+            },
+            {
+              "compound": "SOFT",
+              "laps": 24
+            }
+          ],
+          "predicted_time": "1:27:57.047",
+          "gap_to_optimal": "+4.5s"
+        },
+        {
+          "rank": 5,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 22
+            },
+            {
+              "compound": "HARD",
+              "laps": 49
+            }
+          ],
+          "predicted_time": "1:27:58.848",
+          "gap_to_optimal": "+6.3s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 22
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 49
+            }
+          ],
+          "predicted_time": "1:28:12.629",
+          "gap_to_optimal": "+20.1s"
+        }
+      ],
+      "notes": "逆時針賽道，海拔影響，較滑順路面"
+    },
+    "Las_Vegas": {
+      "official_name": "Las Vegas Strip Circuit",
+      "track_length_km": 6.201,
+      "typical_race_laps": 50,
+      "base_lap_time_seconds": 105.41699999999999,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 14,
+          "pit_window": {
+            "start": 11,
+            "end": 17
+          },
+          "max_stint_laps": 24,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 24,
+          "pit_window": {
+            "start": 21,
+            "end": 27
+          },
+          "max_stint_laps": 34,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 36,
+          "pit_window": {
+            "start": 33,
+            "end": 39
+          },
+          "max_stint_laps": 46,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 24
+          },
+          {
+            "compound": "HARD",
+            "laps": 26
+          }
+        ],
+        "predicted_time": "1:28:49.564",
+        "predicted_time_seconds": 5329.564
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            },
+            {
+              "compound": "HARD",
+              "laps": 26
+            }
+          ],
+          "predicted_time": "1:28:49.564",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 36
+            }
+          ],
+          "predicted_time": "1:28:55.356",
+          "gap_to_optimal": "+5.8s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 12
+            },
+            {
+              "compound": "HARD",
+              "laps": 20
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:28:58.954",
+          "gap_to_optimal": "+9.4s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 12
+            },
+            {
+              "compound": "HARD",
+              "laps": 20
+            },
+            {
+              "compound": "SOFT",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:29:00.246",
+          "gap_to_optimal": "+10.7s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 12
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            },
+            {
+              "compound": "SOFT",
+              "laps": 18
+            }
+          ],
+          "predicted_time": "1:29:00.738",
+          "gap_to_optimal": "+11.2s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 36
+            }
+          ],
+          "predicted_time": "1:29:06.968",
+          "gap_to_optimal": "+17.4s"
+        }
+      ],
+      "notes": "夜間街道賽，極低溫度使輪胎難以升溫但路面粗糙"
+    },
+    "Lusail": {
+      "official_name": "Lusail International Circuit",
+      "track_length_km": 5.419,
+      "typical_race_laps": 57,
+      "base_lap_time_seconds": 92.12299999999999,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 16,
+          "pit_window": {
+            "start": 13,
+            "end": 19
+          },
+          "max_stint_laps": 26,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 26,
+          "pit_window": {
+            "start": 23,
+            "end": 29
+          },
+          "max_stint_laps": 36,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 38,
+          "pit_window": {
+            "start": 35,
+            "end": 41
+          },
+          "max_stint_laps": 48,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 26
+          },
+          {
+            "compound": "HARD",
+            "laps": 31
+          }
+        ],
+        "predicted_time": "1:28:38.953",
+        "predicted_time_seconds": 5318.953
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 26
+            },
+            {
+              "compound": "HARD",
+              "laps": 31
+            }
+          ],
+          "predicted_time": "1:28:38.953",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:44.662",
+          "gap_to_optimal": "+5.7s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:46.756",
+          "gap_to_optimal": "+7.8s"
+        },
+        {
+          "rank": 4,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "HARD",
+              "laps": 41
+            }
+          ],
+          "predicted_time": "1:28:46.989",
+          "gap_to_optimal": "+8.0s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 23
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:28:47.980",
+          "gap_to_optimal": "+9.0s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 16
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 41
+            }
+          ],
+          "predicted_time": "1:29:02.626",
+          "gap_to_optimal": "+23.7s"
+        }
+      ],
+      "notes": "高速流暢賽道，夜間比賽高輪胎負荷"
+    },
+    "Yas_Marina": {
+      "official_name": "Yas Marina Circuit",
+      "track_length_km": 5.281,
+      "typical_race_laps": 58,
+      "base_lap_time_seconds": 89.777,
+      "pit_loss_seconds": 24.0,
+      "track_abrasiveness": "medium",
+      "pit_windows": {
+        "SOFT": {
+          "optimal_pit_lap": 18,
+          "pit_window": {
+            "start": 15,
+            "end": 21
+          },
+          "max_stint_laps": 28,
+          "confidence": 0.85
+        },
+        "MEDIUM": {
+          "optimal_pit_lap": 28,
+          "pit_window": {
+            "start": 25,
+            "end": 31
+          },
+          "max_stint_laps": 38,
+          "confidence": 0.85
+        },
+        "HARD": {
+          "optimal_pit_lap": 42,
+          "pit_window": {
+            "start": 39,
+            "end": 45
+          },
+          "max_stint_laps": 52,
+          "confidence": 0.85
+        }
+      },
+      "recommended_strategy": {
+        "name": "1-Stop (M→H)",
+        "stops": 1,
+        "stints": [
+          {
+            "compound": "MEDIUM",
+            "laps": 28
+          },
+          {
+            "compound": "HARD",
+            "laps": 30
+          }
+        ],
+        "predicted_time": "1:27:47.185",
+        "predicted_time_seconds": 5267.185
+      },
+      "all_strategies": [
+        {
+          "rank": 1,
+          "name": "1-Stop (M→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 28
+            },
+            {
+              "compound": "HARD",
+              "laps": 30
+            }
+          ],
+          "predicted_time": "1:27:47.185",
+          "gap_to_optimal": "最佳"
+        },
+        {
+          "rank": 2,
+          "name": "1-Stop (S→H)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "HARD",
+              "laps": 40
+            }
+          ],
+          "predicted_time": "1:27:51.698",
+          "gap_to_optimal": "+4.5s"
+        },
+        {
+          "rank": 3,
+          "name": "2-Stop (S→M→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 24
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:27:55.206",
+          "gap_to_optimal": "+8.0s"
+        },
+        {
+          "rank": 4,
+          "name": "2-Stop (S→H→S)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 24
+            },
+            {
+              "compound": "SOFT",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:27:55.236",
+          "gap_to_optimal": "+8.1s"
+        },
+        {
+          "rank": 5,
+          "name": "2-Stop (M→H→M)",
+          "stops": 2,
+          "stints": [
+            {
+              "compound": "MEDIUM",
+              "laps": 14
+            },
+            {
+              "compound": "HARD",
+              "laps": 24
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 20
+            }
+          ],
+          "predicted_time": "1:27:55.299",
+          "gap_to_optimal": "+8.1s"
+        },
+        {
+          "rank": 6,
+          "name": "1-Stop (S→M)",
+          "stops": 1,
+          "stints": [
+            {
+              "compound": "SOFT",
+              "laps": 18
+            },
+            {
+              "compound": "MEDIUM",
+              "laps": 40
+            }
+          ],
+          "predicted_time": "1:28:00.640",
+          "gap_to_optimal": "+13.5s"
+        }
+      ],
+      "notes": "日落賽事，溫度變化影響輪胎表現"
+    }
+  }
+}

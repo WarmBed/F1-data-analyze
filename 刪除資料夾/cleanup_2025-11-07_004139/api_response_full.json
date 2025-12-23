@@ -1,0 +1,485 @@
+{
+  "success": true,
+  "message": "分析完成 (功能 74)",
+  "data": {
+    "metadata": {
+      "track": "Mexico",
+      "year": 2025,
+      "session": "Q",
+      "model_r2": 0.8531473270304392,
+      "model_mae": 0.33686430333024353,
+      "sample_count": 59,
+      "prediction_time": "2025-11-05T20:39:32.655372",
+      "model_version": "v3.8",
+      "feature_count": 17,
+      "has_actual_results": true
+    },
+    "predictions": [
+      {
+        "rank": 1,
+        "driver": "NOR",
+        "team": "McLaren",
+        "fp3_time": 76.633,
+        "predicted_time": 76.84884643554688,
+        "actual_q_time": 75.586,
+        "improvement": 0.21584320068359375
+      },
+      {
+        "rank": 2,
+        "driver": "HAM",
+        "team": "Ferrari",
+        "fp3_time": 76.978,
+        "predicted_time": 76.8624267578125,
+        "actual_q_time": 75.938,
+        "improvement": -0.115570068359375
+      },
+      {
+        "rank": 3,
+        "driver": "RUS",
+        "team": "Mercedes",
+        "fp3_time": 77.145,
+        "predicted_time": 76.89794158935547,
+        "actual_q_time": 76.034,
+        "improvement": -0.2470550537109375
+      },
+      {
+        "rank": 4,
+        "driver": "ANT",
+        "team": "Mercedes",
+        "fp3_time": 77.253,
+        "predicted_time": 76.91622924804688,
+        "actual_q_time": 76.118,
+        "improvement": -0.33676910400390625
+      },
+      {
+        "rank": 5,
+        "driver": "LEC",
+        "team": "Ferrari",
+        "fp3_time": 77.199,
+        "predicted_time": 76.916748046875,
+        "actual_q_time": 75.848,
+        "improvement": -0.28224945068359375
+      },
+      {
+        "rank": 6,
+        "driver": "VER",
+        "team": "Red Bull Racing",
+        "fp3_time": 77.242,
+        "predicted_time": 76.916748046875,
+        "actual_q_time": 76.07,
+        "improvement": -0.32524871826171875
+      },
+      {
+        "rank": 7,
+        "driver": "PIA",
+        "team": "McLaren",
+        "fp3_time": 77.232,
+        "predicted_time": 76.92039489746094,
+        "actual_q_time": 76.174,
+        "improvement": -0.31160736083984375
+      },
+      {
+        "rank": 8,
+        "driver": "TSU",
+        "team": "Red Bull Racing",
+        "fp3_time": 77.415,
+        "predicted_time": 76.9445571899414,
+        "actual_q_time": 76.816,
+        "improvement": -0.4704437255859375
+      },
+      {
+        "rank": 9,
+        "driver": "HAD",
+        "team": "Racing Bulls",
+        "fp3_time": 77.396,
+        "predicted_time": 77.05848693847656,
+        "actual_q_time": 76.252,
+        "improvement": -0.33751678466796875
+      },
+      {
+        "rank": 10,
+        "driver": "STR",
+        "team": "Aston Martin",
+        "fp3_time": 77.598,
+        "predicted_time": 77.0669174194336,
+        "actual_q_time": 77.606,
+        "improvement": -0.5310821533203125
+      },
+      {
+        "rank": 11,
+        "driver": "BOR",
+        "team": "Kick Sauber",
+        "fp3_time": 77.526,
+        "predicted_time": 77.09391021728516,
+        "actual_q_time": 77.412,
+        "improvement": -0.43209075927734375
+      },
+      {
+        "rank": 12,
+        "driver": "LAW",
+        "team": "Racing Bulls",
+        "fp3_time": 77.552,
+        "predicted_time": 77.1861343383789,
+        "actual_q_time": 76.961,
+        "improvement": -0.36586761474609375
+      },
+      {
+        "rank": 13,
+        "driver": "OCO",
+        "team": "Haas F1 Team",
+        "fp3_time": 77.574,
+        "predicted_time": 77.2352294921875,
+        "actual_q_time": 76.837,
+        "improvement": -0.33876800537109375
+      },
+      {
+        "rank": 14,
+        "driver": "SAI",
+        "team": "Williams",
+        "fp3_time": 77.801,
+        "predicted_time": 77.27764129638672,
+        "actual_q_time": 76.172,
+        "improvement": -0.5233612060546875
+      },
+      {
+        "rank": 15,
+        "driver": "BEA",
+        "team": "Haas F1 Team",
+        "fp3_time": 78.046,
+        "predicted_time": 77.43533325195312,
+        "actual_q_time": 76.46,
+        "improvement": -0.6106643676757812
+      },
+      {
+        "rank": 16,
+        "driver": "GAS",
+        "team": "Alpine",
+        "fp3_time": 78.412,
+        "predicted_time": 77.49272918701172,
+        "actual_q_time": 77.546,
+        "improvement": -0.9192733764648438
+      },
+      {
+        "rank": 17,
+        "driver": "ALB",
+        "team": "Williams",
+        "fp3_time": 77.994,
+        "predicted_time": 77.54913330078125,
+        "actual_q_time": 77.49,
+        "improvement": -0.4448699951171875
+      },
+      {
+        "rank": 18,
+        "driver": "HUL",
+        "team": "Kick Sauber",
+        "fp3_time": 77.664,
+        "predicted_time": 77.6113510131836,
+        "actual_q_time": 77.016,
+        "improvement": -0.05265045166015625
+      },
+      {
+        "rank": 19,
+        "driver": "ALO",
+        "team": "Aston Martin",
+        "fp3_time": 78.611,
+        "predicted_time": 77.84280395507812,
+        "actual_q_time": 77.103,
+        "improvement": -0.7681961059570312
+      },
+      {
+        "rank": 20,
+        "driver": "COL",
+        "team": "Alpine",
+        "fp3_time": 78.581,
+        "predicted_time": 77.86621856689453,
+        "actual_q_time": 77.67,
+        "improvement": -0.71478271484375
+      }
+    ],
+    "file_info": {
+      "file_path": "json\\qualifying_prediction_2025_Mexico.json",
+      "file_name": "qualifying_prediction_2025_Mexico.json",
+      "file_size_mb": 0.0,
+      "modified_time": "2025-11-05T20:39:32.655804",
+      "created_time": "2025-11-05T18:42:11.142216",
+      "is_recent": true
+    },
+    "cache_info": {
+      "cache_hit": true,
+      "match_type": "exact_match",
+      "response_source": "json_cache",
+      "cache_timestamp": "2025-11-05T20:57:58.307352",
+      "match_description": "完全匹配 - 所有參數完全符合"
+    }
+  },
+  "source": "cache",
+  "execution_time": "0.009s",
+  "request_id": "req_4d846cb45b",
+  "timestamp": "2025-11-05T20:57:58.307644",
+  "function_spec": {
+    "function_id": "74",
+    "name": "Qualifying Prediction Generator (v3.8)",
+    "description": "Generates qualifying predictions using trained v3.8 models. Loads FP3 data, extracts features, predicts Q times, and outputs JSON file to json/qualifying_prediction_{year}_{race}.json",
+    "required_params": [
+      "year",
+      "race"
+    ],
+    "optional_params": [],
+    "cli_flag_map": {
+      "year": "-y",
+      "race": "-r"
+    },
+    "cache_patterns": [
+      "qualifying_prediction"
+    ],
+    "notes": "CLI function -f 74 generates qualifying predictions JSON. Session is fixed to 'Q'. Requires pre-trained v3.8 model for the specified track (run -f 73 first). GUI module reads the generated JSON for display.",
+    "aliases": []
+  },
+  "runtime": {
+    "busy": false,
+    "active_task_count": 0,
+    "queue_length": 0,
+    "estimated_completion_seconds": null,
+    "max_concurrency": 1,
+    "active_tasks": [],
+    "metrics": {
+      "total_requests": 72,
+      "cache_hits": 71,
+      "cache_hit_rate": 0.986,
+      "cli_runs": 0,
+      "failures": 0,
+      "avg_execution_seconds": null,
+      "last_execution_seconds": 0.009,
+      "last_request_id": "req_4d846cb45b",
+      "last_completed_request": "req_4d846cb45b",
+      "last_completed_source": "cache"
+    },
+    "recent_history": [
+      {
+        "request_id": "req_b2d6566092",
+        "function_id": "97",
+        "completed_at": "2025-11-05T20:48:41.396212",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_063f81b30d",
+        "function_id": "74",
+        "completed_at": "2025-11-05T20:49:28.671587",
+        "duration_seconds": 0.008,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_805e8ab9ac",
+        "function_id": "74",
+        "completed_at": "2025-11-05T20:49:28.947447",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_9f40e2082a",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:53:48.701149",
+        "duration_seconds": 1.132,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_d7e90a5a72",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:53:51.638784",
+        "duration_seconds": 1.101,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_9dd5698d60",
+        "function_id": "98",
+        "completed_at": "2025-11-05T20:53:53.357158",
+        "duration_seconds": 0.006,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_4b528d97f1",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:54:17.231144",
+        "duration_seconds": 1.12,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_27ec107bc9",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:54:20.235109",
+        "duration_seconds": 1.163,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_5ae9951958",
+        "function_id": "98",
+        "completed_at": "2025-11-05T20:54:21.978224",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_8170a24c8b",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:55:14.370257",
+        "duration_seconds": 1.181,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_53dc599d3d",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:55:17.032596",
+        "duration_seconds": 1.132,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_d2ce4616eb",
+        "function_id": "98",
+        "completed_at": "2025-11-05T20:55:18.787230",
+        "duration_seconds": 0.009,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_7a2b361fd1",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:56:20.062646",
+        "duration_seconds": 1.296,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_c6c9b24936",
+        "function_id": "28",
+        "completed_at": "2025-11-05T20:56:22.990537",
+        "duration_seconds": 1.123,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_fabf1fe5bd",
+        "function_id": "98",
+        "completed_at": "2025-11-05T20:56:24.702793",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_2d864ebf22",
+        "function_id": "98",
+        "completed_at": "2025-11-05T20:56:31.808391",
+        "duration_seconds": 0.006,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_f8eb6b4dff",
+        "function_id": "99",
+        "completed_at": "2025-11-05T20:56:32.935546",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_b667fa9de4",
+        "function_id": "97",
+        "completed_at": "2025-11-05T20:56:34.103954",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_b367abbf1e",
+        "function_id": "96",
+        "completed_at": "2025-11-05T20:56:34.120344",
+        "duration_seconds": 0.013,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_4517880838",
+        "function_id": "97",
+        "completed_at": "2025-11-05T20:56:34.133263",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_089acfc9e3",
+        "function_id": "97",
+        "completed_at": "2025-11-05T20:56:34.161322",
+        "duration_seconds": 0.007,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_47a4ea1b7d",
+        "function_id": "97",
+        "completed_at": "2025-11-05T20:56:34.385912",
+        "duration_seconds": 0.009,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_3c930fba0e",
+        "function_id": "74",
+        "completed_at": "2025-11-05T20:56:39.559521",
+        "duration_seconds": 0.006,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_66b1112721",
+        "function_id": "74",
+        "completed_at": "2025-11-05T20:56:39.567067",
+        "duration_seconds": 0.006,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      },
+      {
+        "request_id": "req_4d846cb45b",
+        "function_id": "74",
+        "completed_at": "2025-11-05T20:57:58.307633",
+        "duration_seconds": 0.009,
+        "success": true,
+        "source": "cache",
+        "message": "cache_hit"
+      }
+    ]
+  }
+}

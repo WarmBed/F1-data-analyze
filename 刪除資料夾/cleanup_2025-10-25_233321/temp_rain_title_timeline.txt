@@ -1,0 +1,71 @@
+﻿
+2025-10-23 00:02:28 | INFO | f1.gui.main | 圈速控制 - [10/15] 更新視窗: 🌧️ Rain Analysis_
+2025_Australia_R (類型: rain_weather)
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_United States_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_United States_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')...
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')...
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.gui.main | 圈速控制 - [15/15] 更新視窗: 🌧️ Rain Analysis_
+2025_Australia_R (類型: rain_weather)
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')...
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 當前 MDI 視窗標題: '🌧️ R
+ain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 新標題: '🌧️ Rain Anal
+ysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 準備調用: parent.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 舊標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 新標題: '🌧️ Rain Analysis_2
+025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 準備調用 QMdiSubWindow.setWin
+dowTitle('🌧️ Rain Analysis_2025_Australia_R')...
+2025-10-23 00:02:28 | INFO | f1.console | 🔔 [MDI_TITLE] 驗證: windowTitle() 返回 '🌧️
+ Rain Analysis_2025_Australia_R'
+2025-10-23 00:02:28 | INFO | f1.console | 📝 [RAIN_MODULE]   - 調用後 MDI 視窗標題: '🌧️ 
+Rain Analysis_2025_Australia_R'
+
+

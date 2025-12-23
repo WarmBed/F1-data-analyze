@@ -1,0 +1,749 @@
+{
+  "circuit_id": "nl-1948",
+  "basic_info": {
+    "name": "Circuit Zandvoort",
+    "location": "Zandvoort",
+    "country": "NL",
+    "length_meters": 4259,
+    "opened_year": 1948,
+    "first_gp_year": null,
+    "reference_altitude": 3
+  },
+  "coordinates": [
+    {
+      "lon": 4.540491,
+      "lat": 52.388408,
+      "elevation": 6.0,
+      "distance_km": 0.0
+    },
+    {
+      "lon": 4.542096,
+      "lat": 52.390776,
+      "elevation": 6.0,
+      "distance_km": 0.284
+    },
+    {
+      "lon": 4.542706,
+      "lat": 52.391645,
+      "elevation": 6.0,
+      "distance_km": 0.389
+    },
+    {
+      "lon": 4.542844,
+      "lat": 52.391741,
+      "elevation": 9.0,
+      "distance_km": 0.404
+    },
+    {
+      "lon": 4.543031,
+      "lat": 52.391795,
+      "elevation": 9.0,
+      "distance_km": 0.418
+    },
+    {
+      "lon": 4.543235,
+      "lat": 52.391811,
+      "elevation": 9.0,
+      "distance_km": 0.432
+    },
+    {
+      "lon": 4.543424,
+      "lat": 52.391787,
+      "elevation": 9.0,
+      "distance_km": 0.445
+    },
+    {
+      "lon": 4.543602,
+      "lat": 52.391713,
+      "elevation": 9.0,
+      "distance_km": 0.459
+    },
+    {
+      "lon": 4.543726,
+      "lat": 52.39162,
+      "elevation": 6.0,
+      "distance_km": 0.472
+    },
+    {
+      "lon": 4.543792,
+      "lat": 52.391504,
+      "elevation": 6.0,
+      "distance_km": 0.486
+    },
+    {
+      "lon": 4.543797,
+      "lat": 52.391375,
+      "elevation": 6.0,
+      "distance_km": 0.5
+    },
+    {
+      "lon": 4.54362,
+      "lat": 52.391124,
+      "elevation": 6.0,
+      "distance_km": 0.531
+    },
+    {
+      "lon": 4.543111,
+      "lat": 52.390368,
+      "elevation": 6.0,
+      "distance_km": 0.621
+    },
+    {
+      "lon": 4.542947,
+      "lat": 52.390016,
+      "elevation": 6.0,
+      "distance_km": 0.662
+    },
+    {
+      "lon": 4.542881,
+      "lat": 52.389649,
+      "elevation": 6.0,
+      "distance_km": 0.703
+    },
+    {
+      "lon": 4.542916,
+      "lat": 52.389305,
+      "elevation": 6.0,
+      "distance_km": 0.741
+    },
+    {
+      "lon": 4.542863,
+      "lat": 52.389165,
+      "elevation": 6.0,
+      "distance_km": 0.757
+    },
+    {
+      "lon": 4.542738,
+      "lat": 52.389071,
+      "elevation": 6.0,
+      "distance_km": 0.771
+    },
+    {
+      "lon": 4.542488,
+      "lat": 52.388947,
+      "elevation": 6.0,
+      "distance_km": 0.793
+    },
+    {
+      "lon": 4.542219,
+      "lat": 52.388882,
+      "elevation": 6.0,
+      "distance_km": 0.812
+    },
+    {
+      "lon": 4.541476,
+      "lat": 52.388705,
+      "elevation": 6.0,
+      "distance_km": 0.866
+    },
+    {
+      "lon": 4.541285,
+      "lat": 52.388617,
+      "elevation": 6.0,
+      "distance_km": 0.882
+    },
+    {
+      "lon": 4.541233,
+      "lat": 52.388487,
+      "elevation": 6.0,
+      "distance_km": 0.897
+    },
+    {
+      "lon": 4.541226,
+      "lat": 52.38837,
+      "elevation": 6.0,
+      "distance_km": 0.91
+    },
+    {
+      "lon": 4.541303,
+      "lat": 52.388251,
+      "elevation": 6.0,
+      "distance_km": 0.924
+    },
+    {
+      "lon": 4.541447,
+      "lat": 52.388166,
+      "elevation": 6.0,
+      "distance_km": 0.938
+    },
+    {
+      "lon": 4.541627,
+      "lat": 52.388121,
+      "elevation": 6.0,
+      "distance_km": 0.951
+    },
+    {
+      "lon": 4.541903,
+      "lat": 52.388125,
+      "elevation": 6.0,
+      "distance_km": 0.97
+    },
+    {
+      "lon": 4.543264,
+      "lat": 52.38839,
+      "elevation": 6.0,
+      "distance_km": 1.067
+    },
+    {
+      "lon": 4.543896,
+      "lat": 52.388462,
+      "elevation": 7.0,
+      "distance_km": 1.11
+    },
+    {
+      "lon": 4.544441,
+      "lat": 52.388473,
+      "elevation": 7.0,
+      "distance_km": 1.147
+    },
+    {
+      "lon": 4.544923,
+      "lat": 52.388451,
+      "elevation": 7.0,
+      "distance_km": 1.18
+    },
+    {
+      "lon": 4.545379,
+      "lat": 52.388404,
+      "elevation": 7.0,
+      "distance_km": 1.211
+    },
+    {
+      "lon": 4.545704,
+      "lat": 52.388343,
+      "elevation": 7.0,
+      "distance_km": 1.234
+    },
+    {
+      "lon": 4.546236,
+      "lat": 52.388274,
+      "elevation": 4.0,
+      "distance_km": 1.271
+    },
+    {
+      "lon": 4.546727,
+      "lat": 52.388248,
+      "elevation": 4.0,
+      "distance_km": 1.305
+    },
+    {
+      "lon": 4.547075,
+      "lat": 52.388292,
+      "elevation": 4.0,
+      "distance_km": 1.329
+    },
+    {
+      "lon": 4.547494,
+      "lat": 52.388359,
+      "elevation": 4.0,
+      "distance_km": 1.358
+    },
+    {
+      "lon": 4.547998,
+      "lat": 52.388514,
+      "elevation": 4.0,
+      "distance_km": 1.396
+    },
+    {
+      "lon": 4.54859,
+      "lat": 52.38875,
+      "elevation": 4.0,
+      "distance_km": 1.444
+    },
+    {
+      "lon": 4.548991,
+      "lat": 52.388866,
+      "elevation": 4.0,
+      "distance_km": 1.474
+    },
+    {
+      "lon": 4.549348,
+      "lat": 52.388929,
+      "elevation": 4.0,
+      "distance_km": 1.499
+    },
+    {
+      "lon": 4.549819,
+      "lat": 52.388961,
+      "elevation": 4.0,
+      "distance_km": 1.531
+    },
+    {
+      "lon": 4.55019,
+      "lat": 52.388956,
+      "elevation": 8.0,
+      "distance_km": 1.557
+    },
+    {
+      "lon": 4.551737,
+      "lat": 52.388898,
+      "elevation": 8.0,
+      "distance_km": 1.662
+    },
+    {
+      "lon": 4.552094,
+      "lat": 52.388848,
+      "elevation": 7.0,
+      "distance_km": 1.686
+    },
+    {
+      "lon": 4.552425,
+      "lat": 52.388747,
+      "elevation": 7.0,
+      "distance_km": 1.711
+    },
+    {
+      "lon": 4.55266,
+      "lat": 52.388624,
+      "elevation": 7.0,
+      "distance_km": 1.732
+    },
+    {
+      "lon": 4.552811,
+      "lat": 52.388493,
+      "elevation": 7.0,
+      "distance_km": 1.75
+    },
+    {
+      "lon": 4.552958,
+      "lat": 52.388343,
+      "elevation": 7.0,
+      "distance_km": 1.77
+    },
+    {
+      "lon": 4.553036,
+      "lat": 52.38817,
+      "elevation": 7.0,
+      "distance_km": 1.789
+    },
+    {
+      "lon": 4.553061,
+      "lat": 52.387987,
+      "elevation": 7.0,
+      "distance_km": 1.81
+    },
+    {
+      "lon": 4.553033,
+      "lat": 52.387808,
+      "elevation": 7.0,
+      "distance_km": 1.83
+    },
+    {
+      "lon": 4.552947,
+      "lat": 52.387626,
+      "elevation": 7.0,
+      "distance_km": 1.851
+    },
+    {
+      "lon": 4.552761,
+      "lat": 52.387428,
+      "elevation": 7.0,
+      "distance_km": 1.876
+    },
+    {
+      "lon": 4.55205,
+      "lat": 52.386836,
+      "elevation": 6.0,
+      "distance_km": 1.958
+    },
+    {
+      "lon": 4.551788,
+      "lat": 52.386573,
+      "elevation": 6.0,
+      "distance_km": 1.992
+    },
+    {
+      "lon": 4.551194,
+      "lat": 52.38579,
+      "elevation": 6.0,
+      "distance_km": 2.088
+    },
+    {
+      "lon": 4.550909,
+      "lat": 52.385729,
+      "elevation": 6.0,
+      "distance_km": 2.108
+    },
+    {
+      "lon": 4.550557,
+      "lat": 52.385704,
+      "elevation": 6.0,
+      "distance_km": 2.132
+    },
+    {
+      "lon": 4.55022,
+      "lat": 52.385714,
+      "elevation": 6.0,
+      "distance_km": 2.155
+    },
+    {
+      "lon": 4.549823,
+      "lat": 52.385755,
+      "elevation": 4.0,
+      "distance_km": 2.182
+    },
+    {
+      "lon": 4.549411,
+      "lat": 52.385841,
+      "elevation": 4.0,
+      "distance_km": 2.212
+    },
+    {
+      "lon": 4.54897,
+      "lat": 52.38597,
+      "elevation": 4.0,
+      "distance_km": 2.245
+    },
+    {
+      "lon": 4.548533,
+      "lat": 52.38616,
+      "elevation": 4.0,
+      "distance_km": 2.281
+    },
+    {
+      "lon": 4.548263,
+      "lat": 52.386343,
+      "elevation": 4.0,
+      "distance_km": 2.309
+    },
+    {
+      "lon": 4.548214,
+      "lat": 52.386455,
+      "elevation": 4.0,
+      "distance_km": 2.321
+    },
+    {
+      "lon": 4.548257,
+      "lat": 52.386573,
+      "elevation": 4.0,
+      "distance_km": 2.335
+    },
+    {
+      "lon": 4.548425,
+      "lat": 52.386721,
+      "elevation": 4.0,
+      "distance_km": 2.355
+    },
+    {
+      "lon": 4.548665,
+      "lat": 52.386815,
+      "elevation": 4.0,
+      "distance_km": 2.374
+    },
+    {
+      "lon": 4.549018,
+      "lat": 52.386894,
+      "elevation": 4.0,
+      "distance_km": 2.4
+    },
+    {
+      "lon": 4.549621,
+      "lat": 52.386952,
+      "elevation": 4.0,
+      "distance_km": 2.441
+    },
+    {
+      "lon": 4.550202,
+      "lat": 52.387041,
+      "elevation": 6.0,
+      "distance_km": 2.482
+    },
+    {
+      "lon": 4.550732,
+      "lat": 52.387165,
+      "elevation": 6.0,
+      "distance_km": 2.52
+    },
+    {
+      "lon": 4.551025,
+      "lat": 52.387291,
+      "elevation": 6.0,
+      "distance_km": 2.544
+    },
+    {
+      "lon": 4.551136,
+      "lat": 52.387442,
+      "elevation": 6.0,
+      "distance_km": 2.563
+    },
+    {
+      "lon": 4.551151,
+      "lat": 52.387607,
+      "elevation": 8.0,
+      "distance_km": 2.581
+    },
+    {
+      "lon": 4.551056,
+      "lat": 52.387771,
+      "elevation": 8.0,
+      "distance_km": 2.6
+    },
+    {
+      "lon": 4.550811,
+      "lat": 52.38792,
+      "elevation": 8.0,
+      "distance_km": 2.624
+    },
+    {
+      "lon": 4.550591,
+      "lat": 52.387967,
+      "elevation": 8.0,
+      "distance_km": 2.64
+    },
+    {
+      "lon": 4.549448,
+      "lat": 52.388052,
+      "elevation": 4.0,
+      "distance_km": 2.718
+    },
+    {
+      "lon": 4.548297,
+      "lat": 52.38805,
+      "elevation": 4.0,
+      "distance_km": 2.795
+    },
+    {
+      "lon": 4.547074,
+      "lat": 52.38796,
+      "elevation": 4.0,
+      "distance_km": 2.879
+    },
+    {
+      "lon": 4.54604,
+      "lat": 52.387801,
+      "elevation": 4.0,
+      "distance_km": 2.951
+    },
+    {
+      "lon": 4.5454,
+      "lat": 52.387678,
+      "elevation": 7.0,
+      "distance_km": 2.997
+    },
+    {
+      "lon": 4.544694,
+      "lat": 52.387518,
+      "elevation": 7.0,
+      "distance_km": 3.048
+    },
+    {
+      "lon": 4.544019,
+      "lat": 52.387343,
+      "elevation": 7.0,
+      "distance_km": 3.097
+    },
+    {
+      "lon": 4.543469,
+      "lat": 52.387144,
+      "elevation": 4.0,
+      "distance_km": 3.141
+    },
+    {
+      "lon": 4.543267,
+      "lat": 52.387091,
+      "elevation": 4.0,
+      "distance_km": 3.156
+    },
+    {
+      "lon": 4.543123,
+      "lat": 52.387108,
+      "elevation": 4.0,
+      "distance_km": 3.165
+    },
+    {
+      "lon": 4.542988,
+      "lat": 52.387222,
+      "elevation": 4.0,
+      "distance_km": 3.181
+    },
+    {
+      "lon": 4.542844,
+      "lat": 52.387388,
+      "elevation": 4.0,
+      "distance_km": 3.202
+    },
+    {
+      "lon": 4.542646,
+      "lat": 52.387463,
+      "elevation": 4.0,
+      "distance_km": 3.218
+    },
+    {
+      "lon": 4.542392,
+      "lat": 52.387469,
+      "elevation": 4.0,
+      "distance_km": 3.235
+    },
+    {
+      "lon": 4.542144,
+      "lat": 52.387398,
+      "elevation": 4.0,
+      "distance_km": 3.254
+    },
+    {
+      "lon": 4.542012,
+      "lat": 52.387289,
+      "elevation": 4.0,
+      "distance_km": 3.269
+    },
+    {
+      "lon": 4.541951,
+      "lat": 52.387172,
+      "elevation": 4.0,
+      "distance_km": 3.282
+    },
+    {
+      "lon": 4.542012,
+      "lat": 52.386934,
+      "elevation": 4.0,
+      "distance_km": 3.309
+    },
+    {
+      "lon": 4.542566,
+      "lat": 52.38496,
+      "elevation": 6.0,
+      "distance_km": 3.531
+    },
+    {
+      "lon": 4.542578,
+      "lat": 52.384828,
+      "elevation": 6.0,
+      "distance_km": 3.546
+    },
+    {
+      "lon": 4.542517,
+      "lat": 52.384693,
+      "elevation": 6.0,
+      "distance_km": 3.561
+    },
+    {
+      "lon": 4.542419,
+      "lat": 52.384579,
+      "elevation": 6.0,
+      "distance_km": 3.576
+    },
+    {
+      "lon": 4.542324,
+      "lat": 52.384506,
+      "elevation": 6.0,
+      "distance_km": 3.586
+    },
+    {
+      "lon": 4.542089,
+      "lat": 52.384409,
+      "elevation": 6.0,
+      "distance_km": 3.605
+    },
+    {
+      "lon": 4.541838,
+      "lat": 52.384374,
+      "elevation": 6.0,
+      "distance_km": 3.623
+    },
+    {
+      "lon": 4.540774,
+      "lat": 52.384363,
+      "elevation": 6.0,
+      "distance_km": 3.695
+    },
+    {
+      "lon": 4.540557,
+      "lat": 52.38437,
+      "elevation": 6.0,
+      "distance_km": 3.71
+    },
+    {
+      "lon": 4.540241,
+      "lat": 52.3844,
+      "elevation": 6.0,
+      "distance_km": 3.731
+    },
+    {
+      "lon": 4.539914,
+      "lat": 52.384465,
+      "elevation": 6.0,
+      "distance_km": 3.755
+    },
+    {
+      "lon": 4.539645,
+      "lat": 52.38454,
+      "elevation": 6.0,
+      "distance_km": 3.775
+    },
+    {
+      "lon": 4.539287,
+      "lat": 52.384712,
+      "elevation": 8.0,
+      "distance_km": 3.805
+    },
+    {
+      "lon": 4.539054,
+      "lat": 52.384902,
+      "elevation": 8.0,
+      "distance_km": 3.832
+    },
+    {
+      "lon": 4.538895,
+      "lat": 52.385065,
+      "elevation": 8.0,
+      "distance_km": 3.853
+    },
+    {
+      "lon": 4.538779,
+      "lat": 52.385285,
+      "elevation": 8.0,
+      "distance_km": 3.878
+    },
+    {
+      "lon": 4.538742,
+      "lat": 52.385478,
+      "elevation": 7.0,
+      "distance_km": 3.9
+    },
+    {
+      "lon": 4.538775,
+      "lat": 52.385793,
+      "elevation": 7.0,
+      "distance_km": 3.935
+    },
+    {
+      "lon": 4.538873,
+      "lat": 52.386017,
+      "elevation": 7.0,
+      "distance_km": 3.961
+    },
+    {
+      "lon": 4.540408,
+      "lat": 52.38829,
+      "elevation": 6.0,
+      "distance_km": 4.234
+    },
+    {
+      "lon": 4.540491,
+      "lat": 52.388408,
+      "elevation": 6.0,
+      "distance_km": 4.248
+    }
+  ],
+  "elevation_profile": {
+    "min_elevation": 4.0,
+    "max_elevation": 9.0,
+    "elevation_change": 5.0,
+    "avg_elevation": 5.9,
+    "max_elevation_point": {
+      "distance_km": 0.404,
+      "elevation": 9.0
+    },
+    "min_elevation_point": {
+      "distance_km": 1.271,
+      "elevation": 4.0
+    }
+  },
+  "metadata": {
+    "total_points": 119,
+    "valid_elevation_points": 119,
+    "track_length_calculated_km": 4.248,
+    "generated_timestamp": "2025-11-09T00:54:53.783746",
+    "data_source": "Open-Elevation API v1"
+  }
+}

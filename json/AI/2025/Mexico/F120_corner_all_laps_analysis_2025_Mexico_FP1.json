@@ -1,0 +1,1065 @@
+{
+  "success": true,
+  "function_id": "120",
+  "year": 2025,
+  "race": "Mexico",
+  "session": "FP1",
+  "analysis_type": "F120_corner_all_laps_analysis",
+  "selected_corners": {
+    "low_speed": {
+      "corner_number": 1,
+      "apex_distance": 0.0,
+      "avg_apex_speed": 0.0,
+      "angle": 26.961070822263267,
+      "x": 11549.390625,
+      "y": -620.4165039062495
+    },
+    "mid_speed": null,
+    "high_speed": null
+  },
+  "mode_a_unified": {
+    "mode": "unified",
+    "description": "所有有效圈統一分析（不區分燃油狀態）",
+    "total_drivers": 20,
+    "drivers": [
+      {
+        "driver": "BOR",
+        "total_laps": 28,
+        "filtering_summary": {
+          "pit_lap": 8,
+          "in_lap": 4
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 16,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "HAD",
+        "total_laps": 32,
+        "filtering_summary": {
+          "pit_lap": 12,
+          "in_lap": 6
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 14,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "ANT",
+        "total_laps": 35,
+        "filtering_summary": {
+          "pit_lap": 10,
+          "in_lap": 5
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 20,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "ALO",
+        "total_laps": 26,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 17,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "LEC",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 8,
+          "in_lap": 4
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 17,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "TSU",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 8,
+          "in_lap": 4
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 17,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "ALB",
+        "total_laps": 33,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 24,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "HUL",
+        "total_laps": 27,
+        "filtering_summary": {
+          "pit_lap": 10,
+          "in_lap": 5
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 12,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "OCO",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 8,
+          "in_lap": 4
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 17,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "CRA",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 20,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "LIN",
+        "total_laps": 26,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 17,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "FUO",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 8,
+          "in_lap": 4
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 17,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "IWA",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 12,
+          "in_lap": 6
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 11,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "COL",
+        "total_laps": 28,
+        "filtering_summary": {
+          "pit_lap": 13,
+          "in_lap": 6
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 9,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "BRO",
+        "total_laps": 31,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 22,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "HIR",
+        "total_laps": 27,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 18,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "ARO",
+        "total_laps": 29,
+        "filtering_summary": {
+          "pit_lap": 14,
+          "in_lap": 7
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 8,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "VES",
+        "total_laps": 32,
+        "filtering_summary": {
+          "pit_lap": 8,
+          "in_lap": 4
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 47.0,
+            "mean_speed": 47.0,
+            "std_dev": 0.0,
+            "q1": 47.0,
+            "q3": 47.0,
+            "iqr": 0.0,
+            "min_speed": 47.0,
+            "max_speed": 47.0,
+            "top3_avg": 47.0,
+            "bottom3_avg": 47.0,
+            "cv": 0.0,
+            "valid_laps": 20,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0
+            ],
+            "exit_speed_median": 47.0,
+            "exit_speed_mean": 47.0,
+            "exit_speeds_raw": [
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0,
+              47.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 47.0,
+            "apex_speed": 47.0
+          }
+        }
+      },
+      {
+        "driver": "PIA",
+        "total_laps": 31,
+        "filtering_summary": {
+          "pit_lap": 10,
+          "in_lap": 5
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 16,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      },
+      {
+        "driver": "OWA",
+        "total_laps": 30,
+        "filtering_summary": {
+          "pit_lap": 6,
+          "in_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_1": {
+            "median_speed": 0.0,
+            "mean_speed": 0.0,
+            "std_dev": 0.0,
+            "q1": 0.0,
+            "q3": 0.0,
+            "iqr": 0.0,
+            "min_speed": 0.0,
+            "max_speed": 0.0,
+            "top3_avg": 0.0,
+            "bottom3_avg": 0.0,
+            "cv": 0.0,
+            "valid_laps": 21,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 0,
+            "exit_50m_speed": 0,
+            "apex_speed": 0.0
+          }
+        }
+      }
+    ]
+  },
+  "mode_b_grouped": null
+}

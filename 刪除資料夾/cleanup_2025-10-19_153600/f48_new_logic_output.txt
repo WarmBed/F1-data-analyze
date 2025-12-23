@@ -1,0 +1,12 @@
+﻿python : C:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastf1\ap
+i.py:32: UserWarning: `fastf1.api` will be considered private in future releases and potent
+ially be removed or changed!
+位於 線路:1 字元:1
++ python f1_analysis_modular_main.py -f 48 -y 2025 -r Azerbaijan -s R - ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\mike2\...ved or changed!:String) [], 
+    RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  warnings.warn("`fastf1.api` will be considered private in future releases and "
+  VER: 最高速度 324.0 km/h @ 5485m  RUS: 最高速度 327.0 km/h @ 5505m [擴展範圍]  SAI: 最高速度 325.0 km/h @ 5560m [擴展範圍]  ANT: 最高速度 331.0 km/h @ 5527m [擴展範圍]  LAW: 最高速度 325.0 km/h @ 5502m [擴展範圍]  TSU: 最高速度 338.0 km/h @ 5670m [擴展範圍]  NOR: 最高速度 341.0 km/h @ 5685m [擴展範圍]  HAM: 最高速度 331.0 km/h @ 5597m [擴展範圍]  LEC: 最高速度 334.0 km/h @ 5600m [擴展範圍]  HAD: 最高速度 327.0 km/h @ 5566m [擴展範圍]  BOR: 最高速度 325.0 km/h @ 5640m [擴展範圍]  BEA: 最高速度 327.0 km/h @ 5597m [擴展範圍]  ALB: 最高速度 328.0 km/h @ 5552m [擴展範圍]  OCO: 最高速度 325.0 km/h @ 5618m [擴展範圍]  ALO: 最高速度 329.0 km/h @ 5508m [擴展範圍]  HUL: 最高速度 326.0 km/h @ 5607m [擴展範圍]  STR: 最高速度 324.0 km/h @ 5525m [擴展範圍]  GAS: 最高速度 329.0 km/h @ 5569m [擴展範圍]  COL: 最高速度 327.0 km/h @ 5483m

@@ -1,0 +1,43 @@
+{
+  "success": true,
+  "track": "Saudi Arabia",
+  "model_path": "models\\v3.6\\Saudi Arabia.pkl",
+  "best_cv_mae": 2.117778688742898,
+  "best_params": {
+    "n_estimators": 172,
+    "max_depth": 7,
+    "learning_rate": 0.01000272381573912,
+    "subsample": 0.8088454670410036,
+    "colsample_bytree": 0.9616298969324399,
+    "min_child_weight": 7,
+    "gamma": 0.29360060823723544,
+    "reg_alpha": 0.1062740435531288,
+    "reg_lambda": 0.6252620135233771
+  },
+  "n_samples": 55,
+  "n_trials": 500,
+  "duration_seconds": 64.375679,
+  "top_features": [
+    {
+      "feature": "high_speed_apex",
+      "importance": 0.37296628952026367
+    },
+    {
+      "feature": "mid_speed_apex",
+      "importance": 0.2638557553291321
+    },
+    {
+      "feature": "max_speed",
+      "importance": 0.122092604637146
+    },
+    {
+      "feature": "ideal_lap",
+      "importance": 0.10120237618684769
+    },
+    {
+      "feature": "low_speed_apex",
+      "importance": 0.053916048258543015
+    }
+  ],
+  "timestamp": "2025-11-03T23:12:05.221885"
+}

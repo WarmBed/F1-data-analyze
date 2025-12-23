@@ -1,0 +1,34 @@
+{
+  "success": true,
+  "function_id": "120",
+  "year": 2025,
+  "race": "Spain",
+  "session": "Q",
+  "analysis_type": "F120_corner_all_laps_analysis",
+  "selected_corners": {
+    "low_speed": null,
+    "mid_speed": {
+      "corner_number": 10,
+      "apex_distance": 3483.0815933979657,
+      "avg_apex_speed": 113.4,
+      "angle": -342.50296791471146,
+      "x": 1428.3820141701494,
+      "y": 2292.7810928036356
+    },
+    "high_speed": {
+      "corner_number": 6,
+      "apex_distance": 2349.1935345350958,
+      "avg_apex_speed": 245.21192762514283,
+      "angle": -49.40879337476423,
+      "x": -2919.047113239949,
+      "y": -5303.979987824779
+    }
+  },
+  "mode_a_unified": {
+    "mode": "unified",
+    "description": "所有有效圈統一分析（不區分燃油狀態）",
+    "total_drivers": 0,
+    "drivers": []
+  },
+  "mode_b_grouped": null
+}

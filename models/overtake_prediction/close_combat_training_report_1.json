@@ -1,0 +1,35 @@
+{
+  "model_type": "XGBClassifier",
+  "version": 1,
+  "trained_at": "2025-12-09T22:32:10.092762",
+  "features": [
+    "gap_seconds",
+    "gap_delta",
+    "is_catching",
+    "drs_available",
+    "attacker_tyre_compound",
+    "defender_tyre_compound",
+    "tyre_age_diff",
+    "track_status_green",
+    "attacker_position",
+    "race_progress",
+    "gap_trend_3lap",
+    "min_gap_last_5lap",
+    "consecutive_catching_laps"
+  ],
+  "metrics": {
+    "accuracy": 0.9819071461083295,
+    "precision": 0.6557377049180327,
+    "recall": 0.40609137055837563,
+    "f1_score": 0.5015673981191222,
+    "roc_auc": 0.9866876582170654,
+    "cv_mean_auc": 0.9846924361276923,
+    "cv_std_auc": 0.0009859702563097836
+  },
+  "sample_count": {
+    "total": 131820,
+    "train": 105456,
+    "test": 26364,
+    "positive": 2954
+  }
+}

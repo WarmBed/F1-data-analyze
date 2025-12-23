@@ -1,0 +1,136 @@
+======================================================================
+F1T Live Timing 性能分析報告 - PKL 載入階段
+生成時間: 2025-12-10 12:15:25
+======================================================================
+
+
+📊 累計時間排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:15:25 2025    reports\profiling\live_timing_pkl_loading_20251210_121517.prof
+
+         5110 function calls (5097 primitive calls) in 0.786 seconds
+
+   Ordered by: cumulative time
+   List reduced from 655 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        1    0.000    0.000    0.785    0.785 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:270(load_race)
+        1    0.000    0.000    0.772    0.772 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:200(download_and_cache)
+        1    0.000    0.000    0.771    0.771 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:293(_find_session_path)
+        1    0.000    0.000    0.771    0.771 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:286(list_meetings)
+        1    0.000    0.000    0.771    0.771 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:271(get_year_index)
+        1    0.000    0.000    0.770    0.770 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py:593(get)
+        1    0.000    0.000    0.770    0.770 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py:500(request)
+        1    0.000    0.000    0.768    0.768 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py:673(send)
+        1    0.000    0.000    0.766    0.766 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\adapters.py:613(send)
+        1    0.000    0.000    0.765    0.765 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:592(urlopen)
+        1    0.000    0.000    0.765    0.765 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:377(_make_request)
+        1    0.000    0.000    0.703    0.703 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:485(getresponse)
+        1    0.000    0.000    0.702    0.702 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\http\client.py:1384(getresponse)
+        1    0.000    0.000    0.702    0.702 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\http\client.py:324(begin)
+        4    0.000    0.000    0.701    0.175 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\socket.py:706(readinto)
+        4    0.000    0.000    0.701    0.175 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\ssl.py:1236(recv_into)
+        4    0.000    0.000    0.701    0.175 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\ssl.py:1094(read)
+        4    0.701    0.175    0.701    0.175 {method 'read' of '_ssl._SSLSocket' objects}
+        1    0.000    0.000    0.701    0.701 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\http\client.py:291(_read_status)
+       22    0.000    0.000    0.701    0.032 {method 'readline' of '_io.BufferedReader' objects}
+        1    0.000    0.000    0.061    0.061 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py:1085(_validate_conn)
+        1    0.000    0.000    0.061    0.061 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:669(connect)
+        1    0.000    0.000    0.054    0.054 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py:192(_new_conn)
+        1    0.000    0.000    0.054    0.054 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\util\connection.py:27(create_connection)
+        1    0.000    0.000    0.049    0.049 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\socket.py:959(getaddrinfo)
+        1    0.049    0.049    0.049    0.049 {built-in method _socket.getaddrinfo}
+        1    0.000    0.000    0.011    0.011 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:438(_load_from_legacy_json)
+        1    0.000    0.000    0.009    0.009 <frozen importlib._bootstrap>:1349(_find_and_load)
+        1    0.000    0.000    0.009    0.009 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)
+        1    0.000    0.000    0.009    0.009 <frozen importlib._bootstrap>:911(_load_unlocked)
+
+
+
+
+⏱️  總執行時間排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:15:25 2025    reports\profiling\live_timing_pkl_loading_20251210_121517.prof
+
+         5110 function calls (5097 primitive calls) in 0.786 seconds
+
+   Ordered by: internal time
+   List reduced from 655 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        4    0.701    0.175    0.701    0.175 {method 'read' of '_ssl._SSLSocket' objects}
+        1    0.049    0.049    0.049    0.049 {built-in method _socket.getaddrinfo}
+        1    0.007    0.007    0.007    0.007 {method 'do_handshake' of '_ssl._SSLSocket' objects}
+        1    0.004    0.004    0.004    0.004 {method 'connect' of '_socket.socket' objects}
+        1    0.003    0.003    0.003    0.003 {built-in method builtins.compile}
+        4    0.002    0.000    0.002    0.000 {built-in method nt._getfinalpathname}
+        1    0.001    0.001    0.001    0.001 {built-in method nt.open}
+        2    0.001    0.000    0.001    0.000 {built-in method _io.open_code}
+        2    0.001    0.000    0.001    0.000 {method '__exit__' of '_io._IOBase' objects}
+        1    0.001    0.001    0.001    0.001 {method 'write' of '_io.FileIO' objects}
+       10    0.001    0.000    0.001    0.000 {built-in method nt.stat}
+        1    0.001    0.001    0.001    0.001 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\json\decoder.py:343(raw_decode)
+        1    0.000    0.000    0.000    0.000 {built-in method nt.replace}
+        2    0.000    0.000    0.000    0.000 {built-in method winreg.OpenKey}
+        2    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:482(cache_from_source)
+        1    0.000    0.000    0.000    0.000 {built-in method marshal.dumps}
+  356/352    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+        1    0.000    0.000    0.000    0.000 {built-in method nt.mkdir}
+      351    0.000    0.000    0.000    0.000 {method 'lower' of 'str' objects}
+        3    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\util\url.py:227(_encode_invalid_chars)
+       76    0.000    0.000    0.000    0.000 {method 'decode' of 'bytes' objects}
+        6    0.000    0.000    0.000    0.000 D:\OneDrive\Code\F1-data-analyze\core\logger.py:458(_infer_log_level)
+        2    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\urllib\request.py:2505(getproxies_environment)
+        1    0.000    0.000    0.003    0.003 <frozen importlib._bootstrap_external>:195(_write_atomic)
+      156    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+        3    0.000    0.000    0.001    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\response.py:864(_raw_read)
+        5    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:96(_path_join)
+        7    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\pathlib.py:387(_parse_path)
+        1    0.000    0.000    0.000    0.000 {method 'write' of '_ssl._SSLSocket' objects}
+  298/297    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+
+
+
+
+🔢 調用次數排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:15:25 2025    reports\profiling\live_timing_pkl_loading_20251210_121517.prof
+
+         5110 function calls (5097 primitive calls) in 0.786 seconds
+
+   Ordered by: call count
+   List reduced from 655 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+  356/352    0.000    0.000    0.000    0.000 {built-in method builtins.isinstance}
+      351    0.000    0.000    0.000    0.000 {method 'lower' of 'str' objects}
+  298/297    0.000    0.000    0.000    0.000 {built-in method builtins.len}
+      156    0.000    0.000    0.000    0.000 {method 'startswith' of 'str' objects}
+      144    0.000    0.000    0.000    0.000 <frozen os>:732(__iter__)
+      144    0.000    0.000    0.000    0.000 <frozen _collections_abc>:868(__iter__)
+      124    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       84    0.000    0.000    0.000    0.000 {method 'get' of 'dict' objects}
+       78    0.000    0.000    0.000    0.000 {method 'join' of 'str' objects}
+       76    0.000    0.000    0.000    0.000 {method 'decode' of 'bytes' objects}
+       69    0.000    0.000    0.000    0.000 {built-in method builtins.ord}
+       58    0.000    0.000    0.000    0.000 {built-in method nt.fspath}
+    58/56    0.000    0.000    0.000    0.000 {method 'encode' of 'str' objects}
+       58    0.000    0.000    0.000    0.000 {method 'replace' of 'str' objects}
+       51    0.000    0.000    0.000    0.000 {built-in method sys.intern}
+       49    0.000    0.000    0.000    0.000 {built-in method builtins.hasattr}
+       44    0.000    0.000    0.000    0.000 {method 'match' of 're.Pattern' objects}
+       44    0.000    0.000    0.000    0.000 {method 'rstrip' of 'str' objects}
+       41    0.000    0.000    0.000    0.000 {built-in method __new__ of type object at 0x00007FFFEA7758F0}
+       40    0.000    0.000    0.000    0.000 {method 'split' of 'str' objects}
+       37    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\structures.py:46(__setitem__)
+       37    0.000    0.000    0.000    0.000 {built-in method builtins.any}
+       33    0.000    0.000    0.000    0.000 {method 'partition' of 'str' objects}
+       29    0.000    0.000    0.000    0.000 {method 'lstrip' of 'str' objects}
+       29    0.000    0.000    0.000    0.000 {method 'endswith' of 'str' objects}
+       28    0.000    0.000    0.000    0.000 {method 'find' of 'str' objects}
+       27    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\utils.py:52(_has_surrogates)
+       26    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\_policybase.py:289(_sanitize_header)
+       26    0.000    0.000    0.000    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\email\_policybase.py:319(header_fetch_parse)
+       26    0.000    0.000    0.000    0.000 <frozen abc>:117(__instancecheck__)
+
+

@@ -1,0 +1,727 @@
+{
+  "generated_at": "2025-10-11T10:09:55.177227+00:00",
+  "root": "C:/Users/mike2/OneDrive/Code/F1-data-analyze/modules/gui",
+  "summary": {
+    "module_count": 16,
+    "file_count": 147,
+    "line_count": 84331
+  },
+  "modules": [
+    {
+      "module": "accident_analysis",
+      "path": "gui/accident_analysis",
+      "file_count": 11,
+      "line_count": 10628,
+      "files": [
+        {
+          "relative_path": "accident_analysis/__init__.py",
+          "lines": 42
+        },
+        {
+          "relative_path": "accident_analysis/accident_analysis.py",
+          "lines": 380
+        },
+        {
+          "relative_path": "accident_analysis/accident_analysis_complete.py",
+          "lines": 3936
+        },
+        {
+          "relative_path": "accident_analysis/accident_analysis_mdi.py",
+          "lines": 2216
+        },
+        {
+          "relative_path": "accident_analysis/accident_analysis_mdi_simple.py",
+          "lines": 509
+        },
+        {
+          "relative_path": "accident_analysis/accident_data_manager.py",
+          "lines": 596
+        },
+        {
+          "relative_path": "accident_analysis/accident_statistics_summary.py",
+          "lines": 519
+        },
+        {
+          "relative_path": "accident_analysis/all_incidents_analysis.py",
+          "lines": 887
+        },
+        {
+          "relative_path": "accident_analysis/severity_distribution_analysis.py",
+          "lines": 628
+        },
+        {
+          "relative_path": "accident_analysis/special_incidents_analysis.py",
+          "lines": 425
+        },
+        {
+          "relative_path": "accident_analysis/team_risk_analysis.py",
+          "lines": 490
+        }
+      ]
+    },
+    {
+      "module": "base",
+      "path": "gui/base",
+      "file_count": 5,
+      "line_count": 3541,
+      "files": [
+        {
+          "relative_path": "base/__init__.py",
+          "lines": 30
+        },
+        {
+          "relative_path": "base/loading_indicator.py",
+          "lines": 179
+        },
+        {
+          "relative_path": "base/universal_analysis_mdi_base.py",
+          "lines": 1272
+        },
+        {
+          "relative_path": "base/universal_chart_widget_base.py",
+          "lines": 1297
+        },
+        {
+          "relative_path": "base/universal_data_loader_base.py",
+          "lines": 763
+        }
+      ]
+    },
+    {
+      "module": "driver_analysis",
+      "path": "gui/driver_analysis",
+      "file_count": 4,
+      "line_count": 1458,
+      "files": [
+        {
+          "relative_path": "driver_analysis/__init__.py",
+          "lines": 28
+        },
+        {
+          "relative_path": "driver_analysis/driver_comprehensive_full.py",
+          "lines": 1110
+        },
+        {
+          "relative_path": "driver_analysis/driver_statistics_overview.py",
+          "lines": 145
+        },
+        {
+          "relative_path": "driver_analysis/driver_telemetry_statistics.py",
+          "lines": 175
+        }
+      ]
+    },
+    {
+      "module": "driver_race",
+      "path": "gui/driver_race",
+      "file_count": 11,
+      "line_count": 7229,
+      "files": [
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/__init__.py",
+          "lines": 88
+        },
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/detailed_lap_options_dialog.py",
+          "lines": 326
+        },
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/driverlap_analysis_chart_widget.py",
+          "lines": 1361
+        },
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/driverlap_analysis_mdi.py",
+          "lines": 1324
+        },
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/driverlap_analysis_module.py",
+          "lines": 382
+        },
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/lap_filter_utils.py",
+          "lines": 206
+        },
+        {
+          "relative_path": "driver_race/detailed_lap_analysis/laptime_boxplot_widget.py",
+          "lines": 957
+        },
+        {
+          "relative_path": "driver_race/lap_box_plot_analysis/__init__.py",
+          "lines": 43
+        },
+        {
+          "relative_path": "driver_race/lap_box_plot_analysis/lap_box_plot_analysis_mdi.py",
+          "lines": 1307
+        },
+        {
+          "relative_path": "driver_race/lap_box_plot_analysis/lap_box_plot_analysis_module.py",
+          "lines": 542
+        },
+        {
+          "relative_path": "driver_race/lap_box_plot_analysis/lap_box_plot_chart_widget.py",
+          "lines": 693
+        }
+      ]
+    },
+    {
+      "module": "ideal_lap_analysis",
+      "path": "gui/ideal_lap_analysis",
+      "file_count": 26,
+      "line_count": 9928,
+      "files": [
+        {
+          "relative_path": "ideal_lap_analysis/__init__.py",
+          "lines": 31
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_options_dialog.py",
+          "lines": 339
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_ranking_table/__init__.py",
+          "lines": 21
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_ranking_table/ideal_lap_ranking_table_data_loader.py",
+          "lines": 443
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_ranking_table/ideal_lap_ranking_table_mdi.py",
+          "lines": 677
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_ranking_table/ideal_lap_ranking_table_module.py",
+          "lines": 425
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_ranking_table/ideal_lap_ranking_table_widget.py",
+          "lines": 596
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/__init__.py",
+          "lines": 37
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_data_loader.py",
+          "lines": 344
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_mdi.py",
+          "lines": 909
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_module.py",
+          "lines": 404
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_table_widget.py",
+          "lines": 330
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_widget.py",
+          "lines": 613
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_widget_NEW.py",
+          "lines": 681
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_widget_OLD.py",
+          "lines": 449
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_widget_V1_OLD.py",
+          "lines": 742
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/ideal_lap_sector_comparison_widget_V2_COMPACT.py",
+          "lines": 489
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_comparison/register_module.py",
+          "lines": 33
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/__init__.py",
+          "lines": 23
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/ideal_lap_sector_heatmap_data_loader.py",
+          "lines": 356
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/ideal_lap_sector_heatmap_mdi.py",
+          "lines": 738
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/ideal_lap_sector_heatmap_module.py",
+          "lines": 176
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/ideal_lap_sector_heatmap_widget.py",
+          "lines": 469
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/ideal_lap_sector_heatmap_widget_old.py",
+          "lines": 442
+        },
+        {
+          "relative_path": "ideal_lap_analysis/ideal_lap_sector_heatmap/register_module.py",
+          "lines": 28
+        },
+        {
+          "relative_path": "ideal_lap_analysis/shared_colors.py",
+          "lines": 133
+        }
+      ]
+    },
+    {
+      "module": "interfaces",
+      "path": "gui/interfaces",
+      "file_count": 3,
+      "line_count": 504,
+      "files": [
+        {
+          "relative_path": "interfaces/__init__.py",
+          "lines": 13
+        },
+        {
+          "relative_path": "interfaces/analysis_module.py",
+          "lines": 312
+        },
+        {
+          "relative_path": "interfaces/base_analysis_module_copy.py",
+          "lines": 179
+        }
+      ]
+    },
+    {
+      "module": "lap_analysis",
+      "path": "gui/lap_analysis",
+      "file_count": 47,
+      "line_count": 29456,
+      "files": [
+        {
+          "relative_path": "lap_analysis/Throttle_analysis/__init__.py",
+          "lines": 14
+        },
+        {
+          "relative_path": "lap_analysis/Throttle_analysis/throttle_analysis_chart_widget.py",
+          "lines": 1518
+        },
+        {
+          "relative_path": "lap_analysis/Throttle_analysis/throttle_analysis_data_loader.py",
+          "lines": 238
+        },
+        {
+          "relative_path": "lap_analysis/Throttle_analysis/throttle_analysis_mdi.py",
+          "lines": 1263
+        },
+        {
+          "relative_path": "lap_analysis/Throttle_analysis/throttle_analysis_mdi_new.py",
+          "lines": 1081
+        },
+        {
+          "relative_path": "lap_analysis/__init__.py",
+          "lines": 34
+        },
+        {
+          "relative_path": "lap_analysis/acceleration_analysis/__init__.py",
+          "lines": 14
+        },
+        {
+          "relative_path": "lap_analysis/acceleration_analysis/acceleration_analysis_chart_widget.py",
+          "lines": 1545
+        },
+        {
+          "relative_path": "lap_analysis/acceleration_analysis/acceleration_analysis_data_loader.py",
+          "lines": 244
+        },
+        {
+          "relative_path": "lap_analysis/acceleration_analysis/acceleration_analysis_mdi.py",
+          "lines": 1306
+        },
+        {
+          "relative_path": "lap_analysis/analysis_module_manager.py",
+          "lines": 283
+        },
+        {
+          "relative_path": "lap_analysis/brake_analysis/__init__.py",
+          "lines": 16
+        },
+        {
+          "relative_path": "lap_analysis/brake_analysis/brake_analysis_chart_widget.py",
+          "lines": 1498
+        },
+        {
+          "relative_path": "lap_analysis/brake_analysis/brake_analysis_data_loader.py",
+          "lines": 238
+        },
+        {
+          "relative_path": "lap_analysis/brake_analysis/brake_analysis_mdi.py",
+          "lines": 1356
+        },
+        {
+          "relative_path": "lap_analysis/brake_analysis_module.py",
+          "lines": 13
+        },
+        {
+          "relative_path": "lap_analysis/distancediff_analysis/__init__.py",
+          "lines": 14
+        },
+        {
+          "relative_path": "lap_analysis/distancediff_analysis/distancediff_analysis_chart_widget.py",
+          "lines": 1569
+        },
+        {
+          "relative_path": "lap_analysis/distancediff_analysis/distancediff_analysis_data_loader.py",
+          "lines": 244
+        },
+        {
+          "relative_path": "lap_analysis/distancediff_analysis/distancediff_analysis_mdi.py",
+          "lines": 1398
+        },
+        {
+          "relative_path": "lap_analysis/gear_analysis/__init__.py",
+          "lines": 14
+        },
+        {
+          "relative_path": "lap_analysis/gear_analysis/gear_analysis_chart_widget.py",
+          "lines": 1475
+        },
+        {
+          "relative_path": "lap_analysis/gear_analysis/gear_analysis_data_loader.py",
+          "lines": 238
+        },
+        {
+          "relative_path": "lap_analysis/gear_analysis/gear_analysis_mdi.py",
+          "lines": 1273
+        },
+        {
+          "relative_path": "lap_analysis/linkage/__init__.py",
+          "lines": 50
+        },
+        {
+          "relative_path": "lap_analysis/linkage/linkage_example.py",
+          "lines": 190
+        },
+        {
+          "relative_path": "lap_analysis/linkage/linkage_manager.py",
+          "lines": 208
+        },
+        {
+          "relative_path": "lap_analysis/linkage/linkage_mixin.py",
+          "lines": 311
+        },
+        {
+          "relative_path": "lap_analysis/linkage/linkage_ui.py",
+          "lines": 336
+        },
+        {
+          "relative_path": "lap_analysis/linkage/telemetry_generation_helper.py",
+          "lines": 137
+        },
+        {
+          "relative_path": "lap_analysis/rpm_analysis/__init__.py",
+          "lines": 14
+        },
+        {
+          "relative_path": "lap_analysis/rpm_analysis/rpm_analysis_chart_widget.py",
+          "lines": 1481
+        },
+        {
+          "relative_path": "lap_analysis/rpm_analysis/rpm_analysis_data_loader.py",
+          "lines": 238
+        },
+        {
+          "relative_path": "lap_analysis/rpm_analysis/rpm_analysis_mdi.py",
+          "lines": 1259
+        },
+        {
+          "relative_path": "lap_analysis/speed_analysis/__init__.py",
+          "lines": 16
+        },
+        {
+          "relative_path": "lap_analysis/speed_analysis/speed_analysis_chart_widget.py",
+          "lines": 1591
+        },
+        {
+          "relative_path": "lap_analysis/speed_analysis/speed_analysis_data_loader.py",
+          "lines": 238
+        },
+        {
+          "relative_path": "lap_analysis/speed_analysis/speed_analysis_mdi.py",
+          "lines": 1280
+        },
+        {
+          "relative_path": "lap_analysis/speed_analysis/straight_line_speed_loader.py",
+          "lines": 237
+        },
+        {
+          "relative_path": "lap_analysis/speed_analysis_module.py",
+          "lines": 15
+        },
+        {
+          "relative_path": "lap_analysis/speeddiff_analysis/__init__.py",
+          "lines": 14
+        },
+        {
+          "relative_path": "lap_analysis/speeddiff_analysis/speeddiff_analysis_chart_widget.py",
+          "lines": 1610
+        },
+        {
+          "relative_path": "lap_analysis/speeddiff_analysis/speeddiff_analysis_data_loader.py",
+          "lines": 244
+        },
+        {
+          "relative_path": "lap_analysis/speeddiff_analysis/speeddiff_analysis_mdi.py",
+          "lines": 1400
+        },
+        {
+          "relative_path": "lap_analysis/telemetry_data_loader_base.py",
+          "lines": 1545
+        },
+        {
+          "relative_path": "lap_analysis/telemetry_loader_example.py",
+          "lines": 145
+        },
+        {
+          "relative_path": "lap_analysis/throttle_analysis_module.py",
+          "lines": 11
+        }
+      ]
+    },
+    {
+      "module": "lap_box_plot_analysis",
+      "path": "gui/lap_box_plot_analysis",
+      "file_count": 4,
+      "line_count": 2583,
+      "files": [
+        {
+          "relative_path": "lap_box_plot_analysis/__init__.py",
+          "lines": 43
+        },
+        {
+          "relative_path": "lap_box_plot_analysis/lap_box_plot_analysis_mdi.py",
+          "lines": 1304
+        },
+        {
+          "relative_path": "lap_box_plot_analysis/lap_box_plot_analysis_module.py",
+          "lines": 542
+        },
+        {
+          "relative_path": "lap_box_plot_analysis/lap_box_plot_chart_widget.py",
+          "lines": 694
+        }
+      ]
+    },
+    {
+      "module": "pitstop_analysis",
+      "path": "gui/pitstop_analysis",
+      "file_count": 3,
+      "line_count": 3459,
+      "files": [
+        {
+          "relative_path": "pitstop_analysis/__init__.py",
+          "lines": 29
+        },
+        {
+          "relative_path": "pitstop_analysis/pitstop_analysis_complete.py",
+          "lines": 832
+        },
+        {
+          "relative_path": "pitstop_analysis/pitstop_analysis_mdi.py",
+          "lines": 2598
+        }
+      ]
+    },
+    {
+      "module": "rain_analysis",
+      "path": "gui/rain_analysis",
+      "file_count": 5,
+      "line_count": 2781,
+      "files": [
+        {
+          "relative_path": "rain_analysis/__init__.py",
+          "lines": 83
+        },
+        {
+          "relative_path": "rain_analysis/rain_analysis_chart_widget.py",
+          "lines": 1210
+        },
+        {
+          "relative_path": "rain_analysis/rain_analysis_mdi.py",
+          "lines": 931
+        },
+        {
+          "relative_path": "rain_analysis/rain_analysis_module.py",
+          "lines": 545
+        },
+        {
+          "relative_path": "rain_analysis/rain_analysis_universal.py",
+          "lines": 12
+        }
+      ]
+    },
+    {
+      "module": "settings",
+      "path": "gui/settings",
+      "file_count": 2,
+      "line_count": 315,
+      "files": [
+        {
+          "relative_path": "settings/__init__.py",
+          "lines": 1
+        },
+        {
+          "relative_path": "settings/system_settings_dialog.py",
+          "lines": 314
+        }
+      ]
+    },
+    {
+      "module": "shared",
+      "path": "gui/shared",
+      "file_count": 1,
+      "line_count": 413,
+      "files": [
+        {
+          "relative_path": "shared/season_calendar_provider.py",
+          "lines": 413
+        }
+      ]
+    },
+    {
+      "module": "themes",
+      "path": "gui/themes",
+      "file_count": 2,
+      "line_count": 455,
+      "files": [
+        {
+          "relative_path": "themes/__init__.py",
+          "lines": 16
+        },
+        {
+          "relative_path": "themes/color_palette_provider.py",
+          "lines": 439
+        }
+      ]
+    },
+    {
+      "module": "Throttle_analysis",
+      "path": "gui/Throttle_analysis",
+      "file_count": 13,
+      "line_count": 5044,
+      "files": [
+        {
+          "relative_path": "Throttle_analysis/throttle_analysis_options_dialog.py",
+          "lines": 243
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_box_plot_analysis/__init__.py",
+          "lines": 49
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_box_plot_analysis/throttle_box_plot_analysis_mdi.py",
+          "lines": 1129
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_box_plot_analysis/throttle_box_plot_analysis_module.py",
+          "lines": 215
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_box_plot_analysis/throttle_box_plot_chart_widget.py",
+          "lines": 476
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/__init__.py",
+          "lines": 31
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/lap_time_chart_widget.py",
+          "lines": 311
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/linked_chart_widget.py",
+          "lines": 259
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/signal_bus.py",
+          "lines": 29
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/throttle_duration_chart_widget.py",
+          "lines": 337
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/throttle_line_chart_data_loader.py",
+          "lines": 877
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/throttle_line_chart_mdi.py",
+          "lines": 891
+        },
+        {
+          "relative_path": "Throttle_analysis/throttle_line_chart_analysis/throttle_line_chart_module.py",
+          "lines": 197
+        }
+      ]
+    },
+    {
+      "module": "tire_analysis",
+      "path": "gui/tire_analysis",
+      "file_count": 4,
+      "line_count": 2443,
+      "files": [
+        {
+          "relative_path": "tire_analysis/__init__.py",
+          "lines": 83
+        },
+        {
+          "relative_path": "tire_analysis/tire_analysis_chart_widget.py",
+          "lines": 759
+        },
+        {
+          "relative_path": "tire_analysis/tire_analysis_mdi.py",
+          "lines": 1076
+        },
+        {
+          "relative_path": "tire_analysis/tire_analysis_module.py",
+          "lines": 525
+        }
+      ]
+    },
+    {
+      "module": "track_analysis",
+      "path": "gui/track_analysis",
+      "file_count": 6,
+      "line_count": 4094,
+      "files": [
+        {
+          "relative_path": "track_analysis/__init__.py",
+          "lines": 26
+        },
+        {
+          "relative_path": "track_analysis/track_analysis_mdi.py",
+          "lines": 1091
+        },
+        {
+          "relative_path": "track_analysis/track_analysis_module.py",
+          "lines": 1500
+        },
+        {
+          "relative_path": "track_analysis/track_data_loader.py",
+          "lines": 308
+        },
+        {
+          "relative_path": "track_analysis/track_data_processor.py",
+          "lines": 466
+        },
+        {
+          "relative_path": "track_analysis/track_map_widget.py",
+          "lines": 703
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,355 @@
+{
+  "team": "Red Bull",
+  "year": 2025,
+  "total_upgrades": 64,
+  "races": [
+    {
+      "race": "Unknown Race",
+      "date": "2025-10-22T10:03:31+01:00",
+      "title": "Red Bull again hint Verstappen will get more car upgrades for title push",
+      "upgrades": [
+        {
+          "team": "Red Bull",
+          "race": "Austrian Grand Prix",
+          "component": "Floor edge"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Floor body and fences"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Sidepod inlet"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Engine cover"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front suspension"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Rear wheel bodywork lower cascade"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front brake intake and exit duct"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Dutch Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Italian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Azerbaijan Grand Prix",
+          "component": "Inboard wing assembly"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Engine cover"
+        }
+      ]
+    },
+    {
+      "race": "Unknown Race",
+      "date": "2025-10-04T07:15:13+01:00",
+      "title": "Red Bull out-pacing rivals on development as 2026 rules switchover looms",
+      "upgrades": [
+        {
+          "team": "Red Bull",
+          "race": "Austrian Grand Prix",
+          "component": "Floor edge"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Floor body and fences"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Sidepod inlet"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Engine cover"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front suspension"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Rear wheel bodywork lower cascade"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front brake intake and exit duct"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Dutch Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Italian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Azerbaijan Grand Prix",
+          "component": "Inboard wing assembly"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Engine cover"
+        }
+      ]
+    },
+    {
+      "race": "Unknown Race",
+      "date": "2025-10-24T17:20:27+01:00",
+      "title": "Verstappen to benefit from four-part Red Bull car upgrade at Mexican GP",
+      "upgrades": [
+        {
+          "team": "Red Bull",
+          "race": "Austrian Grand Prix",
+          "component": "Floor edge"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Floor body and fences"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Sidepod inlet"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Engine cover"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front suspension"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Rear wheel bodywork lower cascade"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front brake intake and exit duct"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Dutch Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Italian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Azerbaijan Grand Prix",
+          "component": "Inboard wing assembly"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Engine cover"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Mexican Grand Prix",
+          "component": "Front brake ducts"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Mexican Grand Prix",
+          "component": "Engine cover"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Mexican Grand Prix",
+          "component": "Floor body"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Mexican Grand Prix",
+          "component": "Floor edge wing"
+        }
+      ]
+    },
+    {
+      "race": "Unknown Race",
+      "date": "2025-10-08T10:04:39+01:00",
+      "title": "“We have more coming” – Mekies hints Red Bull will continue late 2025 development push",
+      "upgrades": [
+        {
+          "team": "Red Bull",
+          "race": "Austrian Grand Prix",
+          "component": "Floor edge"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "British Grand Prix",
+          "component": "Floor body and fences"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Sidepod inlet"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Engine cover"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Front suspension"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Belgian Grand Prix",
+          "component": "Rear wheel bodywork lower cascade"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Hungarian Grand Prix",
+          "component": "Front brake intake and exit duct"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Dutch Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Italian Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Azerbaijan Grand Prix",
+          "component": "Inboard wing assembly"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Front wing"
+        },
+        {
+          "team": "Red Bull",
+          "race": "Singapore Grand Prix",
+          "component": "Engine cover"
+        }
+      ]
+    }
+  ]
+}

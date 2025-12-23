@@ -1,0 +1,371 @@
+{
+  "metadata": {
+    "version": "v3.3",
+    "training_period": "2022-2024",
+    "prediction_year": 2025,
+    "timestamp": "2025-11-03T13:28:24.999402"
+  },
+  "training_results": {
+    "Abu Dhabi": {
+      "race": "Abu Dhabi",
+      "r2_score": 0.9838084661863857,
+      "mae": 0.08826149633375253,
+      "n_samples": 59,
+      "feature_importance": {
+        "ideal_s1": 0.008572550490498543,
+        "ideal_s2": 0.1986313909292221,
+        "ideal_s3": 0.09542499482631683,
+        "ideal_lap": 0.5391092300415039,
+        "low_speed_apex": 0.018871422857046127,
+        "mid_speed_apex": 0.0314166359603405,
+        "high_speed_apex": 0.014333820901811123,
+        "max_speed": 0.02712203748524189,
+        "s1_s2_ratio": 0.02550998516380787,
+        "sector_cv": 0.012484882026910782,
+        "s2_lap_ratio": 0.028523126617074013
+      },
+      "model_path": "models\\track_specific_v3.3\\Abu Dhabi.pkl"
+    },
+    "Azerbaijan": {
+      "race": "Azerbaijan",
+      "r2_score": 0.99492907306488,
+      "mae": 0.060240965190686405,
+      "n_samples": 38,
+      "feature_importance": {
+        "ideal_s1": 0.3649774193763733,
+        "ideal_s2": 0.2334071397781372,
+        "ideal_s3": 0.04038524255156517,
+        "ideal_lap": 0.05665910243988037,
+        "low_speed_apex": 0.012502982281148434,
+        "mid_speed_apex": 0.09884169697761536,
+        "high_speed_apex": 0.05786861106753349,
+        "max_speed": 0.011953596957027912,
+        "s1_s2_ratio": 0.05696384608745575,
+        "sector_cv": 0.04146002233028412,
+        "s2_lap_ratio": 0.02498036064207554
+      },
+      "model_path": "models\\track_specific_v3.3\\Azerbaijan.pkl"
+    },
+    "Bahrain": {
+      "race": "Bahrain",
+      "r2_score": 0.9892992956228225,
+      "mae": 0.08529415841829965,
+      "n_samples": 59,
+      "feature_importance": {
+        "ideal_s1": 0.18064117431640625,
+        "ideal_s2": 0.03552508354187012,
+        "ideal_s3": 0.047246549278497696,
+        "ideal_lap": 0.5802358388900757,
+        "low_speed_apex": 0.018421104177832603,
+        "mid_speed_apex": 0.021218355745077133,
+        "high_speed_apex": 0.019044650718569756,
+        "max_speed": 0.024250533431768417,
+        "s1_s2_ratio": 0.014749577268958092,
+        "sector_cv": 0.02402452565729618,
+        "s2_lap_ratio": 0.034642674028873444
+      },
+      "model_path": "models\\track_specific_v3.3\\Bahrain.pkl"
+    },
+    "Canada": {
+      "race": "Canada",
+      "r2_score": 0.9847755004566513,
+      "mae": 0.69318378720041,
+      "n_samples": 59,
+      "feature_importance": {
+        "ideal_s1": 0.36119768023490906,
+        "ideal_s2": 0.029722413048148155,
+        "ideal_s3": 0.017283659428358078,
+        "ideal_lap": 0.03308281674981117,
+        "low_speed_apex": 0.027313943952322006,
+        "mid_speed_apex": 0.11054657399654388,
+        "high_speed_apex": 0.01877923682332039,
+        "max_speed": 0.20716993510723114,
+        "s1_s2_ratio": 0.01589861325919628,
+        "sector_cv": 0.13430099189281464,
+        "s2_lap_ratio": 0.04470409080386162
+      },
+      "model_path": "models\\track_specific_v3.3\\Canada.pkl"
+    },
+    "Dutch": {
+      "race": "Dutch",
+      "r2_score": 0.9932873822763147,
+      "mae": 0.26398450991981887,
+      "n_samples": 19,
+      "feature_importance": {
+        "ideal_s1": 0.004448167979717255,
+        "ideal_s2": 0.2854129672050476,
+        "ideal_s3": 0.08999980986118317,
+        "ideal_lap": 0.06514885276556015,
+        "low_speed_apex": 0.23587343096733093,
+        "mid_speed_apex": 0.08060070127248764,
+        "high_speed_apex": 0.022969046607613564,
+        "max_speed": 0.049177385866642,
+        "s1_s2_ratio": 0.06152215972542763,
+        "sector_cv": 0.023578207939863205,
+        "s2_lap_ratio": 0.08126933127641678
+      },
+      "model_path": "models\\track_specific_v3.3\\Dutch.pkl"
+    },
+    "France": {
+      "race": "France",
+      "r2_score": 0.9979871036376831,
+      "mae": 0.03061828613281179,
+      "n_samples": 20,
+      "feature_importance": {
+        "ideal_s1": 0.08437125384807587,
+        "ideal_s2": 0.02741594798862934,
+        "ideal_s3": 0.03064756654202938,
+        "ideal_lap": 0.7254567742347717,
+        "low_speed_apex": 0.02673662267625332,
+        "mid_speed_apex": 0.025838902220129967,
+        "high_speed_apex": 0.030442677438259125,
+        "max_speed": 0.0024504312314093113,
+        "s1_s2_ratio": 0.029123272746801376,
+        "sector_cv": 0.012435470707714558,
+        "s2_lap_ratio": 0.00508107477799058
+      },
+      "model_path": "models\\track_specific_v3.3\\France.pkl"
+    },
+    "Great Britain": {
+      "race": "Great Britain",
+      "r2_score": 0.9937091309921565,
+      "mae": 0.4886706433418482,
+      "n_samples": 39,
+      "feature_importance": {
+        "ideal_s1": 0.08892682194709778,
+        "ideal_s2": 0.047685857862234116,
+        "ideal_s3": 0.029943998903036118,
+        "ideal_lap": 0.012981726787984371,
+        "low_speed_apex": 0.0036338577046990395,
+        "mid_speed_apex": 0.19770118594169617,
+        "high_speed_apex": 0.03286178782582283,
+        "max_speed": 0.5549688935279846,
+        "s1_s2_ratio": 0.007161471527069807,
+        "sector_cv": 0.0020776353776454926,
+        "s2_lap_ratio": 0.02205681800842285
+      },
+      "model_path": "models\\track_specific_v3.3\\Great Britain.pkl"
+    },
+    "Hungary": {
+      "race": "Hungary",
+      "r2_score": 0.9685073448277904,
+      "mae": 0.17295306396484353,
+      "n_samples": 60,
+      "feature_importance": {
+        "ideal_s1": 0.02072136662900448,
+        "ideal_s2": 0.5221520662307739,
+        "ideal_s3": 0.04725144803524017,
+        "ideal_lap": 0.09472278505563736,
+        "low_speed_apex": 0.032325468957424164,
+        "mid_speed_apex": 0.05131043493747711,
+        "high_speed_apex": 0.029387179762125015,
+        "max_speed": 0.049635764211416245,
+        "s1_s2_ratio": 0.029066771268844604,
+        "sector_cv": 0.036481503397226334,
+        "s2_lap_ratio": 0.08694525063037872
+      },
+      "model_path": "models\\track_specific_v3.3\\Hungary.pkl"
+    },
+    "Italy": {
+      "race": "Italy",
+      "r2_score": 0.9877172484559669,
+      "mae": 0.08835888773600213,
+      "n_samples": 60,
+      "feature_importance": {
+        "ideal_s1": 0.018571173772215843,
+        "ideal_s2": 0.6264210939407349,
+        "ideal_s3": 0.10873527824878693,
+        "ideal_lap": 0.05097918584942818,
+        "low_speed_apex": 0.030028846114873886,
+        "mid_speed_apex": 0.016417130827903748,
+        "high_speed_apex": 0.00716378353536129,
+        "max_speed": 0.016778631135821342,
+        "s1_s2_ratio": 0.06054292246699333,
+        "sector_cv": 0.03790435940027237,
+        "s2_lap_ratio": 0.02645750902593136
+      },
+      "model_path": "models\\track_specific_v3.3\\Italy.pkl"
+    },
+    "Japan": {
+      "race": "Japan",
+      "r2_score": 0.9938822387789694,
+      "mae": 0.05517981370828924,
+      "n_samples": 59,
+      "feature_importance": {
+        "ideal_s1": 0.01267671212553978,
+        "ideal_s2": 0.01091606542468071,
+        "ideal_s3": 0.0559513084590435,
+        "ideal_lap": 0.7382264733314514,
+        "low_speed_apex": 0.04605492949485779,
+        "mid_speed_apex": 0.03490489721298218,
+        "high_speed_apex": 0.015681887045502663,
+        "max_speed": 0.013951010070741177,
+        "s1_s2_ratio": 0.029764672741293907,
+        "sector_cv": 0.011385279707610607,
+        "s2_lap_ratio": 0.030486728996038437
+      },
+      "model_path": "models\\track_specific_v3.3\\Japan.pkl"
+    },
+    "Las Vegas": {
+      "race": "Las Vegas",
+      "r2_score": 0.984834267753288,
+      "mae": 0.20478419342040938,
+      "n_samples": 40,
+      "feature_importance": {
+        "ideal_s1": 0.08927831053733826,
+        "ideal_s2": 0.04368433728814125,
+        "ideal_s3": 0.02228972502052784,
+        "ideal_lap": 0.0078049213625490665,
+        "low_speed_apex": 0.03756878152489662,
+        "mid_speed_apex": 0.6670905947685242,
+        "high_speed_apex": 0.04445475712418556,
+        "max_speed": 0.0055053988471627235,
+        "s1_s2_ratio": 0.03203076869249344,
+        "sector_cv": 0.02303156815469265,
+        "s2_lap_ratio": 0.02726094052195549
+      },
+      "model_path": "models\\track_specific_v3.3\\Las Vegas.pkl"
+    },
+    "Mexico": {
+      "race": "Mexico",
+      "r2_score": 0.9845174075812642,
+      "mae": 0.11081407954775077,
+      "n_samples": 58,
+      "feature_importance": {
+        "ideal_s1": 0.33441057801246643,
+        "ideal_s2": 0.2241218239068985,
+        "ideal_s3": 0.10972779244184494,
+        "ideal_lap": 0.05678696930408478,
+        "low_speed_apex": 0.02817225083708763,
+        "mid_speed_apex": 0.01847860962152481,
+        "high_speed_apex": 0.008821261115372181,
+        "max_speed": 0.030483264476060867,
+        "s1_s2_ratio": 0.15546725690364838,
+        "sector_cv": 0.01871267892420292,
+        "s2_lap_ratio": 0.014817489311099052
+      },
+      "model_path": "models\\track_specific_v3.3\\Mexico.pkl"
+    },
+    "Miami": {
+      "race": "Miami",
+      "r2_score": 0.9976438254163291,
+      "mae": 0.04731342961237937,
+      "n_samples": 39,
+      "feature_importance": {
+        "ideal_s1": 0.7014626264572144,
+        "ideal_s2": 0.043515000492334366,
+        "ideal_s3": 0.016367578878998756,
+        "ideal_lap": 0.15402595698833466,
+        "low_speed_apex": 0.014867381192743778,
+        "mid_speed_apex": 0.017077038064599037,
+        "high_speed_apex": 0.0038535099010914564,
+        "max_speed": 0.006815415807068348,
+        "s1_s2_ratio": 0.027893979102373123,
+        "sector_cv": 0.011139310896396637,
+        "s2_lap_ratio": 0.0029822862707078457
+      },
+      "model_path": "models\\track_specific_v3.3\\Miami.pkl"
+    },
+    "Monaco": {
+      "race": "Monaco",
+      "r2_score": 0.9812505480596764,
+      "mae": 0.11143037957660219,
+      "n_samples": 59,
+      "feature_importance": {
+        "ideal_s1": 0.10526039451360703,
+        "ideal_s2": 0.061534736305475235,
+        "ideal_s3": 0.04617307707667351,
+        "ideal_lap": 0.5526840686798096,
+        "low_speed_apex": 0.0255352184176445,
+        "mid_speed_apex": 0.06261829286813736,
+        "high_speed_apex": 0.015265194699168205,
+        "max_speed": 0.0196425411850214,
+        "s1_s2_ratio": 0.028688881546258926,
+        "sector_cv": 0.04992842301726341,
+        "s2_lap_ratio": 0.03266918659210205
+      },
+      "model_path": "models\\track_specific_v3.3\\Monaco.pkl"
+    },
+    "Netherlands": {
+      "race": "Netherlands",
+      "r2_score": 0.9875939125867461,
+      "mae": 0.29552640642438605,
+      "n_samples": 56,
+      "feature_importance": {
+        "ideal_s1": 0.03310350701212883,
+        "ideal_s2": 0.13053259253501892,
+        "ideal_s3": 0.29186779260635376,
+        "ideal_lap": 0.09279277175664902,
+        "low_speed_apex": 0.04697918891906738,
+        "mid_speed_apex": 0.14073726534843445,
+        "high_speed_apex": 0.06733760237693787,
+        "max_speed": 0.08897583931684494,
+        "s1_s2_ratio": 0.013106590136885643,
+        "sector_cv": 0.07678835093975067,
+        "s2_lap_ratio": 0.017778543755412102
+      },
+      "model_path": "models\\track_specific_v3.3\\Netherlands.pkl"
+    },
+    "Saudi Arabia": {
+      "race": "Saudi Arabia",
+      "r2_score": 0.9921414511602763,
+      "mae": 0.3009514648437491,
+      "n_samples": 55,
+      "feature_importance": {
+        "ideal_s1": 0.22928887605667114,
+        "ideal_s2": 0.016740210354328156,
+        "ideal_s3": 0.007271816022694111,
+        "ideal_lap": 0.027058815583586693,
+        "low_speed_apex": 0.005647327750921249,
+        "mid_speed_apex": 0.002738251583650708,
+        "high_speed_apex": 0.4410100281238556,
+        "max_speed": 0.2346169650554657,
+        "s1_s2_ratio": 0.009293108247220516,
+        "sector_cv": 0.024490604177117348,
+        "s2_lap_ratio": 0.0018440722487866879
+      },
+      "model_path": "models\\track_specific_v3.3\\Saudi Arabia.pkl"
+    },
+    "Singapore": {
+      "race": "Singapore",
+      "r2_score": 0.9993235586875939,
+      "mae": 0.1970666809082026,
+      "n_samples": 60,
+      "feature_importance": {
+        "ideal_s1": 0.9543877840042114,
+        "ideal_s2": 0.0039160121232271194,
+        "ideal_s3": 0.016594886779785156,
+        "ideal_lap": 0.0063018943183124065,
+        "low_speed_apex": 0.0029789682012051344,
+        "mid_speed_apex": 0.003966171760112047,
+        "high_speed_apex": 0.0028240664396435022,
+        "max_speed": 0.001095683197490871,
+        "s1_s2_ratio": 0.004981296136975288,
+        "sector_cv": 0.0015141932526603341,
+        "s2_lap_ratio": 0.0014391705626621842
+      },
+      "model_path": "models\\track_specific_v3.3\\Singapore.pkl"
+    },
+    "United States": {
+      "race": "United States",
+      "r2_score": 0.9988261584150505,
+      "mae": 0.026731607055663176,
+      "n_samples": 20,
+      "feature_importance": {
+        "ideal_s1": 0.003867850173264742,
+        "ideal_s2": 0.04515208303928375,
+        "ideal_s3": 0.026796404272317886,
+        "ideal_lap": 0.758277952671051,
+        "low_speed_apex": 0.033757284283638,
+        "mid_speed_apex": 0.008225133642554283,
+        "high_speed_apex": 0.016620229929685593,
+        "max_speed": 0.08125235140323639,
+        "s1_s2_ratio": 0.008013307116925716,
+        "sector_cv": 0.009742575697600842,
+        "s2_lap_ratio": 0.008294844068586826
+      },
+      "model_path": "models\\track_specific_v3.3\\United States.pkl"
+    }
+  },
+  "prediction_results": {}
+}

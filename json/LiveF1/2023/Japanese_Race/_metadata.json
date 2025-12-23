@@ -1,0 +1,101 @@
+{
+  "year": "2023",
+  "meeting": "Japanese Grand Prix",
+  "session": "Race",
+  "race_name": "Japanese",
+  "session_type": "Race",
+  "download_time": "2025-11-26T19:19:26.582010",
+  "streams": {
+    "Position.json": {
+      "status": "downloaded",
+      "records": 9340,
+      "size": 8571239
+    },
+    "TimingData.json": {
+      "status": "downloaded",
+      "records": 50079,
+      "size": 5218478
+    },
+    "CarData.json": {
+      "status": "downloaded",
+      "records": 9337,
+      "size": 7634271
+    },
+    "TimingAppData.json": {
+      "status": "downloaded",
+      "records": 889,
+      "size": 82257
+    },
+    "WeatherData.json": {
+      "status": "downloaded",
+      "records": 158,
+      "size": 22725
+    },
+    "RaceControlMessages.json": {
+      "status": "downloaded",
+      "records": 71,
+      "size": 12371
+    },
+    "TrackStatus.json": {
+      "status": "downloaded",
+      "records": 12,
+      "size": 591
+    },
+    "LapCount.json": {
+      "status": "downloaded",
+      "records": 53,
+      "size": 1652
+    },
+    "PitLaneTimeCollection.json": {
+      "status": "downloaded",
+      "records": 86,
+      "size": 5564
+    },
+    "DriverList.json": {
+      "status": "downloaded",
+      "records": 179,
+      "size": 16597
+    },
+    "SessionInfo.json": {
+      "status": "downloaded",
+      "records": 1,
+      "size": 470
+    },
+    "SessionData.json": {
+      "status": "downloaded",
+      "records": 69,
+      "size": 5505
+    },
+    "LapSeries.json": {
+      "status": "downloaded",
+      "records": 880,
+      "size": 42405
+    },
+    "TopThree.json": {
+      "status": "downloaded",
+      "records": 2868,
+      "size": 228303
+    },
+    "TimingStats.json": {
+      "status": "downloaded",
+      "records": 1004,
+      "size": 304876
+    },
+    "ExtrapolatedClock.json": {
+      "status": "downloaded",
+      "records": 2,
+      "size": 188
+    },
+    "TeamRadio.json": {
+      "status": "downloaded",
+      "records": 121,
+      "size": 20170
+    },
+    "TyreStintSeries.json": {
+      "status": "downloaded",
+      "records": 592,
+      "size": 46129
+    }
+  },
+  "total_records": 75741
+}

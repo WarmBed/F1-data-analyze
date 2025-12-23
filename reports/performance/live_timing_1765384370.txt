@@ -1,0 +1,127 @@
+====================================================================================================
+Live Timing 性能分析報告
+分析時長: 60 秒
+====================================================================================================
+
+         17395907 function calls (17380084 primitive calls) in 60.125 seconds
+
+   Ordered by: cumulative time
+   List reduced from 716 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      594    0.077    0.000   78.502    0.132 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\threading.py:641(wait)
+1799/1523    0.088    0.000   63.317    0.042 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\threading.py:327(wait)
+1407/1051    1.748    0.001   55.811    0.053 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\queue.py:180(get)
+2805/2234    0.070    0.000   25.972    0.012 {method 'emit' of 'PyQt5.QtCore.pyqtBoundSignal' objects}
+     5076    0.023    0.000   25.552    0.005 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\base_live_mdi.py:149(_handle_snapshot_updated)
+   211555   17.046    0.000   17.046    0.000 {built-in method setItem}
+     5852    0.125    0.000   15.055    0.003 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\sklearn.py:1745(predict_proba)
+     1265    0.025    0.000   13.762    0.011 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:1840(_on_playback_tick)
+11716/5858    0.072    0.000   12.574    0.002 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\core.py:710(inner_f)
+      153    0.008    0.000   11.589    0.076 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:2031(_on_predictions_ready)
+     5858    0.037    0.000   10.169    0.002 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\sklearn.py:1282(predict)
+     2926    0.036    0.000   10.047    0.003 C:\Users\mike2\OneDrive\Code\F1-data-analyze\CLI_modules\cli\prediction\overtake_prediction\predictor.py:188(predict)
+      423    0.004    0.000    8.696    0.021 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\battle_insight.py:616(_on_snapshot_updated)
+     2926    0.031    0.000    8.558    0.003 C:\Users\mike2\OneDrive\Code\F1-data-analyze\CLI_modules\cli\prediction\overtake_prediction\close_combat_predictor.py:153(predict)
+      423    0.011    0.000    7.327    0.017 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\battle_insight.py:177(update_snapshot)
+   147763    6.642    0.000    6.642    0.000 {built-in method boundingRect}
+     1111    0.024    0.000    6.599    0.006 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:373(paintEvent)
+12164/12068    0.016    0.000    5.694    0.000 {built-in method builtins.next}
+      423    0.004    0.000    5.565    0.013 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\race_control_messages.py:301(_on_snapshot_updated)
+      423    0.084    0.000    5.559    0.013 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\race_control_messages.py:142(update_for_lap)
+     1111    0.019    0.000    5.471    0.005 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:301(paintEvent)
+     1111    0.029    0.000    5.412    0.005 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:294(paintEvent)
+     1111    0.095    0.000    5.346    0.005 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:501(_draw_driver_markers)
+    22220    0.402    0.000    5.172    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:563(_draw_single_marker)
+    11716    0.020    0.000    5.101    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\config.py:155(config_context)
+    23432    0.041    0.000    4.906    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\config.py:106(wrap)
+     5858    0.561    0.000    4.211    0.001 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\core.py:2540(inplace_predict)
+     5858    0.006    0.000    3.415    0.001 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\contextlib.py:136(__enter__)
+      423    0.005    0.000    3.349    0.008 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\battle_insight.py:189(_update_battles)
+      307    0.115    0.000    3.321    0.011 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\battle_insight.py:472(_populate_table)
+     5110    3.092    0.001    3.286    0.001 {built-in method setCellWidget}
+    11716    0.190    0.000    3.191    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\config.py:115(set_config)
+     1111    0.387    0.000    2.923    0.003 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:504(_draw_driver_markers)
+   183115    2.875    0.000    2.875    0.000 {built-in method drawText}
+     5858    0.017    0.000    2.611    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\sklearn.py:1269(_get_iteration_range)
+     1111    0.296    0.000    2.488    0.002 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:379(_draw_driver_markers)
+     5858    0.008    0.000    2.345    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\contextlib.py:145(__exit__)
+    22220    0.355    0.000    2.293    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:612(_draw_pit_bubble)
+    22220    0.250    0.000    2.194    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:590(_draw_flag)
+     5858    0.226    0.000    2.062    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\sklearn.py:1450(best_iteration)
+     1111    0.741    0.001    1.862    0.002 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:470(_draw_corner_markers)
+     8500    0.072    0.000    1.841    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\ranking_tower.py:573(_update_row)
+     5858    0.014    0.000    1.824    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\core.py:2876(best_iteration)
+      423    0.018    0.000    1.819    0.004 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\ranking_tower.py:1503(_on_snapshot_updated)
+      425    0.016    0.000    1.739    0.004 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\ranking_tower.py:477(update_display)
+    22220    0.260    0.000    1.697    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:643(_draw_flag)
+      154    0.006    0.000    1.690    0.011 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\prediction_worker.py:149(_perform_predictions)
+    22220    0.239    0.000    1.645    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:449(_draw_flag_label)
+     5858    0.146    0.000    1.596    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\config.py:135(get_config)
+     5858    0.064    0.000    1.579    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\core.py:2079(attr)
+
+
+
+
+====================================================================================================
+按內部時間排序 (tottime)
+====================================================================================================
+
+         17395907 function calls (17380084 primitive calls) in 60.125 seconds
+
+   Ordered by: internal time
+   List reduced from 716 to 50 due to restriction <50>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+   211555   17.046    0.000   17.046    0.000 {built-in method setItem}
+   7501/3    7.926    0.001    0.000    0.000 {method 'acquire' of '_thread.lock' objects}
+   147763    6.642    0.000    6.642    0.000 {built-in method boundingRect}
+     5110    3.092    0.001    3.286    0.001 {built-in method setCellWidget}
+   183115    2.875    0.000    2.875    0.000 {built-in method drawText}
+1407/1051    1.748    0.001   55.811    0.053 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\queue.py:180(get)
+   578883    0.794    0.000    0.794    0.000 {built-in method drawLine}
+    79618    0.772    0.000    0.772    0.000 {built-in method drawEllipse}
+     1111    0.741    0.001    1.862    0.002 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:470(_draw_corner_markers)
+    15568    0.675    0.000    0.797    0.000 {built-in method setText}
+  4299904    0.671    0.000    0.671    0.000 {method 'get' of 'dict' objects}
+    10169    0.660    0.000    0.750    0.000 {built-in method setStyleSheet}
+     5858    0.561    0.000    4.211    0.001 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\core.py:2540(inplace_predict)
+     5912    0.516    0.000    0.516    0.000 {function PopoutSubWindow.paintEvent at 0x000001F604E39EE0}
+    22220    0.508    0.000    0.508    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:578(_xy_to_angle)
+    22220    0.402    0.000    5.172    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:563(_draw_single_marker)
+     1111    0.387    0.000    2.923    0.003 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:504(_draw_driver_markers)
+   530347    0.382    0.000    0.801    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze/f1t_gui_main.py:1118(eventFilter)
+    22220    0.355    0.000    2.293    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:612(_draw_pit_bubble)
+     1111    0.324    0.000    0.770    0.001 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:371(_draw_track_outline)
+     1111    0.296    0.000    2.488    0.002 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:379(_draw_driver_markers)
+   491489    0.295    0.000    0.295    0.000 {built-in method setPen}
+     2577    0.286    0.000    0.286    0.000 {built-in method drawPath}
+    91354    0.281    0.000    0.333    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\themes\color_palette_provider.py:548(_format_entry)
+    22220    0.260    0.000    1.697    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:643(_draw_flag)
+    22220    0.250    0.000    2.194    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:590(_draw_flag)
+     1111    0.249    0.000    0.527    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:378(_draw_track_ring)
+   134570    0.243    0.000    0.539    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\driver_strategy.py:1442(_calculate_stint_prediction)
+       30    0.241    0.008    0.241    0.008 {built-in method psutil_windows.proc_info}
+     1111    0.240    0.000    1.367    0.001 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\circle_map.py:401(_draw_corner_markers)
+    22220    0.239    0.000    1.645    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:449(_draw_flag_label)
+    66926    0.232    0.000    0.232    0.000 {built-in method drawRect}
+     5858    0.226    0.000    2.062    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\sklearn.py:1450(best_iteration)
+     1111    0.210    0.000    1.087    0.001 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\pit_window.py:466(_draw_x_axis)
+    11716    0.190    0.000    3.191    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\config.py:115(set_config)
+   530347    0.189    0.000    0.189    0.000 {function CustomMdiArea.eventFilter at 0x000001F627F547C0}
+   971734    0.184    0.000    0.184    0.000 {built-in method builtins.isinstance}
+   785477    0.172    0.000    0.172    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\track_map.py:358(_world_to_screen)
+    46564    0.172    0.000    0.172    0.000 {built-in method fillRect}
+     7920    0.171    0.000    0.171    0.000 {built-in method nt.scandir}
+   114010    0.151    0.000    0.151    0.000 {built-in method setFont}
+     1658    0.149    0.000    0.764    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\driver_strategy.py:1249(_calculate_all_predictions)
+     5858    0.146    0.000    1.596    0.000 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\config.py:135(get_config)
+     8500    0.145    0.000    0.307    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\ranking_tower.py:777(_set_tyre_info)
+     1906    0.141    0.000    0.141    0.000 {function PopoutSubWindow.minimumSizeHint at 0x000001F604E3A160}
+     5852    0.125    0.000   15.055    0.003 c:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\xgboost\sklearn.py:1745(predict_proba)
+     5912    0.121    0.000    0.694    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\f1t_gui_main.py:4214(paintEvent)
+   161391    0.117    0.000    0.156    0.000 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:1001(_time_str_to_seconds)
+      307    0.115    0.000    3.321    0.011 C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\live_timing_modules\battle_insight.py:472(_populate_table)
+   220302    0.114    0.000    0.114    0.000 {built-in method setTextAlignment}
+
+

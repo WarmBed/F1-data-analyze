@@ -1,0 +1,159 @@
+{
+  "year": 2023,
+  "races": [
+    {
+      "round": 1,
+      "event_name": "Bahrain Grand Prix",
+      "date": "2023-03-05 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 2,
+      "event_name": "Saudi Arabian Grand Prix",
+      "date": "2023-03-19 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 3,
+      "event_name": "Australian Grand Prix",
+      "date": "2023-04-02 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 4,
+      "event_name": "Azerbaijan Grand Prix",
+      "date": "2023-04-30 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 5,
+      "event_name": "Miami Grand Prix",
+      "date": "2023-05-07 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 6,
+      "event_name": "Monaco Grand Prix",
+      "date": "2023-05-28 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 7,
+      "event_name": "Spanish Grand Prix",
+      "date": "2023-06-04 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 8,
+      "event_name": "Canadian Grand Prix",
+      "date": "2023-06-18 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 9,
+      "event_name": "Austrian Grand Prix",
+      "date": "2023-07-02 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 10,
+      "event_name": "British Grand Prix",
+      "date": "2023-07-09 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 11,
+      "event_name": "Hungarian Grand Prix",
+      "date": "2023-07-23 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 12,
+      "event_name": "Belgian Grand Prix",
+      "date": "2023-07-30 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 13,
+      "event_name": "Dutch Grand Prix",
+      "date": "2023-08-27 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 14,
+      "event_name": "Italian Grand Prix",
+      "date": "2023-09-03 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 15,
+      "event_name": "Singapore Grand Prix",
+      "date": "2023-09-17 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 16,
+      "event_name": "Japanese Grand Prix",
+      "date": "2023-09-24 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 17,
+      "event_name": "Qatar Grand Prix",
+      "date": "2023-10-08 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 18,
+      "event_name": "United States Grand Prix",
+      "date": "2023-10-22 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 19,
+      "event_name": "Mexico City Grand Prix",
+      "date": "2023-10-29 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 20,
+      "event_name": "São Paulo Grand Prix",
+      "date": "2023-11-05 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 21,
+      "event_name": "Las Vegas Grand Prix",
+      "date": "2023-11-18 00:00:00",
+      "qualifying": null,
+      "race": null
+    },
+    {
+      "round": 22,
+      "event_name": "Abu Dhabi Grand Prix",
+      "date": "2023-11-26 00:00:00",
+      "qualifying": null,
+      "race": null
+    }
+  ]
+}

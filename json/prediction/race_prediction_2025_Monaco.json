@@ -1,0 +1,284 @@
+{
+  "success": true,
+  "message": "Q->R 正賽預測完成",
+  "function_id": "80",
+  "metadata": {
+    "track": "Monaco",
+    "year": 2025,
+    "session": "R",
+    "data_source": "Q",
+    "prediction_model": "Dynamic Team Rating + Q Position",
+    "prediction_time": "2025-11-27T01:17:28.987487",
+    "model_version": "v1.0",
+    "has_actual_results": true,
+    "accuracy": {
+      "top1_correct": true,
+      "top3_correct": 3
+    }
+  },
+  "predictions": [
+    {
+      "driver": "NOR",
+      "team": "McLaren",
+      "team_rating": 6.3,
+      "q_position": 1,
+      "combined_score": 0.852,
+      "predicted_position": 1,
+      "rank": 1,
+      "actual_position": 1,
+      "rank_change": 0
+    },
+    {
+      "driver": "PIA",
+      "team": "McLaren",
+      "team_rating": 6.3,
+      "q_position": 3,
+      "combined_score": 0.7888421052631579,
+      "predicted_position": 2,
+      "rank": 2,
+      "actual_position": 3,
+      "rank_change": -1
+    },
+    {
+      "driver": "LEC",
+      "team": "Ferrari",
+      "team_rating": 4.19,
+      "q_position": 2,
+      "combined_score": 0.7360210526315789,
+      "predicted_position": 3,
+      "rank": 3,
+      "actual_position": 2,
+      "rank_change": 1
+    },
+    {
+      "driver": "VER",
+      "team": "Red Bull Racing",
+      "team_rating": 6.37,
+      "q_position": 5,
+      "combined_score": 0.7284842105263158,
+      "predicted_position": 4,
+      "rank": 4,
+      "actual_position": 4,
+      "rank_change": 0
+    },
+    {
+      "driver": "HAM",
+      "team": "Ferrari",
+      "team_rating": 4.19,
+      "q_position": 4,
+      "combined_score": 0.6728631578947368,
+      "predicted_position": 5,
+      "rank": 5,
+      "actual_position": 5,
+      "rank_change": 0
+    },
+    {
+      "driver": "HAD",
+      "team": "Racing Bulls",
+      "team_rating": 5.0,
+      "q_position": 7,
+      "combined_score": 0.6105263157894737,
+      "predicted_position": 6,
+      "rank": 6,
+      "actual_position": 6,
+      "rank_change": 0
+    },
+    {
+      "driver": "OCO",
+      "team": "Haas F1 Team",
+      "team_rating": 5.0,
+      "q_position": 9,
+      "combined_score": 0.5473684210526316,
+      "predicted_position": 7,
+      "rank": 7,
+      "actual_position": 7,
+      "rank_change": 0
+    },
+    {
+      "driver": "ALB",
+      "team": "Williams",
+      "team_rating": 2.2,
+      "q_position": 6,
+      "combined_score": 0.5301052631578947,
+      "predicted_position": 8,
+      "rank": 8,
+      "actual_position": 9,
+      "rank_change": -1
+    },
+    {
+      "driver": "LAW",
+      "team": "Racing Bulls",
+      "team_rating": 5.0,
+      "q_position": 10,
+      "combined_score": 0.5157894736842106,
+      "predicted_position": 9,
+      "rank": 9,
+      "actual_position": 8,
+      "rank_change": 1
+    },
+    {
+      "driver": "TSU",
+      "team": "Red Bull Racing",
+      "team_rating": 6.37,
+      "q_position": 12,
+      "combined_score": 0.5074315789473685,
+      "predicted_position": 10,
+      "rank": 10,
+      "actual_position": 17,
+      "rank_change": -7
+    },
+    {
+      "driver": "ALO",
+      "team": "Aston Martin",
+      "team_rating": 2.22,
+      "q_position": 8,
+      "combined_score": 0.4677473684210526,
+      "predicted_position": 11,
+      "rank": 11,
+      "actual_position": 19,
+      "rank_change": -8
+    },
+    {
+      "driver": "HUL",
+      "team": "Kick Sauber",
+      "team_rating": 5.0,
+      "q_position": 14,
+      "combined_score": 0.3894736842105263,
+      "predicted_position": 12,
+      "rank": 12,
+      "actual_position": 16,
+      "rank_change": -4
+    },
+    {
+      "driver": "SAI",
+      "team": "Williams",
+      "team_rating": 2.2,
+      "q_position": 11,
+      "combined_score": 0.3722105263157895,
+      "predicted_position": 13,
+      "rank": 13,
+      "actual_position": 10,
+      "rank_change": 3
+    },
+    {
+      "driver": "RUS",
+      "team": "Mercedes",
+      "team_rating": 3.47,
+      "q_position": 13,
+      "combined_score": 0.35985263157894737,
+      "predicted_position": 14,
+      "rank": 14,
+      "actual_position": 11,
+      "rank_change": 3
+    },
+    {
+      "driver": "BOR",
+      "team": "Kick Sauber",
+      "team_rating": 5.0,
+      "q_position": 16,
+      "combined_score": 0.3263157894736842,
+      "predicted_position": 15,
+      "rank": 15,
+      "actual_position": 14,
+      "rank_change": 1
+    },
+    {
+      "driver": "ANT",
+      "team": "Mercedes",
+      "team_rating": 3.47,
+      "q_position": 15,
+      "combined_score": 0.29669473684210523,
+      "predicted_position": 16,
+      "rank": 16,
+      "actual_position": 18,
+      "rank_change": -2
+    },
+    {
+      "driver": "BEA",
+      "team": "Haas F1 Team",
+      "team_rating": 5.0,
+      "q_position": 17,
+      "combined_score": 0.2947368421052632,
+      "predicted_position": 17,
+      "rank": 17,
+      "actual_position": 12,
+      "rank_change": 5
+    },
+    {
+      "driver": "GAS",
+      "team": "Alpine",
+      "team_rating": 3.33,
+      "q_position": 18,
+      "combined_score": 0.19635789473684212,
+      "predicted_position": 18,
+      "rank": 18,
+      "actual_position": 20,
+      "rank_change": -2
+    },
+    {
+      "driver": "COL",
+      "team": "Alpine",
+      "team_rating": 3.33,
+      "q_position": 20,
+      "combined_score": 0.1332,
+      "predicted_position": 19,
+      "rank": 19,
+      "actual_position": 13,
+      "rank_change": 6
+    },
+    {
+      "driver": "STR",
+      "team": "Aston Martin",
+      "team_rating": 2.22,
+      "q_position": 19,
+      "combined_score": 0.12037894736842106,
+      "predicted_position": 20,
+      "rank": 20,
+      "actual_position": 15,
+      "rank_change": 5
+    }
+  ],
+  "team_ratings": {
+    "Red Bull Racing": {
+      "current": 6.37,
+      "base": 8.05
+    },
+    "Williams": {
+      "current": 2.2,
+      "base": 5.0
+    },
+    "Haas F1 Team": {
+      "current": 5.0,
+      "base": 5.0
+    },
+    "Ferrari": {
+      "current": 4.19,
+      "base": 4.18
+    },
+    "McLaren": {
+      "current": 6.3,
+      "base": 4.89
+    },
+    "Alpine": {
+      "current": 3.33,
+      "base": 3.33
+    },
+    "Aston Martin": {
+      "current": 2.22,
+      "base": 2.22
+    },
+    "Kick Sauber": {
+      "current": 5.0,
+      "base": 5.0
+    },
+    "Mercedes": {
+      "current": 3.47,
+      "base": 3.04
+    },
+    "Racing Bulls": {
+      "current": 5.0,
+      "base": 5.0
+    }
+  },
+  "execution_time": "3.87s"
+}

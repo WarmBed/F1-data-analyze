@@ -1,0 +1,82 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: GUI",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/f1t_gui_main.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8",
+    "F1_API_HOST": "127.0.0.1",
+    "F1_API_PORT": "8000",
+    "F1_API_BASE_URL": "https://api.f1telemetrystationpro.org"
+      },
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+    {
+      "name": "Python: API server",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/refactored_api.py",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}",
+        "PYTHONIOENCODING": "utf-8",
+        "F1_API_HOST": "127.0.0.1",
+        "F1_API_PORT": "8000",
+        "F1_API_RELOAD": "0"
+      },
+      "serverReadyAction": {
+        "pattern": "Uvicorn running on (http://\\S+)",
+        "uriFormat": "%s/docs",
+        "action": "openExternally"
+      },
+      "justMyCode": false,
+      "stopOnEntry": false
+    },
+   
+    {
+      "name": "🌐 Cloudflare Tunnel",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\cloudflared\\cloudflared.exe --config ${workspaceFolder}\\cloudflared\\config.yml tunnel run myfastapi",
+      "cwd": "${workspaceFolder}\\cloudflared"
+    },
+    {
+      "name": "🚀 啟動所有 F1T 服務",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\nssm\\Start_All_Services.bat",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🛑 關閉所有 F1T 服務",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\nssm\\Stop_All_Services.bat",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🔄 重啟所有 F1T 服務",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\nssm\\Restart_All_Services.bat",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "📊 查看 F1T 服務狀態",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "${workspaceFolder}\\nssm\\Check_Service_Status.bat",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+  }
+
+

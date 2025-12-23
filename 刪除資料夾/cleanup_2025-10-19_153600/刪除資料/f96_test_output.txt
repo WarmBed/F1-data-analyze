@@ -1,0 +1,17 @@
+﻿python : C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site
+-packages\fastf1\api.py:32: UserWarning: `fastf1.api` will be considere
+d private in future releases and potentially be removed or changed!
+位於 線路:1 字元:1
++ python test_f96_cli_direct.py *>&1 | Out-File -FilePath f96_test_outp
+ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\mike\A...ved or  
+   changed!:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  warnings.warn("`fastf1.api` will be considered private in future rele
+ases and "
+================================================================================
+Function 96 CLI 測試
+命令: python f1_analysis_modular_main.py -f 96 -y 2025 -r Japan
+================================================================================

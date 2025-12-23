@@ -1,0 +1,129 @@
+{
+  "success": true,
+  "function_id": "120",
+  "year": 2025,
+  "race": "Emilia Romagna",
+  "session": "Q",
+  "analysis_type": "F120_corner_all_laps_analysis",
+  "selected_corners": {
+    "low_speed": null,
+    "mid_speed": {
+      "corner_number": 15,
+      "apex_distance": 3567.1209880183374,
+      "avg_apex_speed": 101.6,
+      "angle": -96.25082233626188,
+      "x": -2813.3766286096075,
+      "y": -5561.05664668873
+    },
+    "high_speed": {
+      "corner_number": 9,
+      "apex_distance": 2551.110052139762,
+      "avg_apex_speed": 226.88999936,
+      "angle": -41.148155207078,
+      "x": -8677.443388922406,
+      "y": -9848.486839053796
+    }
+  },
+  "mode_a_unified": {
+    "mode": "unified",
+    "description": "所有有效圈統一分析（不區分燃油狀態）",
+    "total_drivers": 1,
+    "drivers": [
+      {
+        "driver": "PIA",
+        "total_laps": 18,
+        "filtering_summary": {
+          "pit_lap": 22,
+          "in_lap": 10
+        },
+        "corners": {
+          "mid_speed_corner_15": {
+            "median_speed": 95.5,
+            "mean_speed": 95.5,
+            "std_dev": 7.5,
+            "q1": 91.75,
+            "q3": 99.25,
+            "iqr": 7.5,
+            "min_speed": 88.0,
+            "max_speed": 103.0,
+            "top3_avg": 95.5,
+            "bottom3_avg": 95.5,
+            "cv": 7.85,
+            "valid_laps": 2,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              103.0,
+              88.0
+            ],
+            "warnings": [
+              "樣本量不足 (2 < 5)",
+              "數據變異過大 (CV=7.85%)"
+            ],
+            "entry_speed_median": 111.0,
+            "entry_speed_mean": 111.0,
+            "entry_speeds_raw": [
+              126.0,
+              96.0
+            ],
+            "exit_speed_median": 97.0,
+            "exit_speed_mean": 97.0,
+            "exit_speeds_raw": [
+              103.0,
+              91.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 111.0,
+            "exit_50m_speed": 97.0,
+            "apex_speed": 95.5
+          },
+          "high_speed_corner_9": {
+            "median_speed": 183.0,
+            "mean_speed": 183.0,
+            "std_dev": 29.0,
+            "q1": 168.5,
+            "q3": 197.5,
+            "iqr": 29.0,
+            "min_speed": 154.0,
+            "max_speed": 212.0,
+            "top3_avg": 183.0,
+            "bottom3_avg": 183.0,
+            "cv": 15.85,
+            "valid_laps": 2,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              212.0,
+              154.0
+            ],
+            "warnings": [
+              "樣本量不足 (2 < 5)",
+              "數據變異過大 (CV=15.85%)"
+            ],
+            "entry_speed_median": 184.5,
+            "entry_speed_mean": 184.5,
+            "entry_speeds_raw": [
+              214.0,
+              155.0
+            ],
+            "exit_speed_median": 187.0,
+            "exit_speed_mean": 187.0,
+            "exit_speeds_raw": [
+              212.0,
+              162.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 184.5,
+            "exit_50m_speed": 187.0,
+            "apex_speed": 183.0
+          }
+        }
+      }
+    ]
+  },
+  "mode_b_grouped": null
+}

@@ -1,0 +1,21 @@
+Driver,Setup,Confidence,Suitability,Corner_Rank,Straight_Rank,Bias,Brake_CV
+BOR,Low Downforce,High,9.0,13.50,2.60,-10.90,10.67
+OCO,Low Downforce,Medium,9.0,8.50,3.40,-5.10,9.61
+ANT,Low Downforce,High,9.0,12.50,2.50,-10.00,25.02
+STR,Low Downforce,High,9.0,14.80,7.10,-7.70,14.23
+HAM,Low Downforce,Medium,9.0,9.50,3.80,-5.70,10.43
+HUL,Low Downforce,High,9.0,12.90,3.00,-9.90,8.30
+RUS,Balanced,Medium,7.0,10.80,11.60,0.80,11.23
+HAD,Balanced,Medium,7.0,18.20,14.90,-3.30,11.67
+TSU,Balanced,Medium,7.0,11.50,10.00,-1.50,14.41
+BEA,Balanced,Medium,7.0,8.60,8.40,-0.20,10.30
+SAI,Balanced,Medium,7.0,7.80,7.30,-0.50,9.10
+ALB,Balanced,Medium,7.0,7.60,6.90,-0.70,11.61
+GAS,Balanced,Medium,7.0,13.40,16.20,2.80,9.59
+VER,High Downforce,High,4.0,8.90,18.80,9.90,14.20
+NOR,High Downforce,High,4.0,5.40,13.80,8.40,12.13
+PIA,High Downforce,High,4.0,9.90,15.70,5.80,9.41
+LEC,High Downforce,High,4.0,8.20,12.60,4.40,6.81
+ALO,High Downforce,High,4.0,6.80,17.60,10.80,11.46
+LAW,High Downforce,High,4.0,8.50,15.10,6.60,14.34
+COL,High Downforce,Medium,4.0,12.70,18.70,6.00,14.02

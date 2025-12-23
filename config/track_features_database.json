@@ -1,0 +1,393 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-10-29",
+    "description": "F1 賽道特徵資料庫 - 用於機器學習模型訓練",
+    "sources": [
+      "Wikipedia F1 Circuit Data",
+      "Official F1 Technical Documents",
+      "Historical Race Analysis"
+    ],
+    "total_circuits": 5
+  },
+  
+  "Suzuka": {
+    "official_name": "Suzuka International Racing Course",
+    "country": "Japan",
+    "location": {
+      "latitude": 34.8431,
+      "longitude": 136.5407,
+      "timezone": "Asia/Tokyo"
+    },
+    "track_info": {
+      "track_type": "Permanent",
+      "direction": "Clockwise",
+      "opened": 1962,
+      "designer": "John Hugenholtz",
+      "figure_8_layout": true
+    },
+    "geometry": {
+      "track_length_km": 5.807,
+      "total_corners": 18,
+      "high_speed_corners": 8,
+      "medium_speed_corners": 6,
+      "low_speed_corners": 4,
+      "chicanes": 0,
+      "hairpins": 1,
+      "longest_straight_m": 600,
+      "total_straight_distance_m": 1500,
+      "straight_ratio": 0.26,
+      "avg_corner_radius_m": 120,
+      "elevation_change_m": 27
+    },
+    "characteristics": {
+      "power_sensitivity": "Medium",
+      "downforce_level": "High",
+      "mechanical_grip_importance": "High",
+      "aero_efficiency_importance": "Very High",
+      "tire_wear": "Medium-High",
+      "brake_wear": "High",
+      "fuel_consumption": "Medium",
+      "overtaking_difficulty": 0.6,
+      "track_evolution_rate": "Fast",
+      "surface_type": "Smooth Asphalt"
+    },
+    "racing_stats": {
+      "lap_record_time": "1:30.983",
+      "lap_record_driver": "Lewis Hamilton",
+      "lap_record_year": 2019,
+      "avg_race_speed_kmh": 223.1,
+      "typical_race_laps": 53,
+      "typical_race_distance_km": 307.471
+    },
+    "historical_patterns": {
+      "fp3_q_correlation": 0.82,
+      "weather_impact": 0.75,
+      "pole_position_advantage": 0.65,
+      "overtaking_zones": 2,
+      "safety_car_probability": 0.35
+    },
+    "team_advantages_2024": {
+      "red_bull": 0.15,
+      "ferrari": 0.10,
+      "mercedes": 0.05,
+      "mclaren": 0.12,
+      "aston_martin": -0.02,
+      "alpine": -0.05,
+      "williams": -0.08,
+      "alphatauri": -0.10,
+      "alfa_romeo": -0.12,
+      "haas": -0.15
+    },
+    "notable_corners": {
+      "1": "Turn 1 - High-speed left",
+      "8": "Spoon Curve - Technical section",
+      "13": "130R - Famous high-speed corner",
+      "15": "Casio Triangle - Final chicane"
+    }
+  },
+
+  "Monaco": {
+    "official_name": "Circuit de Monaco",
+    "country": "Monaco",
+    "location": {
+      "latitude": 43.7347,
+      "longitude": 7.4206,
+      "timezone": "Europe/Monaco"
+    },
+    "track_info": {
+      "track_type": "Street Circuit",
+      "direction": "Clockwise",
+      "opened": 1929,
+      "surface_type": "Public Road Asphalt"
+    },
+    "geometry": {
+      "track_length_km": 3.337,
+      "total_corners": 19,
+      "high_speed_corners": 1,
+      "medium_speed_corners": 5,
+      "low_speed_corners": 13,
+      "chicanes": 1,
+      "hairpins": 3,
+      "longest_straight_m": 450,
+      "total_straight_distance_m": 800,
+      "straight_ratio": 0.24,
+      "avg_corner_radius_m": 45,
+      "elevation_change_m": 42
+    },
+    "characteristics": {
+      "power_sensitivity": "Very Low",
+      "downforce_level": "Maximum",
+      "mechanical_grip_importance": "Very High",
+      "aero_efficiency_importance": "Low",
+      "tire_wear": "Low",
+      "brake_wear": "Very High",
+      "fuel_consumption": "Low",
+      "overtaking_difficulty": 0.95,
+      "track_evolution_rate": "Very Fast",
+      "surface_type": "Bumpy Street"
+    },
+    "racing_stats": {
+      "lap_record_time": "1:12.909",
+      "lap_record_driver": "Lewis Hamilton",
+      "lap_record_year": 2021,
+      "avg_race_speed_kmh": 160.7,
+      "typical_race_laps": 78,
+      "typical_race_distance_km": 260.286
+    },
+    "historical_patterns": {
+      "fp3_q_correlation": 0.88,
+      "weather_impact": 0.40,
+      "pole_position_advantage": 0.90,
+      "overtaking_zones": 0,
+      "safety_car_probability": 0.75
+    },
+    "team_advantages_2024": {
+      "red_bull": 0.20,
+      "ferrari": 0.15,
+      "mercedes": 0.10,
+      "mclaren": 0.08,
+      "aston_martin": 0.05,
+      "alpine": 0.00,
+      "williams": -0.05,
+      "alphatauri": -0.08,
+      "alfa_romeo": -0.10,
+      "haas": -0.15
+    },
+    "notable_corners": {
+      "1": "Sainte Devote - First corner braking",
+      "3": "Casino Square - Uphill elevation",
+      "6": "Hairpin - Slowest corner in F1",
+      "10": "Swimming Pool - Technical chicane section"
+    }
+  },
+
+  "Monza": {
+    "official_name": "Autodromo Nazionale di Monza",
+    "country": "Italy",
+    "location": {
+      "latitude": 45.6156,
+      "longitude": 9.2811,
+      "timezone": "Europe/Rome"
+    },
+    "track_info": {
+      "track_type": "Permanent",
+      "direction": "Clockwise",
+      "opened": 1922,
+      "designer": "Alfredo Rosselli",
+      "surface_type": "Smooth Asphalt"
+    },
+    "geometry": {
+      "track_length_km": 5.793,
+      "total_corners": 11,
+      "high_speed_corners": 7,
+      "medium_speed_corners": 2,
+      "low_speed_corners": 2,
+      "chicanes": 3,
+      "hairpins": 0,
+      "longest_straight_m": 1100,
+      "total_straight_distance_m": 2800,
+      "straight_ratio": 0.48,
+      "avg_corner_radius_m": 180,
+      "elevation_change_m": 12
+    },
+    "characteristics": {
+      "power_sensitivity": "Very High",
+      "downforce_level": "Minimum",
+      "mechanical_grip_importance": "Low",
+      "aero_efficiency_importance": "Very High",
+      "tire_wear": "Medium",
+      "brake_wear": "Very High",
+      "fuel_consumption": "Very High",
+      "overtaking_difficulty": 0.30,
+      "track_evolution_rate": "Medium",
+      "surface_type": "Very Smooth"
+    },
+    "racing_stats": {
+      "lap_record_time": "1:21.046",
+      "lap_record_driver": "Rubens Barrichello",
+      "lap_record_year": 2004,
+      "avg_race_speed_kmh": 242.6,
+      "typical_race_laps": 53,
+      "typical_race_distance_km": 306.72
+    },
+    "historical_patterns": {
+      "fp3_q_correlation": 0.75,
+      "weather_impact": 0.50,
+      "pole_position_advantage": 0.45,
+      "overtaking_zones": 3,
+      "safety_car_probability": 0.40
+    },
+    "team_advantages_2024": {
+      "red_bull": 0.10,
+      "ferrari": 0.18,
+      "mercedes": 0.15,
+      "mclaren": 0.12,
+      "aston_martin": 0.05,
+      "alpine": 0.00,
+      "williams": 0.03,
+      "alphatauri": -0.05,
+      "alfa_romeo": -0.08,
+      "haas": -0.10
+    },
+    "notable_corners": {
+      "1": "Rettifilo Chicane - Heavy braking from 340+ km/h",
+      "3": "Curva Grande - High-speed sweeper",
+      "8": "Ascari Chicane - Technical section",
+      "11": "Parabolica - Final high-speed corner"
+    }
+  },
+
+  "Spa-Francorchamps": {
+    "official_name": "Circuit de Spa-Francorchamps",
+    "country": "Belgium",
+    "location": {
+      "latitude": 50.4372,
+      "longitude": 5.9714,
+      "timezone": "Europe/Brussels"
+    },
+    "track_info": {
+      "track_type": "Permanent",
+      "direction": "Clockwise",
+      "opened": 1921,
+      "surface_type": "Smooth Asphalt"
+    },
+    "geometry": {
+      "track_length_km": 7.004,
+      "total_corners": 19,
+      "high_speed_corners": 12,
+      "medium_speed_corners": 5,
+      "low_speed_corners": 2,
+      "chicanes": 1,
+      "hairpins": 1,
+      "longest_straight_m": 730,
+      "total_straight_distance_m": 2200,
+      "straight_ratio": 0.31,
+      "avg_corner_radius_m": 150,
+      "elevation_change_m": 104
+    },
+    "characteristics": {
+      "power_sensitivity": "High",
+      "downforce_level": "Medium-High",
+      "mechanical_grip_importance": "Medium",
+      "aero_efficiency_importance": "Very High",
+      "tire_wear": "High",
+      "brake_wear": "Medium",
+      "fuel_consumption": "Very High",
+      "overtaking_difficulty": 0.40,
+      "track_evolution_rate": "Medium",
+      "surface_type": "Undulating"
+    },
+    "racing_stats": {
+      "lap_record_time": "1:46.286",
+      "lap_record_driver": "Valtteri Bottas",
+      "lap_record_year": 2018,
+      "avg_race_speed_kmh": 234.5,
+      "typical_race_laps": 44,
+      "typical_race_distance_km": 308.052
+    },
+    "historical_patterns": {
+      "fp3_q_correlation": 0.70,
+      "weather_impact": 0.90,
+      "pole_position_advantage": 0.55,
+      "overtaking_zones": 2,
+      "safety_car_probability": 0.50
+    },
+    "team_advantages_2024": {
+      "red_bull": 0.18,
+      "ferrari": 0.12,
+      "mercedes": 0.10,
+      "mclaren": 0.14,
+      "aston_martin": 0.08,
+      "alpine": 0.02,
+      "williams": -0.03,
+      "alphatauri": -0.08,
+      "alfa_romeo": -0.10,
+      "haas": -0.12
+    },
+    "notable_corners": {
+      "1": "La Source Hairpin - Tight first corner",
+      "2": "Eau Rouge - Iconic uphill sweep",
+      "5": "Les Combes - Downhill chicane",
+      "10": "Pouhon - High-speed left-hander"
+    }
+  },
+
+  "Singapore": {
+    "official_name": "Marina Bay Street Circuit",
+    "country": "Singapore",
+    "location": {
+      "latitude": 1.2914,
+      "longitude": 103.8644,
+      "timezone": "Asia/Singapore"
+    },
+    "track_info": {
+      "track_type": "Street Circuit",
+      "direction": "Anti-clockwise",
+      "opened": 2008,
+      "night_race": true,
+      "surface_type": "Public Road Asphalt"
+    },
+    "geometry": {
+      "track_length_km": 4.940,
+      "total_corners": 19,
+      "high_speed_corners": 2,
+      "medium_speed_corners": 7,
+      "low_speed_corners": 10,
+      "chicanes": 3,
+      "hairpins": 1,
+      "longest_straight_m": 800,
+      "total_straight_distance_m": 1600,
+      "straight_ratio": 0.32,
+      "avg_corner_radius_m": 70,
+      "elevation_change_m": 15
+    },
+    "characteristics": {
+      "power_sensitivity": "Low",
+      "downforce_level": "High",
+      "mechanical_grip_importance": "Very High",
+      "aero_efficiency_importance": "Medium",
+      "tire_wear": "Very High",
+      "brake_wear": "Very High",
+      "fuel_consumption": "High",
+      "overtaking_difficulty": 0.75,
+      "track_evolution_rate": "Very Fast",
+      "surface_type": "Bumpy Street",
+      "humidity_impact": "Very High",
+      "temperature_range": "Hot (28-32°C)"
+    },
+    "racing_stats": {
+      "lap_record_time": "1:35.867",
+      "lap_record_driver": "Lewis Hamilton",
+      "lap_record_year": 2023,
+      "avg_race_speed_kmh": 172.4,
+      "typical_race_laps": 62,
+      "typical_race_distance_km": 306.143
+    },
+    "historical_patterns": {
+      "fp3_q_correlation": 0.85,
+      "weather_impact": 0.60,
+      "pole_position_advantage": 0.70,
+      "overtaking_zones": 1,
+      "safety_car_probability": 0.85
+    },
+    "team_advantages_2024": {
+      "red_bull": 0.12,
+      "ferrari": 0.18,
+      "mercedes": 0.08,
+      "mclaren": 0.10,
+      "aston_martin": 0.05,
+      "alpine": 0.02,
+      "williams": -0.05,
+      "alphatauri": -0.08,
+      "alfa_romeo": -0.12,
+      "haas": -0.15
+    },
+    "notable_corners": {
+      "1": "Turn 1 - Tight left-hander after start",
+      "7": "Singapore Sling - Technical section",
+      "14": "Turn 14 - Slowest corner",
+      "18": "Turn 18 - High-speed chicane before finish"
+    }
+  }
+}

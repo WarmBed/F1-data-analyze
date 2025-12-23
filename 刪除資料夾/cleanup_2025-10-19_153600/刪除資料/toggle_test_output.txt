@@ -1,0 +1,30 @@
+================================================================================
+SIMPLIFIED TIME AXIS TOGGLE TEST
+================================================================================
+
+[1] Creating widget...
+
+[2] Preparing test data...
+
+[3] Loading data...
+
+[4] Initial state:
+  time_axis_available: True
+  use_time_axis: False
+  x_axis_title: Distance (m)
+  checkbox exists: True
+  checkbox enabled: True
+  checkbox checked: False
+
+================================================================================
+[5] TOGGLING CHECKBOX TO TIME AXIS...
+================================================================================
+
+[6] After toggle:
+  use_time_axis: True
+  x_axis_title: Time (s)
+  checkbox checked: True
+
+================================================================================
+TEST COMPLETE
+================================================================================

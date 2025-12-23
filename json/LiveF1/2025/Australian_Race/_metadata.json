@@ -1,0 +1,83 @@
+{
+  "year": "2025",
+  "meeting": "Australian Grand Prix",
+  "session": "Race",
+  "race_name": "Australian",
+  "session_type": "Race",
+  "download_time": "2025-11-26T19:32:53.545761",
+  "streams": {
+    "Position.json": {
+      "status": "skipped",
+      "records": 10117
+    },
+    "TimingData.json": {
+      "status": "skipped",
+      "records": 47452
+    },
+    "CarData.json": {
+      "status": "skipped",
+      "records": 10061
+    },
+    "TimingAppData.json": {
+      "status": "skipped",
+      "records": 1026
+    },
+    "WeatherData.json": {
+      "status": "skipped",
+      "records": 178
+    },
+    "RaceControlMessages.json": {
+      "status": "skipped",
+      "records": 113
+    },
+    "TrackStatus.json": {
+      "status": "skipped",
+      "records": 20
+    },
+    "LapCount.json": {
+      "status": "skipped",
+      "records": 58
+    },
+    "PitLaneTimeCollection.json": {
+      "status": "skipped",
+      "records": 164
+    },
+    "DriverList.json": {
+      "status": "skipped",
+      "records": 81
+    },
+    "SessionInfo.json": {
+      "status": "skipped",
+      "records": 1
+    },
+    "SessionData.json": {
+      "status": "skipped",
+      "records": 81
+    },
+    "LapSeries.json": {
+      "status": "skipped",
+      "records": 922
+    },
+    "TopThree.json": {
+      "status": "skipped",
+      "records": 2815
+    },
+    "TimingStats.json": {
+      "status": "skipped",
+      "records": 2001
+    },
+    "ExtrapolatedClock.json": {
+      "status": "skipped",
+      "records": 3
+    },
+    "TeamRadio.json": {
+      "status": "skipped",
+      "records": 19
+    },
+    "TyreStintSeries.json": {
+      "status": "skipped",
+      "records": 514
+    }
+  },
+  "total_records": 75626
+}

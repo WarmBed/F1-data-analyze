@@ -1,0 +1,66 @@
+All MDI Title Fixes - Comprehensive Verification
+Timestamp: 2025-10-19 00:59:45
+================================================================================
+
+================================================================================
+COMPREHENSIVE TEST: All MDI Title Fixes
+================================================================================
+
+Fixed Modules:
+  1. All Drivers Brake Performance
+  2. Track Analysis
+  3. All Drivers Straight Line Speed
+
+Reference Module:
+  - Pitstop Analysis (already correct)
+
+================================================================================
+[Test 1] All Drivers Brake Performance MDI
+================================================================================
+Status: [PASS]
+  - get_window_title() method: YES
+  - Format: All Drivers Brake Performance_{year}_{race}_{session}
+
+================================================================================
+[Test 2] Track Analysis MDI
+================================================================================
+Status: [PASS]
+  - get_window_title() method: YES
+  - Format: Track Analysis_{year}_{race}_{session}
+
+================================================================================
+[Test 3] All Drivers Straight Line Speed MDI
+================================================================================
+Status: [PASS]
+  - get_window_title() method: YES
+  - Format: All Drivers Straight Line Speed_{year}_{race}_{session}
+
+================================================================================
+[Test 4] Pitstop Analysis MDI (Reference)
+================================================================================
+Status: [PASS]
+  - get_window_title() method: YES (reference implementation)
+  - Format: Pitstop Analysis_{year}_{race}_{session}
+
+================================================================================
+SUMMARY
+================================================================================
+
+All Drivers Brake Performance:     [PASS]
+Track Analysis:                     [PASS]
+All Drivers Straight Line Speed:   [PASS]
+Pitstop Analysis (Reference):       [PASS]
+
+--------------------------------------------------------------------------------
+OVERALL RESULT: [ALL TESTS PASSED]
+
+All MDI modules now use consistent title format:
+  {Module Name}_{Year}_{Race}_{Session}
+
+Title update behavior:
+  - Initial: Module_2025_Singapore_R
+  - After race update: Module_2025_Japan_R
+  - Titles are REPLACED, not accumulated
+
+================================================================================
+Results saved to: C:\Users\mike2\OneDrive\Code\F1-data-analyze\test_all_mdi_titles_result.txt

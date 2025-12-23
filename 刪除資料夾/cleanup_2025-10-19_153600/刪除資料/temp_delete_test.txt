@@ -1,0 +1,2 @@
+# Temporary placeholder generated during tooling experiments.
+# Safe to delete once the workspace is cleaned up.

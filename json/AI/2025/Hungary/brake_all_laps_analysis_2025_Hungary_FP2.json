@@ -1,0 +1,2998 @@
+{
+  "success": true,
+  "function_id": "122",
+  "year": 2025,
+  "race": "Hungary",
+  "session": "FP2",
+  "analysis_type": "brake_all_laps_analysis",
+  "main_brake_zone": {
+    "distance": 527.7,
+    "avg_max_decel": -55.25,
+    "detection_threshold": -20,
+    "voter_count": 19
+  },
+  "drivers": [
+    {
+      "driver": "VER",
+      "brake_decel_stats": {
+        "median": -40.27777777763126,
+        "mean": -39.198181478350484,
+        "std_dev": 4.173696971103156,
+        "min": -46.87500000004263,
+        "max": -33.7301587301894,
+        "q1": -41.66666666670455,
+        "q3": -35.493827160481295,
+        "iqr": 6.172839506223255,
+        "cv": 10.647680105793498,
+        "count": 13
+      },
+      "entry_speed_stats": {
+        "median": 295.5,
+        "mean": 267.8,
+        "std_dev": 58.84,
+        "min": 125.0,
+        "max": 318.0,
+        "count": 22
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -41.67,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -15.62,
+          "entry_speed": 153.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -5.95,
+          "entry_speed": 125.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -44.44,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -15.35,
+          "entry_speed": 222.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -57.29,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -9.72,
+          "entry_speed": 159.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -41.67,
+          "entry_speed": 288.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -41.67,
+          "entry_speed": 289.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -35.49,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -35.59,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -37.81,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -33.73,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -41.04,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -50.35,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -34.72,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -40.28,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -46.88,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -34.6,
+          "entry_speed": 287.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -57.87,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -9.26,
+          "entry_speed": 175.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -55.56,
+          "entry_speed": 282.0
+        }
+      ],
+      "valid_laps_count": 22,
+      "outlier_count": 9
+    },
+    {
+      "driver": "NOR",
+      "brake_decel_stats": {
+        "median": -37.03703703707071,
+        "mean": -37.986662257494906,
+        "std_dev": 6.230094590343173,
+        "min": -47.61904761909096,
+        "max": -28.64583333335938,
+        "q1": -43.89880952382808,
+        "q3": -33.035714285706455,
+        "iqr": 10.863095238121623,
+        "cv": 16.4007423134786,
+        "count": 15
+      },
+      "entry_speed_stats": {
+        "median": 297.0,
+        "mean": 273.7,
+        "std_dev": 56.11,
+        "min": 125.0,
+        "max": 321.0,
+        "count": 23
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -61.34,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -13.02,
+          "entry_speed": 201.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -8.93,
+          "entry_speed": 125.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -62.5,
+          "entry_speed": 309.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -45.14,
+          "entry_speed": 309.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -45.83,
+          "entry_speed": 311.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -37.85,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -45.83,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -13.02,
+          "entry_speed": 179.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -47.62,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -12.5,
+          "entry_speed": 190.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -36.11,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -34.72,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -42.66,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -37.04,
+          "entry_speed": 321.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -33.33,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -30.75,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -32.74,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -61.11,
+          "entry_speed": 303.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -28.65,
+          "entry_speed": 228.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -40.28,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -11.99,
+          "entry_speed": 199.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -31.25,
+          "entry_speed": 275.0
+        }
+      ],
+      "valid_laps_count": 23,
+      "outlier_count": 8
+    },
+    {
+      "driver": "BOR",
+      "brake_decel_stats": {
+        "median": -36.71377112770924,
+        "mean": -33.298015194431876,
+        "std_dev": 18.034184134239375,
+        "min": -68.0555555555401,
+        "max": -12.499999999997158,
+        "q1": -45.13888888886579,
+        "q3": -15.277777777774311,
+        "iqr": 29.861111111091482,
+        "cv": 54.159937248317036,
+        "count": 25
+      },
+      "entry_speed_stats": {
+        "median": 295.0,
+        "mean": 269.3,
+        "std_dev": 47.19,
+        "min": 152.0,
+        "max": 321.0,
+        "count": 26
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -55.56,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -18.52,
+          "entry_speed": 235.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -14.45,
+          "entry_speed": 237.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -68.06,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -13.89,
+          "entry_speed": 233.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -15.28,
+          "entry_speed": 226.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -50.15,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -12.5,
+          "entry_speed": 214.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -45.14,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -44.82,
+          "entry_speed": 321.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -19.44,
+          "entry_speed": 220.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -19.1,
+          "entry_speed": 152.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -83.33,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -12.73,
+          "entry_speed": 205.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -43.4,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -41.67,
+          "entry_speed": 302.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -65.97,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -55.56,
+          "entry_speed": 304.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -36.11,
+          "entry_speed": 304.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -37.04,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -36.71,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -45.14,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -38.19,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -13.26,
+          "entry_speed": 207.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -12.9,
+          "entry_speed": 227.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -16.87,
+          "entry_speed": 262.0
+        }
+      ],
+      "valid_laps_count": 26,
+      "outlier_count": 1
+    },
+    {
+      "driver": "HAD",
+      "brake_decel_stats": {
+        "median": -38.58024691359098,
+        "mean": -39.802961161600415,
+        "std_dev": 9.053838305649373,
+        "min": -57.29166666663739,
+        "max": -23.14814814814728,
+        "q1": -43.402777777817235,
+        "q3": -35.80729166663559,
+        "iqr": 7.595486111181643,
+        "cv": 22.746645077210964,
+        "count": 20
+      },
+      "entry_speed_stats": {
+        "median": 295.5,
+        "mean": 271.5,
+        "std_dev": 56.93,
+        "min": 122.0,
+        "max": 317.0,
+        "count": 26
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -38.58,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -15.62,
+          "entry_speed": 173.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -12.5,
+          "entry_speed": 140.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -59.03,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -4.63,
+          "entry_speed": 122.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -31.25,
+          "entry_speed": 230.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -57.29,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -23.15,
+          "entry_speed": 215.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -52.08,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -13.89,
+          "entry_speed": 209.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -28.77,
+          "entry_speed": 310.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -38.58,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -35.88,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -38.7,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -40.28,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -76.39,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -35.59,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -49.77,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -36.46,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -40.34,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -48.61,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -38.58,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -55.56,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -27.89,
+          "entry_speed": 223.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -41.67,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 30,
+          "max_decel": -37.04,
+          "entry_speed": 280.0
+        }
+      ],
+      "valid_laps_count": 26,
+      "outlier_count": 6
+    },
+    {
+      "driver": "GAS",
+      "brake_decel_stats": {
+        "median": -37.08330387098519,
+        "mean": -37.913434454656084,
+        "std_dev": 9.753648158590364,
+        "min": -53.81944444449341,
+        "max": -18.84920634920819,
+        "q1": -45.572916666708096,
+        "q3": -31.644570707049233,
+        "iqr": 13.928345959658863,
+        "cv": 25.726100256772007,
+        "count": 18
+      },
+      "entry_speed_stats": {
+        "median": 296.0,
+        "mean": 268.1,
+        "std_dev": 59.46,
+        "min": 122.0,
+        "max": 320.0,
+        "count": 22
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -36.57,
+          "entry_speed": 319.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -8.68,
+          "entry_speed": 135.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -18.85,
+          "entry_speed": 238.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -48.61,
+          "entry_speed": 320.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -24.31,
+          "entry_speed": 258.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -43.4,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -12.15,
+          "entry_speed": 154.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -53.82,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -13.89,
+          "entry_speed": 235.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -5.79,
+          "entry_speed": 122.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -48.61,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -27.78,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -35.98,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -36.46,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -31.25,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -40.51,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -32.83,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -46.3,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -42.44,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -37.59,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -26.79,
+          "entry_speed": 233.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -50.35,
+          "entry_speed": 275.0
+        }
+      ],
+      "valid_laps_count": 22,
+      "outlier_count": 4
+    },
+    {
+      "driver": "ANT",
+      "brake_decel_stats": {
+        "median": -48.611111111155324,
+        "mean": -48.372230865505216,
+        "std_dev": 5.771225834914832,
+        "min": -57.87037037042299,
+        "max": -38.194444444370646,
+        "q1": -52.08333333338067,
+        "q3": -45.13888888886579,
+        "iqr": 6.944444444514879,
+        "cv": 11.930865564090322,
+        "count": 13
+      },
+      "entry_speed_stats": {
+        "median": 298.0,
+        "mean": 274.0,
+        "std_dev": 63.4,
+        "min": 99.0,
+        "max": 322.0,
+        "count": 19
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -48.61,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -11.57,
+          "entry_speed": 99.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -51.77,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -27.78,
+          "entry_speed": 253.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -53.24,
+          "entry_speed": 322.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -11.11,
+          "entry_speed": 152.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -57.87,
+          "entry_speed": 319.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -12.15,
+          "entry_speed": 162.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -38.19,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -41.67,
+          "entry_speed": 290.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -67.71,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -50.93,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -53.57,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -45.14,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -52.08,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -40.28,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -69.44,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -46.87,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -48.61,
+          "entry_speed": 297.0
+        }
+      ],
+      "valid_laps_count": 19,
+      "outlier_count": 6
+    },
+    {
+      "driver": "ALO",
+      "brake_decel_stats": {
+        "median": -42.24537037040879,
+        "mean": -39.60417355601435,
+        "std_dev": 12.02249070899796,
+        "min": -55.55555555560612,
+        "max": -18.51851851846518,
+        "q1": -46.36863425930141,
+        "q3": -32.65817901237539,
+        "iqr": 13.710455246926017,
+        "cv": 30.356625652076524,
+        "count": 16
+      },
+      "entry_speed_stats": {
+        "median": 292.0,
+        "mean": 255.4,
+        "std_dev": 78.54,
+        "min": 85.0,
+        "max": 320.0,
+        "count": 20
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -41.67,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -6.94,
+          "entry_speed": 150.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -55.56,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -12.15,
+          "entry_speed": 137.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -45.14,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -25.0,
+          "entry_speed": 244.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -44.64,
+          "entry_speed": 311.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -18.52,
+          "entry_speed": 220.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -53.82,
+          "entry_speed": 312.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -46.01,
+          "entry_speed": 320.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -2.98,
+          "entry_speed": 95.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -55.56,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -5.21,
+          "entry_speed": 85.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -42.82,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -41.67,
+          "entry_speed": 290.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -47.45,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -34.72,
+          "entry_speed": 289.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -34.03,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -18.52,
+          "entry_speed": 211.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -28.55,
+          "entry_speed": 290.0
+        }
+      ],
+      "valid_laps_count": 20,
+      "outlier_count": 4
+    },
+    {
+      "driver": "LEC",
+      "brake_decel_stats": {
+        "median": -45.83333333327076,
+        "mean": -43.94132036862106,
+        "std_dev": 9.716460541827626,
+        "min": -57.87037037042299,
+        "max": -21.99074074073991,
+        "q1": -50.97415123454597,
+        "q3": -39.2466329965941,
+        "iqr": 11.72751823795187,
+        "cv": 22.11235452261523,
+        "count": 19
+      },
+      "entry_speed_stats": {
+        "median": 300.0,
+        "mean": 280.9,
+        "std_dev": 43.96,
+        "min": 184.0,
+        "max": 323.0,
+        "count": 24
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -56.71,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -13.89,
+          "entry_speed": 201.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -15.05,
+          "entry_speed": 194.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -45.86,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -19.1,
+          "entry_speed": 228.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -24.31,
+          "entry_speed": 208.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -53.82,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -21.99,
+          "entry_speed": 289.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -45.83,
+          "entry_speed": 323.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -52.58,
+          "entry_speed": 322.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -16.2,
+          "entry_speed": 250.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -57.87,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -11.28,
+          "entry_speed": 184.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -39.68,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -49.48,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -48.61,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -52.47,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -37.5,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -41.67,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -46.3,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -45.14,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -36.57,
+          "entry_speed": 302.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -39.14,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -39.35,
+          "entry_speed": 280.0
+        }
+      ],
+      "valid_laps_count": 24,
+      "outlier_count": 5
+    },
+    {
+      "driver": "STR",
+      "brake_decel_stats": {
+        "median": -43.40277777781724,
+        "mean": -40.456146219374354,
+        "std_dev": 10.82773716610822,
+        "min": -55.55555555557452,
+        "max": -16.666666666681838,
+        "q1": -47.45370370374685,
+        "q3": -37.03703703707071,
+        "iqr": 10.416666666676136,
+        "cv": 26.764133952340824,
+        "count": 17
+      },
+      "entry_speed_stats": {
+        "median": 294.0,
+        "mean": 276.2,
+        "std_dev": 44.06,
+        "min": 182.0,
+        "max": 320.0,
+        "count": 24
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -55.56,
+          "entry_speed": 320.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -15.62,
+          "entry_speed": 187.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -49.77,
+          "entry_speed": 320.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -13.89,
+          "entry_speed": 230.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -54.17,
+          "entry_speed": 319.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -16.2,
+          "entry_speed": 238.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -62.5,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -12.9,
+          "entry_speed": 202.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -50.51,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -8.33,
+          "entry_speed": 182.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -16.67,
+          "entry_speed": 215.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -40.67,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -37.04,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -37.59,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -64.24,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -35.71,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -46.3,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -43.4,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -37.5,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -43.4,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -47.45,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -43.4,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -20.83,
+          "entry_speed": 244.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -27.78,
+          "entry_speed": 275.0
+        }
+      ],
+      "valid_laps_count": 24,
+      "outlier_count": 7
+    },
+    {
+      "driver": "TSU",
+      "brake_decel_stats": {
+        "median": -46.527777777709574,
+        "mean": -46.75390089160359,
+        "std_dev": 9.86333404052622,
+        "min": -62.50000000005684,
+        "max": -33.17901234570918,
+        "q1": -52.517361111083204,
+        "q3": -38.62847222222901,
+        "iqr": 13.888888888854197,
+        "cv": 21.09628042244824,
+        "count": 18
+      },
+      "entry_speed_stats": {
+        "median": 295.0,
+        "mean": 261.8,
+        "std_dev": 73.76,
+        "min": 97.0,
+        "max": 318.0,
+        "count": 26
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -41.67,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -13.89,
+          "entry_speed": 197.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -17.36,
+          "entry_speed": 164.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -50.35,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -50.35,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -12.15,
+          "entry_speed": 137.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -60.19,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -44.44,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -12.35,
+          "entry_speed": 206.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -5.21,
+          "entry_speed": 111.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -69.44,
+          "entry_speed": 312.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -60.19,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -7.81,
+          "entry_speed": 128.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -3.47,
+          "entry_speed": 97.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -62.5,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -61.11,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -34.72,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -40.8,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -39.93,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -50.35,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -53.24,
+          "entry_speed": 306.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -34.72,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -33.18,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -37.04,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -48.61,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 30,
+          "max_decel": -38.19,
+          "entry_speed": 280.0
+        }
+      ],
+      "valid_laps_count": 26,
+      "outlier_count": 8
+    },
+    {
+      "driver": "ALB",
+      "brake_decel_stats": {
+        "median": -46.62698412695084,
+        "mean": -46.243556577348244,
+        "std_dev": 12.056770809803607,
+        "min": -67.12962962956347,
+        "max": -18.055555555571992,
+        "q1": -55.555555555606105,
+        "q3": -36.80555555550532,
+        "iqr": 18.750000000100783,
+        "cv": 26.07232596748289,
+        "count": 21
+      },
+      "entry_speed_stats": {
+        "median": 298.0,
+        "mean": 265.9,
+        "std_dev": 73.36,
+        "min": 94.0,
+        "max": 318.0,
+        "count": 27
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -56.42,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -18.06,
+          "entry_speed": 202.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -41.67,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -51.39,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -5.95,
+          "entry_speed": 94.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -6.43,
+          "entry_speed": 108.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -72.22,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -54.92,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -32.12,
+          "entry_speed": 285.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -59.03,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -11.28,
+          "entry_speed": 120.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -8.1,
+          "entry_speed": 123.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -63.27,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -32.99,
+          "entry_speed": 269.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -35.98,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -57.29,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -55.56,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -67.13,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -43.98,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -39.68,
+          "entry_speed": 312.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -46.63,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -41.67,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -50.6,
+          "entry_speed": 311.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -50.35,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -12.73,
+          "entry_speed": 179.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -36.81,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 30,
+          "max_decel": -35.59,
+          "entry_speed": 276.0
+        }
+      ],
+      "valid_laps_count": 27,
+      "outlier_count": 6
+    },
+    {
+      "driver": "HUL",
+      "brake_decel_stats": {
+        "median": -43.981481481521456,
+        "mean": -43.09327254162063,
+        "std_dev": 8.529976948010875,
+        "min": -57.2916666666373,
+        "max": -21.60493827159728,
+        "q1": -47.30902777772474,
+        "q3": -39.31601580665376,
+        "iqr": 7.9930119710709775,
+        "cv": 19.794219480018363,
+        "count": 19
+      },
+      "entry_speed_stats": {
+        "median": 293.0,
+        "mean": 251.4,
+        "std_dev": 70.8,
+        "min": 117.0,
+        "max": 318.0,
+        "count": 28
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -41.67,
+          "entry_speed": 309.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -12.5,
+          "entry_speed": 168.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -57.29,
+          "entry_speed": 312.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -7.81,
+          "entry_speed": 167.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -8.68,
+          "entry_speed": 117.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -57.29,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -8.74,
+          "entry_speed": 167.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -8.68,
+          "entry_speed": 130.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -50.35,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -21.6,
+          "entry_speed": 257.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -43.06,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -15.28,
+          "entry_speed": 174.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -6.94,
+          "entry_speed": 117.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -45.45,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -13.89,
+          "entry_speed": 226.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -44.44,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -51.39,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -40.8,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -38.35,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -33.96,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -48.61,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -40.28,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -43.98,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -45.14,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -46.01,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -10.8,
+          "entry_speed": 137.0
+        },
+        {
+          "lap_number": 30,
+          "max_decel": -36.11,
+          "entry_speed": 271.0
+        },
+        {
+          "lap_number": 31,
+          "max_decel": -32.99,
+          "entry_speed": 274.0
+        }
+      ],
+      "valid_laps_count": 28,
+      "outlier_count": 9
+    },
+    {
+      "driver": "LAW",
+      "brake_decel_stats": {
+        "median": -40.288800705439556,
+        "mean": -40.60706716090335,
+        "std_dev": 10.6334242405051,
+        "min": -59.02777777783145,
+        "max": -23.278717879846273,
+        "q1": -48.17708333334385,
+        "q3": -32.46527777776074,
+        "iqr": 15.711805555583112,
+        "cv": 26.186141930346068,
+        "count": 22
+      },
+      "entry_speed_stats": {
+        "median": 294.0,
+        "mean": 279.2,
+        "std_dev": 45.07,
+        "min": 127.0,
+        "max": 315.0,
+        "count": 26
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -62.5,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -23.28,
+          "entry_speed": 278.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -13.12,
+          "entry_speed": 153.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -54.69,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -31.94,
+          "entry_speed": 221.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -11.11,
+          "entry_speed": 127.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -54.56,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -39.35,
+          "entry_speed": 286.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -75.0,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -29.86,
+          "entry_speed": 287.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -46.87,
+          "entry_speed": 290.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -35.71,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -56.94,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -41.67,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -25.46,
+          "entry_speed": 271.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -59.03,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -48.61,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -36.46,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -30.93,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -43.4,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -34.03,
+          "entry_speed": 288.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -40.9,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -51.39,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -39.68,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -43.4,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -25.17,
+          "entry_speed": 265.0
+        }
+      ],
+      "valid_laps_count": 26,
+      "outlier_count": 4
+    },
+    {
+      "driver": "OCO",
+      "brake_decel_stats": {
+        "median": -44.56018518522568,
+        "mean": -42.87873047488242,
+        "std_dev": 7.808834418320609,
+        "min": -54.16666666659282,
+        "max": -24.154589371971923,
+        "q1": -46.6145833333497,
+        "q3": -39.583333333356165,
+        "iqr": 7.031249999993534,
+        "cv": 18.211440338456107,
+        "count": 18
+      },
+      "entry_speed_stats": {
+        "median": 295.5,
+        "mean": 257.4,
+        "std_dev": 72.25,
+        "min": 84.0,
+        "max": 318.0,
+        "count": 26
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -36.46,
+          "entry_speed": 311.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -13.89,
+          "entry_speed": 141.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -52.08,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -13.89,
+          "entry_speed": 150.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -53.57,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -19.68,
+          "entry_speed": 237.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -16.98,
+          "entry_speed": 240.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -61.11,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -43.86,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -10.42,
+          "entry_speed": 114.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -5.56,
+          "entry_speed": 84.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -45.14,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -24.15,
+          "entry_speed": 186.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -32.64,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -54.17,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -45.14,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -45.83,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -45.14,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -41.67,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -46.88,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -43.98,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -38.89,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -48.61,
+          "entry_speed": 310.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -9.47,
+          "entry_speed": 141.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -41.67,
+          "entry_speed": 271.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -31.94,
+          "entry_speed": 279.0
+        }
+      ],
+      "valid_laps_count": 26,
+      "outlier_count": 8
+    },
+    {
+      "driver": "COL",
+      "brake_decel_stats": {
+        "median": -45.13888888877601,
+        "mean": -44.18538613563708,
+        "std_dev": 7.520093159893678,
+        "min": -58.33333333338641,
+        "max": -31.635802469124624,
+        "q1": -50.130208333378945,
+        "q3": -40.674603174615385,
+        "iqr": 9.45560515876356,
+        "cv": 17.01941256507082,
+        "count": 18
+      },
+      "entry_speed_stats": {
+        "median": 293.0,
+        "mean": 259.1,
+        "std_dev": 75.52,
+        "min": 86.0,
+        "max": 316.0,
+        "count": 25
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -46.88,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -5.56,
+          "entry_speed": 117.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -40.67,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -35.88,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -8.33,
+          "entry_speed": 128.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -51.39,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -13.02,
+          "entry_speed": 175.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -45.14,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -11.57,
+          "entry_speed": 139.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -5.56,
+          "entry_speed": 86.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -49.48,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -11.57,
+          "entry_speed": 140.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -32.41,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -40.8,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -50.35,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -31.64,
+          "entry_speed": 288.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -41.67,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -48.61,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -40.67,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -65.97,
+          "entry_speed": 293.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -58.33,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -33.86,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -52.08,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -45.14,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -50.35,
+          "entry_speed": 272.0
+        }
+      ],
+      "valid_laps_count": 25,
+      "outlier_count": 7
+    },
+    {
+      "driver": "HAM",
+      "brake_decel_stats": {
+        "median": -48.611111111017124,
+        "mean": -47.5589006299962,
+        "std_dev": 4.233010428920433,
+        "min": -53.240740740789164,
+        "max": -40.798611111090246,
+        "q1": -51.37582723786604,
+        "q3": -43.05555555559473,
+        "iqr": 8.320271682271311,
+        "cv": 8.90056408547552,
+        "count": 13
+      },
+      "entry_speed_stats": {
+        "median": 300.0,
+        "mean": 273.4,
+        "std_dev": 62.58,
+        "min": 126.0,
+        "max": 324.0,
+        "count": 22
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -61.73,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -8.1,
+          "entry_speed": 126.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -51.38,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -42.66,
+          "entry_speed": 317.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -15.43,
+          "entry_speed": 222.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -9.26,
+          "entry_speed": 160.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -51.39,
+          "entry_speed": 314.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -68.06,
+          "entry_speed": 324.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -13.89,
+          "entry_speed": 153.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -46.63,
+          "entry_speed": 322.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -26.04,
+          "entry_speed": 279.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -40.8,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -48.61,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -45.83,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -49.77,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -43.06,
+          "entry_speed": 305.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -53.24,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -43.06,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -69.44,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -53.24,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -48.61,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -10.42,
+          "entry_speed": 167.0
+        }
+      ],
+      "valid_laps_count": 22,
+      "outlier_count": 9
+    },
+    {
+      "driver": "SAI",
+      "brake_decel_stats": {
+        "median": -45.965608465569346,
+        "mean": -46.13756613757757,
+        "std_dev": 5.9265608994734595,
+        "min": -55.55555555556659,
+        "max": -36.80555555554719,
+        "q1": -50.46296296291383,
+        "q3": -41.31944444448203,
+        "iqr": 9.143518518431797,
+        "cv": 12.845412958717962,
+        "count": 20
+      },
+      "entry_speed_stats": {
+        "median": 295.0,
+        "mean": 252.8,
+        "std_dev": 81.47,
+        "min": 85.0,
+        "max": 316.0,
+        "count": 29
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -55.56,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -8.68,
+          "entry_speed": 133.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -67.71,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -5.79,
+          "entry_speed": 85.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -9.92,
+          "entry_speed": 94.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -42.44,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -53.57,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -15.05,
+          "entry_speed": 96.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -51.39,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -5.79,
+          "entry_speed": 126.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -38.19,
+          "entry_speed": 274.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -50.0,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -53.57,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -17.36,
+          "entry_speed": 204.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -38.69,
+          "entry_speed": 290.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -38.69,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -36.81,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -46.3,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -41.67,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -45.14,
+          "entry_speed": 308.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -43.98,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -45.63,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -53.82,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -46.88,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -50.15,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -40.28,
+          "entry_speed": 279.0
+        },
+        {
+          "lap_number": 30,
+          "max_decel": -50.0,
+          "entry_speed": 281.0
+        },
+        {
+          "lap_number": 31,
+          "max_decel": -8.68,
+          "entry_speed": 169.0
+        },
+        {
+          "lap_number": 32,
+          "max_decel": -4.63,
+          "entry_speed": 121.0
+        }
+      ],
+      "valid_laps_count": 29,
+      "outlier_count": 9
+    },
+    {
+      "driver": "RUS",
+      "brake_decel_stats": {
+        "median": -48.99691358022959,
+        "mean": -47.224628148201624,
+        "std_dev": 11.757558490233045,
+        "min": -66.28787878787054,
+        "max": -20.833333333332543,
+        "q1": -54.363479262710214,
+        "q3": -41.21197089945883,
+        "iqr": 13.151508363251388,
+        "cv": 24.897090673398534,
+        "count": 14
+      },
+      "entry_speed_stats": {
+        "median": 298.0,
+        "mean": 268.3,
+        "std_dev": 61.1,
+        "min": 124.0,
+        "max": 322.0,
+        "count": 21
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -66.29,
+          "entry_speed": 318.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -10.56,
+          "entry_speed": 162.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -51.7,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -20.83,
+          "entry_speed": 226.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -46.3,
+          "entry_speed": 313.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -60.19,
+          "entry_speed": 322.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -11.28,
+          "entry_speed": 162.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -55.56,
+          "entry_speed": 319.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -6.94,
+          "entry_speed": 124.0
+        },
+        {
+          "lap_number": 16,
+          "max_decel": -53.76,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -31.94,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -72.92,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -40.67,
+          "entry_speed": 299.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -42.82,
+          "entry_speed": 298.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -52.08,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -77.78,
+          "entry_speed": 300.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -44.75,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -54.56,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -17.99,
+          "entry_speed": 210.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -17.36,
+          "entry_speed": 195.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -39.68,
+          "entry_speed": 279.0
+        }
+      ],
+      "valid_laps_count": 21,
+      "outlier_count": 7
+    },
+    {
+      "driver": "PIA",
+      "brake_decel_stats": {
+        "median": -40.42521515285513,
+        "mean": -40.22665952235841,
+        "std_dev": 14.319193213976948,
+        "min": -61.34259259264838,
+        "max": -12.15277777777155,
+        "q1": -48.61111111112571,
+        "q3": -37.57440476193888,
+        "iqr": 11.03670634918683,
+        "cv": 35.596277155497305,
+        "count": 20
+      },
+      "entry_speed_stats": {
+        "median": 291.0,
+        "mean": 244.3,
+        "std_dev": 78.27,
+        "min": 105.0,
+        "max": 316.0,
+        "count": 27
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -59.03,
+          "entry_speed": 311.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -8.1,
+          "entry_speed": 106.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -7.72,
+          "entry_speed": 131.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -76.39,
+          "entry_speed": 310.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -5.21,
+          "entry_speed": 113.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -12.15,
+          "entry_speed": 141.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -48.61,
+          "entry_speed": 310.0
+        },
+        {
+          "lap_number": 9,
+          "max_decel": -13.89,
+          "entry_speed": 230.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -60.52,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -4.96,
+          "entry_speed": 105.0
+        },
+        {
+          "lap_number": 13,
+          "max_decel": -9.26,
+          "entry_speed": 123.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -48.61,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -6.94,
+          "entry_speed": 138.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -42.82,
+          "entry_speed": 290.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -40.34,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -41.67,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -39.93,
+          "entry_speed": 301.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -31.25,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -53.82,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -35.71,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -45.14,
+          "entry_speed": 289.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -61.34,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -38.19,
+          "entry_speed": 296.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -40.51,
+          "entry_speed": 291.0
+        },
+        {
+          "lap_number": 28,
+          "max_decel": -38.19,
+          "entry_speed": 224.0
+        },
+        {
+          "lap_number": 29,
+          "max_decel": -13.12,
+          "entry_speed": 209.0
+        },
+        {
+          "lap_number": 30,
+          "max_decel": -39.68,
+          "entry_speed": 274.0
+        }
+      ],
+      "valid_laps_count": 27,
+      "outlier_count": 7
+    },
+    {
+      "driver": "BEA",
+      "brake_decel_stats": {
+        "median": -40.31635802468964,
+        "mean": -38.933904723392736,
+        "std_dev": 9.335595172912878,
+        "min": -53.81944444434045,
+        "max": -20.833333333352297,
+        "q1": -45.95871913583404,
+        "q3": -34.895833333307046,
+        "iqr": 11.062885802526992,
+        "cv": 23.978060354433843,
+        "count": 18
+      },
+      "entry_speed_stats": {
+        "median": 292.0,
+        "mean": 260.0,
+        "std_dev": 63.66,
+        "min": 122.0,
+        "max": 319.0,
+        "count": 23
+      },
+      "raw_decel_trend": [
+        {
+          "lap_number": 2,
+          "max_decel": -43.21,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 3,
+          "max_decel": -8.33,
+          "entry_speed": 135.0
+        },
+        {
+          "lap_number": 4,
+          "max_decel": -47.07,
+          "entry_speed": 315.0
+        },
+        {
+          "lap_number": 5,
+          "max_decel": -9.26,
+          "entry_speed": 152.0
+        },
+        {
+          "lap_number": 6,
+          "max_decel": -20.83,
+          "entry_speed": 230.0
+        },
+        {
+          "lap_number": 7,
+          "max_decel": -46.88,
+          "entry_speed": 311.0
+        },
+        {
+          "lap_number": 8,
+          "max_decel": -18.06,
+          "entry_speed": 181.0
+        },
+        {
+          "lap_number": 10,
+          "max_decel": -24.8,
+          "entry_speed": 262.0
+        },
+        {
+          "lap_number": 11,
+          "max_decel": -53.82,
+          "entry_speed": 319.0
+        },
+        {
+          "lap_number": 12,
+          "max_decel": -4.17,
+          "entry_speed": 122.0
+        },
+        {
+          "lap_number": 14,
+          "max_decel": -47.98,
+          "entry_speed": 316.0
+        },
+        {
+          "lap_number": 15,
+          "max_decel": -13.89,
+          "entry_speed": 173.0
+        },
+        {
+          "lap_number": 17,
+          "max_decel": -38.19,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 18,
+          "max_decel": -40.51,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 19,
+          "max_decel": -42.53,
+          "entry_speed": 292.0
+        },
+        {
+          "lap_number": 20,
+          "max_decel": -49.77,
+          "entry_speed": 286.0
+        },
+        {
+          "lap_number": 21,
+          "max_decel": -37.5,
+          "entry_speed": 295.0
+        },
+        {
+          "lap_number": 22,
+          "max_decel": -34.03,
+          "entry_speed": 282.0
+        },
+        {
+          "lap_number": 23,
+          "max_decel": -41.93,
+          "entry_speed": 297.0
+        },
+        {
+          "lap_number": 24,
+          "max_decel": -40.12,
+          "entry_speed": 294.0
+        },
+        {
+          "lap_number": 25,
+          "max_decel": -24.41,
+          "entry_speed": 222.0
+        },
+        {
+          "lap_number": 26,
+          "max_decel": -39.35,
+          "entry_speed": 312.0
+        },
+        {
+          "lap_number": 27,
+          "max_decel": -27.88,
+          "entry_speed": 278.0
+        }
+      ],
+      "valid_laps_count": 23,
+      "outlier_count": 5
+    }
+  ],
+  "summary": {
+    "total_drivers": 20,
+    "best_braker": {
+      "driver": "RUS",
+      "median_decel": -49.0
+    },
+    "most_consistent_braker": {
+      "driver": "HAM",
+      "cv": 8.9
+    },
+    "avg_median_decel": -43.06
+  }
+}

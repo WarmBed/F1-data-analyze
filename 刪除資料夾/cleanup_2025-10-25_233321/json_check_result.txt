@@ -1,0 +1,11 @@
+File: json\championship_standings_2025_R19_20251025T021527Z.json
+Calendar exists: True
+Calendar: {
+  "completed": 19,
+  "remaining": 5,
+  "total": 24,
+  "next_race": {
+    "name": "Mexico City Grand Prix",
+    "date": "2025-10-26T14:00:00-06:00"
+  }
+}

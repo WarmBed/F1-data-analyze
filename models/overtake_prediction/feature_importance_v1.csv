@@ -1,0 +1,11 @@
+﻿feature,importance
+gap_seconds,0.32895577
+tyre_age_diff,0.1643488
+track_status_green,0.1016119
+race_progress,0.097574234
+defender_tyre_compound,0.07854389
+attacker_tyre_compound,0.06616619
+attacker_position,0.064533286
+gap_delta,0.059032958
+is_catching,0.03923306
+drs_available,0.0

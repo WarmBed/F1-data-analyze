@@ -1,0 +1,21 @@
+=== TIME AXIS TOGGLE TEST ===
+
+INITIAL STATE:
+  use_time_axis: False
+  x_axis_title: 'Distance (m)'
+
+AFTER SET_DATA:
+  time_axis_available: True
+  x_axis_title: 'Distance (m)'
+
+AFTER TOGGLE TO TIME:
+  success: True
+  use_time_axis: True
+  x_axis_title: 'Time (s)'
+
+AFTER TOGGLE TO DISTANCE:
+  success: True
+  use_time_axis: False
+  x_axis_title: 'Distance (m)'
+
+=== TEST COMPLETE ===

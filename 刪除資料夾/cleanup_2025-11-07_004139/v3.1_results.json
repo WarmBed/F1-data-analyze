@@ -1,0 +1,8 @@
+{
+  "Mexico_train": {
+    "track": "Mexico",
+    "train_mae": 0.11643796439792824,
+    "test_mae": 0.45762022399902236,
+    "test_r2": 0.7642450689943296,
+    "feature_importances": {
+      "ideal_s1": 

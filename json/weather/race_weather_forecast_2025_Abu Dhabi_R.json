@@ -1,0 +1,2352 @@
+{
+  "success": true,
+  "message": "2025 Abu Dhabi Grand Prix 天氣預報已生成",
+  "metadata": {
+    "function_id": 96,
+    "analysis_type": "race_weather_forecast",
+    "generated_at": "2025-12-23T15:13:18.321924+00:00",
+    "refresh_interval_hours": 24,
+    "force_regenerated": false,
+    "year": 2025,
+    "event_name": "Abu Dhabi Grand Prix",
+    "event_slug": "abu_dhabi_grand_prix",
+    "round": 24,
+    "location": "Yas Island",
+    "country": "United Arab Emirates",
+    "race_date_local": "2025-12-07T17:00:00+04:00",
+    "race_date_utc": "2025-12-07T13:00:00+00:00",
+    "calendar_reference_file": "json\\season_calendar_multi_year_20251217T170900Z.json",
+    "calendar_freshness": {
+      "exists": true,
+      "path": "json\\season_calendar_multi_year_20251217T170900Z.json",
+      "file_time": "2025-12-17T17:09:00.209390+00:00",
+      "current_time": "2025-12-23T15:13:15.214338+00:00",
+      "age_hours": 142.07,
+      "age_formatted": "5 天 22 小時前",
+      "is_fresh": true,
+      "should_regenerate": false,
+      "refresh_interval_hours": 168,
+      "reason": "檔案新鮮（142.1小時前生成）",
+      "trigger_mode": null,
+      "events_to_update": []
+    },
+    "sources": {
+      "calendar": "FastF1 (via season calendar function -f99)",
+      "forecast": "https://api.open-meteo.com/v1/forecast",
+      "historical": "https://archive-api.open-meteo.com/v1/archive"
+    }
+  },
+  "data": {
+    "coordinates": {
+      "latitude": 24.4672,
+      "longitude": 54.6031,
+      "timezone": "Asia/Dubai",
+      "circuit": "Yas Marina Circuit",
+      "country": "United Arab Emirates"
+    },
+    "forecast": {
+      "generated_at": "2025-12-23T15:13:18.321924+00:00",
+      "days": [
+        {
+          "date": "2025-12-05",
+          "label": "race_minus_2",
+          "summary": {
+            "temperature_max": 27.3,
+            "temperature_min": 22.1,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 81,
+            "windspeed_max": 10.1,
+            "winddirection_dominant": 245,
+            "winddirection_cardinal": "SW"
+          },
+          "hourly": [
+            {
+              "time": "2025-12-05T00:00",
+              "temperature_2m": 23.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 34,
+              "windspeed_10m": 3.8,
+              "winddirection_10m": 41,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-05T01:00",
+              "temperature_2m": 23.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 3.7,
+              "winddirection_10m": 61,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-05T02:00",
+              "temperature_2m": 22.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 3.8,
+              "winddirection_10m": 107,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2025-12-05T03:00",
+              "temperature_2m": 22.4,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 4.0,
+              "winddirection_10m": 117,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2025-12-05T04:00",
+              "temperature_2m": 22.5,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 3.5,
+              "winddirection_10m": 156,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2025-12-05T05:00",
+              "temperature_2m": 22.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 4.0,
+              "winddirection_10m": 170,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-05T06:00",
+              "temperature_2m": 22.2,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 5.6,
+              "winddirection_10m": 195,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-05T07:00",
+              "temperature_2m": 22.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 4.4,
+              "winddirection_10m": 171,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-05T08:00",
+              "temperature_2m": 22.2,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 5.8,
+              "winddirection_10m": 176,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-05T09:00",
+              "temperature_2m": 22.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 6.2,
+              "winddirection_10m": 187,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-05T10:00",
+              "temperature_2m": 24.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 8.2,
+              "winddirection_10m": 203,
+              "winddirection_cardinal": "SW"
+            },
+            {
+              "time": "2025-12-05T11:00",
+              "temperature_2m": 25.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 100,
+              "windspeed_10m": 8.2,
+              "winddirection_10m": 221,
+              "winddirection_cardinal": "SW"
+            },
+            {
+              "time": "2025-12-05T12:00",
+              "temperature_2m": 26.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 9.7,
+              "winddirection_10m": 255,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-05T13:00",
+              "temperature_2m": 26.5,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 10.1,
+              "winddirection_10m": 268,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-05T14:00",
+              "temperature_2m": 26.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 84,
+              "windspeed_10m": 7.4,
+              "winddirection_10m": 256,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-05T15:00",
+              "temperature_2m": 27.2,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 95,
+              "windspeed_10m": 6.2,
+              "winddirection_10m": 249,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-05T16:00",
+              "temperature_2m": 27.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 100,
+              "windspeed_10m": 3.6,
+              "winddirection_10m": 264,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-05T17:00",
+              "temperature_2m": 26.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 100,
+              "windspeed_10m": 5.6,
+              "winddirection_10m": 297,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-05T18:00",
+              "temperature_2m": 25.6,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 29,
+              "windspeed_10m": 6.5,
+              "winddirection_10m": 304,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-05T19:00",
+              "temperature_2m": 24.4,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 42,
+              "windspeed_10m": 7.4,
+              "winddirection_10m": 299,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-05T20:00",
+              "temperature_2m": 23.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 27,
+              "windspeed_10m": 5.9,
+              "winddirection_10m": 308,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-05T21:00",
+              "temperature_2m": 23.4,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 27,
+              "windspeed_10m": 3.3,
+              "winddirection_10m": 319,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-05T22:00",
+              "temperature_2m": 23.5,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 37,
+              "windspeed_10m": 3.8,
+              "winddirection_10m": 311,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-05T23:00",
+              "temperature_2m": 23.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 58,
+              "windspeed_10m": 3.1,
+              "winddirection_10m": 315,
+              "winddirection_cardinal": "NW"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        {
+          "date": "2025-12-06",
+          "label": "race_minus_1",
+          "summary": {
+            "temperature_max": 27.9,
+            "temperature_min": 20.8,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 33,
+            "windspeed_max": 10.2,
+            "winddirection_dominant": 285,
+            "winddirection_cardinal": "W"
+          },
+          "hourly": [
+            {
+              "time": "2025-12-06T00:00",
+              "temperature_2m": 23.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 58,
+              "windspeed_10m": 2.8,
+              "winddirection_10m": 310,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-06T01:00",
+              "temperature_2m": 22.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 36,
+              "windspeed_10m": 1.6,
+              "winddirection_10m": 297,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-06T02:00",
+              "temperature_2m": 22.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 100,
+              "windspeed_10m": 1.4,
+              "winddirection_10m": 180,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-06T03:00",
+              "temperature_2m": 22.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 86,
+              "windspeed_10m": 3.0,
+              "winddirection_10m": 166,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-06T04:00",
+              "temperature_2m": 21.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 97,
+              "windspeed_10m": 3.8,
+              "winddirection_10m": 139,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2025-12-06T05:00",
+              "temperature_2m": 21.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 74,
+              "windspeed_10m": 4.5,
+              "winddirection_10m": 151,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2025-12-06T06:00",
+              "temperature_2m": 20.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 78,
+              "windspeed_10m": 5.6,
+              "winddirection_10m": 153,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2025-12-06T07:00",
+              "temperature_2m": 21.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 68,
+              "windspeed_10m": 6.2,
+              "winddirection_10m": 173,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-06T08:00",
+              "temperature_2m": 21.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 52,
+              "windspeed_10m": 6.5,
+              "winddirection_10m": 183,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-06T09:00",
+              "temperature_2m": 22.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 47,
+              "windspeed_10m": 6.5,
+              "winddirection_10m": 183,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-06T10:00",
+              "temperature_2m": 24.6,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 29,
+              "windspeed_10m": 5.9,
+              "winddirection_10m": 191,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2025-12-06T11:00",
+              "temperature_2m": 26.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 3,
+              "windspeed_10m": 5.1,
+              "winddirection_10m": 225,
+              "winddirection_cardinal": "SW"
+            },
+            {
+              "time": "2025-12-06T12:00",
+              "temperature_2m": 27.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.2,
+              "winddirection_10m": 258,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-06T13:00",
+              "temperature_2m": 27.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.1,
+              "winddirection_10m": 273,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-06T14:00",
+              "temperature_2m": 27.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 0,
+              "windspeed_10m": 6.8,
+              "winddirection_10m": 288,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2025-12-06T15:00",
+              "temperature_2m": 27.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.0,
+              "winddirection_10m": 297,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-06T16:00",
+              "temperature_2m": 26.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.2,
+              "winddirection_10m": 321,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-06T17:00",
+              "temperature_2m": 26.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.2,
+              "winddirection_10m": 328,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-06T18:00",
+              "temperature_2m": 25.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.4,
+              "winddirection_10m": 335,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2025-12-06T19:00",
+              "temperature_2m": 24.6,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 3,
+              "windspeed_10m": 5.4,
+              "winddirection_10m": 352,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-06T20:00",
+              "temperature_2m": 24.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 6,
+              "windspeed_10m": 4.7,
+              "winddirection_10m": 360,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-06T21:00",
+              "temperature_2m": 23.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.7,
+              "winddirection_10m": 4,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-06T22:00",
+              "temperature_2m": 23.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 7,
+              "windspeed_10m": 5.0,
+              "winddirection_10m": 21,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-06T23:00",
+              "temperature_2m": 23.5,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 51,
+              "windspeed_10m": 4.6,
+              "winddirection_10m": 39,
+              "winddirection_cardinal": "NE"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        {
+          "date": "2025-12-07",
+          "label": "race_day",
+          "summary": {
+            "temperature_max": 29.2,
+            "temperature_min": 21.6,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 13,
+            "windspeed_max": 17.7,
+            "winddirection_dominant": 28,
+            "winddirection_cardinal": "NE"
+          },
+          "hourly": [
+            {
+              "time": "2025-12-07T00:00",
+              "temperature_2m": 23.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 56,
+              "windspeed_10m": 4.2,
+              "winddirection_10m": 59,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T01:00",
+              "temperature_2m": 22.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 66,
+              "windspeed_10m": 4.8,
+              "winddirection_10m": 77,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2025-12-07T02:00",
+              "temperature_2m": 22.4,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 75,
+              "windspeed_10m": 4.7,
+              "winddirection_10m": 90,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2025-12-07T03:00",
+              "temperature_2m": 22.2,
+              "precipitation": 0.0,
+              "precipitation_probability": 3,
+              "cloudcover": 100,
+              "windspeed_10m": 5.5,
+              "winddirection_10m": 101,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2025-12-07T04:00",
+              "temperature_2m": 22.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 5,
+              "cloudcover": 13,
+              "windspeed_10m": 4.0,
+              "winddirection_10m": 90,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2025-12-07T05:00",
+              "temperature_2m": 21.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 3.3,
+              "winddirection_10m": 77,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2025-12-07T06:00",
+              "temperature_2m": 21.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.3,
+              "winddirection_10m": 48,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T07:00",
+              "temperature_2m": 21.6,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.9,
+              "winddirection_10m": 54,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T08:00",
+              "temperature_2m": 22.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.5,
+              "winddirection_10m": 58,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T09:00",
+              "temperature_2m": 23.4,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.9,
+              "winddirection_10m": 60,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T10:00",
+              "temperature_2m": 25.5,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.7,
+              "winddirection_10m": 52,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T11:00",
+              "temperature_2m": 26.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.5,
+              "winddirection_10m": 41,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T12:00",
+              "temperature_2m": 28.1,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.6,
+              "winddirection_10m": 37,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T13:00",
+              "temperature_2m": 28.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.0,
+              "winddirection_10m": 28,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2025-12-07T14:00",
+              "temperature_2m": 29.2,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.5,
+              "winddirection_10m": 16,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T15:00",
+              "temperature_2m": 28.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.5,
+              "winddirection_10m": 4,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T16:00",
+              "temperature_2m": 27.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 17.7,
+              "winddirection_10m": 358,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T17:00",
+              "temperature_2m": 26.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.2,
+              "winddirection_10m": 3,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T18:00",
+              "temperature_2m": 25.7,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.8,
+              "winddirection_10m": 6,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T19:00",
+              "temperature_2m": 25.3,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.7,
+              "winddirection_10m": 11,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T20:00",
+              "temperature_2m": 25.0,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.5,
+              "winddirection_10m": 20,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T21:00",
+              "temperature_2m": 24.8,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.7,
+              "winddirection_10m": 20,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T22:00",
+              "temperature_2m": 24.9,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.6,
+              "winddirection_10m": 18,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2025-12-07T23:00",
+              "temperature_2m": 24.5,
+              "precipitation": 0.0,
+              "precipitation_probability": 0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.1,
+              "winddirection_10m": 27,
+              "winddirection_cardinal": "NE"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        }
+      ],
+      "units": {
+        "daily": {
+          "time": "iso8601",
+          "temperature_2m_max": "°C",
+          "temperature_2m_min": "°C",
+          "precipitation_sum": "mm",
+          "cloudcover_mean": "%",
+          "windspeed_10m_max": "km/h",
+          "winddirection_10m_dominant": "°"
+        },
+        "hourly": {
+          "time": "iso8601",
+          "temperature_2m": "°C",
+          "precipitation": "mm",
+          "precipitation_probability": "%",
+          "cloudcover": "%",
+          "windspeed_10m": "km/h",
+          "winddirection_10m": "°"
+        }
+      },
+      "raw_source": "https://api.open-meteo.com/v1/forecast",
+      "request_parameters": {
+        "latitude": 24.4672,
+        "longitude": 54.6031,
+        "hourly": "temperature_2m,precipitation,precipitation_probability,cloudcover,windspeed_10m,winddirection_10m",
+        "daily": "temperature_2m_max,temperature_2m_min,precipitation_sum,cloudcover_mean,windspeed_10m_max,winddirection_10m_dominant",
+        "timezone": "Asia/Dubai",
+        "start_date": "2025-12-05",
+        "end_date": "2025-12-07"
+      }
+    },
+    "historical": {
+      "generated_at": "2025-12-23T15:13:18.321924+00:00",
+      "entries": {
+        "2024_race_minus_2": {
+          "date": "2024-12-05",
+          "label": "race_minus_2",
+          "summary": {
+            "temperature_max": 26.9,
+            "temperature_min": 16.2,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 0,
+            "windspeed_max": 15.7,
+            "winddirection_dominant": 357,
+            "winddirection_cardinal": "N"
+          },
+          "hourly": [
+            {
+              "time": "2024-12-05T00:00",
+              "temperature_2m": 19.5,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 3.9,
+              "winddirection_10m": 146,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T01:00",
+              "temperature_2m": 18.8,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 3.5,
+              "winddirection_10m": 152,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T02:00",
+              "temperature_2m": 18.3,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.6,
+              "winddirection_10m": 144,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T03:00",
+              "temperature_2m": 17.4,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 7.7,
+              "winddirection_10m": 141,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T04:00",
+              "temperature_2m": 16.9,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 7.1,
+              "winddirection_10m": 142,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T05:00",
+              "temperature_2m": 17.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 3.3,
+              "winddirection_10m": 144,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T06:00",
+              "temperature_2m": 16.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 2.3,
+              "winddirection_10m": 129,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T07:00",
+              "temperature_2m": 16.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 2.3,
+              "winddirection_10m": 119,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T08:00",
+              "temperature_2m": 17.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.2,
+              "winddirection_10m": 126,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T09:00",
+              "temperature_2m": 22.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 2.7,
+              "winddirection_10m": 127,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2024-12-05T10:00",
+              "temperature_2m": 24.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 2.2,
+              "winddirection_10m": 42,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2024-12-05T11:00",
+              "temperature_2m": 26.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.6,
+              "winddirection_10m": 349,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T12:00",
+              "temperature_2m": 26.7,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.3,
+              "winddirection_10m": 340,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T13:00",
+              "temperature_2m": 26.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 14.2,
+              "winddirection_10m": 334,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-05T14:00",
+              "temperature_2m": 26.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.7,
+              "winddirection_10m": 335,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-05T15:00",
+              "temperature_2m": 26.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.4,
+              "winddirection_10m": 339,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T16:00",
+              "temperature_2m": 25.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 14.9,
+              "winddirection_10m": 345,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T17:00",
+              "temperature_2m": 25.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.6,
+              "winddirection_10m": 345,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T18:00",
+              "temperature_2m": 24.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.9,
+              "winddirection_10m": 347,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T19:00",
+              "temperature_2m": 23.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.1,
+              "winddirection_10m": 358,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T20:00",
+              "temperature_2m": 22.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.7,
+              "winddirection_10m": 4,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T21:00",
+              "temperature_2m": 22.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.5,
+              "winddirection_10m": 2,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T22:00",
+              "temperature_2m": 21.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.9,
+              "winddirection_10m": 356,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-05T23:00",
+              "temperature_2m": 21.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.7,
+              "winddirection_10m": 358,
+              "winddirection_cardinal": "N"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        "2024_race_minus_1": {
+          "date": "2024-12-06",
+          "label": "race_minus_1",
+          "summary": {
+            "temperature_max": 28.8,
+            "temperature_min": 19.9,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 2,
+            "windspeed_max": 18.2,
+            "winddirection_dominant": 344,
+            "winddirection_cardinal": "N"
+          },
+          "hourly": [
+            {
+              "time": "2024-12-06T00:00",
+              "temperature_2m": 21.1,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 4.3,
+              "winddirection_10m": 358,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T01:00",
+              "temperature_2m": 20.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.1,
+              "winddirection_10m": 347,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T02:00",
+              "temperature_2m": 20.5,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 4.0,
+              "winddirection_10m": 352,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T03:00",
+              "temperature_2m": 20.2,
+              "precipitation": 0.0,
+              "cloudcover": 18,
+              "windspeed_10m": 2.9,
+              "winddirection_10m": 11,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T04:00",
+              "temperature_2m": 19.9,
+              "precipitation": 0.0,
+              "cloudcover": 8,
+              "windspeed_10m": 1.3,
+              "winddirection_10m": 56,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2024-12-06T05:00",
+              "temperature_2m": 20.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 2.2,
+              "winddirection_10m": 14,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T06:00",
+              "temperature_2m": 20.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.2,
+              "winddirection_10m": 7,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T07:00",
+              "temperature_2m": 19.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 3.8,
+              "winddirection_10m": 25,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2024-12-06T08:00",
+              "temperature_2m": 21.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.4,
+              "winddirection_10m": 37,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2024-12-06T09:00",
+              "temperature_2m": 24.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.5,
+              "winddirection_10m": 39,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2024-12-06T10:00",
+              "temperature_2m": 26.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.4,
+              "winddirection_10m": 15,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T11:00",
+              "temperature_2m": 27.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 14.6,
+              "winddirection_10m": 1,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T12:00",
+              "temperature_2m": 28.7,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.6,
+              "winddirection_10m": 354,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T13:00",
+              "temperature_2m": 28.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 18.0,
+              "winddirection_10m": 346,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T14:00",
+              "temperature_2m": 28.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 18.2,
+              "winddirection_10m": 343,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T15:00",
+              "temperature_2m": 28.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 18.1,
+              "winddirection_10m": 340,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-06T16:00",
+              "temperature_2m": 27.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.8,
+              "winddirection_10m": 337,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T17:00",
+              "temperature_2m": 26.7,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.3,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T18:00",
+              "temperature_2m": 25.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.6,
+              "winddirection_10m": 328,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T19:00",
+              "temperature_2m": 24.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.4,
+              "winddirection_10m": 323,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T20:00",
+              "temperature_2m": 24.4,
+              "precipitation": 0.0,
+              "cloudcover": 8,
+              "windspeed_10m": 7.4,
+              "winddirection_10m": 315,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T21:00",
+              "temperature_2m": 23.9,
+              "precipitation": 0.0,
+              "cloudcover": 8,
+              "windspeed_10m": 7.4,
+              "winddirection_10m": 302,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T22:00",
+              "temperature_2m": 23.5,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 8.7,
+              "winddirection_10m": 297,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-06T23:00",
+              "temperature_2m": 23.3,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 8.5,
+              "winddirection_10m": 297,
+              "winddirection_cardinal": "NW"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        "2024_race_minus_0": {
+          "date": "2024-12-07",
+          "label": "race_day",
+          "summary": {
+            "temperature_max": 28.1,
+            "temperature_min": 22.1,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 1,
+            "windspeed_max": 21.0,
+            "winddirection_dominant": 323,
+            "winddirection_cardinal": "NW"
+          },
+          "hourly": [
+            {
+              "time": "2024-12-07T00:00",
+              "temperature_2m": 23.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.2,
+              "winddirection_10m": 293,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T01:00",
+              "temperature_2m": 22.7,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.0,
+              "winddirection_10m": 293,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T02:00",
+              "temperature_2m": 22.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.8,
+              "winddirection_10m": 292,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2024-12-07T03:00",
+              "temperature_2m": 22.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.9,
+              "winddirection_10m": 297,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T04:00",
+              "temperature_2m": 22.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.8,
+              "winddirection_10m": 303,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T05:00",
+              "temperature_2m": 22.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.8,
+              "winddirection_10m": 310,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T06:00",
+              "temperature_2m": 22.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.9,
+              "winddirection_10m": 309,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T07:00",
+              "temperature_2m": 22.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.9,
+              "winddirection_10m": 310,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T08:00",
+              "temperature_2m": 24.3,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.1,
+              "winddirection_10m": 312,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T09:00",
+              "temperature_2m": 26.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 17.8,
+              "winddirection_10m": 320,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T10:00",
+              "temperature_2m": 27.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 20.0,
+              "winddirection_10m": 328,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T11:00",
+              "temperature_2m": 27.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 20.6,
+              "winddirection_10m": 329,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T12:00",
+              "temperature_2m": 28.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 21.0,
+              "winddirection_10m": 331,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T13:00",
+              "temperature_2m": 28.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 20.9,
+              "winddirection_10m": 331,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T14:00",
+              "temperature_2m": 28.0,
+              "precipitation": 0.0,
+              "cloudcover": 2,
+              "windspeed_10m": 20.7,
+              "winddirection_10m": 330,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T15:00",
+              "temperature_2m": 27.5,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 20.4,
+              "winddirection_10m": 326,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T16:00",
+              "temperature_2m": 27.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 19.8,
+              "winddirection_10m": 321,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T17:00",
+              "temperature_2m": 26.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 19.0,
+              "winddirection_10m": 318,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T18:00",
+              "temperature_2m": 25.3,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 14.1,
+              "winddirection_10m": 316,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T19:00",
+              "temperature_2m": 24.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.2,
+              "winddirection_10m": 317,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T20:00",
+              "temperature_2m": 24.2,
+              "precipitation": 0.0,
+              "cloudcover": 13,
+              "windspeed_10m": 9.6,
+              "winddirection_10m": 332,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2024-12-07T21:00",
+              "temperature_2m": 23.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.7,
+              "winddirection_10m": 6,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-07T22:00",
+              "temperature_2m": 22.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.3,
+              "winddirection_10m": 17,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2024-12-07T23:00",
+              "temperature_2m": 22.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.7,
+              "winddirection_10m": 18,
+              "winddirection_cardinal": "N"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        "2023_race_minus_2": {
+          "date": "2023-12-05",
+          "label": "race_minus_2",
+          "summary": {
+            "temperature_max": 28.8,
+            "temperature_min": 22.0,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 17,
+            "windspeed_max": 18.2,
+            "winddirection_dominant": 328,
+            "winddirection_cardinal": "NW"
+          },
+          "hourly": [
+            {
+              "time": "2023-12-05T00:00",
+              "temperature_2m": 22.7,
+              "precipitation": 0.0,
+              "cloudcover": 91,
+              "windspeed_10m": 5.5,
+              "winddirection_10m": 58,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-05T01:00",
+              "temperature_2m": 22.6,
+              "precipitation": 0.0,
+              "cloudcover": 99,
+              "windspeed_10m": 4.5,
+              "winddirection_10m": 346,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-05T02:00",
+              "temperature_2m": 22.0,
+              "precipitation": 0.0,
+              "cloudcover": 88,
+              "windspeed_10m": 7.2,
+              "winddirection_10m": 323,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T03:00",
+              "temperature_2m": 22.4,
+              "precipitation": 0.0,
+              "cloudcover": 43,
+              "windspeed_10m": 10.7,
+              "winddirection_10m": 318,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T04:00",
+              "temperature_2m": 22.6,
+              "precipitation": 0.0,
+              "cloudcover": 21,
+              "windspeed_10m": 12.4,
+              "winddirection_10m": 324,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T05:00",
+              "temperature_2m": 22.9,
+              "precipitation": 0.0,
+              "cloudcover": 13,
+              "windspeed_10m": 12.6,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T06:00",
+              "temperature_2m": 23.0,
+              "precipitation": 0.0,
+              "cloudcover": 33,
+              "windspeed_10m": 13.9,
+              "winddirection_10m": 329,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T07:00",
+              "temperature_2m": 22.7,
+              "precipitation": 0.0,
+              "cloudcover": 16,
+              "windspeed_10m": 12.6,
+              "winddirection_10m": 329,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T08:00",
+              "temperature_2m": 24.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.8,
+              "winddirection_10m": 334,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T09:00",
+              "temperature_2m": 26.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.8,
+              "winddirection_10m": 340,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-05T10:00",
+              "temperature_2m": 27.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.4,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T11:00",
+              "temperature_2m": 28.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.7,
+              "winddirection_10m": 328,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T12:00",
+              "temperature_2m": 28.7,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.8,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T13:00",
+              "temperature_2m": 28.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 17.6,
+              "winddirection_10m": 329,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T14:00",
+              "temperature_2m": 28.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 18.2,
+              "winddirection_10m": 326,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T15:00",
+              "temperature_2m": 28.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.9,
+              "winddirection_10m": 326,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T16:00",
+              "temperature_2m": 27.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.1,
+              "winddirection_10m": 326,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T17:00",
+              "temperature_2m": 27.0,
+              "precipitation": 0.0,
+              "cloudcover": 5,
+              "windspeed_10m": 18.0,
+              "winddirection_10m": 323,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T18:00",
+              "temperature_2m": 26.4,
+              "precipitation": 0.0,
+              "cloudcover": 5,
+              "windspeed_10m": 14.9,
+              "winddirection_10m": 323,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T19:00",
+              "temperature_2m": 25.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.2,
+              "winddirection_10m": 315,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T20:00",
+              "temperature_2m": 25.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.7,
+              "winddirection_10m": 313,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T21:00",
+              "temperature_2m": 24.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.7,
+              "winddirection_10m": 317,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T22:00",
+              "temperature_2m": 24.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 12.1,
+              "winddirection_10m": 323,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-05T23:00",
+              "temperature_2m": 23.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.7,
+              "winddirection_10m": 326,
+              "winddirection_cardinal": "NW"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        "2023_race_minus_1": {
+          "date": "2023-12-06",
+          "label": "race_minus_1",
+          "summary": {
+            "temperature_max": 28.4,
+            "temperature_min": 20.0,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 0,
+            "windspeed_max": 20.9,
+            "winddirection_dominant": 347,
+            "winddirection_cardinal": "N"
+          },
+          "hourly": [
+            {
+              "time": "2023-12-06T00:00",
+              "temperature_2m": 22.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 9.7,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T01:00",
+              "temperature_2m": 21.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.4,
+              "winddirection_10m": 353,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-06T02:00",
+              "temperature_2m": 21.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.0,
+              "winddirection_10m": 33,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-06T03:00",
+              "temperature_2m": 22.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 3.9,
+              "winddirection_10m": 34,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-06T04:00",
+              "temperature_2m": 22.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 2.4,
+              "winddirection_10m": 27,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-06T05:00",
+              "temperature_2m": 20.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.2,
+              "winddirection_10m": 34,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-06T06:00",
+              "temperature_2m": 20.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.2,
+              "winddirection_10m": 56,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-06T07:00",
+              "temperature_2m": 20.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.1,
+              "winddirection_10m": 86,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2023-12-06T08:00",
+              "temperature_2m": 20.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.9,
+              "winddirection_10m": 104,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2023-12-06T09:00",
+              "temperature_2m": 23.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 3.5,
+              "winddirection_10m": 114,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2023-12-06T10:00",
+              "temperature_2m": 25.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 3.1,
+              "winddirection_10m": 54,
+              "winddirection_cardinal": "NE"
+            },
+            {
+              "time": "2023-12-06T11:00",
+              "temperature_2m": 27.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.5,
+              "winddirection_10m": 17,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-06T12:00",
+              "temperature_2m": 28.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 10.1,
+              "winddirection_10m": 360,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-06T13:00",
+              "temperature_2m": 28.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.2,
+              "winddirection_10m": 343,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-06T14:00",
+              "temperature_2m": 28.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.4,
+              "winddirection_10m": 334,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T15:00",
+              "temperature_2m": 27.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 19.5,
+              "winddirection_10m": 332,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T16:00",
+              "temperature_2m": 27.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 20.9,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T17:00",
+              "temperature_2m": 26.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 19.2,
+              "winddirection_10m": 330,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T18:00",
+              "temperature_2m": 25.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 17.7,
+              "winddirection_10m": 333,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T19:00",
+              "temperature_2m": 25.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.1,
+              "winddirection_10m": 335,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T20:00",
+              "temperature_2m": 24.7,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 14.3,
+              "winddirection_10m": 332,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T21:00",
+              "temperature_2m": 24.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.3,
+              "winddirection_10m": 325,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T22:00",
+              "temperature_2m": 23.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 13.5,
+              "winddirection_10m": 335,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-06T23:00",
+              "temperature_2m": 22.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 9.7,
+              "winddirection_10m": 360,
+              "winddirection_cardinal": "N"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        },
+        "2023_race_minus_0": {
+          "date": "2023-12-07",
+          "label": "race_day",
+          "summary": {
+            "temperature_max": 27.5,
+            "temperature_min": 19.0,
+            "precipitation_sum": 0.0,
+            "cloudcover_mean": 0,
+            "windspeed_max": 18.8,
+            "winddirection_dominant": 314,
+            "winddirection_cardinal": "NW"
+          },
+          "hourly": [
+            {
+              "time": "2023-12-07T00:00",
+              "temperature_2m": 21.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 7.3,
+              "winddirection_10m": 11,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-07T01:00",
+              "temperature_2m": 21.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.9,
+              "winddirection_10m": 11,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-07T02:00",
+              "temperature_2m": 21.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.5,
+              "winddirection_10m": 349,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-07T03:00",
+              "temperature_2m": 21.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.3,
+              "winddirection_10m": 332,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T04:00",
+              "temperature_2m": 22.5,
+              "precipitation": 0.0,
+              "cloudcover": 6,
+              "windspeed_10m": 2.2,
+              "winddirection_10m": 360,
+              "winddirection_cardinal": "N"
+            },
+            {
+              "time": "2023-12-07T05:00",
+              "temperature_2m": 21.6,
+              "precipitation": 0.0,
+              "cloudcover": 1,
+              "windspeed_10m": 2.9,
+              "winddirection_10m": 97,
+              "winddirection_cardinal": "E"
+            },
+            {
+              "time": "2023-12-07T06:00",
+              "temperature_2m": 20.6,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.1,
+              "winddirection_10m": 135,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2023-12-07T07:00",
+              "temperature_2m": 19.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.7,
+              "winddirection_10m": 157,
+              "winddirection_cardinal": "SE"
+            },
+            {
+              "time": "2023-12-07T08:00",
+              "temperature_2m": 19.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.4,
+              "winddirection_10m": 172,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2023-12-07T09:00",
+              "temperature_2m": 22.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 4.6,
+              "winddirection_10m": 198,
+              "winddirection_cardinal": "S"
+            },
+            {
+              "time": "2023-12-07T10:00",
+              "temperature_2m": 25.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.4,
+              "winddirection_10m": 217,
+              "winddirection_cardinal": "SW"
+            },
+            {
+              "time": "2023-12-07T11:00",
+              "temperature_2m": 26.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.6,
+              "winddirection_10m": 279,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2023-12-07T12:00",
+              "temperature_2m": 27.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.8,
+              "winddirection_10m": 301,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T13:00",
+              "temperature_2m": 27.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.9,
+              "winddirection_10m": 309,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T14:00",
+              "temperature_2m": 27.4,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 18.8,
+              "winddirection_10m": 313,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T15:00",
+              "temperature_2m": 26.9,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 17.8,
+              "winddirection_10m": 313,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T16:00",
+              "temperature_2m": 26.1,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 16.8,
+              "winddirection_10m": 315,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T17:00",
+              "temperature_2m": 25.8,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 15.5,
+              "winddirection_10m": 324,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T18:00",
+              "temperature_2m": 25.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 11.4,
+              "winddirection_10m": 325,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T19:00",
+              "temperature_2m": 24.3,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 9.4,
+              "winddirection_10m": 328,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T20:00",
+              "temperature_2m": 23.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 8.2,
+              "winddirection_10m": 322,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T21:00",
+              "temperature_2m": 22.2,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 5.9,
+              "winddirection_10m": 308,
+              "winddirection_cardinal": "NW"
+            },
+            {
+              "time": "2023-12-07T22:00",
+              "temperature_2m": 21.5,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.2,
+              "winddirection_10m": 291,
+              "winddirection_cardinal": "W"
+            },
+            {
+              "time": "2023-12-07T23:00",
+              "temperature_2m": 21.0,
+              "precipitation": 0.0,
+              "cloudcover": 0,
+              "windspeed_10m": 6.6,
+              "winddirection_10m": 292,
+              "winddirection_cardinal": "W"
+            }
+          ],
+          "units": {
+            "temperature_max": "°C",
+            "temperature_min": "°C",
+            "precipitation_sum": "mm",
+            "cloudcover_mean": "%",
+            "windspeed_max": "km/h",
+            "winddirection_dominant": "°"
+          }
+        }
+      },
+      "units": {
+        "daily": {
+          "time": "iso8601",
+          "temperature_2m_max": "°C",
+          "temperature_2m_min": "°C",
+          "precipitation_sum": "mm",
+          "cloudcover_mean": "%",
+          "windspeed_10m_max": "km/h",
+          "winddirection_10m_dominant": "°"
+        }
+      },
+      "raw_source": "https://archive-api.open-meteo.com/v1/archive"
+    },
+    "calendar_event": {
+      "round": 24,
+      "event_name": "Abu Dhabi Grand Prix",
+      "official_name": "FORMULA 1 ETIHAD AIRWAYS ABU DHABI GRAND PRIX 2025",
+      "country": "United Arab Emirates",
+      "location": "Yas Island",
+      "is_completed": true,
+      "race_date_local": "2025-12-07T17:00:00+04:00",
+      "race_date_utc": "2025-12-07T13:00:00+00:00",
+      "days_until_race": null,
+      "session_dates": {
+        "session1_name": "Practice 1",
+        "session1_local": "2025-12-05T13:30:00+04:00",
+        "session1_utc": "2025-12-05T09:30:00+00:00",
+        "session2_name": "Practice 2",
+        "session2_local": "2025-12-05T17:00:00+04:00",
+        "session2_utc": "2025-12-05T13:00:00+00:00",
+        "session3_name": "Practice 3",
+        "session3_local": "2025-12-06T14:30:00+04:00",
+        "session3_utc": "2025-12-06T10:30:00+00:00",
+        "session4_name": "Qualifying",
+        "session4_local": "2025-12-06T18:00:00+04:00",
+        "session4_utc": "2025-12-06T14:00:00+00:00",
+        "session5_name": "Race",
+        "session5_local": "2025-12-07T17:00:00+04:00",
+        "session5_utc": "2025-12-07T13:00:00+00:00"
+      },
+      "cache_used": false
+    }
+  }
+}

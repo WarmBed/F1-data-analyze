@@ -1,0 +1,92 @@
+======================================================================
+Live Timing 性能分析報告 - PKL 載入 - 2025 Qatar
+生成時間: 2025-12-10 12:21:54
+======================================================================
+
+
+📊 累計時間排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:21:54 2025    reports\profiling\live_timing_load_2025_Qatar_20251210_122151.prof
+
+         2248077 function calls (2210331 primitive calls) in 3.710 seconds
+
+   Ordered by: cumulative time
+   List reduced from 7663 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        3    1.301    0.434    2.139    0.713 {built-in method _pickle.load}
+   1835/8    0.009    0.000    2.089    0.261 <frozen importlib._bootstrap>:1349(_find_and_load)
+   1810/8    0.005    0.000    2.088    0.261 <frozen importlib._bootstrap>:1304(_find_and_load_unlocked)
+  4186/17    0.003    0.000    2.085    0.123 <frozen importlib._bootstrap>:480(_call_with_frames_removed)
+  1733/15    0.004    0.000    2.085    0.139 <frozen importlib._bootstrap>:911(_load_unlocked)
+  1501/12    0.003    0.000    2.040    0.170 <frozen importlib._bootstrap_external>:989(exec_module)
+  1934/12    0.044    0.000    2.037    0.170 {built-in method builtins.exec}
+    799/5    0.001    0.000    2.036    0.407 {built-in method builtins.__import__}
+        1    0.000    0.000    1.800    1.800 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:120(__init__)
+        1    0.000    0.000    1.712    1.712 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:193(_init_win_predictor)
+ 1935/605    0.002    0.000    1.595    0.003 <frozen importlib._bootstrap>:1390(_handle_fromlist)
+        1    0.113    0.113    1.456    1.456 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:270(load_race)
+        1    0.000    0.000    0.874    0.874 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:36(_lazy_import_predictor)
+        1    0.000    0.000    0.866    0.866 D:\OneDrive\Code\F1-data-analyze\CLI_modules\cli\prediction\__init__.py:1(<module>)
+        1    0.000    0.000    0.859    0.859 D:\OneDrive\Code\F1-data-analyze\CLI_modules\cli\prediction\fp_q_data_collector.py:1(<module>)
+        1    0.000    0.000    0.838    0.838 D:\OneDrive\Code\F1-data-analyze\CLI_modules\cli\prediction\live_win_probability\predictor.py:1938(load_model)
+        1    0.000    0.000    0.732    0.732 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\__init__.py:1(<module>)
+        1    0.000    0.000    0.721    0.721 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\tracker.py:1(<module>)
+        1    0.000    0.000    0.720    0.720 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\core.py:1(<module>)
+        1    0.017    0.017    0.713    0.713 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:166(load_cache)
+        1    0.014    0.014    0.629    0.629 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:129(is_cache_valid)
+        1    0.000    0.000    0.604    0.604 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\_data_utils.py:1(<module>)
+        1    0.000    0.000    0.600    0.600 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\compat.py:1(<module>)
+1733/1722    0.002    0.000    0.584    0.000 <frozen importlib._bootstrap>:806(module_from_spec)
+  207/202    0.000    0.000    0.551    0.003 <frozen importlib._bootstrap_external>:1287(create_module)
+  207/202    0.544    0.003    0.550    0.003 {built-in method _imp.create_dynamic}
+        1    0.000    0.000    0.519    0.519 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\__init__.py:1(<module>)
+        1    0.000    0.000    0.509    0.509 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\base.py:1(<module>)
+        1    0.000    0.000    0.507    0.507 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\utils\__init__.py:1(<module>)
+        1    0.000    0.000    0.498    0.498 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\sklearn\utils\_chunking.py:1(<module>)
+
+
+
+
+⏱️  總執行時間排名 (Top 30)
+----------------------------------------------------------------------
+Wed Dec 10 12:21:54 2025    reports\profiling\live_timing_load_2025_Qatar_20251210_122151.prof
+
+         2248077 function calls (2210331 primitive calls) in 3.710 seconds
+
+   Ordered by: internal time
+   List reduced from 7663 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        3    1.301    0.434    2.139    0.713 {built-in method _pickle.load}
+  207/202    0.544    0.003    0.550    0.003 {built-in method _imp.create_dynamic}
+        1    0.145    0.145    0.145    0.145 {method 'load_verify_locations' of '_ssl._SSLContext' objects}
+        1    0.113    0.113    1.456    1.456 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\data_manager.py:270(load_race)
+        1    0.104    0.104    0.105    0.105 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\core.py:2111(__setstate__)
+     1501    0.098    0.000    0.098    0.000 {built-in method marshal.loads}
+     1501    0.090    0.000    0.090    0.000 {built-in method _io.open_code}
+        2    0.074    0.037    0.074    0.037 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\xgboost\core.py:3016(load_model)
+     6687    0.064    0.000    0.065    0.000 {built-in method nt.stat}
+  1934/12    0.044    0.000    2.037    0.170 {built-in method builtins.exec}
+    12385    0.044    0.000    0.066    0.000 <frozen importlib._bootstrap_external>:96(_path_join)
+     7574    0.043    0.000    0.079    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\inspect.py:882(cleandoc)
+     1501    0.035    0.000    0.035    0.000 {method 'read' of '_io.BufferedReader' objects}
+        2    0.030    0.015    0.030    0.015 {built-in method _wmi.exec_query}
+3317/3217    0.030    0.000    0.333    0.000 {built-in method builtins.__build_class__}
+  207/165    0.021    0.000    0.154    0.001 {built-in method _imp.exec_dynamic}
+   162805    0.019    0.000    0.019    0.000 {method 'startswith' of 'str' objects}
+277380/274776    0.018    0.000    0.019    0.000 {built-in method builtins.len}
+        1    0.017    0.017    0.713    0.713 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:166(load_cache)
+     2062    0.017    0.000    0.021    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\functools.py:35(update_wrapper)
+      406    0.016    0.000    0.048    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\scipy\_lib\doccer.py:13(docformat)
+   156623    0.016    0.000    0.016    0.000 {method 'append' of 'list' objects}
+      203    0.015    0.000    0.015    0.000 {built-in method nt.listdir}
+      227    0.015    0.000    0.046    0.000 C:\Users\mike\AppData\Local\Programs\Python\Python312\Lib\site-packages\matplotlib\artist.py:1433(get_aliases)
+        1    0.014    0.014    0.629    0.629 D:\OneDrive\Code\F1-data-analyze\modules\gui\live_timing\core\f1_api_downloader.py:129(is_cache_valid)
+135524/135523    0.013    0.000    0.015    0.000 {built-in method builtins.isinstance}
+     2590    0.013    0.000    0.140    0.000 <frozen importlib._bootstrap_external>:1593(find_spec)
+101277/100845    0.013    0.000    0.013    0.000 {built-in method builtins.getattr}
+        6    0.012    0.002    0.012    0.002 {built-in method _ctypes.LoadLibrary}
+     1501    0.012    0.000    0.112    0.000 <frozen importlib._bootstrap_external>:751(_compile_bytecode)
+
+

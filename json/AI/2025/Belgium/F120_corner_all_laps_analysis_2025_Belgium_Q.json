@@ -1,0 +1,324 @@
+{
+  "success": true,
+  "function_id": "120",
+  "year": 2025,
+  "race": "Belgium",
+  "session": "Q",
+  "analysis_type": "F120_corner_all_laps_analysis",
+  "selected_corners": {
+    "low_speed": {
+      "corner_number": 19,
+      "apex_distance": 6748.622794862248,
+      "avg_apex_speed": 76.4,
+      "angle": -14.515880956568681,
+      "x": 549.4779052734375,
+      "y": -386.9144592285156
+    },
+    "mid_speed": {
+      "corner_number": 8,
+      "apex_distance": 3022.3117376733626,
+      "avg_apex_speed": 124.115999744,
+      "angle": -147.87551693169823,
+      "x": 4795.484375,
+      "y": -15569.1689453125
+    },
+    "high_speed": {
+      "corner_number": 13,
+      "apex_distance": 4611.64390875478,
+      "avg_apex_speed": 202.0584182690909,
+      "angle": 102.89657229563842,
+      "x": -711.81396484375,
+      "y": -12662.1513671875
+    }
+  },
+  "mode_a_unified": {
+    "mode": "unified",
+    "description": "所有有效圈統一分析（不區分燃油狀態）",
+    "total_drivers": 2,
+    "drivers": [
+      {
+        "driver": "NOR",
+        "total_laps": 20,
+        "filtering_summary": {
+          "pit_lap": 36,
+          "in_lap": 15,
+          "inaccurate_lap": 3
+        },
+        "corners": {
+          "low_speed_corner_19": {
+            "median_speed": 64.5,
+            "mean_speed": 64.5,
+            "std_dev": 9.5,
+            "q1": 59.75,
+            "q3": 69.25,
+            "iqr": 9.5,
+            "min_speed": 55.0,
+            "max_speed": 74.0,
+            "top3_avg": 64.5,
+            "bottom3_avg": 64.5,
+            "cv": 14.73,
+            "valid_laps": 2,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              74.0,
+              55.0
+            ],
+            "warnings": [
+              "樣本量不足 (2 < 5)",
+              "數據變異過大 (CV=14.73%)"
+            ],
+            "entry_speed_median": 74.5,
+            "entry_speed_mean": 74.5,
+            "entry_speeds_raw": [
+              83.0,
+              66.0
+            ],
+            "exit_speed_median": 78.5,
+            "exit_speed_mean": 78.5,
+            "exit_speeds_raw": [
+              86.0,
+              71.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 74.5,
+            "exit_50m_speed": 78.5,
+            "apex_speed": 64.5
+          },
+          "mid_speed_corner_8": {
+            "median_speed": 110.5,
+            "mean_speed": 110.5,
+            "std_dev": 12.5,
+            "q1": 104.25,
+            "q3": 116.75,
+            "iqr": 12.5,
+            "min_speed": 98.0,
+            "max_speed": 123.0,
+            "top3_avg": 110.5,
+            "bottom3_avg": 110.5,
+            "cv": 11.31,
+            "valid_laps": 2,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              123.0,
+              98.0
+            ],
+            "warnings": [
+              "樣本量不足 (2 < 5)",
+              "數據變異過大 (CV=11.31%)"
+            ],
+            "entry_speed_median": 126.0,
+            "entry_speed_mean": 126.0,
+            "entry_speeds_raw": [
+              142.0,
+              110.0
+            ],
+            "exit_speed_median": 109.0,
+            "exit_speed_mean": 109.0,
+            "exit_speeds_raw": [
+              123.0,
+              95.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 126.0,
+            "exit_50m_speed": 109.0,
+            "apex_speed": 110.5
+          },
+          "high_speed_corner_13": {
+            "median_speed": 175.0,
+            "mean_speed": 175.0,
+            "std_dev": 33.0,
+            "q1": 158.5,
+            "q3": 191.5,
+            "iqr": 33.0,
+            "min_speed": 142.0,
+            "max_speed": 208.0,
+            "top3_avg": 175.0,
+            "bottom3_avg": 175.0,
+            "cv": 18.86,
+            "valid_laps": 2,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              208.0,
+              142.0
+            ],
+            "warnings": [
+              "樣本量不足 (2 < 5)",
+              "數據變異過大 (CV=18.86%)"
+            ],
+            "entry_speed_median": 166.0,
+            "entry_speed_mean": 166.0,
+            "entry_speeds_raw": [
+              195.0,
+              137.0
+            ],
+            "exit_speed_median": 176.5,
+            "exit_speed_mean": 176.5,
+            "exit_speeds_raw": [
+              208.0,
+              145.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 166.0,
+            "exit_50m_speed": 176.5,
+            "apex_speed": 175.0
+          }
+        }
+      },
+      {
+        "driver": "PIA",
+        "total_laps": 21,
+        "filtering_summary": {
+          "pit_lap": 36,
+          "in_lap": 18
+        },
+        "corners": {
+          "low_speed_corner_19": {
+            "median_speed": 71.0,
+            "mean_speed": 70.67,
+            "std_dev": 4.5,
+            "q1": 68.0,
+            "q3": 73.5,
+            "iqr": 5.5,
+            "min_speed": 65.0,
+            "max_speed": 76.0,
+            "top3_avg": 70.67,
+            "bottom3_avg": 70.67,
+            "cv": 6.36,
+            "valid_laps": 3,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              76.0,
+              65.0,
+              71.0
+            ],
+            "warnings": [
+              "樣本量不足 (3 < 5)",
+              "數據變異過大 (CV=6.36%)"
+            ],
+            "entry_speed_median": 65.0,
+            "entry_speed_mean": 68.33333333333333,
+            "entry_speeds_raw": [
+              81.0,
+              59.0,
+              65.0
+            ],
+            "exit_speed_median": 92.0,
+            "exit_speed_mean": 92.0,
+            "exit_speeds_raw": [
+              95.0,
+              89.0,
+              92.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 65.0,
+            "exit_50m_speed": 92.0,
+            "apex_speed": 71.0
+          },
+          "mid_speed_corner_8": {
+            "median_speed": 109.0,
+            "mean_speed": 113.33,
+            "std_dev": 6.85,
+            "q1": 108.5,
+            "q3": 116.0,
+            "iqr": 7.5,
+            "min_speed": 108.0,
+            "max_speed": 123.0,
+            "top3_avg": 113.33,
+            "bottom3_avg": 113.33,
+            "cv": 6.04,
+            "valid_laps": 3,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              123.0,
+              108.0,
+              109.0
+            ],
+            "warnings": [
+              "樣本量不足 (3 < 5)",
+              "數據變異過大 (CV=6.04%)"
+            ],
+            "entry_speed_median": 124.0,
+            "entry_speed_mean": 129.33333333333334,
+            "entry_speeds_raw": [
+              142.0,
+              122.0,
+              124.0
+            ],
+            "exit_speed_median": 108.0,
+            "exit_speed_mean": 112.0,
+            "exit_speeds_raw": [
+              121.0,
+              108.0,
+              107.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 124.0,
+            "exit_50m_speed": 108.0,
+            "apex_speed": 109.0
+          },
+          "high_speed_corner_13": {
+            "median_speed": 152.0,
+            "mean_speed": 167.67,
+            "std_dev": 24.31,
+            "q1": 150.5,
+            "q3": 177.0,
+            "iqr": 26.5,
+            "min_speed": 149.0,
+            "max_speed": 202.0,
+            "top3_avg": 167.67,
+            "bottom3_avg": 167.67,
+            "cv": 14.5,
+            "valid_laps": 3,
+            "filtered_laps": 0,
+            "speeds_raw": [
+              202.0,
+              152.0,
+              149.0
+            ],
+            "warnings": [
+              "樣本量不足 (3 < 5)",
+              "數據變異過大 (CV=14.50%)"
+            ],
+            "entry_speed_median": 148.0,
+            "entry_speed_mean": 159.33333333333334,
+            "entry_speeds_raw": [
+              197.0,
+              148.0,
+              133.0
+            ],
+            "exit_speed_median": 152.0,
+            "exit_speed_mean": 168.66666666666666,
+            "exit_speeds_raw": [
+              205.0,
+              152.0,
+              149.0
+            ],
+            "entry_filtered": false,
+            "exit_filtered": false,
+            "entry_outliers_count": 0,
+            "exit_outliers_count": 0,
+            "entry_50m_speed": 148.0,
+            "exit_50m_speed": 152.0,
+            "apex_speed": 152.0
+          }
+        }
+      }
+    ]
+  },
+  "mode_b_grouped": null
+}

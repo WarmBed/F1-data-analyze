@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "function_id": "120",
+  "year": 2025,
+  "race": "Abu Dhabi",
+  "session": "FP1",
+  "analysis_type": "F120_corner_all_laps_analysis",
+  "selected_corners": {
+    "low_speed": null,
+    "mid_speed": null,
+    "high_speed": null
+  },
+  "mode_a_unified": {
+    "mode": "unified",
+    "description": "所有有效圈統一分析（不區分燃油狀態）",
+    "total_drivers": 0,
+    "drivers": []
+  },
+  "mode_b_grouped": null
+}

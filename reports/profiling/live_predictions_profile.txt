@@ -1,0 +1,52 @@
+Live Timing 預測性能分析報告
+================================================================================
+
+測試日期: 2025-12-10 16:31:42
+賽事: 2025 Abu Dhabi Race
+快照樣本數: 50
+
+【時間統計】
+勝率預測平均: 0.43 ms
+超車預測平均: 9.47 ms
+近距離預測平均: 4.71 ms
+總計平均: 14.62 ms
+
+【詳細 Profile】
+         86250 function calls (85890 primitive calls) in 0.134 seconds
+
+   Ordered by: cumulative time
+   List reduced from 154 to 30 due to restriction <30>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      360    0.001    0.000    0.116    0.000 sklearn.py:1866(predict_proba)
+  720/360    0.002    0.000    0.108    0.000 core.py:755(inner_f)
+      360    0.002    0.000    0.107    0.000 sklearn.py:1398(predict)
+      360    0.039    0.000    0.078    0.000 core.py:2727(inplace_predict)
+       10    0.002    0.000    0.067    0.007 data_manager.py:1466(_update_close_combat_predictions)
+       10    0.002    0.000    0.067    0.007 data_manager.py:1338(_update_overtake_predictions)
+      180    0.002    0.000    0.062    0.000 predictor.py:188(predict)
+      180    0.002    0.000    0.059    0.000 close_combat_predictor.py:153(predict)
+      360    0.002    0.000    0.026    0.000 core.py:460(_prediction_output)
+      720    0.000    0.000    0.019    0.000 {built-in method builtins.next}
+      720    0.001    0.000    0.019    0.000 config.py:155(config_context)
+     1440    0.001    0.000    0.018    0.000 config.py:106(wrap)
+      360    0.000    0.000    0.012    0.000 contextlib.py:132(__enter__)
+      360    0.001    0.000    0.010    0.000 _data_utils.py:112(from_array_interface)
+      720    0.005    0.000    0.009    0.000 config.py:115(set_config)
+     1440    0.001    0.000    0.008    0.000 __init__.py:183(dumps)
+      360    0.002    0.000    0.008    0.000 _data_utils.py:164(make_array_interface)
+     1440    0.002    0.000    0.008    0.000 encoder.py:183(encode)
+      360    0.004    0.000    0.008    0.000 config.py:135(get_config)
+      360    0.000    0.000    0.007    0.000 contextlib.py:141(__exit__)
+      360    0.003    0.000    0.007    0.000 sklearn.py:1668(_cls_predict_proba)
+      360    0.004    0.000    0.006    0.000 {built-in method builtins.__build_class__}
+     1440    0.005    0.000    0.005    0.000 encoder.py:205(iterencode)
+      360    0.001    0.000    0.005    0.000 fromnumeric.py:2979(prod)
+      360    0.003    0.000    0.005    0.000 core.py:424(ctypes2numpy)
+      360    0.001    0.000    0.004    0.000 fromnumeric.py:71(_wrapreduction)
+      360    0.000    0.000    0.004    0.000 _data_utils.py:456(array_interface)
+      360    0.000    0.000    0.004    0.000 sklearn.py:1385(_get_iteration_range)
+      360    0.002    0.000    0.003    0.000 shape_base.py:219(vstack)
+      360    0.000    0.000    0.003    0.000 sklearn.py:1567(best_iteration)
+
+

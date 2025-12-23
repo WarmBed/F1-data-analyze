@@ -1,0 +1,288 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "F1 賽道燃油效率係數資料庫 - 用於燃油校正圈速分析",
+    "last_updated": "2025-12-03",
+    "sources": [
+      "Academic Research: Data-driven pit stop decision support (NIH/PMC 2025)",
+      "FIA Technical Regulations 2024",
+      "Historical Race Data Analysis 2022-2024"
+    ],
+    "notes": {
+      "fuel_kg_per_lap": "每圈燃油消耗量 (公斤)",
+      "fuel_effect_coefficient": "燃油對圈速的影響係數 (秒/公斤)",
+      "start_fuel_kg": "起跑燃油量 (通常 105-110 kg)",
+      "calculation": "corrected_time = actual_time + fuel_effect_coef * fuel_consumed"
+    },
+    "research_reference": {
+      "typical_fuel_effect": "0.030 - 0.035 s/kg",
+      "typical_fuel_consumption": "1.4 - 2.3 kg/lap depending on track"
+    }
+  },
+
+  "circuits": {
+    "Bahrain": {
+      "official_name": "Bahrain International Circuit",
+      "track_length_km": 5.412,
+      "typical_race_laps": 57,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.85,
+      "fuel_effect_coefficient": 0.032,
+      "start_fuel_kg": 110,
+      "notes": "高溫增加燃油消耗"
+    },
+    "Jeddah": {
+      "official_name": "Jeddah Corniche Circuit",
+      "track_length_km": 6.174,
+      "typical_race_laps": 50,
+      "fuel_consumption_level": "Very High",
+      "fuel_kg_per_lap": 2.10,
+      "fuel_effect_coefficient": 0.033,
+      "start_fuel_kg": 110,
+      "notes": "長直道高速賽道"
+    },
+    "Melbourne": {
+      "official_name": "Albert Park Circuit",
+      "track_length_km": 5.278,
+      "typical_race_laps": 58,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.70,
+      "fuel_effect_coefficient": 0.030,
+      "start_fuel_kg": 110,
+      "notes": "街道賽道中等消耗"
+    },
+    "Suzuka": {
+      "official_name": "Suzuka International Racing Course",
+      "track_length_km": 5.807,
+      "typical_race_laps": 53,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.65,
+      "fuel_effect_coefficient": 0.030,
+      "start_fuel_kg": 110,
+      "notes": "技術性賽道，中等消耗"
+    },
+    "Shanghai": {
+      "official_name": "Shanghai International Circuit",
+      "track_length_km": 5.451,
+      "typical_race_laps": 56,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.80,
+      "fuel_effect_coefficient": 0.031,
+      "start_fuel_kg": 110,
+      "notes": "長直道增加消耗"
+    },
+    "Miami": {
+      "official_name": "Miami International Autodrome",
+      "track_length_km": 5.412,
+      "typical_race_laps": 57,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.85,
+      "fuel_effect_coefficient": 0.032,
+      "start_fuel_kg": 110,
+      "notes": "高溫街道賽道"
+    },
+    "Imola": {
+      "official_name": "Autodromo Enzo e Dino Ferrari",
+      "track_length_km": 4.909,
+      "typical_race_laps": 63,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.60,
+      "fuel_effect_coefficient": 0.029,
+      "start_fuel_kg": 110,
+      "notes": "較短賽道，中等消耗"
+    },
+    "Monaco": {
+      "official_name": "Circuit de Monaco",
+      "track_length_km": 3.337,
+      "typical_race_laps": 78,
+      "fuel_consumption_level": "Low",
+      "fuel_kg_per_lap": 1.40,
+      "fuel_effect_coefficient": 0.025,
+      "start_fuel_kg": 105,
+      "notes": "最慢賽道，最低燃油消耗"
+    },
+    "Montreal": {
+      "official_name": "Circuit Gilles Villeneuve",
+      "track_length_km": 4.361,
+      "typical_race_laps": 70,
+      "fuel_consumption_level": "Medium-High",
+      "fuel_kg_per_lap": 1.75,
+      "fuel_effect_coefficient": 0.031,
+      "start_fuel_kg": 110,
+      "notes": "停走特性賽道"
+    },
+    "Barcelona": {
+      "official_name": "Circuit de Barcelona-Catalunya",
+      "track_length_km": 4.657,
+      "typical_race_laps": 66,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.65,
+      "fuel_effect_coefficient": 0.030,
+      "start_fuel_kg": 110,
+      "notes": "標準測試賽道"
+    },
+    "Spielberg": {
+      "official_name": "Red Bull Ring",
+      "track_length_km": 4.318,
+      "typical_race_laps": 71,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.55,
+      "fuel_effect_coefficient": 0.029,
+      "start_fuel_kg": 110,
+      "notes": "短賽道，海拔影響"
+    },
+    "Silverstone": {
+      "official_name": "Silverstone Circuit",
+      "track_length_km": 5.891,
+      "typical_race_laps": 52,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.90,
+      "fuel_effect_coefficient": 0.033,
+      "start_fuel_kg": 110,
+      "notes": "高速彎角賽道"
+    },
+    "Budapest": {
+      "official_name": "Hungaroring",
+      "track_length_km": 4.381,
+      "typical_race_laps": 70,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.55,
+      "fuel_effect_coefficient": 0.028,
+      "start_fuel_kg": 110,
+      "notes": "技術性慢速賽道"
+    },
+    "Spa": {
+      "official_name": "Circuit de Spa-Francorchamps",
+      "track_length_km": 7.004,
+      "typical_race_laps": 44,
+      "fuel_consumption_level": "Very High",
+      "fuel_kg_per_lap": 2.15,
+      "fuel_effect_coefficient": 0.035,
+      "start_fuel_kg": 110,
+      "notes": "最長賽道，最高消耗之一"
+    },
+    "Zandvoort": {
+      "official_name": "Circuit Zandvoort",
+      "track_length_km": 4.259,
+      "typical_race_laps": 72,
+      "fuel_consumption_level": "Medium",
+      "fuel_kg_per_lap": 1.55,
+      "fuel_effect_coefficient": 0.029,
+      "start_fuel_kg": 110,
+      "notes": "傾斜彎角特殊設計"
+    },
+    "Monza": {
+      "official_name": "Autodromo Nazionale di Monza",
+      "track_length_km": 5.793,
+      "typical_race_laps": 53,
+      "fuel_consumption_level": "Very High",
+      "fuel_kg_per_lap": 2.20,
+      "fuel_effect_coefficient": 0.032,
+      "start_fuel_kg": 110,
+      "notes": "最高速賽道，燃油消耗最高"
+    },
+    "Baku": {
+      "official_name": "Baku City Circuit",
+      "track_length_km": 6.003,
+      "typical_race_laps": 51,
+      "fuel_consumption_level": "Very High",
+      "fuel_kg_per_lap": 2.05,
+      "fuel_effect_coefficient": 0.033,
+      "start_fuel_kg": 110,
+      "notes": "超長直道街道賽"
+    },
+    "Singapore": {
+      "official_name": "Marina Bay Street Circuit",
+      "track_length_km": 4.940,
+      "typical_race_laps": 62,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.90,
+      "fuel_effect_coefficient": 0.028,
+      "start_fuel_kg": 110,
+      "notes": "夜間街道賽，高濕度"
+    },
+    "Austin": {
+      "official_name": "Circuit of the Americas",
+      "track_length_km": 5.513,
+      "typical_race_laps": 56,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.85,
+      "fuel_effect_coefficient": 0.031,
+      "start_fuel_kg": 110,
+      "notes": "高海拔影響引擎效率"
+    },
+    "Mexico": {
+      "official_name": "Autodromo Hermanos Rodriguez",
+      "track_length_km": 4.304,
+      "typical_race_laps": 71,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.80,
+      "fuel_effect_coefficient": 0.030,
+      "start_fuel_kg": 110,
+      "notes": "高海拔 (2200m) 顯著影響"
+    },
+    "Interlagos": {
+      "official_name": "Autodromo Jose Carlos Pace",
+      "track_length_km": 4.309,
+      "typical_race_laps": 71,
+      "fuel_consumption_level": "Medium-High",
+      "fuel_kg_per_lap": 1.70,
+      "fuel_effect_coefficient": 0.030,
+      "start_fuel_kg": 110,
+      "notes": "逆時針賽道，海拔影響"
+    },
+    "Las_Vegas": {
+      "official_name": "Las Vegas Strip Circuit",
+      "track_length_km": 6.201,
+      "typical_race_laps": 50,
+      "fuel_consumption_level": "Very High",
+      "fuel_kg_per_lap": 2.10,
+      "fuel_effect_coefficient": 0.033,
+      "start_fuel_kg": 110,
+      "notes": "超長直道夜間賽"
+    },
+    "Lusail": {
+      "official_name": "Lusail International Circuit",
+      "track_length_km": 5.419,
+      "typical_race_laps": 57,
+      "fuel_consumption_level": "High",
+      "fuel_kg_per_lap": 1.85,
+      "fuel_effect_coefficient": 0.031,
+      "start_fuel_kg": 110,
+      "notes": "高速流暢賽道"
+    },
+    "Yas_Marina": {
+      "official_name": "Yas Marina Circuit",
+      "track_length_km": 5.281,
+      "typical_race_laps": 58,
+      "fuel_consumption_level": "Medium-High",
+      "fuel_kg_per_lap": 1.75,
+      "fuel_effect_coefficient": 0.030,
+      "start_fuel_kg": 110,
+      "notes": "日落賽事，混合特性"
+    }
+  },
+
+  "fuel_consumption_levels": {
+    "Low": {
+      "range_kg_per_lap": [1.3, 1.5],
+      "typical_tracks": ["Monaco"]
+    },
+    "Medium": {
+      "range_kg_per_lap": [1.5, 1.7],
+      "typical_tracks": ["Melbourne", "Suzuka", "Imola", "Barcelona", "Spielberg", "Budapest", "Zandvoort"]
+    },
+    "Medium-High": {
+      "range_kg_per_lap": [1.7, 1.85],
+      "typical_tracks": ["Montreal", "Interlagos", "Yas_Marina"]
+    },
+    "High": {
+      "range_kg_per_lap": [1.85, 2.0],
+      "typical_tracks": ["Bahrain", "Shanghai", "Miami", "Silverstone", "Singapore", "Austin", "Mexico", "Lusail"]
+    },
+    "Very High": {
+      "range_kg_per_lap": [2.0, 2.3],
+      "typical_tracks": ["Jeddah", "Spa", "Monza", "Baku", "Las_Vegas"]
+    }
+  }
+}

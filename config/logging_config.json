@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "level": "INFO",
+  "console_level": "INFO",
+  "patch_print": true,
+  "comment": "Logger settings - Changes require restart"
+}

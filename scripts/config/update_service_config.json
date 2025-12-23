@@ -1,0 +1,91 @@
+{
+  "_comment": "定時 API 更新服務配置檔案",
+  "_version": "1.0.0",
+  "_last_updated": "2025-10-13",
+  
+  "api": {
+    "base_url": "https://api.f1telemetrystationpro.org",
+    "timeout": 120,
+    "retry_attempts": 3,
+    "retry_delay": 60
+  },
+  
+  "functions": {
+    "96": {
+      "name": "賽事天氣預報",
+      "cli_args": ["-f", "96"],
+      "enabled": true
+    },
+    "97": {
+      "name": "賽季積分查詢",
+      "cli_args": ["-f", "97"],
+      "enabled": true
+    },
+    "98": {
+      "name": "顏色配置輸出",
+      "cli_args": ["-f", "98"],
+      "enabled": true
+    },
+    "99": {
+      "name": "賽季賽程查詢",
+      "cli_args": ["-f", "99"],
+      "enabled": true
+    }
+  },
+  
+  "update_intervals": {
+    "_comment": "更新間隔配置（單位：小時）",
+    
+    "normal": {
+      "_description": "平時維護模式 - 無比賽周末",
+      "96": 24,
+      "97": 120,
+      "98": 168,
+      "99": 168
+    },
+    
+    "post_race": {
+      "_description": "賽後密集模式 - 賽後 0-48 小時",
+      "_trigger": "race_end_time < now < race_end_time + 48h",
+      "_duration_hours": 48,
+      "96": 24,
+      "97": 4,
+      "98": null,
+      "99": 24
+    },
+    
+    "pre_race": {
+      "_description": "賽前預熱模式 - 比賽前 72 小時",
+      "_trigger": "race_start_time - 72h < now < race_start_time",
+      "_duration_hours": 72,
+      "96": 6,
+      "97": 24,
+      "98": null,
+      "99": 24
+    }
+  },
+  
+  "logging": {
+    "level": "INFO",
+    "format": "[%(asctime)s] [%(levelname)s] %(message)s",
+    "date_format": "%Y-%m-%d %H:%M:%S",
+    "file": "logs/periodic_update_service.log",
+    "console": true,
+    "max_bytes": 10485760,
+    "backup_count": 5
+  },
+  
+  "error_handling": {
+    "strategy": "exponential_backoff",
+    "initial_delay": 60,
+    "max_delay": 3600,
+    "max_retries": 3,
+    "continue_on_error": true
+  },
+  
+  "service": {
+    "check_interval_seconds": 60,
+    "startup_delay_seconds": 10,
+    "graceful_shutdown_timeout": 30
+  }
+}

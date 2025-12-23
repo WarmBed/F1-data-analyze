@@ -1,0 +1,2410 @@
+{
+  "metadata": {
+    "資料標題": "2025 F1 主要部件升級完整記錄",
+    "生成時間": "2025-11-06 21:16:51",
+    "數據源": "2025_f1_parts_changes_complete.json",
+    "全局統計": {
+      "總升級次數": 120,
+      "涉及車隊數": 10,
+      "涉及賽事數": 19,
+      "涉及賽事": [
+        "Australian",
+        "Austrian",
+        "Azerbaijan",
+        "Bahrain",
+        "Belgian",
+        "British",
+        "Canadian",
+        "Chinese",
+        "Dutch",
+        "Emilia Romagna",
+        "Hungarian",
+        "Italian",
+        "Japanese",
+        "Miami",
+        "Monaco",
+        "Saudi Arabian",
+        "Singapore",
+        "Spanish",
+        "United States"
+      ],
+      "變更類型分佈": {
+        "維修 (Repair)": 28,
+        "未分類 (Unclassified)": 13,
+        "重大更新 (Major Update)": 38,
+        "變更 (Change)": 39,
+        "升級套件 (Upgrade Package)": 2
+      }
+    }
+  },
+  "車隊升級記錄": {
+    "Williams": {
+      "車隊統計": {
+        "總升級次數": 26,
+        "涉及賽事": [
+          "Austrian",
+          "Azerbaijan",
+          "Belgian",
+          "Canadian",
+          "Emilia Romagna",
+          "Hungarian",
+          "Saudi Arabian",
+          "Spanish",
+          "United States"
+        ],
+        "部件類別分佈": {
+          "底板系統": 4,
+          "電能回收": 2,
+          "側箱系統": 3,
+          "前翼系統": 4,
+          "後翼系統": 2,
+          "車身外殼": 2,
+          "懸吊系統": 6,
+          "變速箱": 1,
+          "引擎系統": 2
+        }
+      },
+      "車手": {
+        "Alexander Albon": {
+          "車手資訊": {
+            "車號": "23",
+            "車手姓名": "Alexander Albon",
+            "所屬車隊": "Williams"
+          },
+          "車手統計": {
+            "總升級次數": 7,
+            "涉及賽事": [
+              "Austrian",
+              "Azerbaijan",
+              "Canadian",
+              "Saudi Arabian"
+            ],
+            "部件類別分佈": {
+              "底板系統": 1,
+              "懸吊系統": 3,
+              "前翼系統": 2,
+              "側箱系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Front wing / nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 23: Front wing / nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Canadian",
+              "比賽日期": "2025-06-29",
+              "更換部件": "Engine cover",
+              "部件類別": "側箱系統",
+              "資料來源": {
+                "文件名稱": "2025 Canadian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 23: Engine cover",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Canadian",
+              "比賽日期": "2025-06-29",
+              "更換部件": "LHS rear suspension closing panel",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Canadian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 23: LHS rear suspension closing panel",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Canadian",
+              "比賽日期": "2025-06-29",
+              "更換部件": "LHS and RHS rear suspension fairing blend panels",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Canadian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 23: LHS and RHS rear suspension fairing blend panels",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Austrian",
+              "比賽日期": "2025-07-06",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Austrian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 23: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "LHS front outboard suspension assembly",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 3
+              },
+              "原始記錄": "Car 23: LHS front outboard suspension assembly",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 3
+              },
+              "原始記錄": "Car 23: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Carlos Sainz": {
+          "車手資訊": {
+            "車號": "55",
+            "車手姓名": "Carlos Sainz",
+            "所屬車隊": "Williams"
+          },
+          "車手統計": {
+            "總升級次數": 4,
+            "涉及賽事": [
+              "Austrian",
+              "Hungarian",
+              "United States"
+            ],
+            "部件類別分佈": {
+              "底板系統": 1,
+              "側箱系統": 1,
+              "引擎系統": 2
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Austrian",
+              "比賽日期": "2025-07-06",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Austrian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 55: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Hungarian",
+              "比賽日期": "2025-08-17",
+              "更換部件": "RHS sidepod",
+              "部件類別": "側箱系統",
+              "資料來源": {
+                "文件名稱": "2025 Hungarian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 55: RHS sidepod",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "ICE sump bump rubber",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and Parameters been replaced and or changed during Sprint Parc Fermé (1).pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 55: ICE sump bump rubber",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "ICE sump bump rubber",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and Parameters been replaced and or changed during Sprint Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 55: ICE sump bump rubber",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Franco Colapinto": {
+          "車手資訊": {
+            "車號": "43",
+            "車手姓名": "Franco Colapinto",
+            "所屬車隊": "Williams"
+          },
+          "車手統計": {
+            "總升級次數": 15,
+            "涉及賽事": [
+              "Azerbaijan",
+              "Belgian",
+              "Emilia Romagna",
+              "Spanish"
+            ],
+            "部件類別分佈": {
+              "電能回收": 2,
+              "底板系統": 2,
+              "側箱系統": 1,
+              "前翼系統": 2,
+              "後翼系統": 2,
+              "車身外殼": 2,
+              "懸吊系統": 3,
+              "變速箱": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Emilia Romagna",
+              "比賽日期": "2025-06-15",
+              "更換部件": "Front wing / nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Emilia Romagna Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: Front wing / nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Emilia Romagna",
+              "比賽日期": "2025-06-15",
+              "更換部件": "LHS and RHS outboard front suspension assemblies",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Emilia Romagna Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: LHS and RHS outboard front suspension assemblies",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Emilia Romagna",
+              "比賽日期": "2025-06-15",
+              "更換部件": "LHS and RHS inboard front suspension assemblies",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Emilia Romagna Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: LHS and RHS inboard front suspension assemblies",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Emilia Romagna",
+              "比賽日期": "2025-06-15",
+              "更換部件": "Front end chassis harness",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Emilia Romagna Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: Front end chassis harness",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Emilia Romagna",
+              "比賽日期": "2025-06-15",
+              "更換部件": "Rear wing assemblyFrom The FIA Formula One Technical Delegate",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Emilia Romagna Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: Rear wing assemblyFrom The FIA Formula One Technical Delegate",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Spanish",
+              "比賽日期": "2025-06-20",
+              "更換部件": "Gearbox assembly",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Spanish Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: Gearbox assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "LHS rearward floor stay",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 43: LHS rearward floor stay",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "ES (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: ES (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "CE (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: CE (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "LHS sidepod",
+              "部件類別": "側箱系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: LHS sidepod",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Rear wing assembly",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: Rear wing assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Rear bodywork coke panel",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: Rear bodywork coke panel",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "LHS and RHS rear suspension assembly",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 43: LHS and RHS rear suspension assembly",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            }
+          ]
+        }
+      }
+    },
+    "McLaren": {
+      "車隊統計": {
+        "總升級次數": 19,
+        "涉及賽事": [
+          "Australian",
+          "Azerbaijan",
+          "British",
+          "Canadian",
+          "Japanese",
+          "Miami",
+          "Monaco",
+          "Saudi Arabian",
+          "Spanish"
+        ],
+        "部件類別分佈": {
+          "引擎系統": 5,
+          "車身外殼": 5,
+          "底板系統": 3,
+          "前翼系統": 3,
+          "變速箱": 1,
+          "懸吊系統": 1,
+          "後翼系統": 1
+        }
+      },
+      "車手": {
+        "Lando Norris": {
+          "車手資訊": {
+            "車號": "04",
+            "車手姓名": "Lando Norris",
+            "所屬車隊": "McLaren"
+          },
+          "車手統計": {
+            "總升級次數": 11,
+            "涉及賽事": [
+              "Australian",
+              "Canadian",
+              "Japanese",
+              "Monaco",
+              "Saudi Arabian"
+            ],
+            "部件類別分佈": {
+              "引擎系統": 2,
+              "前翼系統": 2,
+              "車身外殼": 3,
+              "變速箱": 1,
+              "懸吊系統": 1,
+              "後翼系統": 1,
+              "底板系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Australian",
+              "比賽日期": "2025-03-16",
+              "更換部件": "ICE sump rubber",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Australian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: ICE sump rubber",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Japanese",
+              "比賽日期": "2025-04-20",
+              "更換部件": "RHS chassis saver plate",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Japanese Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: RHS chassis saver plate",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Gearbox assembly and associated control hydraulics",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: Gearbox assembly and associated control hydraulics",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "LHS front outboard suspension assembly",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: LHS front outboard suspension assembly",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Front wing / nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: Front wing / nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Rear wing assembly",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: Rear wing assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Floor assembly (excluding plank and skids)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: Floor assembly (excluding plank and skids)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Seatbelts and associated chassis mounts",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: Seatbelts and associated chassis mounts",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Saudi Arabian",
+              "比賽日期": "2025-05-18",
+              "更換部件": "Chassis to nose catch pins",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Saudi Arabian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: Chassis to nose catch pins",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Canadian",
+              "比賽日期": "2025-06-29",
+              "更換部件": "LHS front wing endplate diveplane",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Canadian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: LHS front wing endplate diveplane",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.95
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "ICE water cooling pipe and associated Wiggins connector",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 04: ICE water cooling pipe and associated Wiggins connector",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Oscar Piastri": {
+          "車手資訊": {
+            "車號": "81",
+            "車手姓名": "Oscar Piastri",
+            "所屬車隊": "McLaren"
+          },
+          "車手統計": {
+            "總升級次數": 8,
+            "涉及賽事": [
+              "Azerbaijan",
+              "British",
+              "Miami",
+              "Monaco",
+              "Spanish"
+            ],
+            "部件類別分佈": {
+              "車身外殼": 2,
+              "底板系統": 2,
+              "前翼系統": 1,
+              "引擎系統": 3
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Miami",
+              "比賽日期": "2025-06-01",
+              "更換部件": "ICE sump protection foam",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Miami Grand Prix - Parts and Parameters been replaced and or changed during Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: ICE sump protection foam",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Spanish",
+              "比賽日期": "2025-06-20",
+              "更換部件": "ICE sump foam",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Spanish Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: ICE sump foam",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "ICE sump foam",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: ICE sump foam",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "British",
+              "比賽日期": "2025-07-20",
+              "更換部件": "Floor assembly (excluding plank and skids)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 British Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: Floor assembly (excluding plank and skids)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Bonded chassis assemblies",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: Bonded chassis assemblies",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Chassis pitot",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: Chassis pitot",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 81: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "Red Bull Racing": {
+      "車隊統計": {
+        "總升級次數": 15,
+        "涉及賽事": [
+          "Bahrain",
+          "Belgian",
+          "Chinese",
+          "Hungarian",
+          "Italian",
+          "Miami",
+          "Singapore"
+        ],
+        "部件類別分佈": {
+          "煞車主組件": 1,
+          "引擎系統": 5,
+          "電能回收": 4,
+          "變速箱": 1,
+          "懸吊系統": 2,
+          "後翼系統": 1,
+          "底板系統": 1
+        }
+      },
+      "車手": {
+        "Max Verstappen": {
+          "車手資訊": {
+            "車號": "01",
+            "車手姓名": "Max Verstappen",
+            "所屬車隊": "Red Bull Racing"
+          },
+          "車手統計": {
+            "總升級次數": 6,
+            "涉及賽事": [
+              "Bahrain",
+              "Belgian",
+              "Singapore"
+            ],
+            "部件類別分佈": {
+              "煞車主組件": 1,
+              "引擎系統": 3,
+              "電能回收": 2
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Bahrain",
+              "比賽日期": "2025-05-04",
+              "更換部件": "LHS rear brake caliper cooling spat",
+              "部件類別": "煞車主組件",
+              "資料來源": {
+                "文件名稱": "2025 Bahrain Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 01: LHS rear brake caliper cooling spat",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "ICE (previously used)",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 01: ICE (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "MGU-H (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 01: MGU-H (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "MGU-K (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 01: MGU-K (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "ICE water header tank assembly",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and parameters been replaced and or changed during the Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 01: ICE water header tank assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "ICE cooling water pipe separator  Driver cooling pump   Mercedes:",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 01: ICE cooling water pipe separator  Driver cooling pump   Mercedes:",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Liam Lawson": {
+          "車手資訊": {
+            "車號": "30",
+            "車手姓名": "Liam Lawson",
+            "所屬車隊": "Red Bull Racing"
+          },
+          "車手統計": {
+            "總升級次數": 9,
+            "涉及賽事": [
+              "Chinese",
+              "Hungarian",
+              "Italian",
+              "Miami",
+              "Singapore"
+            ],
+            "部件類別分佈": {
+              "變速箱": 1,
+              "懸吊系統": 2,
+              "後翼系統": 1,
+              "底板系統": 1,
+              "引擎系統": 2,
+              "電能回收": 2
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "Gearbox assembly and associated control hydraulics",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: Gearbox assembly and associated control hydraulics",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "LHS and RHS outboard rear suspension assemblies including driveshafts",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: LHS and RHS outboard rear suspension assemblies including driveshafts",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "LHS and RHS inboard rear suspension assemblies",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: LHS and RHS inboard rear suspension assemblies",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Miami",
+              "比賽日期": "2025-06-01",
+              "更換部件": "ICE (previously used)",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Miami Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: ICE (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Miami",
+              "比賽日期": "2025-06-01",
+              "更換部件": "MGU-H (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Miami Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: MGU-H (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Miami",
+              "比賽日期": "2025-06-01",
+              "更換部件": "MGU-K (previously used)From The FIA Formula One Technical Delegate",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Miami Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: MGU-K (previously used)From The FIA Formula One Technical Delegate",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Hungarian",
+              "比賽日期": "2025-08-17",
+              "更換部件": "Rear wing assembly",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Hungarian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: Rear wing assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Italian",
+              "比賽日期": "2025-09-14",
+              "更換部件": "LHS floor edge winglet array",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Italian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 30: LHS floor edge winglet array",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "ICE (previously used)  TC (previously used)  MGU-H (previously used)  MGU-K (previously used)  EX (new)",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 3
+              },
+              "原始記錄": "Car 30: ICE (previously used)  TC (previously used)  MGU-H (previously used)  MGU-K (previously used)  EX (new)",
+              "變更類型": "升級套件 (Upgrade Package)",
+              "變更類型說明": "新設計、需 re-presented / re-homologated、性能提升",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "Mercedes": {
+      "車隊統計": {
+        "總升級次數": 12,
+        "涉及賽事": [
+          "Belgian",
+          "Hungarian",
+          "Monaco",
+          "United States"
+        ],
+        "部件類別分佈": {
+          "前翼系統": 2,
+          "底板系統": 1,
+          "側箱系統": 1,
+          "引擎系統": 2,
+          "電能回收": 4,
+          "車身外殼": 2
+        }
+      },
+      "車手": {
+        "Andrea Kimi Antonelli": {
+          "車手資訊": {
+            "車號": "12",
+            "車手姓名": "Andrea Kimi Antonelli",
+            "所屬車隊": "Mercedes"
+          },
+          "車手統計": {
+            "總升級次數": 7,
+            "涉及賽事": [
+              "Belgian",
+              "Hungarian",
+              "Monaco",
+              "United States"
+            ],
+            "部件類別分佈": {
+              "前翼系統": 2,
+              "底板系統": 1,
+              "側箱系統": 1,
+              "引擎系統": 1,
+              "車身外殼": 2
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "Front wing / nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 12: Front wing / nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "Front wing/nosebox assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and parameters been replaced and or changed during the Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 12: Front wing/nosebox assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "Floor assembly (excluding skids)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and parameters been replaced and or changed during the Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 12: Floor assembly (excluding skids)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "RHS sidepod",
+              "部件類別": "側箱系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and parameters been replaced and or changed during the Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 12: RHS sidepod",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Hungarian",
+              "比賽日期": "2025-08-17",
+              "更換部件": "ICE sump bumper plate",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Hungarian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 12: ICE sump bumper plate",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "Chassis to ICE top hat mount",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and Parameters been replaced and or changed during Sprint Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 12: Chassis to ICE top hat mount",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "Chassis to ICE top hat mount",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and Parameters been replaced and or changed during Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 12: Chassis to ICE top hat mount",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.8
+            }
+          ]
+        },
+        "George Russell": {
+          "車手資訊": {
+            "車號": "63",
+            "車手姓名": "George Russell",
+            "所屬車隊": "Mercedes"
+          },
+          "車手統計": {
+            "總升級次數": 5,
+            "涉及賽事": [
+              "Monaco"
+            ],
+            "部件類別分佈": {
+              "引擎系統": 1,
+              "電能回收": 4
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "ICE (previously used)",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 63: ICE (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "MGU-H (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 63: MGU-H (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "MGU-K(previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 63: MGU-K(previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "ES (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 63: ES (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "CE (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 63: CE (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "Aston Martin": {
+      "車隊統計": {
+        "總升級次數": 11,
+        "涉及賽事": [
+          "Australian",
+          "Belgian",
+          "Dutch",
+          "Japanese",
+          "Singapore"
+        ],
+        "部件類別分佈": {
+          "底板系統": 3,
+          "引擎系統": 1,
+          "前翼系統": 1,
+          "後翼系統": 2,
+          "懸吊系統": 2,
+          "變速箱": 1,
+          "煞車主組件": 1
+        }
+      },
+      "車手": {
+        "Fernando Alonso": {
+          "車手資訊": {
+            "車號": "14",
+            "車手姓名": "Fernando Alonso",
+            "所屬車隊": "Aston Martin"
+          },
+          "車手統計": {
+            "總升級次數": 2,
+            "涉及賽事": [
+              "Australian"
+            ],
+            "部件類別分佈": {
+              "底板系統": 1,
+              "引擎系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Australian",
+              "比賽日期": "2025-03-16",
+              "更換部件": "Floor assembly",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Australian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 14: Floor assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Australian",
+              "比賽日期": "2025-03-16",
+              "更換部件": "ICE sump rubber",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Australian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 14: ICE sump rubber",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Lance Stroll": {
+          "車手資訊": {
+            "車號": "18",
+            "車手姓名": "Lance Stroll",
+            "所屬車隊": "Aston Martin"
+          },
+          "車手統計": {
+            "總升級次數": 9,
+            "涉及賽事": [
+              "Belgian",
+              "Dutch",
+              "Japanese",
+              "Singapore"
+            ],
+            "部件類別分佈": {
+              "底板系統": 2,
+              "前翼系統": 1,
+              "後翼系統": 2,
+              "懸吊系統": 2,
+              "變速箱": 1,
+              "煞車主組件": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Japanese",
+              "比賽日期": "2025-04-20",
+              "更換部件": "Rear wing assembly",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Japanese Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: Rear wing assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and parameters been replaced and or changed during the Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Dutch",
+              "比賽日期": "2025-08-31",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Dutch Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Dutch",
+              "比賽日期": "2025-08-31",
+              "更換部件": "Floor assembly",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Dutch Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: Floor assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Dutch",
+              "比賽日期": "2025-08-31",
+              "更換部件": "Rear wing assembly",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Dutch Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: Rear wing assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Dutch",
+              "比賽日期": "2025-08-31",
+              "更換部件": "RHS front corner suspension assembly and associated brake duct",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Dutch Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: RHS front corner suspension assembly and associated brake duct",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Dutch",
+              "比賽日期": "2025-08-31",
+              "更換部件": "Gearbox assembly and associated control hydraulics",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Dutch Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: Gearbox assembly and associated control hydraulics",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Dutch",
+              "比賽日期": "2025-08-31",
+              "更換部件": "LHS and RHS rear complete suspension assembly",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Dutch Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 18: LHS and RHS rear complete suspension assembly",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "RHS front brake caliper cap   Alpine Renault:",
+              "部件類別": "煞車主組件",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 18: RHS front brake caliper cap   Alpine Renault:",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            }
+          ]
+        }
+      }
+    },
+    "Haas": {
+      "車隊統計": {
+        "總升級次數": 10,
+        "涉及賽事": [
+          "Australian",
+          "Austrian",
+          "Azerbaijan",
+          "Bahrain",
+          "Japanese",
+          "Singapore"
+        ],
+        "部件類別分佈": {
+          "變速箱": 4,
+          "底板系統": 4,
+          "後翼系統": 1,
+          "前翼系統": 1
+        }
+      },
+      "車手": {
+        "Oliver Bearman": {
+          "車手資訊": {
+            "車號": "87",
+            "車手姓名": "Oliver Bearman",
+            "所屬車隊": "Haas"
+          },
+          "車手統計": {
+            "總升級次數": 6,
+            "涉及賽事": [
+              "Australian",
+              "Austrian",
+              "Azerbaijan",
+              "Japanese",
+              "Singapore"
+            ],
+            "部件類別分佈": {
+              "變速箱": 3,
+              "底板系統": 3
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Australian",
+              "比賽日期": "2025-03-16",
+              "更換部件": "Gearbox assembly",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Australian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 87: Gearbox assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Japanese",
+              "比賽日期": "2025-04-20",
+              "更換部件": "Metallic floor edge ancillaries",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Japanese Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 87: Metallic floor edge ancillaries",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Austrian",
+              "比賽日期": "2025-07-06",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Austrian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 87: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Gearbox assembly and associated control hydraulics",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 87: Gearbox assembly and associated control hydraulics",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Parameter changes associated with the gearbox assembly replacement",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 87: Parameter changes associated with the gearbox assembly replacement",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "RHS floor stay",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 87: RHS floor stay",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Esteban Ocon": {
+          "車手資訊": {
+            "車號": "31",
+            "車手姓名": "Esteban Ocon",
+            "所屬車隊": "Haas"
+          },
+          "車手統計": {
+            "總升級次數": 4,
+            "涉及賽事": [
+              "Bahrain",
+              "Japanese"
+            ],
+            "部件類別分佈": {
+              "後翼系統": 1,
+              "底板系統": 1,
+              "變速箱": 1,
+              "前翼系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Japanese",
+              "比賽日期": "2025-04-20",
+              "更換部件": "RHS front wing flap adjuster tower",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Japanese Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 31: RHS front wing flap adjuster tower",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Bahrain",
+              "比賽日期": "2025-05-04",
+              "更換部件": "Rear wing assembly",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Bahrain Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 31: Rear wing assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Bahrain",
+              "比賽日期": "2025-05-04",
+              "更換部件": "Floor assembly",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Bahrain Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 31: Floor assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Bahrain",
+              "比賽日期": "2025-05-04",
+              "更換部件": "Gearbox assembly",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Bahrain Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 31: Gearbox assembly",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "Kick Sauber": {
+      "車隊統計": {
+        "總升級次數": 10,
+        "涉及賽事": [
+          "Azerbaijan",
+          "Bahrain",
+          "Belgian",
+          "Chinese",
+          "Miami",
+          "Monaco",
+          "Spanish"
+        ],
+        "部件類別分佈": {
+          "前翼系統": 2,
+          "後翼系統": 2,
+          "底板系統": 2,
+          "變速箱": 1,
+          "懸吊系統": 2,
+          "煞車主組件": 1
+        }
+      },
+      "車手": {
+        "Nico Hulkenberg": {
+          "車手資訊": {
+            "車號": "27",
+            "車手姓名": "Nico Hulkenberg",
+            "所屬車隊": "Kick Sauber"
+          },
+          "車手統計": {
+            "總升級次數": 7,
+            "涉及賽事": [
+              "Azerbaijan",
+              "Chinese",
+              "Miami",
+              "Monaco",
+              "Spanish"
+            ],
+            "部件類別分佈": {
+              "前翼系統": 2,
+              "變速箱": 1,
+              "懸吊系統": 2,
+              "後翼系統": 1,
+              "底板系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "Gearbox assembly and associated control hydraulics",
+              "部件類別": "變速箱",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 27: Gearbox assembly and associated control hydraulics",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "LHS and RHS outboard rear suspension (excluding top wishbones)",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 27: LHS and RHS outboard rear suspension (excluding top wishbones)",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "LHS and RHS rear suspension",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 27: LHS and RHS rear suspension",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            },
+            {
+              "賽事名稱": "Miami",
+              "比賽日期": "2025-06-01",
+              "更換部件": "Rear wing flap shim",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Miami Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 27: Rear wing flap shim",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Spanish",
+              "比賽日期": "2025-06-20",
+              "更換部件": "Floor stay fixings",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Spanish Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 27: Floor stay fixings",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "Front wing / nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 27: Front wing / nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 3
+              },
+              "原始記錄": "Car 27: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Gabriel Bortoleto": {
+          "車手資訊": {
+            "車號": "05",
+            "車手姓名": "Gabriel Bortoleto",
+            "所屬車隊": "Kick Sauber"
+          },
+          "車手統計": {
+            "總升級次數": 3,
+            "涉及賽事": [
+              "Bahrain",
+              "Belgian",
+              "Chinese"
+            ],
+            "部件類別分佈": {
+              "後翼系統": 1,
+              "底板系統": 1,
+              "煞車主組件": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "RHS rear brake caliper temperature sensor",
+              "部件類別": "煞車主組件",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 05: RHS rear brake caliper temperature sensor",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Bahrain",
+              "比賽日期": "2025-05-04",
+              "更換部件": "LHS rear wing endplate light",
+              "部件類別": "後翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Bahrain Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 05: LHS rear wing endplate light",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.8
+            },
+            {
+              "賽事名稱": "Belgian",
+              "比賽日期": "2025-08-03",
+              "更換部件": "LHS floor stay clamp",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Belgian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 05: LHS floor stay clamp",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "RB": {
+      "車隊統計": {
+        "總升級次數": 6,
+        "涉及賽事": [
+          "Australian",
+          "British",
+          "United States"
+        ],
+        "部件類別分佈": {
+          "引擎系統": 1,
+          "底板系統": 3,
+          "前翼系統": 2
+        }
+      },
+      "車手": {
+        "Yuki Tsunoda": {
+          "車手資訊": {
+            "車號": "22",
+            "車手姓名": "Yuki Tsunoda",
+            "所屬車隊": "RB"
+          },
+          "車手統計": {
+            "總升級次數": 1,
+            "涉及賽事": [
+              "Australian"
+            ],
+            "部件類別分佈": {
+              "引擎系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Australian",
+              "比賽日期": "2025-03-16",
+              "更換部件": "ICE water cooling system PRV",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Australian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 22: ICE water cooling system PRV",
+              "變更類型": "未分類 (Unclassified)",
+              "變更類型說明": "無法根據現有規則分類",
+              "分類信心度": 0.0
+            }
+          ]
+        },
+        "Isack Hadjar": {
+          "車手資訊": {
+            "車號": "06",
+            "車手姓名": "Isack Hadjar",
+            "所屬車隊": "RB"
+          },
+          "車手統計": {
+            "總升級次數": 5,
+            "涉及賽事": [
+              "British",
+              "United States"
+            ],
+            "部件類別分佈": {
+              "底板系統": 3,
+              "前翼系統": 2
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "British",
+              "比賽日期": "2025-07-20",
+              "更換部件": "Floor assembly (excluding plank and skids)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 British Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 06: Floor assembly (excluding plank and skids)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 06: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "Floor assembly (excluding skids and plank)From The FIA Formula One Technical Delegate",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 06: Floor assembly (excluding skids and plank)From The FIA Formula One Technical Delegate",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 06: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "United States",
+              "比賽日期": "2025-10-26",
+              "更換部件": "Floor assembly (excluding skids and plank)From The FIA Formula One Technical Delegate",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 United States Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 06: Floor assembly (excluding skids and plank)From The FIA Formula One Technical Delegate",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "Ferrari": {
+      "車隊統計": {
+        "總升級次數": 6,
+        "涉及賽事": [
+          "Azerbaijan",
+          "Chinese",
+          "Miami",
+          "Monaco",
+          "Singapore"
+        ],
+        "部件類別分佈": {
+          "懸吊系統": 1,
+          "前翼系統": 3,
+          "車身外殼": 1,
+          "電能回收": 1
+        }
+      },
+      "車手": {
+        "Charles Leclerc": {
+          "車手資訊": {
+            "車號": "16",
+            "車手姓名": "Charles Leclerc",
+            "所屬車隊": "Ferrari"
+          },
+          "車手統計": {
+            "總升級次數": 5,
+            "涉及賽事": [
+              "Azerbaijan",
+              "Chinese",
+              "Miami",
+              "Singapore"
+            ],
+            "部件類別分佈": {
+              "懸吊系統": 1,
+              "前翼系統": 2,
+              "車身外殼": 1,
+              "電能回收": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Chinese",
+              "比賽日期": "2025-04-06",
+              "更換部件": "Steering column and associated chassis mounts",
+              "部件類別": "車身外殼",
+              "資料來源": {
+                "文件名稱": "2025 Chinese Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé (1).pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 16: Steering column and associated chassis mounts",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Miami",
+              "比賽日期": "2025-06-01",
+              "更換部件": "CE (powerbox, new)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Miami Grand Prix - Parts and Parameters been replaced and or changed during Sprint Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 16: CE (powerbox, new)",
+              "變更類型": "升級套件 (Upgrade Package)",
+              "變更類型說明": "新設計、需 re-presented / re-homologated、性能提升",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "RHS front outboard suspension assembly",
+              "部件類別": "懸吊系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 16: RHS front outboard suspension assembly",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Azerbaijan",
+              "比賽日期": "2025-09-28",
+              "更換部件": "Front wing/nose assemblyFrom The FIA Formula One Technical Delegate",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Azerbaijan Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 16: Front wing/nose assemblyFrom The FIA Formula One Technical Delegate",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "Front wing/nose assembly  Car 44: DCS loom connector   Red Bull Racing Honda RBPT:",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 16: Front wing/nose assembly  Car 44: DCS loom connector   Red Bull Racing Honda RBPT:",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        },
+        "Lewis Hamilton": {
+          "車手資訊": {
+            "車號": "44",
+            "車手姓名": "Lewis Hamilton",
+            "所屬車隊": "Ferrari"
+          },
+          "車手統計": {
+            "總升級次數": 1,
+            "涉及賽事": [
+              "Monaco"
+            ],
+            "部件類別分佈": {
+              "前翼系統": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Monaco",
+              "比賽日期": "2025-06-29",
+              "更換部件": "Front wing / nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Monaco Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 44: Front wing / nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    },
+    "Alpine": {
+      "車隊統計": {
+        "總升級次數": 5,
+        "涉及賽事": [
+          "Austrian",
+          "Hungarian",
+          "Singapore"
+        ],
+        "部件類別分佈": {
+          "底板系統": 1,
+          "側箱系統": 1,
+          "前翼系統": 1,
+          "引擎系統": 1,
+          "電能回收": 1
+        }
+      },
+      "車手": {
+        "Pierre Gasly": {
+          "車手資訊": {
+            "車號": "10",
+            "車手姓名": "Pierre Gasly",
+            "所屬車隊": "Alpine"
+          },
+          "車手統計": {
+            "總升級次數": 5,
+            "涉及賽事": [
+              "Austrian",
+              "Hungarian",
+              "Singapore"
+            ],
+            "部件類別分佈": {
+              "底板系統": 1,
+              "側箱系統": 1,
+              "前翼系統": 1,
+              "引擎系統": 1,
+              "電能回收": 1
+            }
+          },
+          "升級記錄": [
+            {
+              "賽事名稱": "Austrian",
+              "比賽日期": "2025-07-06",
+              "更換部件": "Floor assembly (excluding skids and plank)",
+              "部件類別": "底板系統",
+              "資料來源": {
+                "文件名稱": "2025 Austrian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 10: Floor assembly (excluding skids and plank)",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Austrian",
+              "比賽日期": "2025-07-06",
+              "更換部件": "LHS sidepod",
+              "部件類別": "側箱系統",
+              "資料來源": {
+                "文件名稱": "2025 Austrian Grand Prix - Parts and Parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 10: LHS sidepod",
+              "變更類型": "重大更新 (Major Update)",
+              "變更類型說明": "結構性改動、觸發 FIA 重新檢驗、但非全新套件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Hungarian",
+              "比賽日期": "2025-08-17",
+              "更換部件": "Front wing/nose assembly",
+              "部件類別": "前翼系統",
+              "資料來源": {
+                "文件名稱": "2025 Hungarian Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 1
+              },
+              "原始記錄": "Car 10: Front wing/nose assembly",
+              "變更類型": "變更 (Change)",
+              "變更類型說明": "Parc Fermé 內合法調整、空力/配置切換",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "ICE (previously used)  TC (previously used)  MGU-H (previously used)",
+              "部件類別": "引擎系統",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 10: ICE (previously used)  TC (previously used)  MGU-H (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            },
+            {
+              "賽事名稱": "Singapore",
+              "比賽日期": "2025-10-12",
+              "更換部件": "MGU-K (previously used)",
+              "部件類別": "電能回收",
+              "資料來源": {
+                "文件名稱": "2025 Singapore Grand Prix - Parts and parameters been replaced and or changed during Parc Fermé.pdf",
+                "頁碼": 2
+              },
+              "原始記錄": "Car 10: MGU-K (previously used)",
+              "變更類型": "維修 (Repair)",
+              "變更類型說明": "損壞後更換舊件或備件",
+              "分類信心度": 0.65
+            }
+          ]
+        }
+      }
+    }
+  }
+}

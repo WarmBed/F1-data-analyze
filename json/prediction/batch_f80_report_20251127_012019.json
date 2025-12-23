@@ -1,0 +1,47 @@
+{
+  "timestamp": "2025-11-27T01:20:19.451714",
+  "year": 2025,
+  "results": {
+    "success": [
+      "Australia",
+      "China",
+      "Japan",
+      "Bahrain",
+      "Saudi Arabia",
+      "Miami",
+      "Emilia Romagna",
+      "Monaco",
+      "Spain",
+      "Canada",
+      "Austria",
+      "Great Britain",
+      "Belgium",
+      "Hungary",
+      "Netherlands",
+      "Italy",
+      "Azerbaijan",
+      "Singapore",
+      "United States",
+      "Mexico"
+    ],
+    "skipped": [
+      "Brazil",
+      "Las Vegas"
+    ],
+    "failed": [
+      {
+        "race": "Qatar",
+        "error": "Command failed: C:\\Users\\mike2\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\fastf1\\api.py:32: UserWarning: `fastf1.api` will be considered private in future releases and potentially be removed or changed"
+      },
+      {
+        "race": "Abu Dhabi",
+        "error": "Command failed: C:\\Users\\mike2\\AppData\\Local\\Programs\\Python\\Python313\\Lib\\site-packages\\fastf1\\api.py:32: UserWarning: `fastf1.api` will be considered private in future releases and potentially be removed or changed"
+      }
+    ]
+  },
+  "statistics": {
+    "total_success": 20,
+    "total_skipped": 2,
+    "total_failed": 2
+  }
+}

@@ -1,0 +1,482 @@
+{
+  "total_samples": 2062,
+  "total_races": 22,
+  "years": [
+    2023,
+    2024
+  ],
+  "mean_position_error": 2.1042677012609117,
+  "median_position_error": 1.0,
+  "errors_by_circuit_type": {
+    "high_speed": 2.270609318996416,
+    "mixed": 1.9763313609467457,
+    "street": 2.2593406593406593,
+    "technical": 1.7487437185929648,
+    "unknown": 2.1725239616613417
+  },
+  "errors_by_position_group": {
+    "P1-P3": 1.057057057057057,
+    "P11-P20": 2.5031512605042017,
+    "P4-P10": 2.0643500643500645
+  },
+  "errors_by_lap_phase": {
+    "early": 2.806709265175719,
+    "late": 1.3241167434715821,
+    "middle": 2.1910828025477707
+  },
+  "errors_by_tyre": {
+    "HARD": 1.9482596425211665,
+    "INTERMEDIATE": 2.550632911392405,
+    "MEDIUM": 2.2788018433179724,
+    "SOFT": 2.14214463840399,
+    "WET": 2.8333333333333335
+  },
+  "worst_predictions": [
+    {
+      "year": 2024,
+      "race_name": "British",
+      "driver_code": "RUS",
+      "position": 1,
+      "final_position": 21,
+      "position_error": 20,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2024,
+      "race_name": "Austrian",
+      "driver_code": "NOR",
+      "position": 2,
+      "final_position": 21,
+      "position_error": 19,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2024,
+      "race_name": "Austrian",
+      "driver_code": "NOR",
+      "position": 2,
+      "final_position": 21,
+      "position_error": 19,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2024,
+      "race_name": "Austrian",
+      "driver_code": "NOR",
+      "position": 2,
+      "final_position": 21,
+      "position_error": 19,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2023,
+      "race_name": "Bahrain",
+      "driver_code": "LEC",
+      "position": 3,
+      "final_position": 21,
+      "position_error": 18,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2023,
+      "race_name": "Australian",
+      "driver_code": "RUS",
+      "position": 4,
+      "final_position": 21,
+      "position_error": 17,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2023,
+      "race_name": "Saudi_Arabian",
+      "driver_code": "STR",
+      "position": 4,
+      "final_position": 21,
+      "position_error": 17,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2024,
+      "race_name": "British",
+      "driver_code": "RUS",
+      "position": 4,
+      "final_position": 21,
+      "position_error": 17,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2023,
+      "race_name": "Bahrain",
+      "driver_code": "LEC",
+      "position": 5,
+      "final_position": 21,
+      "position_error": 16,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    },
+    {
+      "year": 2023,
+      "race_name": "Dutch",
+      "driver_code": "ZHO",
+      "position": 6,
+      "final_position": 21,
+      "position_error": 15,
+      "gap_to_leader": 0.0,
+      "qualifying_position": 10
+    }
+  ],
+  "driver_specific_errors": {
+    "ALB": {
+      "mean_error": 2.4361702127659575,
+      "samples": 94,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.26595744680851063
+    },
+    "ALO": {
+      "mean_error": 2.0186915887850465,
+      "samples": 107,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.16822429906542055
+    },
+    "BEA": {
+      "mean_error": 1.8333333333333333,
+      "samples": 6,
+      "p1_accuracy": 1.0,
+      "gained_positions": 1.8333333333333333
+    },
+    "BOT": {
+      "mean_error": 2.2735849056603774,
+      "samples": 106,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.2169811320754717
+    },
+    "COL": {
+      "mean_error": 2.55,
+      "samples": 20,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.15
+    },
+    "DEV": {
+      "mean_error": 1.2962962962962963,
+      "samples": 27,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.5555555555555556
+    },
+    "DOO": {
+      "mean_error": 2.3333333333333335,
+      "samples": 3,
+      "p1_accuracy": 1.0,
+      "gained_positions": -1.6666666666666667
+    },
+    "GAS": {
+      "mean_error": 2.4455445544554455,
+      "samples": 101,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.06930693069306931
+    },
+    "HAM": {
+      "mean_error": 1.619047619047619,
+      "samples": 105,
+      "p1_accuracy": 0.9619047619047619,
+      "gained_positions": 0.9904761904761905
+    },
+    "HUL": {
+      "mean_error": 2.3904761904761904,
+      "samples": 105,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.42857142857142855
+    },
+    "LAW": {
+      "mean_error": 3.212121212121212,
+      "samples": 33,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.42424242424242425
+    },
+    "LEC": {
+      "mean_error": 1.7766990291262137,
+      "samples": 103,
+      "p1_accuracy": 0.9514563106796117,
+      "gained_positions": -0.10679611650485436
+    },
+    "MAG": {
+      "mean_error": 2.5757575757575757,
+      "samples": 99,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.8383838383838383
+    },
+    "NOR": {
+      "mean_error": 2.1666666666666665,
+      "samples": 108,
+      "p1_accuracy": 0.9537037037037037,
+      "gained_positions": 0.09259259259259259
+    },
+    "OCO": {
+      "mean_error": 2.5106382978723403,
+      "samples": 94,
+      "p1_accuracy": 0.9893617021276596,
+      "gained_positions": -0.5531914893617021
+    },
+    "PER": {
+      "mean_error": 1.8823529411764706,
+      "samples": 102,
+      "p1_accuracy": 0.9705882352941176,
+      "gained_positions": 0.43137254901960786
+    },
+    "PIA": {
+      "mean_error": 1.8823529411764706,
+      "samples": 102,
+      "p1_accuracy": 0.9607843137254902,
+      "gained_positions": 0.7058823529411765
+    },
+    "RIC": {
+      "mean_error": 2.2916666666666665,
+      "samples": 48,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.7083333333333334
+    },
+    "RUS": {
+      "mean_error": 2.5,
+      "samples": 108,
+      "p1_accuracy": 0.9351851851851852,
+      "gained_positions": -0.6851851851851852
+    },
+    "SAI": {
+      "mean_error": 1.3773584905660377,
+      "samples": 106,
+      "p1_accuracy": 0.9905660377358491,
+      "gained_positions": -0.11320754716981132
+    },
+    "SAR": {
+      "mean_error": 1.8933333333333333,
+      "samples": 75,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.05333333333333334
+    },
+    "STR": {
+      "mean_error": 2.7731958762886597,
+      "samples": 97,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.23711340206185566
+    },
+    "TSU": {
+      "mean_error": 1.9896907216494846,
+      "samples": 97,
+      "p1_accuracy": 1.0,
+      "gained_positions": -0.6288659793814433
+    },
+    "VER": {
+      "mean_error": 0.7657657657657657,
+      "samples": 111,
+      "p1_accuracy": 0.9099099099099099,
+      "gained_positions": 0.24324324324324326
+    },
+    "ZHO": {
+      "mean_error": 2.552380952380952,
+      "samples": 105,
+      "p1_accuracy": 1.0,
+      "gained_positions": 0.24761904761904763
+    }
+  },
+  "circuit_specific_errors": {
+    "Abu_Dhabi": {
+      "mean_error": 1.9385964912280702,
+      "samples": 114,
+      "circuit_type": "mixed",
+      "position_changes": 1.9385964912280702
+    },
+    "Australian": {
+      "mean_error": 2.2884615384615383,
+      "samples": 52,
+      "circuit_type": "mixed",
+      "position_changes": 2.2884615384615383
+    },
+    "Austrian": {
+      "mean_error": 2.341880341880342,
+      "samples": 117,
+      "circuit_type": "high_speed",
+      "position_changes": 2.341880341880342
+    },
+    "Azerbaijan": {
+      "mean_error": 1.9736842105263157,
+      "samples": 114,
+      "circuit_type": "street",
+      "position_changes": 1.9736842105263157
+    },
+    "Bahrain": {
+      "mean_error": 2.327272727272727,
+      "samples": 55,
+      "circuit_type": "mixed",
+      "position_changes": 2.327272727272727
+    },
+    "Belgian": {
+      "mean_error": 2.0353982300884956,
+      "samples": 113,
+      "circuit_type": "high_speed",
+      "position_changes": 2.0353982300884956
+    },
+    "British": {
+      "mean_error": 2.2232142857142856,
+      "samples": 112,
+      "circuit_type": "high_speed",
+      "position_changes": 2.2232142857142856
+    },
+    "Canadian": {
+      "mean_error": 1.7894736842105263,
+      "samples": 57,
+      "circuit_type": "mixed",
+      "position_changes": 1.7894736842105263
+    },
+    "Dutch": {
+      "mean_error": 2.2327586206896552,
+      "samples": 116,
+      "circuit_type": "technical",
+      "position_changes": 2.2327586206896552
+    },
+    "Hungarian": {
+      "mean_error": 1.4910714285714286,
+      "samples": 112,
+      "circuit_type": "technical",
+      "position_changes": 1.4910714285714286
+    },
+    "Italian": {
+      "mean_error": 1.8421052631578947,
+      "samples": 114,
+      "circuit_type": "high_speed",
+      "position_changes": 1.8421052631578947
+    },
+    "Japanese": {
+      "mean_error": 1.58,
+      "samples": 50,
+      "circuit_type": "technical",
+      "position_changes": 1.58
+    },
+    "Las_Vegas": {
+      "mean_error": 2.973684210526316,
+      "samples": 114,
+      "circuit_type": "street",
+      "position_changes": 2.973684210526316
+    },
+    "Mexico_City": {
+      "mean_error": 2.2476190476190476,
+      "samples": 105,
+      "circuit_type": "unknown",
+      "position_changes": 2.2476190476190476
+    },
+    "Miami": {
+      "mean_error": 1.6333333333333333,
+      "samples": 60,
+      "circuit_type": "mixed",
+      "position_changes": 1.6333333333333333
+    },
+    "Monaco": {
+      "mean_error": 1.847457627118644,
+      "samples": 59,
+      "circuit_type": "street",
+      "position_changes": 1.847457627118644
+    },
+    "Qatar": {
+      "mean_error": 2.980392156862745,
+      "samples": 102,
+      "circuit_type": "high_speed",
+      "position_changes": 2.980392156862745
+    },
+    "Saudi_Arabian": {
+      "mean_error": 1.6666666666666667,
+      "samples": 57,
+      "circuit_type": "street",
+      "position_changes": 1.6666666666666667
+    },
+    "Singapore": {
+      "mean_error": 2.3423423423423424,
+      "samples": 111,
+      "circuit_type": "street",
+      "position_changes": 2.3423423423423424
+    },
+    "Spanish": {
+      "mean_error": 1.5916666666666666,
+      "samples": 120,
+      "circuit_type": "technical",
+      "position_changes": 1.5916666666666666
+    },
+    "São_Paulo": {
+      "mean_error": 2.329896907216495,
+      "samples": 97,
+      "circuit_type": "unknown",
+      "position_changes": 2.329896907216495
+    },
+    "United_States": {
+      "mean_error": 1.9639639639639639,
+      "samples": 111,
+      "circuit_type": "unknown",
+      "position_changes": 1.9639639639639639
+    }
+  },
+  "suggested_adjustments": [
+    {
+      "type": "driver_adjustment",
+      "driver": "LAW",
+      "issue": "平均預測誤差 3.21 個位置",
+      "observation": "平均每場下降 0.4 個位置",
+      "suggestion": "考慮提高 LAW 的基礎預測排名",
+      "priority": "high"
+    },
+    {
+      "type": "driver_adjustment",
+      "driver": "STR",
+      "issue": "平均預測誤差 2.77 個位置",
+      "observation": "平均每場上升 0.2 個位置",
+      "suggestion": "考慮降低 STR 的基礎預測排名",
+      "priority": "medium"
+    },
+    {
+      "type": "driver_adjustment",
+      "driver": "MAG",
+      "issue": "平均預測誤差 2.58 個位置",
+      "observation": "平均每場下降 0.8 個位置",
+      "suggestion": "考慮提高 MAG 的基礎預測排名",
+      "priority": "medium"
+    },
+    {
+      "type": "driver_adjustment",
+      "driver": "ZHO",
+      "issue": "平均預測誤差 2.55 個位置",
+      "observation": "平均每場上升 0.2 個位置",
+      "suggestion": "考慮降低 ZHO 的基礎預測排名",
+      "priority": "medium"
+    },
+    {
+      "type": "driver_adjustment",
+      "driver": "COL",
+      "issue": "平均預測誤差 2.55 個位置",
+      "observation": "平均每場上升 0.1 個位置",
+      "suggestion": "考慮降低 COL 的基礎預測排名",
+      "priority": "medium"
+    },
+    {
+      "type": "circuit_adjustment",
+      "circuit": "Qatar",
+      "circuit_type": "high_speed",
+      "issue": "平均預測誤差 2.98 個位置",
+      "observation": "平均位置變動 3.0",
+      "suggestion": "調整 Qatar (high_speed) 的超車難度係數",
+      "priority": "medium"
+    },
+    {
+      "type": "circuit_adjustment",
+      "circuit": "Las_Vegas",
+      "circuit_type": "street",
+      "issue": "平均預測誤差 2.97 個位置",
+      "observation": "平均位置變動 3.0",
+      "suggestion": "調整 Las_Vegas (street) 的超車難度係數",
+      "priority": "medium"
+    }
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "metadata": {
+    "function_id": 73,
+    "function_name": "Track Classification Analysis (Enhanced)",
+    "analysis_timestamp": "2025-11-01T04:42:54.756045",
+    "n_clusters": 3,
+    "session": "FP3",
+    "total_tracks": 27,
+    "features_used": [
+      "avg_speed",
+      "max_speed",
+      "throttle_ratio",
+      "brake_intensity",
+      "corner_count",
+      "track_length_km",
+      "straight_line_ratio",
+      "avg_corner_speed"
+    ],
+    "algorithm": "K-Means",
+    "data_version": "2.0.0",
+    "improvements": "Added track length, straight line ratio, and corner speed features; implemented deduplication"
+  },
+  "classification": {
+    "cluster_0": {
+      "cluster_id": 0,
+      "tracks": [
+        "Abu Dhabi",
+        "Azerbaijan",
+        "France",
+        "Hungary",
+        "Mexico",
+        "Miami",
+        "Qatar",
+        "United States"
+      ],
+      "track_count": 8,
+      "center_features": {
+        "avg_speed": 328.8248903508772,
+        "max_speed": 336.875,
+        "throttle_ratio": 0.3390961185989195,
+        "brake_intensity": 33.68598538011695,
+        "corner_count": 21.0,
+        "track_length_km": 3.0454999999999997,
+        "straight_line_ratio": 0.3390961185989195,
+        "avg_corner_speed": 150.0
+      }
+    },
+    "cluster_1": {
+      "cluster_id": 1,
+      "tracks": [
+        "Australia",
+        "Brazil",
+        "Canada",
+        "China",
+        "Germany",
+        "Great Britain",
+        "Italy",
+        "Japan",
+        "Las Vegas",
+        "Russia",
+        "Saudi Arabia"
+      ],
+      "track_count": 11,
+      "center_features": {
+        "avg_speed": 319.43516746411484,
+        "max_speed": 327.27272727272725,
+        "throttle_ratio": 0.4183918283997617,
+        "brake_intensity": 30.840287081339714,
+        "corner_count": 24.0,
+        "track_length_km": 3.4786363636363635,
+        "straight_line_ratio": 0.4183918283997617,
+        "avg_corner_speed": 150.0
+      }
+    },
+    "cluster_2": {
+      "cluster_id": 2,
+      "tracks": [
+        "Austria",
+        "Bahrain",
+        "Belgium",
+        "Emilia Romagna",
+        "Monaco",
+        "Netherlands",
+        "Singapore",
+        "Spain"
+      ],
+      "track_count": 8,
+      "center_features": {
+        "avg_speed": 288.95208333333335,
+        "max_speed": 303.625,
+        "throttle_ratio": 0.3372619804307003,
+        "brake_intensity": 31.348534722222222,
+        "corner_count": 18.0,
+        "track_length_km": 4.529125,
+        "straight_line_ratio": 0.3372619804307003,
+        "avg_corner_speed": 150.0
+      }
+    }
+  },
+  "validation": {
+    "overall_accuracy": 0.8461538461538461,
+    "by_category": {
+      "high_speed": {
+        "predicted_cluster": null,
+        "matches": [
+          "Monza",
+          "Spa",
+          "Silverstone",
+          "Baku",
+          "Jeddah"
+        ],
+        "mismatches": [],
+        "accuracy": 1.0
+      },
+      "street": {
+        "predicted_cluster": "cluster_1",
+        "matches": [
+          "Las Vegas"
+        ],
+        "mismatches": [
+          {
+            "track": "Monaco",
+            "expected": "street",
+            "predicted": "cluster_2"
+          },
+          {
+            "track": "Singapore",
+            "expected": "street",
+            "predicted": "cluster_2"
+          }
+        ],
+        "accuracy": 0.3333333333333333
+      },
+      "mixed": {
+        "predicted_cluster": null,
+        "matches": [
+          "Suzuka",
+          "Barcelona",
+          "Austin",
+          "Interlagos",
+          "Spielberg"
+        ],
+        "mismatches": [],
+        "accuracy": 1.0
+      }
+    },
+    "total_known_tracks": 13,
+    "total_matches": 11
+  }
+}

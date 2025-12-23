@@ -1,0 +1,16 @@
+{
+  "timestamp": "2025-11-27T07:12:40.156742",
+  "year": 2025,
+  "results": {
+    "success": [],
+    "skipped": [
+      "Las Vegas"
+    ],
+    "failed": []
+  },
+  "statistics": {
+    "total_success": 0,
+    "total_skipped": 1,
+    "total_failed": 0
+  }
+}

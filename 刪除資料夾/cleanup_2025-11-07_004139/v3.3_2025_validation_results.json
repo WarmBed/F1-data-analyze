@@ -1,0 +1,163 @@
+{
+  "metadata": {
+    "version": "v3.3",
+    "validation_year": 2025,
+    "timestamp": "2025-11-03T13:46:52.751118",
+    "total_races": 24,
+    "successful_predictions": 12,
+    "failed_predictions": 12
+  },
+  "summary": {
+    "avg_spearman": 0.3188361218469198,
+    "avg_mae": 1.9262739090367365,
+    "avg_top3_accuracy": 0.3055555555555555,
+    "avg_top10_accuracy": 0.625,
+    "avg_rank_error": 5.019298245614034
+  },
+  "race_results": {
+    "Japan": {
+      "race_number": 3,
+      "race_name": "Japan",
+      "n_drivers": 20,
+      "r2": -2.411844345015046,
+      "mae": 1.0467591064453117,
+      "spearman": 0.2292013241521104,
+      "top3_accuracy": 0.0,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 6.1,
+      "max_rank_error": 17
+    },
+    "Bahrain": {
+      "race_number": 4,
+      "race_name": "Bahrain",
+      "n_drivers": 20,
+      "r2": 0.43220688721642586,
+      "mae": 0.5667903869628887,
+      "spearman": 0.724812030075188,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 3.6,
+      "max_rank_error": 7
+    },
+    "Saudi Arabia": {
+      "race_number": 5,
+      "race_name": "Saudi Arabia",
+      "n_drivers": 20,
+      "r2": 0.45173135372981266,
+      "mae": 0.3365780303955077,
+      "spearman": 0.8353840774994533,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.9,
+      "mean_rank_error": 2.8,
+      "max_rank_error": 10
+    },
+    "Monaco": {
+      "race_number": 8,
+      "race_name": "Monaco",
+      "n_drivers": 20,
+      "r2": -0.13537135555202595,
+      "mae": 0.6318336547851544,
+      "spearman": 0.6458192841338248,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 3.8,
+      "max_rank_error": 11
+    },
+    "Canada": {
+      "race_number": 10,
+      "race_name": "Canada",
+      "n_drivers": 20,
+      "r2": -135.47375883380718,
+      "mae": 6.155324951171875,
+      "spearman": -0.30523464150881513,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 6.8,
+      "max_rank_error": 17
+    },
+    "Great Britain": {
+      "race_number": 12,
+      "race_name": "Great Britain",
+      "n_drivers": 20,
+      "r2": -158.40175440393986,
+      "mae": 6.474383612060548,
+      "spearman": 0.19406021180504493,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 5.8,
+      "max_rank_error": 15
+    },
+    "Hungary": {
+      "race_number": 14,
+      "race_name": "Hungary",
+      "n_drivers": 20,
+      "r2": -25.961619588464565,
+      "mae": 1.4805344848632835,
+      "spearman": 0.28147313014109365,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 5.2,
+      "max_rank_error": 15
+    },
+    "Netherlands": {
+      "race_number": 15,
+      "race_name": "Netherlands",
+      "n_drivers": 19,
+      "r2": -82.99372902317542,
+      "mae": 4.122311298571136,
+      "spearman": -0.18556661342239764,
+      "top3_accuracy": 0.3333333333333333,
+      "top10_accuracy": 0.5,
+      "mean_rank_error": 6.526315789473684,
+      "max_rank_error": 13
+    },
+    "Italy": {
+      "race_number": 16,
+      "race_name": "Italy",
+      "n_drivers": 20,
+      "r2": -1.833378218890644,
+      "mae": 0.5767714477539052,
+      "spearman": -0.11809509513349878,
+      "top3_accuracy": 0.0,
+      "top10_accuracy": 0.4,
+      "mean_rank_error": 6.8,
+      "max_rank_error": 17
+    },
+    "Azerbaijan": {
+      "race_number": 17,
+      "race_name": "Azerbaijan",
+      "n_drivers": 19,
+      "r2": -0.33642245523075687,
+      "mae": 0.6184413355777146,
+      "spearman": 0.10722754383039856,
+      "top3_accuracy": 0.0,
+      "top10_accuracy": 0.6,
+      "mean_rank_error": 6.105263157894737,
+      "max_rank_error": 14
+    },
+    "Singapore": {
+      "race_number": 18,
+      "race_name": "Singapore",
+      "n_drivers": 20,
+      "r2": -0.2138630687273324,
+      "mae": 0.5745919219970702,
+      "spearman": 0.6429769772176437,
+      "top3_accuracy": 0.6666666666666666,
+      "top10_accuracy": 0.7,
+      "mean_rank_error": 3.8,
+      "max_rank_error": 13
+    },
+    "Mexico": {
+      "race_number": 20,
+      "race_name": "Mexico",
+      "n_drivers": 20,
+      "r2": 0.3360775209080511,
+      "mae": 0.5309666778564456,
+      "spearman": 0.7739752333729918,
+      "top3_accuracy": 0.6666666666666666,
+      "top10_accuracy": 0.8,
+      "mean_rank_error": 2.9,
+      "max_rank_error": 7
+    }
+  }
+}

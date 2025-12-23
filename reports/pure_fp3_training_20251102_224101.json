@@ -1,0 +1,77 @@
+{
+  "model_info": {
+    "name": "xgboost_pure_fp3",
+    "function_id": 75,
+    "timestamp": "2025-11-02T22:41:01.200015",
+    "model_path": "models/xgboost_pure_fp3.pkl",
+    "features_count": 15,
+    "removed_features_count": 24,
+    "feature_reduction_pct": 61.5,
+    "training_period": "2018-2024",
+    "test_year": 2025
+  },
+  "feature_strategy": {
+    "removed_features": [
+      "fp1_best_lap",
+      "fp2_best_lap",
+      "fp1_fastest_lap",
+      "fp2_fastest_lap",
+      "fp1_all_laps_mean",
+      "fp2_all_laps_mean",
+      "fp1_all_laps_std",
+      "fp2_all_laps_std",
+      "fp1_to_fp2_improvement",
+      "fp2_to_fp3_improvement",
+      "improvement_fp3_fp1",
+      "improvement_fp3_fp2",
+      "track_cluster_id",
+      "fp3_race_sim_avg",
+      "fp3_race_sim_degradation",
+      "fp3_air_temp",
+      "fp3_track_temp",
+      "fp3_humidity",
+      "q_air_temp",
+      "q_track_temp",
+      "q_humidity",
+      "fp3_lap_std",
+      "fp3_all_laps_mean",
+      "fp3_all_laps_std"
+    ],
+    "kept_features": [
+      "fp3_best_lap",
+      "fp3_fastest_lap",
+      "fp3_avg_lap",
+      "fp3_sector1",
+      "fp3_sector2",
+      "fp3_sector3",
+      "fp3_speed_trap",
+      "fp3_valid_laps",
+      "fp3_consistency",
+      "fp3_sector_balance",
+      "temp_delta_air",
+      "temp_delta_track",
+      "driver",
+      "team",
+      "race"
+    ]
+  },
+  "performance_test": {
+    "test_year": 2025,
+    "mae": 0.8263569311299452,
+    "rmse": 2.0626741404419002,
+    "r2": 0.9319660984091396,
+    "samples": 545
+  },
+  "comparison": {
+    "baseline_mae": 0.901,
+    "pure_fp3_mae": 0.8263569311299452,
+    "improvement_pct": 8.284469352947257,
+    "target_mae": 0.8,
+    "target_achieved": false
+  },
+  "decision_point": {
+    "mae_threshold": 0.8,
+    "result": "partial_success",
+    "next_action": "考慮集成學習（方案 3）"
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "year": "2024",
+  "meeting": "Dutch Grand Prix",
+  "session": "Race",
+  "race_name": "Dutch",
+  "session_type": "Race",
+  "download_time": "2025-11-26T18:33:09.124574",
+  "streams": {
+    "Position.json": {
+      "status": "downloaded",
+      "records": 9001,
+      "size": 8334515
+    },
+    "TimingData.json": {
+      "status": "downloaded",
+      "records": 73565,
+      "size": 7532587
+    },
+    "CarData.json": {
+      "status": "downloaded",
+      "records": 8949,
+      "size": 8006295
+    },
+    "TimingAppData.json": {
+      "status": "downloaded",
+      "records": 1046,
+      "size": 104703
+    },
+    "WeatherData.json": {
+      "status": "downloaded",
+      "records": 153,
+      "size": 22035
+    },
+    "RaceControlMessages.json": {
+      "status": "downloaded",
+      "records": 82,
+      "size": 15713
+    },
+    "TrackStatus.json": {
+      "status": "downloaded",
+      "records": 3,
+      "size": 148
+    },
+    "LapCount.json": {
+      "status": "downloaded",
+      "records": 72,
+      "size": 2241
+    },
+    "PitLaneTimeCollection.json": {
+      "status": "downloaded",
+      "records": 52,
+      "size": 3371
+    },
+    "DriverList.json": {
+      "status": "downloaded",
+      "records": 151,
+      "size": 15676
+    },
+    "SessionInfo.json": {
+      "status": "downloaded",
+      "records": 1,
+      "size": 476
+    },
+    "SessionData.json": {
+      "status": "downloaded",
+      "records": 79,
+      "size": 6053
+    },
+    "LapSeries.json": {
+      "status": "downloaded",
+      "records": 1427,
+      "size": 68295
+    },
+    "TopThree.json": {
+      "status": "downloaded",
+      "records": 3612,
+      "size": 285031
+    },
+    "TimingStats.json": {
+      "status": "downloaded",
+      "records": 1200,
+      "size": 253561
+    },
+    "ExtrapolatedClock.json": {
+      "status": "downloaded",
+      "records": 3,
+      "size": 258
+    },
+    "TeamRadio.json": {
+      "status": "downloaded",
+      "records": 96,
+      "size": 14634
+    },
+    "TyreStintSeries.json": {
+      "status": "downloaded",
+      "records": 756,
+      "size": 63403
+    }
+  },
+  "total_records": 100248
+}

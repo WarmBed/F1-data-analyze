@@ -1,0 +1,682 @@
+{
+  "metadata": {
+    "year": 2025,
+    "race": 2,
+    "collection_timestamp": "2025-11-02T21:51:56.765534",
+    "fastf1_version": "3.6.0",
+    "data_source": "FastF1 API"
+  },
+  "practice_sessions": {
+    "FP1": {
+      "session_info": {
+        "session_name": "Practice 1",
+        "date": "2025-03-21T03:30:00"
+      },
+      "weather": {
+        "air_temp_avg": 22.764634146341464,
+        "track_temp_avg": 36.15243902439025,
+        "humidity_avg": 19.76829268292683,
+        "rainfall": false
+      },
+      "driver_data": {
+        "VER": {
+          "total_laps": 24,
+          "valid_laps": 19,
+          "best_lap_time": 93.284,
+          "avg_lap_time": 108.05784210526316,
+          "lap_time_std": 17.646291972042548,
+          "fastest_lap": 93.284,
+          "all_laps_mean": 108.05784210526316,
+          "all_laps_std": 17.646291972042548,
+          "race_sim_avg": 106.58380000000002,
+          "race_sim_degradation": 3.1315852929767454,
+          "team": "Red Bull Racing",
+          "sector1_best": 24.565,
+          "sector2_best": 27.854,
+          "sector3_best": 40.276,
+          "speed_trap_max": 336.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 11.578947368421053
+        },
+        "NOR": {
+          "total_laps": 23,
+          "valid_laps": 18,
+          "best_lap_time": 91.504,
+          "avg_lap_time": 106.39116666666668,
+          "lap_time_std": 17.18041870766217,
+          "fastest_lap": 91.504,
+          "all_laps_mean": 106.39116666666668,
+          "all_laps_std": 17.18041870766217,
+          "race_sim_avg": 101.9636,
+          "race_sim_degradation": 1.0868773856698466,
+          "team": "McLaren",
+          "sector1_best": 24.281,
+          "sector2_best": 27.601,
+          "sector3_best": 39.39,
+          "speed_trap_max": 332.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 8.666666666666666
+        },
+        "BOR": {
+          "total_laps": 24,
+          "valid_laps": 16,
+          "best_lap_time": 93.822,
+          "avg_lap_time": 104.502375,
+          "lap_time_std": 15.143926196663793,
+          "fastest_lap": 93.822,
+          "all_laps_mean": 104.502375,
+          "all_laps_std": 15.143926196663793,
+          "race_sim_avg": 108.2412,
+          "race_sim_degradation": 2.8110253761872896,
+          "team": "Kick Sauber",
+          "sector1_best": 25.092,
+          "sector2_best": 28.278,
+          "sector3_best": 40.452,
+          "speed_trap_max": 335.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 10.0625
+        },
+        "HAD": {
+          "total_laps": 23,
+          "valid_laps": 16,
+          "best_lap_time": 93.385,
+          "avg_lap_time": 108.14156249999999,
+          "lap_time_std": 20.410050880121947,
+          "fastest_lap": 93.385,
+          "all_laps_mean": 108.14156249999999,
+          "all_laps_std": 20.410050880121947,
+          "race_sim_avg": 104.30709999999999,
+          "race_sim_degradation": 0.4916582666474756,
+          "team": "Racing Bulls",
+          "sector1_best": 24.884,
+          "sector2_best": 27.76,
+          "sector3_best": 40.613,
+          "speed_trap_max": 330.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 8.625
+        },
+        "DOO": {
+          "total_laps": 17,
+          "valid_laps": 11,
+          "best_lap_time": 93.923,
+          "avg_lap_time": 101.1480909090909,
+          "lap_time_std": 12.003712279578728,
+          "fastest_lap": 93.923,
+          "all_laps_mean": 101.1480909090909,
+          "all_laps_std": 12.003712279578728,
+          "race_sim_avg": 101.5596,
+          "race_sim_degradation": 0.3826648699248042,
+          "team": "Alpine",
+          "sector1_best": 24.881,
+          "sector2_best": 28.265,
+          "sector3_best": 40.558,
+          "speed_trap_max": 330.0,
+          "compounds_used": [
+            "MEDIUM"
+          ],
+          "tire_age_avg": 10.0
+        },
+        "GAS": {
+          "total_laps": 23,
+          "valid_laps": 17,
+          "best_lap_time": 93.123,
+          "avg_lap_time": 107.96217647058822,
+          "lap_time_std": 17.531158027335554,
+          "fastest_lap": 93.123,
+          "all_laps_mean": 107.96217647058822,
+          "all_laps_std": 17.531158027335554,
+          "race_sim_avg": 101.41159999999999,
+          "race_sim_degradation": 2.884675748634571,
+          "team": "Alpine",
+          "sector1_best": 24.719,
+          "sector2_best": 28.294,
+          "sector3_best": 40.03,
+          "speed_trap_max": 336.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 11.176470588235293
+        },
+        "ANT": {
+          "total_laps": 27,
+          "valid_laps": 22,
+          "best_lap_time": 92.874,
+          "avg_lap_time": 106.7645,
+          "lap_time_std": 18.576041558313506,
+          "fastest_lap": 92.874,
+          "all_laps_mean": 106.7645,
+          "all_laps_std": 18.576041558313506,
+          "race_sim_avg": 109.32480000000001,
+          "race_sim_degradation": -4.109412103689141,
+          "team": "Mercedes",
+          "sector1_best": 24.719,
+          "sector2_best": 28.129,
+          "sector3_best": 39.911,
+          "speed_trap_max": 338.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 11.272727272727273
+        },
+        "ALO": {
+          "total_laps": 23,
+          "valid_laps": 17,
+          "best_lap_time": 92.766,
+          "avg_lap_time": 109.5865294117647,
+          "lap_time_std": 17.470703649673236,
+          "fastest_lap": 92.766,
+          "all_laps_mean": 109.5865294117647,
+          "all_laps_std": 17.470703649673236,
+          "race_sim_avg": 107.5658,
+          "race_sim_degradation": 3.25867708997418,
+          "team": "Aston Martin",
+          "sector1_best": 24.557,
+          "sector2_best": 28.17,
+          "sector3_best": 40.039,
+          "speed_trap_max": 333.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 10.352941176470589
+        },
+        "LEC": {
+          "total_laps": 21,
+          "valid_laps": 13,
+          "best_lap_time": 91.958,
+          "avg_lap_time": 106.6929230769231,
+          "lap_time_std": 19.785417468687804,
+          "fastest_lap": 91.958,
+          "all_laps_mean": 106.6929230769231,
+          "all_laps_std": 19.785417468687804,
+          "race_sim_avg": 106.6389,
+          "race_sim_degradation": 4.909774981602605,
+          "team": "Ferrari",
+          "sector1_best": 24.427,
+          "sector2_best": 27.738,
+          "sector3_best": 39.696,
+          "speed_trap_max": 333.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 7.461538461538462
+        },
+        "STR": {
+          "total_laps": 19,
+          "valid_laps": 14,
+          "best_lap_time": 92.984,
+          "avg_lap_time": 112.06871428571428,
+          "lap_time_std": 21.720785488093664,
+          "fastest_lap": 92.984,
+          "all_laps_mean": 112.06871428571428,
+          "all_laps_std": 21.720785488093664,
+          "race_sim_avg": 112.38,
+          "race_sim_degradation": 1.541715482472975,
+          "team": "Aston Martin",
+          "sector1_best": 24.784,
+          "sector2_best": 28.225,
+          "sector3_best": 39.975,
+          "speed_trap_max": 334.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 7.785714285714286
+        },
+        "TSU": {
+          "total_laps": 23,
+          "valid_laps": 16,
+          "best_lap_time": 92.934,
+          "avg_lap_time": 111.4610625,
+          "lap_time_std": 20.951740072425963,
+          "fastest_lap": 92.934,
+          "all_laps_mean": 111.4610625,
+          "all_laps_std": 20.951740072425963,
+          "race_sim_avg": 113.8744,
+          "race_sim_degradation": 0.7340912385330634,
+          "team": "Racing Bulls",
+          "sector1_best": 24.703,
+          "sector2_best": 27.908,
+          "sector3_best": 40.323,
+          "speed_trap_max": 330.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 9.5
+        },
+        "ALB": {
+          "total_laps": 24,
+          "valid_laps": 18,
+          "best_lap_time": 92.687,
+          "avg_lap_time": 112.28944444444443,
+          "lap_time_std": 21.361157289155148,
+          "fastest_lap": 92.687,
+          "all_laps_mean": 112.28944444444443,
+          "all_laps_std": 21.361157289155148,
+          "race_sim_avg": 110.62460000000002,
+          "race_sim_degradation": -25.487748497457236,
+          "team": "Williams",
+          "sector1_best": 24.648,
+          "sector2_best": 27.852,
+          "sector3_best": 40.187,
+          "speed_trap_max": 332.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 9.944444444444445
+        },
+        "HUL": {
+          "total_laps": 21,
+          "valid_laps": 17,
+          "best_lap_time": 92.507,
+          "avg_lap_time": 110.0159411764706,
+          "lap_time_std": 18.90007281556935,
+          "fastest_lap": 92.507,
+          "all_laps_mean": 110.0159411764706,
+          "all_laps_std": 18.90007281556935,
+          "race_sim_avg": 111.4395,
+          "race_sim_degradation": 0.7162068858912326,
+          "team": "Kick Sauber",
+          "sector1_best": 24.628,
+          "sector2_best": 27.894,
+          "sector3_best": 39.985,
+          "speed_trap_max": 333.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 7.647058823529412
+        },
+        "LAW": {
+          "total_laps": 23,
+          "valid_laps": 19,
+          "best_lap_time": 93.631,
+          "avg_lap_time": 114.39010526315788,
+          "lap_time_std": 19.600187436447122,
+          "fastest_lap": 93.631,
+          "all_laps_mean": 114.39010526315788,
+          "all_laps_std": 19.600187436447122,
+          "race_sim_avg": 114.3443,
+          "race_sim_degradation": -25.127006317848117,
+          "team": "Red Bull Racing",
+          "sector1_best": 24.932,
+          "sector2_best": 28.193,
+          "sector3_best": 40.463,
+          "speed_trap_max": 333.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 8.105263157894736
+        },
+        "OCO": {
+          "total_laps": 23,
+          "valid_laps": 15,
+          "best_lap_time": 93.056,
+          "avg_lap_time": 102.64433333333335,
+          "lap_time_std": 13.96950010183751,
+          "fastest_lap": 93.056,
+          "all_laps_mean": 102.64433333333335,
+          "all_laps_std": 13.96950010183751,
+          "race_sim_avg": 101.19680000000001,
+          "race_sim_degradation": -0.6144251904104678,
+          "team": "Haas F1 Team",
+          "sector1_best": 24.788,
+          "sector2_best": 28.073,
+          "sector3_best": 39.985,
+          "speed_trap_max": 334.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 9.0
+        },
+        "HAM": {
+          "total_laps": 22,
+          "valid_laps": 12,
+          "best_lap_time": 92.195,
+          "avg_lap_time": 102.52974999999999,
+          "lap_time_std": 15.09356439693903,
+          "fastest_lap": 92.195,
+          "all_laps_mean": 102.52974999999999,
+          "all_laps_std": 15.09356439693903,
+          "race_sim_avg": 99.1263,
+          "race_sim_degradation": 9.833906490085608,
+          "team": "Ferrari",
+          "sector1_best": 24.55,
+          "sector2_best": 27.825,
+          "sector3_best": 39.82,
+          "speed_trap_max": 334.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 8.75
+        },
+        "SAI": {
+          "total_laps": 26,
+          "valid_laps": 20,
+          "best_lap_time": 93.145,
+          "avg_lap_time": 110.84164999999999,
+          "lap_time_std": 18.974791882292564,
+          "fastest_lap": 93.145,
+          "all_laps_mean": 110.84164999999999,
+          "all_laps_std": 18.974791882292564,
+          "race_sim_avg": 108.85440000000001,
+          "race_sim_degradation": -0.5270580484440469,
+          "team": "Williams",
+          "sector1_best": 24.834,
+          "sector2_best": 27.96,
+          "sector3_best": 40.351,
+          "speed_trap_max": 331.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 11.4
+        },
+        "RUS": {
+          "total_laps": 26,
+          "valid_laps": 19,
+          "best_lap_time": 92.377,
+          "avg_lap_time": 106.1478947368421,
+          "lap_time_std": 18.39690065652587,
+          "fastest_lap": 92.377,
+          "all_laps_mean": 106.1478947368421,
+          "all_laps_std": 18.39690065652587,
+          "race_sim_avg": 99.7722,
+          "race_sim_degradation": 0.6566229618423265,
+          "team": "Mercedes",
+          "sector1_best": 24.624,
+          "sector2_best": 27.957,
+          "sector3_best": 39.625,
+          "speed_trap_max": 340.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 12.263157894736842
+        },
+        "PIA": {
+          "total_laps": 24,
+          "valid_laps": 16,
+          "best_lap_time": 92.153,
+          "avg_lap_time": 104.2841875,
+          "lap_time_std": 18.939748735463727,
+          "fastest_lap": 92.153,
+          "all_laps_mean": 104.2841875,
+          "all_laps_std": 18.939748735463727,
+          "race_sim_avg": 104.50710000000001,
+          "race_sim_degradation": 1.9938231401138686,
+          "team": "McLaren",
+          "sector1_best": 24.472,
+          "sector2_best": 27.659,
+          "sector3_best": 39.681,
+          "speed_trap_max": 332.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 9.0625
+        },
+        "BEA": {
+          "total_laps": 23,
+          "valid_laps": 19,
+          "best_lap_time": 92.967,
+          "avg_lap_time": 111.06457894736842,
+          "lap_time_std": 20.68243583149665,
+          "fastest_lap": 92.967,
+          "all_laps_mean": 111.06457894736842,
+          "all_laps_std": 20.68243583149665,
+          "race_sim_avg": 113.97019999999998,
+          "race_sim_degradation": -2.768338498639753,
+          "team": "Haas F1 Team",
+          "sector1_best": 24.61,
+          "sector2_best": 28.203,
+          "sector3_best": 40.15,
+          "speed_trap_max": 330.0,
+          "compounds_used": [
+            "MEDIUM",
+            "SOFT"
+          ],
+          "tire_age_avg": 8.368421052631579
+        }
+      }
+    }
+  },
+  "qualifying": {
+    "session_info": {
+      "event_name": "Chinese Grand Prix",
+      "circuit": "Shanghai",
+      "country": "China",
+      "date": "2025-03-22T07:00:00"
+    },
+    "weather": {
+      "air_temp_avg": 26.13246753246753,
+      "track_temp_avg": 38.67012987012986,
+      "humidity_avg": 13.818181818181818,
+      "rainfall": false
+    },
+    "results": {
+      "PIA": {
+        "position": 1,
+        "q1_time": "0 days 00:01:31.591000",
+        "q2_time": "0 days 00:01:31.200000",
+        "q3_time": "0 days 00:01:30.641000",
+        "best_time": "0 days 00:01:30.641000",
+        "team": "McLaren",
+        "team_color": "FF8000"
+      },
+      "RUS": {
+        "position": 2,
+        "q1_time": "0 days 00:01:31.295000",
+        "q2_time": "0 days 00:01:31.307000",
+        "q3_time": "0 days 00:01:30.723000",
+        "best_time": "0 days 00:01:30.723000",
+        "team": "Mercedes",
+        "team_color": "27F4D2"
+      },
+      "NOR": {
+        "position": 3,
+        "q1_time": "0 days 00:01:30.983000",
+        "q2_time": "0 days 00:01:30.787000",
+        "q3_time": "0 days 00:01:30.793000",
+        "best_time": "0 days 00:01:30.793000",
+        "team": "McLaren",
+        "team_color": "FF8000"
+      },
+      "VER": {
+        "position": 4,
+        "q1_time": "0 days 00:01:31.424000",
+        "q2_time": "0 days 00:01:31.142000",
+        "q3_time": "0 days 00:01:30.817000",
+        "best_time": "0 days 00:01:30.817000",
+        "team": "Red Bull Racing",
+        "team_color": "3671C6"
+      },
+      "HAM": {
+        "position": 5,
+        "q1_time": "0 days 00:01:31.690000",
+        "q2_time": "0 days 00:01:31.501000",
+        "q3_time": "0 days 00:01:30.927000",
+        "best_time": "0 days 00:01:30.927000",
+        "team": "Ferrari",
+        "team_color": "E80020"
+      },
+      "LEC": {
+        "position": 6,
+        "q1_time": "0 days 00:01:31.579000",
+        "q2_time": "0 days 00:01:31.450000",
+        "q3_time": "0 days 00:01:31.021000",
+        "best_time": "0 days 00:01:31.021000",
+        "team": "Ferrari",
+        "team_color": "E80020"
+      },
+      "HAD": {
+        "position": 7,
+        "q1_time": "0 days 00:01:31.162000",
+        "q2_time": "0 days 00:01:31.253000",
+        "q3_time": "0 days 00:01:31.079000",
+        "best_time": "0 days 00:01:31.079000",
+        "team": "Racing Bulls",
+        "team_color": "6692FF"
+      },
+      "ANT": {
+        "position": 8,
+        "q1_time": "0 days 00:01:31.676000",
+        "q2_time": "0 days 00:01:31.590000",
+        "q3_time": "0 days 00:01:31.103000",
+        "best_time": "0 days 00:01:31.103000",
+        "team": "Mercedes",
+        "team_color": "27F4D2"
+      },
+      "TSU": {
+        "position": 9,
+        "q1_time": "0 days 00:01:31.238000",
+        "q2_time": "0 days 00:01:31.260000",
+        "q3_time": "0 days 00:01:31.638000",
+        "best_time": "0 days 00:01:31.638000",
+        "team": "Racing Bulls",
+        "team_color": "6692FF"
+      },
+      "ALB": {
+        "position": 10,
+        "q1_time": "0 days 00:01:31.503000",
+        "q2_time": "0 days 00:01:31.595000",
+        "q3_time": "0 days 00:01:31.706000",
+        "best_time": "0 days 00:01:31.706000",
+        "team": "Williams",
+        "team_color": "64C4FF"
+      },
+      "OCO": {
+        "position": 11,
+        "q1_time": "0 days 00:01:31.876000",
+        "q2_time": "0 days 00:01:31.625000",
+        "q3_time": null,
+        "best_time": "0 days 00:01:31.625000",
+        "team": "Haas F1 Team",
+        "team_color": "B6BABD"
+      },
+      "HUL": {
+        "position": 12,
+        "q1_time": "0 days 00:01:31.921000",
+        "q2_time": "0 days 00:01:31.632000",
+        "q3_time": null,
+        "best_time": "0 days 00:01:31.632000",
+        "team": "Kick Sauber",
+        "team_color": "52E252"
+      },
+      "ALO": {
+        "position": 13,
+        "q1_time": "0 days 00:01:31.719000",
+        "q2_time": "0 days 00:01:31.688000",
+        "q3_time": null,
+        "best_time": "0 days 00:01:31.688000",
+        "team": "Aston Martin",
+        "team_color": "229971"
+      },
+      "STR": {
+        "position": 14,
+        "q1_time": "0 days 00:01:31.923000",
+        "q2_time": "0 days 00:01:31.773000",
+        "q3_time": null,
+        "best_time": "0 days 00:01:31.773000",
+        "team": "Aston Martin",
+        "team_color": "229971"
+      },
+      "SAI": {
+        "position": 15,
+        "q1_time": "0 days 00:01:31.628000",
+        "q2_time": "0 days 00:01:31.840000",
+        "q3_time": null,
+        "best_time": "0 days 00:01:31.840000",
+        "team": "Williams",
+        "team_color": "64C4FF"
+      },
+      "GAS": {
+        "position": 16,
+        "q1_time": "0 days 00:01:31.992000",
+        "q2_time": null,
+        "q3_time": null,
+        "best_time": "0 days 00:01:31.992000",
+        "team": "Alpine",
+        "team_color": "0093CC"
+      },
+      "BEA": {
+        "position": 17,
+        "q1_time": "0 days 00:01:32.018000",
+        "q2_time": null,
+        "q3_time": null,
+        "best_time": "0 days 00:01:32.018000",
+        "team": "Haas F1 Team",
+        "team_color": "B6BABD"
+      },
+      "DOO": {
+        "position": 18,
+        "q1_time": "0 days 00:01:32.092000",
+        "q2_time": null,
+        "q3_time": null,
+        "best_time": "0 days 00:01:32.092000",
+        "team": "Alpine",
+        "team_color": "0093CC"
+      },
+      "BOR": {
+        "position": 19,
+        "q1_time": "0 days 00:01:32.141000",
+        "q2_time": null,
+        "q3_time": null,
+        "best_time": "0 days 00:01:32.141000",
+        "team": "Kick Sauber",
+        "team_color": "52E252"
+      },
+      "LAW": {
+        "position": 20,
+        "q1_time": "0 days 00:01:32.174000",
+        "q2_time": null,
+        "q3_time": null,
+        "best_time": "0 days 00:01:32.174000",
+        "team": "Red Bull Racing",
+        "team_color": "3671C6"
+      }
+    }
+  },
+  "drivers": [
+    "ALB",
+    "ALO",
+    "ANT",
+    "BEA",
+    "BOR",
+    "DOO",
+    "GAS",
+    "HAD",
+    "HAM",
+    "HUL",
+    "LAW",
+    "LEC",
+    "NOR",
+    "OCO",
+    "PIA",
+    "RUS",
+    "SAI",
+    "STR",
+    "TSU",
+    "VER"
+  ]
+}
