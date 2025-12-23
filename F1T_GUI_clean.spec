@@ -55,6 +55,22 @@ added_files = [
     (certifi.where(), 'certifi'),
 ]
 
+# 📊 JSON 數據檔案（API 降級用）
+# 動態收集最新的 season_calendar 和 weather JSON
+import glob
+
+# 添加最新的 season_calendar multi_year JSON
+season_jsons = glob.glob(str(project_root / 'json' / 'season_calendar_multi_year_*.json'))
+if season_jsons:
+    latest_season = sorted(season_jsons, key=lambda x: Path(x).stat().st_mtime, reverse=True)[0]
+    added_files.append((latest_season, 'json'))
+
+# 添加 weather 資料夾（如果存在）
+weather_dir = project_root / 'json' / 'weather'
+if weather_dir.exists():
+    added_files.append((str(weather_dir), 'json/weather'))
+
+
 # 隱藏導入 - 必須明確列出的模組
 hidden_imports = [
     # ========== PyQt5 核心組件 ==========
