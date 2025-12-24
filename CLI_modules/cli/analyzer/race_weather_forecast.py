@@ -782,24 +782,73 @@ def generate_race_weather_forecast(
     earliest_day = day_minus_two
     latest_day = race_day
 
-    forecast_raw = _build_forecast_payload(
-        lat=circuit_info["latitude"],
-        lon=circuit_info["longitude"],
-        timezone_id=circuit_info["timezone"],
-        start_date=earliest_day,
-        end_date=latest_day,
-        http_get=http_client,
-    )
-    forecast_data = forecast_raw["raw"]
-    forecast_daily = forecast_data.get("daily", {})
-    forecast_hourly = forecast_data.get("hourly", {})
-    daily_units = forecast_data.get("daily_units", {})
+    # ✅ 判斷賽事是過去還是未來
+    today = date.today()
+    is_past_race = race_day < today
+    # Open-Meteo forecast API 最多預報 16 天
+    is_too_far_future = race_day > (today + timedelta(days=16))
+    
+    forecast_days = []
+    forecast_raw = None
+    daily_units = {}
+    
+    if is_past_race:
+        # 🕐 過去的賽事：使用 Archive API 獲取實際天氣數據
+        print(f"[INFO] 賽事已過去 ({race_day})，使用 Archive API 獲取歷史天氣")
+        archive_raw = _build_archive_payload(
+            lat=circuit_info["latitude"],
+            lon=circuit_info["longitude"],
+            timezone_id=circuit_info["timezone"],
+            start_date=earliest_day,
+            end_date=latest_day,
+            http_get=http_client,
+        )
+        archive_data = archive_raw["raw"]
+        archive_daily = archive_data.get("daily", {})
+        archive_hourly = archive_data.get("hourly", {})
+        daily_units = archive_data.get("daily_units", {})
+        
+        forecast_days = [
+            _build_daily_entry("race_minus_2", day_minus_two, archive_daily, archive_hourly, daily_units),
+            _build_daily_entry("race_minus_1", day_minus_one, archive_daily, archive_hourly, daily_units),
+            _build_daily_entry("race_day", race_day, archive_daily, archive_hourly, daily_units),
+        ]
+        forecast_raw = {
+            "source": OPEN_METEO_ARCHIVE_URL + " (historical data for past race)",
+            "requested_parameters": archive_raw.get("requested_parameters", {}),
+        }
+    elif is_too_far_future:
+        # 🔮 太遠的未來：無法獲取預報，只提供歷史參考
+        print(f"[INFO] 賽事日期太遠 ({race_day})，Open-Meteo 無法提供預報，僅提供歷史參考")
+        forecast_days = [
+            {"label": "race_minus_2", "date": day_minus_two.isoformat(), "status": "unavailable", "reason": "Race date too far in future for forecast"},
+            {"label": "race_minus_1", "date": day_minus_one.isoformat(), "status": "unavailable", "reason": "Race date too far in future for forecast"},
+            {"label": "race_day", "date": race_day.isoformat(), "status": "unavailable", "reason": "Race date too far in future for forecast"},
+        ]
+        forecast_raw = {
+            "source": "N/A (race date exceeds 16-day forecast window)",
+            "requested_parameters": {},
+        }
+    else:
+        # ✅ 未來的賽事（16 天內）：使用 Forecast API
+        forecast_raw = _build_forecast_payload(
+            lat=circuit_info["latitude"],
+            lon=circuit_info["longitude"],
+            timezone_id=circuit_info["timezone"],
+            start_date=earliest_day,
+            end_date=latest_day,
+            http_get=http_client,
+        )
+        forecast_data = forecast_raw["raw"]
+        forecast_daily = forecast_data.get("daily", {})
+        forecast_hourly = forecast_data.get("hourly", {})
+        daily_units = forecast_data.get("daily_units", {})
 
-    forecast_days = [
-        _build_daily_entry("race_minus_2", day_minus_two, forecast_daily, forecast_hourly, daily_units),
-        _build_daily_entry("race_minus_1", day_minus_one, forecast_daily, forecast_hourly, daily_units),
-        _build_daily_entry("race_day", race_day, forecast_daily, forecast_hourly, daily_units),
-    ]
+        forecast_days = [
+            _build_daily_entry("race_minus_2", day_minus_two, forecast_daily, forecast_hourly, daily_units),
+            _build_daily_entry("race_minus_1", day_minus_one, forecast_daily, forecast_hourly, daily_units),
+            _build_daily_entry("race_day", race_day, forecast_daily, forecast_hourly, daily_units),
+        ]
 
     historical_entries: Dict[str, Any] = {}
     historical_units: Dict[str, Any] = {}
@@ -861,7 +910,7 @@ def generate_race_weather_forecast(
 
     output_payload: RaceWeatherResult = {
         "success": True,
-        "message": f"{target_year} {event_label} 天氣預報已生成",
+        "message": f"{target_year} {event_label} 天氣預報已生成" if not is_past_race else f"{target_year} {event_label} 歷史天氣數據已生成",
         "metadata": metadata,
         "data": {
             "coordinates": circuit_info,
@@ -870,10 +919,12 @@ def generate_race_weather_forecast(
                 "days": forecast_days,
                 "units": {
                     "daily": daily_units,
-                    "hourly": forecast_data.get("hourly_units"),
+                    "hourly": forecast_raw.get("raw", {}).get("hourly_units") if isinstance(forecast_raw.get("raw"), dict) else {},
                 },
-                "raw_source": forecast_raw["source"],
-                "request_parameters": forecast_raw["requested_parameters"],
+                "raw_source": forecast_raw.get("source", "N/A"),
+                "request_parameters": forecast_raw.get("requested_parameters", {}),
+                "is_historical_data": is_past_race,
+                "is_forecast_unavailable": is_too_far_future,
             },
             "historical": {
                 "generated_at": now_utc.isoformat(),
