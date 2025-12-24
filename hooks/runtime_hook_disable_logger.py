@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-PyInstaller Runtime Hook - 禁用 EXE 模式下的日誌輸出
+PyInstaller Runtime Hook - EXE 模式日誌控制
 
-此 hook 會在 EXE 啟動時自動設定環境變數 F1T_EXE_DISABLE_LOG=1
-從而禁用所有日誌輸出，提升性能並減少檔案 I/O
+此 hook 會在 EXE 啟動時控制日誌輸出
+設定 F1T_EXE_DISABLE_LOG=0 啟用日誌（除錯模式）
+設定 F1T_EXE_DISABLE_LOG=1 禁用日誌（正式發布）
 """
 
 import os
@@ -13,8 +14,8 @@ import sys
 IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 if IS_EXE_MODE:
-    # ✅ 設定環境變數禁用日誌系統
-    os.environ['F1T_EXE_DISABLE_LOG'] = '1'
+    # ✅ 啟用日誌系統（除錯模式）
+    os.environ['F1T_EXE_DISABLE_LOG'] = '0'
     
-    # 可選：輸出提示訊息（僅開發測試用，正式版可移除）
-    # print("[HOOK] EXE mode: Logging disabled for performance")
+    # 輸出提示訊息
+    print("[HOOK] EXE mode: Logging ENABLED for debugging")

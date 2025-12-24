@@ -181,10 +181,12 @@ FILE_SPECS: Dict[str, FileNameSpec] = {
         has_timestamp=True
     ),
     "99": FileNameSpec(
-        prefix="season_calendar",
-        template="{prefix}_{year}.json",
+        prefix="season_calendar_multi_year",
+        template="{prefix}*.json",  # multi_year 格式帶時間戳
+        requires_year=False,  # multi_year 包含多年數據
         requires_race=False,
-        requires_session=False
+        requires_session=False,
+        has_timestamp=True
     ),
     "100": FileNameSpec(
         prefix="historical_flags",
