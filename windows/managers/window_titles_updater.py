@@ -4,9 +4,8 @@ WindowTitlesUpdater - 從 f1t_gui_main.py 提取
 """
 
 from core.logger import get_logger
-
-from core.logger import get_logger
 from windows.widgets.custom_mdi_area import CustomMdiArea
+from windows.widgets.popout_subwindow import PopoutSubWindow
 
 logger = get_logger(__name__)
 

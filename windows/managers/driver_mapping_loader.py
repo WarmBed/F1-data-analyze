@@ -3,6 +3,8 @@
 DriverMappingLoader - 從 f1t_gui_main.py 提取
 """
 
+from pathlib import Path
+
 from core.logger import get_logger
 
 from core.logger import get_logger
