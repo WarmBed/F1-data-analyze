@@ -398,7 +398,8 @@ class F1AnalysisCacheServiceV2:
             
             # 檢查年份 - 使用精確模式匹配，避免時間戳記誤匹配
             # 例如: "2025" 應該匹配 "prefix_2025_..." 但不匹配 "prefix_2024_...20251222..."
-            if year:
+            # ✅ 如果 spec.requires_year=False，跳過年份檢查（例如 multi_year 格式）
+            if year and spec.requires_year:
                 # 模式: _YYYY_ 或 _YYYY. 或以 YYYY_ 開頭（在前綴之後）
                 year_patterns = [
                     f"_{year}_",  # 例如: prefix_2025_race
