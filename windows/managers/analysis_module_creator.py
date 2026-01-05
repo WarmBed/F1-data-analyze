@@ -310,6 +310,24 @@ class AnalysisModuleCreator:
                     "Historical Track Map",
                     "歴年トラック旗統計",
                 ],
+                "long_run_analysis": [  # ⭐ Long Run & Degradation Analysis
+                    ("long_run_analysis", "Long Run & Degradation"),
+                    "long_run",  # ✅ Workspace 使用的原始 key
+                    "Long Run & Degradation",
+                    "Long Run Analysis",
+                    "長跑分析",
+                    "衰退分析",
+                    "ロングラン分析",
+                ],
+                "traffic_analysis": [  # ⭐ Traffic Analysis (超車難度分析)
+                    ("traffic_analysis", "Traffic Analysis"),
+                    "traffic",  # ✅ Workspace 使用的原始 key
+                    "Traffic Analysis",
+                    "車流分析",
+                    "流量分析",
+                    "超車難度分析",
+                    "トラフィック分析",
+                ],
             }
 
             # 調試點：字典定義完成
@@ -1847,6 +1865,74 @@ class AnalysisModuleCreator:
                             return None
                     except Exception as e:
                         logger.error(f"[ERROR] 歷年賽道旗幟統計模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理 Long Run & Degradation 分析模組
+                elif module_type == "long_run_analysis":
+                    try:
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建 Long Run & Degradation 分析模組...")
+                        from modules.gui.long_run_analysis.long_run_mdi import LongRunAnalysis
+                        logger.debug(f"[OK] [MODULE_FACTORY] Long Run 分析模組導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            # 預設使用 FP2 作為練習賽
+                            if current_session not in ["FP1", "FP2", "FP3"]:
+                                current_session = "FP2"
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] Long Run 分析模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            module = LongRunAnalysis(
+                                year=current_year,
+                                race=current_race,
+                                session=current_session
+                            )
+                            logger.debug(f"[OK] [MODULE_FACTORY] Long Run 分析模組初始化成功")
+                            return self.main_window._mark_module_factory_type(module, module_type)
+                        else:
+                            logger.error(f"[ERROR] Long Run 分析模組創建失敗：無參數")
+                            return None
+                    except Exception as e:
+                        logger.error(f"[ERROR] Long Run 分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理 Traffic Analysis 分析模組
+                elif module_type == "traffic_analysis":
+                    try:
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建 Traffic Analysis 分析模組...")
+                        from modules.gui.race_analysis.traffic_analysis.traffic_analysis_mdi import TrafficAnalysisMDI
+                        logger.debug(f"[OK] [MODULE_FACTORY] Traffic Analysis 分析模組導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] Traffic Analysis 分析模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            module = TrafficAnalysisMDI(
+                                year=current_year,
+                                race=current_race,
+                                session=current_session
+                            )
+                            logger.debug(f"[OK] [MODULE_FACTORY] Traffic Analysis 分析模組初始化成功")
+                            return self.main_window._mark_module_factory_type(module, module_type)
+                        else:
+                            logger.error(f"[ERROR] Traffic Analysis 分析模組創建失敗：無參數")
+                            return None
+                    except Exception as e:
+                        logger.error(f"[ERROR] Traffic Analysis 分析模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

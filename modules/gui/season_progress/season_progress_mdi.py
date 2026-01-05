@@ -167,9 +167,18 @@ class SeasonProgressApiWorker(QThread):
             if e.response.status_code == 422:
                 try:
                     payload = e.response.json()
-                    error_msg = payload.get("message", "請求的數據不可用")
+                    # 處理 FastAPI 的 detail 格式
+                    if "detail" in payload:
+                        detail = payload["detail"]
+                        if isinstance(detail, list) and len(detail) > 0:
+                            error_msg = detail[0].get("msg", "請求的年份數據不可用")
+                        else:
+                            error_msg = str(detail)
+                    else:
+                        error_msg = payload.get("message", "請求的年份數據不可用")
                     logger.warning("[API_WORKER] 422 Error: %s", error_msg)
-                    self.failure.emit(error_msg)
+                    # 加入 422 標記以便 _on_api_failure 偵測
+                    self.failure.emit(f"422: {error_msg}")
                 except Exception:
                     error_msg = f"HTTP 422: 請求的年份數據可能尚未可用"
                     logger.error("[API_WORKER] %s", error_msg)
@@ -367,32 +376,97 @@ class SeasonProgressMDI(QWidget):
     @pyqtSlot(str)
     def _on_api_failure(self, error_msg: str):
         """API request failure"""
-        print(f"[SEASON_MDI] ❌ API 調用失敗: {error_msg}")
+        print(f"[SEASON_MDI] API 調用失敗: {error_msg}")
         logger.error("[SEASON_PROGRESS_MDI] API call failed: %s", error_msg)
         
-        # ✅ 友好的錯誤訊息顯示
-        if "尚未開始" in error_msg or "暫不可用" in error_msg:
-            # 未來年份錯誤
-            display_msg = f"資料暫不可用: {error_msg}"
-            self.status_label.setText(display_msg)
-            self.status_label.setStyleSheet("color: orange; font-weight: bold;")
+        # 偵測未來賽季錯誤（多種可能的錯誤訊息格式）
+        is_future_season_error = (
+            "422" in error_msg or 
+            "Unprocessable" in error_msg or
+            "尚未開始" in error_msg or 
+            "暫不可用" in error_msg or
+            "不可用" in error_msg or
+            "尚未可用" in error_msg or
+            "數據可能尚未" in error_msg or
+            "year" in error_msg.lower() and "not" in error_msg.lower()
+        )
+        
+        print(f"[SEASON_MDI] is_future_season_error: {is_future_season_error}")
+        
+        if is_future_season_error:
+            # 未來年份：提供模擬數據讓 Widget 顯示友善訊息
+            print(f"[SEASON_MDI] 呼叫 _show_future_season_placeholder()")
+            self._show_future_season_placeholder()
+            self.status_label.setText(tr("future_season_no_data", "賽季數據尚未發布"))
+            self.status_label.setStyleSheet("color: #6c757d;")
         else:
             # 其他錯誤
-            display_msg = f"載入失敗: {error_msg}"
+            display_msg = f"{tr('load_failed', 'Load failed')}: {error_msg}"
             self.status_label.setText(display_msg)
             self.status_label.setStyleSheet("color: red;")
         
         self.progress_bar.setValue(0)
         self.progress_bar.hide()
+    
+    def _show_future_season_placeholder(self):
+        """
+        為未來賽季顯示友善的佔位數據
         
-        # ✅ 對於未來年份錯誤，顯示溫和的彈窗提示
-        if "尚未開始" in error_msg or "暫不可用" in error_msg:
-            QMessageBox.information(
-                self,
-                tr("data_not_available", "資料暫不可用"),
-                error_msg,
-                QMessageBox.Ok
+        嘗試從本地 Season Calendar JSON 載入首場賽事資訊
+        """
+        from pathlib import Path
+        import json
+        from datetime import datetime, timezone
+        
+        # 預設數據
+        first_race_name = "Australian Grand Prix"
+        first_race_date = ""
+        total_races = 24
+        
+        # 嘗試從本地 JSON 載入 Season Calendar 獲取準確資訊
+        try:
+            json_dir = Path("json")
+            calendar_files = sorted(
+                json_dir.glob("season_calendar_multi_year*.json"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True
             )
+            
+            if calendar_files:
+                with open(calendar_files[0], 'r', encoding='utf-8') as f:
+                    calendar_data = json.load(f)
+                
+                year_events = calendar_data.get("data", {}).get(str(self.year), [])
+                if year_events:
+                    total_races = len(year_events)
+                    first_event = year_events[0]
+                    first_race_name = first_event.get("event_name", first_race_name)
+                    first_race_date = first_event.get("race_date_local", "") or first_event.get("race_date_utc", "")
+                    print(f"[SEASON_MDI] 從本地 JSON 載入: {first_race_name}, {first_race_date}")
+        except Exception as e:
+            print(f"[SEASON_MDI] 無法載入本地 Season Calendar: {e}")
+        
+        # 構建模擬數據，觸發未來賽季顯示邏輯
+        placeholder_data = {
+            "season_year": int(self.year),
+            "round": 0,
+            "calendar": {
+                "completed": 0,  # 關鍵：完成數為 0 觸發未來賽季邏輯
+                "remaining": total_races,
+                "total": total_races,
+                "next_race": {
+                    "name": first_race_name,
+                    "date": first_race_date
+                }
+            },
+            "leaders": {
+                "driver": None,
+                "constructor": None
+            }
+        }
+        
+        # 調用 Widget 的 populate_data 顯示友善訊息
+        self._on_data_loaded(placeholder_data)
     
     def _on_data_loaded(self, data: Dict[str, Any]):
         """

@@ -147,6 +147,9 @@ class F1AnalysisFunctionMapper:
             125: self._execute_vehicle_performance_analysis,  # 車輛性能綜合分析（整合F120+F121+F122+F100）(2025-12-14)
             126: self._execute_live_timing_weather_analysis,  # Live Timing 天氣分析（逐圈氣溫/賽道溫度/降雨）(2025-12-21)
             127: self._execute_live_timing_traffic_distance_analysis,  # Live Timing traffic 分析（距離門檻版，SC/VSC整圈排除）(2025-12-23)
+            
+            # 130-139: FP2-Race Long Run 相關性分析系統
+            131: self._execute_fp2_race_correlation_analysis,  # FP2-Race Long Run 相關性分析 (2025-01-01)
         }
         
         # 子功能映射表
@@ -5472,13 +5475,16 @@ class F1AnalysisFunctionMapper:
             print(f"\n正在載入 FP2→Q 訓練數據...")
             training_data_dir = Path(__file__).parent.parent.parent.parent / "training_data"
             
-            # 檢查是否有 FP2→Q 專用的訓練數據
-            fp2_data_file = training_data_dir / "fp2_q_training_data.json"
+            # 優先使用 2022-2025 多年數據，回退到單年數據
+            fp2_data_file = training_data_dir / "fp2_q_training_data_2022_2025.json"
+            if not fp2_data_file.exists():
+                fp2_data_file = training_data_dir / "fp2_q_training_data.json"
+            
             if not fp2_data_file.exists():
                 return {
                     "success": False,
                     "message": "找不到 FP2→Q 訓練數據",
-                    "hint": "請先執行: python f1_analysis_modular_main.py -f 70 --start-year 2018 --end-year 2024 (收集 FP2 數據)",
+                    "hint": "請先執行: python batch_collect_2022_2025_fp2_q_data.py (收集 2022-2025 數據)",
                     "expected_file": str(fp2_data_file),
                     "function_id": "75"
                 }
@@ -5546,7 +5552,7 @@ class F1AnalysisFunctionMapper:
                 y_train = []
                 
                 for record in records:
-                    # 支援兩種格式
+                    # 支援三種格式
                     # 格式 1: 舊版直接格式 (fp2_best_lap, q_best_lap)
                     fp2_data = record.get('fp2_best_lap')
                     q_data = record.get('q_best_lap')
@@ -5567,6 +5573,14 @@ class F1AnalysisFunctionMapper:
                         fp2_drivers = fp2_section.get('drivers', {})
                         q_results = q_section.get('results', {})
                         
+                        # 格式 3: FPQDataCollector 格式 (practice_sessions.FP2.driver_data, qualifying.results)
+                        if not fp2_drivers or not q_results:
+                            practice_sessions = record.get('practice_sessions', {})
+                            fp2_section = practice_sessions.get('FP2', {})
+                            fp2_drivers = fp2_section.get('driver_data', {})
+                            q_section = record.get('qualifying', {})
+                            q_results = q_section.get('results', {})
+                        
                         if not fp2_drivers or not q_results:
                             continue
                         
@@ -5578,7 +5592,7 @@ class F1AnalysisFunctionMapper:
                             q_driver_data = q_results[driver]
                             
                             # 目標值: Q 最佳成績時間 (從 q3_time/q2_time/q1_time 取最佳)
-                            fp2_time = fp2_driver_data.get('ideal_lap', 0.0)
+                            fp2_time = fp2_driver_data.get('fastest_lap', 0.0) or fp2_driver_data.get('ideal_lap', 0.0)
                             
                             # Q 時間需要從字符串解析
                             q_time_str = q_driver_data.get('q3_time') or q_driver_data.get('q2_time') or q_driver_data.get('q1_time')
@@ -5599,10 +5613,28 @@ class F1AnalysisFunctionMapper:
                                 improvement = q_time - fp2_time
                                 
                                 # 提取特徵向量（只有成功解析 Q 時間才添加）
-                                feature_vector = [fp2_driver_data.get(fname, 0.0) for fname in feature_names]
+                                # 先檢查特徵是否存在，不存在則提取基礎數據
+                                if 'ideal_s1' in fp2_driver_data:
+                                    # 已有特徵數據
+                                    feature_vector = [fp2_driver_data.get(fname, 0.0) for fname in feature_names]
+                                else:
+                                    # 需要從基礎數據構建特徵向量 (使用默認值，後續可優化)
+                                    feature_vector = [
+                                        fp2_driver_data.get('sector1_best', 0.0),  # ideal_s1
+                                        fp2_driver_data.get('sector2_best', 0.0),  # ideal_s2
+                                        fp2_driver_data.get('sector3_best', 0.0),  # ideal_s3
+                                        fp2_driver_data.get('fastest_lap', 0.0),   # ideal_lap
+                                        0.0, 0.0, 0.0,  # low/mid/high speed apex (需要補充)
+                                        fp2_driver_data.get('speed_trap_max', 0.0),  # max_speed
+                                        0.0, 0.0, 0.0,  # s1_s2_ratio, sector_cv, s2_lap_ratio
+                                        0.0, 0.0, 0.0,  # max_speed_lap_ratio, max_speed_s2_ratio, speed_consistency
+                                        0.0, 0.0  # fp2_relative_position, fp2_gap_to_fastest
+                                    ]
+                                
                                 X_train.append(feature_vector)
                                 y_train.append(improvement)
-                            except Exception:
+                            except Exception as e:
+                                print(f"  ⚠️  {driver} 數據解析失敗: {str(e)}")
                                 continue
                 
                 if len(X_train) < 10:
@@ -5720,6 +5752,119 @@ class F1AnalysisFunctionMapper:
                 "function_id": "75"
             }
     
+    def _identify_quali_sim_laps_fp2(self, driver_laps: 'pd.DataFrame') -> 'pd.DataFrame':
+        """
+        識別 FP2 中的排位模擬圈速（方案 2：智能過濾）
+        
+        過濾策略（多層回退）：
+        層級 1: SOFT 胎 + 短 stint (1-3 圈) + 新胎 (胎齡≤3)
+        層級 2: SOFT 胎 + 任意 stint + 新胎 (胎齡≤3)
+        層級 3: SOFT 胎 + 任意條件
+        層級 4: 所有圈速（在外部處理）
+        
+        嚴格過濾：
+        - Out Lap (PitOutTime 存在)
+        - In Lap (下一圈 PitInTime 存在)
+        - IsAccurate == False
+        - 黃旗/安全車圈（TrackStatus）
+        
+        Args:
+            driver_laps: 單一車手的所有圈速 DataFrame
+            
+        Returns:
+            符合 Quali Sim 條件的圈速 DataFrame（可能為空）
+        """
+        import pandas as pd
+        
+        if driver_laps.empty:
+            return pd.DataFrame()
+        
+        # ========== 階段 1: 基礎過濾（嚴格模式） ==========
+        filtered_laps = driver_laps.copy()
+        
+        # 1. IsAccurate 檢查
+        if 'IsAccurate' in filtered_laps.columns:
+            filtered_laps = filtered_laps[filtered_laps['IsAccurate'] == True]
+        
+        # 2. Out Lap 過濾 (PitOutTime 存在)
+        if 'PitOutTime' in filtered_laps.columns:
+            filtered_laps = filtered_laps[pd.isna(filtered_laps['PitOutTime'])]
+        
+        # 3. In Lap 過濾（當前圈或下一圈有 PitInTime）
+        if 'PitInTime' in filtered_laps.columns:
+            # 排除本身是進站圈的
+            filtered_laps = filtered_laps[pd.isna(filtered_laps['PitInTime'])]
+            
+            # 排除下一圈是進站圈的（In Lap）
+            if 'LapNumber' in filtered_laps.columns and not filtered_laps.empty:
+                in_lap_numbers = set()
+                all_lap_numbers = set(driver_laps['LapNumber'].values)
+                pit_in_laps = driver_laps[pd.notna(driver_laps['PitInTime'])]['LapNumber'].values
+                
+                for pit_lap in pit_in_laps:
+                    # 前一圈是 In Lap
+                    if pit_lap - 1 in all_lap_numbers:
+                        in_lap_numbers.add(pit_lap - 1)
+                
+                if in_lap_numbers:
+                    filtered_laps = filtered_laps[~filtered_laps['LapNumber'].isin(in_lap_numbers)]
+        
+        # 4. 黃旗/安全車過濾
+        if 'TrackStatus' in filtered_laps.columns:
+            # 過濾包含黃旗、安全車、VSC 的圈速
+            filtered_laps = filtered_laps[
+                ~filtered_laps['TrackStatus'].astype(str).str.contains(
+                    'Yellow|SafetyCar|VSC', 
+                    case=False, 
+                    na=False
+                )
+            ]
+        
+        if filtered_laps.empty:
+            return pd.DataFrame()
+        
+        # ========== 階段 2: Quali Sim 識別（多層回退） ==========
+        
+        # 層級 1: SOFT 胎 + 短 stint (≤3 圈) + 新胎 (胎齡≤3)
+        if 'Compound' in filtered_laps.columns and 'Stint' in filtered_laps.columns:
+            soft_laps = filtered_laps[filtered_laps['Compound'].str.upper() == 'SOFT']
+            
+            if not soft_laps.empty and 'TyreLife' in soft_laps.columns:
+                # 檢查每個 stint
+                quali_sim_candidates = []
+                
+                for stint_num in soft_laps['Stint'].unique():
+                    stint_laps = soft_laps[soft_laps['Stint'] == stint_num]
+                    stint_length = len(stint_laps)
+                    
+                    # 檢查是否為短 stint (1-3 圈)
+                    if stint_length <= 3:
+                        # 檢查胎齡 (≤3)
+                        new_tire_laps = stint_laps[stint_laps['TyreLife'] <= 3]
+                        
+                        if not new_tire_laps.empty:
+                            # 找出這個 stint 的最快圈
+                            fastest_in_stint = new_tire_laps.loc[new_tire_laps['LapTime'].idxmin()]
+                            quali_sim_candidates.append(fastest_in_stint)
+                
+                if quali_sim_candidates:
+                    # 從所有候選 stint 中找出最快的一次
+                    result_df = pd.DataFrame(quali_sim_candidates)
+                    return result_df
+            
+            # 層級 2: SOFT 胎 + 任意 stint + 新胎 (胎齡≤3)
+            if not soft_laps.empty and 'TyreLife' in soft_laps.columns:
+                new_tire_laps = soft_laps[soft_laps['TyreLife'] <= 3]
+                if not new_tire_laps.empty:
+                    return new_tire_laps
+            
+            # 層級 3: SOFT 胎 + 任意條件
+            if not soft_laps.empty:
+                return soft_laps
+        
+        # 如果沒有 Compound 資料，返回空（外部會使用層級 4 回退）
+        return pd.DataFrame()
+    
     def _execute_fp2_q_prediction_generator(self, **kwargs):
         """功能 76: FP2→Q 排位賽預測生成器
         
@@ -5803,22 +5948,30 @@ class F1AnalysisFunctionMapper:
                 from CLI_modules.cli.core.compatible_data_loader import CompatibleF1DataLoader
                 self.data_loader = CompatibleF1DataLoader()
             
-            # 嘗試載入 FP2
+            # 嘗試載入 FP2，失敗時自動 fallback 到 FP1
+            session_type_used = 'FP2'
             try:
                 print(f"   嘗試載入 FP2...")
                 loaded = self.data_loader.load_race_data(year, race, 'FP2')
+                
                 if not loaded:
-                    return {
-                        "success": False,
-                        "message": f"無法載入 {year} {race} FP2 數據",
-                        "function_id": "76"
-                    }
+                    # FP2 不存在，嘗試 fallback 到 FP1
+                    print(f"   ⚠️  FP2 不存在，自動 fallback 到 FP1...")
+                    loaded = self.data_loader.load_race_data(year, race, 'FP1')
+                    if not loaded:
+                        return {
+                            "success": False,
+                            "message": f"無法載入 {year} {race} FP2 或 FP1 數據",
+                            "function_id": "76"
+                        }
+                    session_type_used = 'FP1'
+                    print(f"   ✅ 已自動使用 FP1 數據（衝刺賽週末）")
                 
                 session = self.data_loader.session
                 if not session:
                     return {
                         "success": False,
-                        "message": "FP2 會話數據未載入",
+                        "message": f"{session_type_used} 會話數據未載入",
                         "function_id": "76"
                     }
                 
@@ -5829,27 +5982,85 @@ class F1AnalysisFunctionMapper:
                 if laps.empty:
                     return {
                         "success": False,
-                        "message": f"{year} {race} FP2 無有效圈速數據",
+                        "message": f"{year} {race} {session_type_used} 無有效圈速數據",
                         "function_id": "76"
                     }
                 
-                print(f"✅ FP2 數據載入成功 ({len(laps)} 個有效圈速)")
+                print(f"✅ {session_type_used} 數據載入成功 ({len(laps)} 個有效圈速)")
                 
             except Exception as e:
-                return {
-                    "success": False,
-                    "message": f"載入 FP2 數據失敗: {str(e)}",
-                    "function_id": "76"
-                }
+                # 最後嘗試 FP1 fallback
+                if session_type_used == 'FP2':
+                    print(f"   ⚠️  FP2 載入失敗: {str(e)}")
+                    print(f"   嘗試 fallback 到 FP1...")
+                    try:
+                        loaded = self.data_loader.load_race_data(year, race, 'FP1')
+                        if loaded:
+                            session_type_used = 'FP1'
+                            session = self.data_loader.session
+                            laps = session.laps
+                            laps = laps[laps['LapTime'].notna()]
+                            laps = laps[laps['IsAccurate'] == True]
+                            if not laps.empty:
+                                print(f"   ✅ 已自動使用 FP1 數據（衝刺賽週末）")
+                                print(f"✅ FP1 數據載入成功 ({len(laps)} 個有效圈速)")
+                            else:
+                                return {
+                                    "success": False,
+                                    "message": f"{year} {race} FP1 無有效圈速數據",
+                                    "function_id": "76"
+                                }
+                        else:
+                            return {
+                                "success": False,
+                                "message": f"載入 FP2 和 FP1 數據均失敗: {str(e)}",
+                                "function_id": "76"
+                            }
+                    except Exception as fp1_error:
+                        return {
+                            "success": False,
+                            "message": f"載入 FP2 失敗: {str(e)}, FP1 fallback 也失敗: {str(fp1_error)}",
+                            "function_id": "76"
+                        }
+                else:
+                    return {
+                        "success": False,
+                        "message": f"載入 {session_type_used} 數據失敗: {str(e)}",
+                        "function_id": "76"
+                    }
             
-            # 計算每位車手的 FP2 特徵 (與 Function 74 邏輯相同)
-            print("\n計算車手特徵...")
+            # 計算每位車手的 FP2 特徵 (使用 SOFT 胎 Quali Sim 過濾)
+            print("\n計算車手特徵（使用 Quali Sim 過濾）...")
             predictions = []
             drivers = laps['Driver'].unique()
             
+            # 統計資訊
+            filter_stats = {
+                'total_drivers': len(drivers),
+                'using_soft_quali_sim': 0,
+                'using_soft_any_stint': 0,
+                'using_fallback': 0
+            }
+            
             for driver_code in drivers:
                 driver_laps = laps[laps['Driver'] == driver_code]
-                fastest_lap = driver_laps.loc[driver_laps['LapTime'].idxmin()]
+                
+                # ============================================================
+                # 方案 2: 智能 Quali Sim 識別（多層回退策略）
+                # ============================================================
+                
+                quali_sim_laps = self._identify_quali_sim_laps_fp2(driver_laps)
+                
+                if not quali_sim_laps.empty:
+                    fastest_lap = quali_sim_laps.loc[quali_sim_laps['LapTime'].idxmin()]
+                    filter_stats['using_soft_quali_sim'] += 1
+                    print(f"   {driver_code}: 使用 SOFT 胎 Quali Sim 最快圈 ({len(quali_sim_laps)} 圈候選)")
+                else:
+                    # 回退策略：使用所有圈速的最快圈
+                    fastest_lap = driver_laps.loc[driver_laps['LapTime'].idxmin()]
+                    filter_stats['using_fallback'] += 1
+                    compound = fastest_lap.get('Compound', 'UNKNOWN')
+                    print(f"   {driver_code}: ⚠️ 無 Quali Sim，使用最快圈 ({compound} 胎)")
                 
                 lap_time = fastest_lap['LapTime'].total_seconds()
                 
@@ -5912,15 +6123,176 @@ class F1AnalysisFunctionMapper:
                 pred['features']['fp2_gap_to_fastest'] = pred['fp2_time'] - fastest_fp2
             
             print(f"✅ 提取 {len(predictions)} 位車手的特徵")
+            print(f"   - SOFT 胎 Quali Sim: {filter_stats['using_soft_quali_sim']} 位")
+            print(f"   - 回退使用最快圈: {filter_stats['using_fallback']} 位")
+            
+            # ============================================================
+            # 載入車隊燃油習慣校正數據 (方案 B - 僅 Quali Sim)
+            # ============================================================
+            team_fuel_habits = {}
+            fuel_habits_file = Path(__file__).parent.parent.parent.parent / "training_data" / "team_fuel_habits.json"
+            if fuel_habits_file.exists():
+                try:
+                    with open(fuel_habits_file, 'r', encoding='utf-8') as f:
+                        habits_data = json.load(f)
+                    team_fuel_habits = habits_data.get('team_habits', {})
+                    # 過濾只保留有 Quali Sim 數據的車隊
+                    team_fuel_habits = {
+                        k: v for k, v in team_fuel_habits.items() 
+                        if v.get('has_quali_sim_data', False) and v.get('fuel_correction_seconds') is not None
+                    }
+                    print(f"\n✅ 載入車隊燃油習慣 (僅 Quali Sim): {len(team_fuel_habits)} 個車隊")
+                except Exception as e:
+                    print(f"⚠️  載入車隊燃油習慣失敗: {e}")
+            else:
+                print(f"⚠️  未找到車隊燃油習慣檔案，不進行燃油校正")
+            
+            # ============================================================
+            # 車隊 FP2→Q 一致性調整因子 (2026-01-04 新增)
+            # 從 2022-2025 歷史數據學習（training_data/team_consistency_factors.json）
+            # 正數值 = 預測時間需要加慢（這些車隊 FP2 表現比 Q 不一致）
+            # ============================================================
+            team_consistency_adjustment = {}
+            consistency_file = Path(__file__).parent.parent.parent.parent / "training_data" / "team_consistency_factors.json"
+            if consistency_file.exists():
+                try:
+                    with open(consistency_file, 'r', encoding='utf-8') as f:
+                        consistency_data = json.load(f)
+                    for team, info in consistency_data.get('team_factors', {}).items():
+                        team_consistency_adjustment[team] = info.get('total_adjustment', 0.0)
+                    print(f"✅ 載入車隊一致性因子 (從歷史數據學習): {len(team_consistency_adjustment)} 個車隊")
+                except Exception as e:
+                    print(f"⚠️  載入車隊一致性因子失敗: {e}")
+            else:
+                print(f"⚠️  未找到車隊一致性因子檔案")
+            
+            # ============================================================
+            # 賽道特定調整因子 (2026-01-04 新增)
+            # 不同賽道的 FP2→Q 轉化特性不同
+            # track_adjustment = 賽道平均 - 全局平均
+            # 正數 = 需要加慢預測，負數 = 需要加快預測
+            # ============================================================
+            track_adjustment = 0.0
+            track_factors_file = Path(__file__).parent.parent.parent.parent / "training_data" / "track_adjustment_factors.json"
+            if track_factors_file.exists():
+                try:
+                    with open(track_factors_file, 'r', encoding='utf-8') as f:
+                        track_factors_data = json.load(f)
+                    track_factors = track_factors_data.get('track_factors', {})
+                    if race in track_factors:
+                        track_adjustment = track_factors[race].get('track_adjustment', 0.0)
+                        print(f"✅ 載入賽道調整因子: {race} = {track_adjustment:+.3f}s")
+                    else:
+                        print(f"⚠️  未找到 {race} 的賽道調整因子，使用預設值 0.0")
+                except Exception as e:
+                    print(f"⚠️  載入賽道調整因子失敗: {e}")
+            
+            # ============================================================
+            # 賽道演進效應因子 (2026-01-05 新增)
+            # Q 時賽道通常有更多橡膠，抓地力更好
+            # evolution_adjustment = 相對於全局中位數的偏差
+            # 正數 = 演進較弱需要加慢預測，負數 = 演進較強需要加快預測
+            # ============================================================
+            track_evolution_adjustment = 0.0
+            track_evolution_file = Path(__file__).parent.parent.parent.parent / "training_data" / "track_evolution_factors.json"
+            if track_evolution_file.exists():
+                try:
+                    with open(track_evolution_file, 'r', encoding='utf-8') as f:
+                        evolution_data = json.load(f)
+                    evolution_factors = evolution_data.get('track_factors', {})
+                    if race in evolution_factors:
+                        track_evolution_adjustment = evolution_factors[race].get('evolution_adjustment', 0.0)
+                        median_delta = evolution_factors[race].get('median_delta', 0.0)
+                        print(f"✅ 載入賽道演進因子: {race} = {track_evolution_adjustment:+.3f}s (中位數: {median_delta:.3f}s)")
+                    else:
+                        print(f"⚠️  未找到 {race} 的賽道演進因子，使用預設值 0.0")
+                except Exception as e:
+                    print(f"⚠️  載入賽道演進因子失敗: {e}")
+            
+            # ============================================================
+            # 車隊樂觀度校正因子 (2026-01-04 新增)
+            # 某些車隊的 FP2 Quali Sim 過於樂觀，無法在 Q 重現
+            # 這個校正因子基於預測誤差分析
+            # ============================================================
+            team_optimism_correction = {}
+            optimism_file = Path(__file__).parent.parent.parent.parent / "training_data" / "team_optimism_correction.json"
+            if optimism_file.exists():
+                try:
+                    with open(optimism_file, 'r', encoding='utf-8') as f:
+                        optimism_data = json.load(f)
+                    for team_name, info in optimism_data.get('team_corrections', {}).items():
+                        team_optimism_correction[team_name] = info.get('optimism_correction', 0.0)
+                    print(f"✅ 載入車隊樂觀度校正因子: {len(team_optimism_correction)} 個車隊")
+                except Exception as e:
+                    print(f"⚠️  載入車隊樂觀度校正因子失敗: {e}")
             
             # 生成預測
-            print("\n生成排位賽預測...")
+            print("\n生成排位賽預測（燃油校正 + 車隊一致性調整 + 賽道調整 + 賽道演進 + 樂觀度校正）...")
             
             for pred in predictions:
                 feature_vector = [pred['features'][fname] for fname in feature_names]
                 predicted_improvement = model.predict([feature_vector])[0]
-                pred['predicted_time'] = float(pred['fp2_time'] + predicted_improvement)
-                pred['improvement'] = float(predicted_improvement)
+                
+                # 應用車隊燃油校正 (僅限有 Quali Sim 數據的車隊)
+                team = pred.get('team', 'Unknown')
+                if team in team_fuel_habits:
+                    fuel_correction = team_fuel_habits[team].get('fuel_correction_seconds')
+                    correction_source = 'quali_sim_only'
+                else:
+                    # 沒有 Quali Sim 數據，不進行燃油校正
+                    fuel_correction = None
+                    correction_source = 'no_data'
+                
+                # 計算預測時間
+                # 基本預測 = FP2時間 + 模型預測的改進量
+                base_predicted = pred['fp2_time'] + predicted_improvement
+                
+                # 應用燃油校正：FP2 Quali Sim 比實際 Q 快，需要加回校正值
+                # fuel_correction_seconds 代表「實際Q時間 - Quali Sim時間」的平均差異
+                if fuel_correction is not None:
+                    final_predicted = base_predicted + fuel_correction
+                else:
+                    final_predicted = base_predicted
+                
+                # 🆕 應用車隊一致性調整因子（從歷史數據學習）
+                consistency_adj = team_consistency_adjustment.get(team, 0.0)
+                if consistency_adj > 0:
+                    final_predicted += consistency_adj
+                    pred['consistency_adjustment'] = float(consistency_adj)
+                else:
+                    pred['consistency_adjustment'] = 0.0
+                
+                # 🆕 應用賽道調整因子（從歷史數據學習）
+                # track_adjustment 已經計算為相對於全局平均的偏差
+                # 正數 = 這個賽道 FP2→Q 進步較少，需要加慢預測
+                # 負數 = 這個賽道 FP2→Q 進步較多，需要加快預測
+                final_predicted += track_adjustment
+                pred['track_adjustment'] = float(track_adjustment)
+                
+                # 🆕 應用賽道演進效應因子（2026-01-05）
+                # evolution_adjustment 相對於全局中位數的偏差
+                # 正數 = 演進較弱需要加慢預測，負數 = 演進較強需要加快預測
+                if track_evolution_adjustment != 0.0:
+                    final_predicted += track_evolution_adjustment
+                    pred['evolution_adjustment'] = float(track_evolution_adjustment)
+                else:
+                    pred['evolution_adjustment'] = 0.0
+                
+                # 🆕 應用車隊樂觀度校正因子（2026-01-04）
+                # 某些車隊的 FP2 Quali Sim 過於樂觀，無法在 Q 重現
+                optimism_adj = team_optimism_correction.get(team, 0.0)
+                if optimism_adj > 0:
+                    final_predicted += optimism_adj
+                    pred['optimism_adjustment'] = float(optimism_adj)
+                else:
+                    pred['optimism_adjustment'] = 0.0
+                
+                pred['predicted_time'] = float(final_predicted)
+                # improvement 欄位應該是「預測時間 - FP2時間」的總改進量（包含燃油校正）
+                # 這樣 GUI 的 △FP2 才會顯示正確
+                pred['improvement'] = float(final_predicted - pred['fp2_time'])
+                pred['fuel_correction'] = float(fuel_correction) if fuel_correction else None
+                pred['fuel_correction_source'] = correction_source
             
             predictions.sort(key=lambda x: x['predicted_time'])
             
@@ -5959,14 +6331,17 @@ class F1AnalysisFunctionMapper:
                     "track": race,
                     "year": year,
                     "session": "Q",
-                    "data_source": "FP2",
+                    "data_source": session_type_used,  # 記錄實際使用的 session (FP2 或 FP1)
+                    "is_sprint_weekend": (session_type_used == 'FP1'),  # 標記是否為衝刺賽週末
                     "model_r2": float(model_r2),
                     "model_mae": float(model_mae),
                     "sample_count": int(sample_count),
                     "prediction_time": datetime.now().isoformat(),
                     "model_version": "v3.10_FP2",
                     "feature_count": len(feature_names),
-                    "has_actual_results": len(actual_q_times) > 0
+                    "has_actual_results": len(actual_q_times) > 0,
+                    "fuel_correction_enabled": len(team_fuel_habits) > 0,
+                    "fuel_correction_teams_count": len(team_fuel_habits)
                 },
                 "predictions": []
             }
@@ -5983,6 +6358,7 @@ class F1AnalysisFunctionMapper:
                 if actual_q_rank is not None:
                     rank_change = fp2_pred_rank - actual_q_rank
                 
+                fuel_corr_value = pred.get('fuel_correction')
                 output_data["predictions"].append({
                     "rank": rank,
                     "driver": driver,
@@ -5991,6 +6367,12 @@ class F1AnalysisFunctionMapper:
                     "predicted_time": float(pred['predicted_time']),
                     "actual_q_time": actual_q_times.get(driver),
                     "improvement": float(pred['improvement']),
+                    "fuel_correction": float(fuel_corr_value) if fuel_corr_value is not None else 0.0,
+                    "fuel_correction_source": pred.get('fuel_correction_source', 'unknown'),
+                    "consistency_adjustment": float(pred.get('consistency_adjustment', 0)),
+                    "track_adjustment": float(pred.get('track_adjustment', 0)),
+                    "evolution_adjustment": float(pred.get('evolution_adjustment', 0)),
+                    "optimism_adjustment": float(pred.get('optimism_adjustment', 0)),
                     "fp2_predicted_rank": fp2_pred_rank,
                     "actual_q_rank": actual_q_rank,
                     "rank_change": rank_change
@@ -6007,10 +6389,12 @@ class F1AnalysisFunctionMapper:
             print(f"\n✅ JSON 檔案已保存: {json_file}")
             
             # 輸出預測摘要
-            print(f"\n預測摘要 (基於 FP2 數據):")
+            print(f"\n預測摘要 (基於 {session_type_used} 數據):")
+            if session_type_used == 'FP1':
+                print(f"  ⚠️  注意：衝刺賽週末，已自動使用 FP1 數據替代 FP2")
             print(f"  前 5 名預測:")
             for i, pred in enumerate(output_data['predictions'][:5], 1):
-                print(f"    P{i}: {pred['driver']} - {pred['predicted_time']:.3f}s (FP2: {pred['fp2_time']:.3f}s, △{pred['improvement']:.3f}s)")
+                print(f"    P{i}: {pred['driver']} - {pred['predicted_time']:.3f}s ({session_type_used}: {pred['fp2_time']:.3f}s, △{pred['improvement']:.3f}s)")
             
             return {
                 "success": True,
@@ -7359,6 +7743,85 @@ class F1AnalysisFunctionMapper:
                 "success": False,
                 "message": f"F127 執行失敗: {str(e)}",
                 "function_id": "127"
+            }
+
+    def _execute_fp2_race_correlation_analysis(self, **kwargs):
+        """功能 131: FP2-Race Long Run 相關性分析
+
+        分析 FP2 Long Run 模擬圈數與正賽實際表現的相關性。
+        使用與 GUI Long Run 模組完全相同的計算邏輯：
+        1. IQR-based outlier filtering
+        2. Fuel correction
+        3. Track evolution (statistical median)
+        4. Fully-Corrected Lap Times
+
+        參數:
+            year: 年份
+            race: 賽事名稱
+            fp2_simulate_lap: FP2 模擬的正賽圈數 (默認 20)
+            fuel_start: 起跑燃油 (kg, 默認 85.0)
+            fuel_consumption: 每圈油耗 (kg, 默認 1.70)
+            fuel_effect: 燃油效應係數 (s/kg, 默認 0.030)
+
+        輸出:
+            - json/fp2_race_correlation_{year}_{race}.json
+        """
+        print("\n" + "="*70)
+        print("功能 131: FP2-Race Long Run 相關性分析")
+        print("="*70)
+        print("數據來源: Function 28 (FP2 + Race lap data)")
+        print("計算邏輯: 與 GUI Long Run 模組完全一致")
+        print("輸出內容: per-driver FP2/Race 配速對比 + 輪胎退化對比")
+
+        year = kwargs.get("year")
+        if not year and self.data_loader:
+            year = self.data_loader.year
+        race = kwargs.get("race")
+        if not race and self.data_loader:
+            race = self.data_loader.race
+        
+        fp2_simulate_lap = int(kwargs.get("fp2_simulate_lap", 20))
+        fuel_start = float(kwargs.get("fuel_start", 85.0))
+        fuel_consumption = float(kwargs.get("fuel_consumption", 1.70))
+        fuel_effect = float(kwargs.get("fuel_effect", 0.030))
+
+        if not year or not race:
+            return {
+                "success": False,
+                "message": "缺少必要參數: year 和 race",
+                "hint": "使用範例: python f1_analysis_modular_main.py -f 131 -y 2025 -r Japan",
+                "function_id": "131"
+            }
+
+        print(f"[INFO] 分析參數: {year} {race}")
+        print(f"[INFO] FP2 模擬圈數: {fp2_simulate_lap}")
+        print(f"[INFO] 燃油設定: {fuel_start}kg 起跑, {fuel_consumption}kg/lap, {fuel_effect}s/kg")
+
+        try:
+            from CLI_modules.cli.analyzer.fp2_race_correlation_analyzer import (
+                run_fp2_race_correlation_analysis
+            )
+
+            result = run_fp2_race_correlation_analysis(
+                year=int(year),
+                race=race,
+                fp2_simulate_lap=fp2_simulate_lap,
+                fuel_start=fuel_start,
+                fuel_consumption=fuel_consumption,
+                fuel_effect=fuel_effect,
+                save_json=True
+            )
+
+            return self._standardize_result(result, 131, "FP2-Race Long Run 相關性分析")
+
+        except Exception as e:
+            print(f"[ERROR] F131 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F131 執行失敗: {str(e)}",
+                "function_id": "131"
             }
 
 # ===== 支援函數和工具 =====

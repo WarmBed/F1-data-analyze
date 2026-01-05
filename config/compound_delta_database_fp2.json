@@ -1,0 +1,15 @@
+{
+  "_metadata": {
+    "version": "2.0.0",
+    "description": "輪胎配方速度差異資料庫 - 從 FP2 Long Run 數據訓練",
+    "last_updated": "2025-12-31T00:31:18.383376",
+    "training_method": "FP2 Long Run analysis with fuel correction",
+    "notes": {
+      "SOFT_vs_MEDIUM": "SOFT - MEDIUM (負值 = SOFT 更快)",
+      "HARD_vs_MEDIUM": "HARD - MEDIUM (正值 = HARD 更慢)",
+      "interpretation": "compound_delta['SOFT'] 應為負值，compound_delta['HARD'] 應為正值"
+    }
+  },
+  "global_averages": {},
+  "circuits": {}
+}

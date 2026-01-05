@@ -89,6 +89,7 @@ class FunctionTreeBuilder:
         QTreeWidgetItem(lap_performance_group, ["    (D) " + tr("lap_time_box_plot_sub", "Lap Time Box Plot")])
         QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("throttle_box_plot", "Throttle Box Plot")])
         QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("throttle_line_chart", "Throttle Line Chart")])
+        QTreeWidgetItem(lap_performance_group, ["    " + tr("long_run_analysis", "Long Run & Degradation")])
         
         # Ideal Lap & Sectors (理想圈速與分段)
         ideal_lap_group = QTreeWidgetItem(historical_group, [tr("ideal_lap_sectors", "Ideal Lap & Sectors")])
@@ -128,52 +129,60 @@ class FunctionTreeBuilder:
         live_timing_group = QTreeWidgetItem(tree, [tr("live_timing_tree", "Live Timing")])
         live_timing_group.setExpanded(False)  # 預設收合
         
-        # Live Timing 子項目 - 已啟用的模組
-        lt_enabled_items = [
-            ("live_timing_track_map", "Track Map"),
-            ("live_timing_circle_map", "Circle Map"),
-            ("live_timing_ranking", "Live Ranking"),
-            ("live_timing_pit_window", "Pit Window"),
-            ("live_timing_tyre_strategy", "Tyre Strategy"),
-            ("live_timing_driver_strategy", "Driver Strategy"),
-            ("live_timing_lap_distribution", "Lap Time Distribution"),
-            ("live_timing_race_control", "Race Control Messages"),
-            ("live_timing_speed_trace", "Speed Trace"),
-            ("live_timing_throttle_trace", "Throttle Trace"),
-            ("live_timing_brake_trace", "Brake Trace"),
-            ("live_timing_gear_trace", "Gear Trace"),
-            ("live_timing_drs_trace", "DRS Trace"),
-            ("live_timing_rpm_trace", "RPM Trace"),
-            # ("live_timing_battle_insight", "Battle Insight"),  # ❌ 已禁用（性能優化）
-            ("live_timing_chase_strategy", "Chase Strategy"),
-            ("live_timing_track_weather", "Track & Weather"),
-            ("live_traffic_timeline", "Traffic Timeline"),
+        # Live Timing 主要功能項目
+        lt_main_items = [
+            ("live_timing_track_map", tr("track_map", "Track Map")),
+            ("live_timing_circle_map", tr("circle_map", "Circle Map")),
+            ("live_timing_ranking", tr("live_ranking", "Live Ranking")),
+            ("live_timing_pit_window", tr("pit_window", "Pit Window")),
+            ("live_timing_tyre_strategy", tr("tyre_strategy", "Tyre Strategy")),
+            ("live_timing_driver_strategy", tr("driver_strategy", "Driver Strategy")),
+            ("live_timing_lap_distribution", tr("lap_time_distribution", "Lap Time Distribution")),
+            ("live_timing_race_control", tr("race_control_messages", "Race Control Messages")),
+            # ("live_timing_battle_insight", tr("battle_insight", "Battle Insight")),  # ❌ 已禁用（性能優化）
+            ("live_timing_chase_strategy", tr("chase_strategy", "Chase Strategy")),
+            ("live_timing_track_weather", tr("track_weather", "Track & Weather")),
+            ("live_traffic_timeline", tr("traffic_timeline", "Traffic Timeline")),
         ]
-        for key, default in lt_enabled_items:
-            QTreeWidgetItem(live_timing_group, [tr(key, default)])
+        for key, default in lt_main_items:
+            QTreeWidgetItem(live_timing_group, [default])
+        
+        # Trace 追蹤子群組 (遙測追蹤)
+        trace_group = QTreeWidgetItem(live_timing_group, [tr("trace_group", "Trace")])
+        trace_items = [
+            ("live_timing_speed_trace", tr("speed_trace", "Speed Trace")),
+            ("live_timing_throttle_trace", tr("throttle_trace", "Throttle Trace")),
+            ("live_timing_brake_trace", tr("brake_trace", "Brake Trace")),
+            ("live_timing_gear_trace", tr("gear_trace", "Gear Trace")),
+            ("live_timing_drs_trace", tr("drs_trace", "DRS Trace")),
+            ("live_timing_rpm_trace", tr("rpm_trace", "RPM Trace")),
+        ]
+        for key, default in trace_items:
+            QTreeWidgetItem(trace_group, [default])
         
         # Lap History 子群組
         lap_history_group = QTreeWidgetItem(live_timing_group, [tr("lap_history_group", "Lap History")])
         lap_history_items = [
-            ("lap_history_lap_time", "Lap History - Lap Time"),
-            ("lap_history_s1", "Lap History - S1"),
-            ("lap_history_s2", "Lap History - S2"),
-            ("lap_history_s3", "Lap History - S3"),
-            ("throttle_history", "Throttle 95%"),
-            ("sf_percentage_chart", "SF% History"),
+            ("lap_history_lap_time", tr("lap_history_lap_time", "Lap History - Lap Time")),
+            ("lap_history_s1", tr("lap_history_s1", "Lap History - S1")),
+            ("lap_history_s2", tr("lap_history_s2", "Lap History - S2")),
+            ("lap_history_s3", tr("lap_history_s3", "Lap History - S3")),
+            ("throttle_history", tr("throttle_95_history", "Throttle 95%")),
+            ("sf_percentage_chart", tr("sf_percentage_history", "SF% History")),
+            ("top_speed_history", tr("top_speed_history", "Top Speed History")),
         ]
         for key, default in lap_history_items:
-            QTreeWidgetItem(lap_history_group, [tr(key, default)])
+            QTreeWidgetItem(lap_history_group, [default])
         
         # Sector Comparison 子群組 (兩車手比較曲線圖)
         sector_comparison_group = QTreeWidgetItem(live_timing_group, [tr("sector_comparison_group", "Sector Comparison")])
         sector_comparison_items = [
-            ("sector_comparison_s1", "S1 Comparison"),
-            ("sector_comparison_s2", "S2 Comparison"),
-            ("sector_comparison_s3", "S3 Comparison"),
+            ("sector_comparison_s1", tr("s1_comparison", "S1 Comparison")),
+            ("sector_comparison_s2", tr("s2_comparison", "S2 Comparison")),
+            ("sector_comparison_s3", tr("s3_comparison", "S3 Comparison")),
         ]
         for key, default in sector_comparison_items:
-            QTreeWidgetItem(sector_comparison_group, [tr(key, default)])
+            QTreeWidgetItem(sector_comparison_group, [default])
         
         # 自動調整列寬以適應內容（但允許用戶手動調整）
         tree.resizeColumnToContents(0)

@@ -1099,6 +1099,19 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_sector_boundaries=True")
                 else:
                     logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] ⚠️  sector_boundaries 為空或 TrackMapWidget 不支援")
+                
+                # 🏎️ 傳遞超車事件數據（從所有年份收集）
+                all_overtake_events = self._collect_all_overtake_events(data)
+                if all_overtake_events and hasattr(self.track_map, 'set_overtake_events'):
+                    self.track_map.set_overtake_events(all_overtake_events)
+                    logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已傳遞 {len(all_overtake_events)} 個超車事件給 TrackMapWidget")
+                    
+                    # ✅ 強制啟用超車標記顯示
+                    if hasattr(self.track_map, 'show_overtake_markers'):
+                        self.track_map.show_overtake_markers = True
+                        logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_overtake_markers=True")
+                else:
+                    logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 無超車事件數據或 TrackMapWidget 不支援")
             else:
                 logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 跳過賽道地圖更新（無數據或 widget 不存在）")
             
@@ -1620,9 +1633,21 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 logger.debug("   🔧 檢測到只有 2025 年數據，開始為 2022-2024 計算 position_changes...")
                 
                 # 從 2025 年數據中提取 position_changes
-                if '2025' in yearly_summary and 'position_changes' in yearly_summary['2025']:
-                    position_changes['2025'] = yearly_summary['2025']['position_changes']
-                    logger.info(f"   ✅ 2025: {position_changes['2025']} 次名次變更")
+                # ✅ 修正: 優先使用 on_track (真正賽道超車)，而非 total (包含進站相關)
+                if '2025' in yearly_summary:
+                    year_data = yearly_summary['2025']
+                    if isinstance(year_data, dict):
+                        # 優先使用 position_changes_detail.on_track_overtakes
+                        if 'position_changes_detail' in year_data:
+                            position_changes['2025'] = year_data['position_changes_detail'].get('on_track_overtakes', 0)
+                        elif 'position_changes' in year_data:
+                            # 向後兼容：舊格式可能只有 position_changes (total)
+                            position_changes['2025'] = year_data['position_changes']
+                        else:
+                            position_changes['2025'] = 0
+                    else:
+                        position_changes['2025'] = 0
+                    logger.info(f"   ✅ 2025: {position_changes['2025']} 次真正賽道超車")
                 else:
                     position_changes['2025'] = 0
                 
@@ -1630,9 +1655,14 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                 for year in ['2022', '2023', '2024']:
                     try:
                         from CLI_modules.cli.analyzer.historical_flags_analysis import _calculate_position_changes_for_year
-                        changes = _calculate_position_changes_for_year(int(year), self.race, self.session)
+                        result = _calculate_position_changes_for_year(int(year), self.race, self.session)
+                        # ✅ 修正: result 是 dict，提取 on_track (真正賽道超車)
+                        if isinstance(result, dict):
+                            changes = result.get('on_track', 0)
+                        else:
+                            changes = result if isinstance(result, (int, float)) else 0
                         position_changes[year] = changes
-                        logger.info(f"   ✅ {year}: {changes} 次名次變更 (即時計算)")
+                        logger.info(f"   ✅ {year}: {changes} 次真正賽道超車 (即時計算)")
                     except Exception as e:
                         logger.warning(f"   ⚠️  {year}: 計算失敗 - {e}")
                         position_changes[year] = 0
@@ -1646,11 +1676,18 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         logger.debug(f"      - year_data 類型: {type(year_data)}")
                         logger.debug(f"      - year_data 內容: {year_data}")
                         
-                        if isinstance(year_data, dict) and 'position_changes' in year_data:
-                            changes = year_data['position_changes']
-                            logger.debug(f"      - position_changes 值: {changes} (類型: {type(changes)})")
+                        if isinstance(year_data, dict):
+                            # ✅ 修正: 優先使用 on_track (真正賽道超車)
+                            if 'position_changes_detail' in year_data:
+                                changes = year_data['position_changes_detail'].get('on_track_overtakes', 0)
+                                logger.debug(f"      - 使用 position_changes_detail.on_track_overtakes: {changes}")
+                            elif 'position_changes' in year_data:
+                                changes = year_data['position_changes']
+                                logger.debug(f"      - 使用 position_changes (向後兼容): {changes}")
+                            else:
+                                changes = 0
                             position_changes[year] = changes
-                            logger.info(f"   ✅ {year}: {changes} 次名次變更")
+                            logger.info(f"   ✅ {year}: {changes} 次真正賽道超車")
                         else:
                             position_changes[year] = 0
                             logger.warning(f"   ⚠️  {year}: yearly_summary 缺少 position_changes 欄位 (is_dict={isinstance(year_data, dict)}, has_key={'position_changes' in year_data if isinstance(year_data, dict) else 'N/A'})")
@@ -1666,6 +1703,50 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
 
             traceback.print_exc()
             return {'2022': 0, '2023': 0, '2024': 0, '2025': 0}
+    
+    def _collect_all_overtake_events(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        從所有年份收集超車事件（含 GPS 座標）
+        
+        Args:
+            data: 完整的分析數據（包含 yearly_summary）
+            
+        Returns:
+            List[Dict]: 所有超車事件列表，每個事件包含 x, y 座標
+        """
+        try:
+            all_events = []
+            yearly_summary = data.get("yearly_summary", {})
+            
+            for year, year_data in yearly_summary.items():
+                if not isinstance(year_data, dict):
+                    continue
+                
+                # 從 position_changes_detail.overtake_events 取得超車事件
+                position_detail = year_data.get("position_changes_detail", {})
+                overtake_events = position_detail.get("overtake_events", [])
+                
+                if overtake_events:
+                    logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] {year}: 發現 {len(overtake_events)} 個超車事件")
+                    
+                    for event in overtake_events:
+                        # 確保事件有有效的 GPS 座標
+                        x = event.get("x", 0)
+                        y = event.get("y", 0)
+                        if x != 0 or y != 0:
+                            # 添加年份資訊到事件
+                            event_with_year = event.copy()
+                            event_with_year["year"] = year
+                            all_events.append(event_with_year)
+            
+            logger.info(f"[HISTORICAL_TRACK_MAP_MDI] 總計收集 {len(all_events)} 個超車事件（含 GPS 座標）")
+            return all_events
+            
+        except Exception as e:
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] 收集超車事件失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
     
     def get_module_info(self) -> Dict[str, Any]:
         """獲取模組資訊"""

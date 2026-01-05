@@ -636,9 +636,12 @@ class F1AnalysisModularCLI:
                 no_fp1=getattr(self.args, 'no_fp1', False),
                 no_fp2=getattr(self.args, 'no_fp2', False),
                 no_fp3=getattr(self.args, 'no_fp3', False),
-                # 功能 73 賽道分類訓練參數
+                # 功能 73, 75 訓練參數
                 mode=getattr(self.args, 'mode', None),
                 fast=getattr(self.args, 'fast', False),
+                trials=getattr(self.args, 'trials', 500),
+                cv_folds=getattr(self.args, 'cv_folds', 3),
+                workers=getattr(self.args, 'workers', 1),
                 # 功能 77/78 賽道特定訓練參數 (2025-11-03)
                 track=getattr(self.args, 'track', None),
                 train=getattr(self.args, 'train', False),
@@ -1872,17 +1875,17 @@ def create_argument_parser():
     parser.add_argument('--fast', action='store_true',
                        help='使用快速參數進行測試 (適用於 -f73 --mode train-by-category)')
     
-    # 功能 73 v3.8 訓練器參數 (2025-11-04)
+    # 功能 73, 75 v3.8 訓練器參數 (2025-11-04)
     parser.add_argument('--trials', type=int, default=500,
-                       help='Optuna 超參數優化試驗次數 (適用於 -f73, 預設: 500)')
+                       help='Optuna 超參數優化試驗次數 (適用於 -f73, -f75, 預設: 500)')
     parser.add_argument('--cv-folds', type=int, default=3,
-                       help='交叉驗證 folds 數量 (適用於 -f73, 預設: 3)')
+                       help='交叉驗證 folds 數量 (適用於 -f73, -f75, 預設: 3)')
     parser.add_argument('--workers', type=int, default=1,
-                       help='並行 workers 數量 (適用於 -f73, 預設: 1)')
+                       help='並行 workers 數量 (適用於 -f73, -f75, 預設: 1)')
     
     # 功能 77 賽道特定訓練參數 (2025-11-03)
     parser.add_argument('--track', type=str,
-                       help='賽道名稱 (適用於 -f73, -f77, -f78: Mexico, Spain, Bahrain 等)')
+                       help='賽道名稱 (適用於 -f73, -f75, -f77, -f78: Qatar, China, Mexico, Spain, Bahrain 等)')
     parser.add_argument('--train', action='store_true',
                        help='訓練模式：訓練賽道特定模型 (適用於 -f77)')
     parser.add_argument('--predict', action='store_true',

@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QListWidget, QListWidgetItem, QLineEdit, QSizePolicy
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
 
 from core.logger import get_logger
 from core.gui_i18n import tr
@@ -25,6 +26,7 @@ class LapAnalysisOptionsDialog(QDialog):
     
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent_window = parent  # 保存父視窗引用
         # 保留用戶當前語言設定，不強制切換
         # set_gui_language('en')  # 已移除強制設定
         
@@ -240,8 +242,8 @@ class LapAnalysisOptionsDialog(QDialog):
         layout.addWidget(driver_group)
         
         # 🆕 從主視窗快取載入車手列表
-        year = int(parent_window.year_combo.currentText())
-        drivers = parent_window.get_drivers_for_year(year)
+        year = int(self.parent_window.year_combo.currentText()) if self.parent_window and hasattr(self.parent_window, 'year_combo') else 2025
+        drivers = self.parent_window.get_drivers_for_year(year) if self.parent_window and hasattr(self.parent_window, 'get_drivers_for_year') else []
         
         # 填充車手下拉選單
         if drivers:

@@ -182,6 +182,15 @@ class LiveTimingManager:
             'category': 'lap_history',
             'enabled': True,
         },
+        'top_speed_history': {
+            'name': 'Top Speed History',
+            'menu_key': 'menu_lap_history_top_speed',
+            'menu_default': 'Top Speed',
+            'tip_key': 'lap_history_top_speed_tip',
+            'tip_default': 'Top speed history for all drivers per lap',
+            'category': 'lap_history',
+            'enabled': True,
+        },
         
         # === Sector Comparison 子選單 ===
         'sector_s1': {
@@ -461,6 +470,9 @@ class LiveTimingManager:
         logger.debug("[LiveTimingManager] Adding sf_percentage_chart to Lap History menu...")
         result_sf = self._add_module_action(lap_history_menu, 'sf_percentage_chart')
         logger.debug(f"[LiveTimingManager] sf_percentage_chart action created: {result_sf is not None}")
+        logger.debug("[LiveTimingManager] Adding top_speed_history to Lap History menu...")
+        result_ts = self._add_module_action(lap_history_menu, 'top_speed_history')
+        logger.debug(f"[LiveTimingManager] top_speed_history action created: {result_ts is not None}")
         
         # === Sector Comparison 子選單 ===
         sector_menu = live_timing_menu.addMenu(

@@ -2,11 +2,11 @@
   "_metadata": {
     "version": "1.0.0",
     "description": "F1 賽道輪胎衰退係數資料庫 - 用於輪胎衰退分析 (時變線性模型)",
-    "last_updated": "2025-12-04",
+    "last_updated": "2025-12-30",
     "sources": [
       "Cappello & Hoegh 2025 - Tire degradation analysis",
       "Fuel-corrected lap time linear regression",
-      "Total analyzed stints: 814"
+      "Total analyzed stints: 855"
     ],
     "model_description": {
       "type": "Time-Varying Linear Degradation",
@@ -123,7 +123,7 @@
         "MEDIUM": 14,
         "HARD": 4
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735961",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.885,
@@ -158,7 +158,7 @@
         "MEDIUM": 4,
         "HARD": 9
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.736103",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.496,
@@ -221,7 +221,7 @@
         "MEDIUM": 16,
         "HARD": 8
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.736055",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.401,
@@ -255,7 +255,7 @@
         "MEDIUM": 19,
         "HARD": 11
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.736009",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.6,
@@ -318,7 +318,7 @@
         "MEDIUM": 8,
         "HARD": 14
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.736031",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.732,
@@ -352,7 +352,7 @@
         "MEDIUM": 4,
         "HARD": 9
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.736080",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.631,
@@ -386,7 +386,7 @@
         "MEDIUM": 13,
         "HARD": 18
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735984",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.47,
@@ -421,7 +421,7 @@
         "MEDIUM": 33,
         "HARD": 12
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735917",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.51,
@@ -456,7 +456,7 @@
         "MEDIUM": 37,
         "HARD": 38
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735588",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.649,
@@ -489,7 +489,7 @@
       "training_samples": {
         "MEDIUM": 16
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735694",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.313
@@ -522,7 +522,7 @@
         "MEDIUM": 30,
         "HARD": 50
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735755",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.575,
@@ -556,7 +556,7 @@
         "MEDIUM": 19,
         "HARD": 10
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735658",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.55,
@@ -591,7 +591,7 @@
         "MEDIUM": 31,
         "HARD": 18
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735724",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.585,
@@ -626,7 +626,7 @@
         "MEDIUM": 13,
         "HARD": 24
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735785",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.43,
@@ -660,7 +660,7 @@
         "MEDIUM": 12,
         "HARD": 10
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735626",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.439,
@@ -695,7 +695,7 @@
         "MEDIUM": 23,
         "HARD": 29
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735891",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.437,
@@ -731,7 +731,7 @@
         "MEDIUM": 8,
         "HARD": 7
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735939",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.476,
@@ -767,7 +767,7 @@
         "MEDIUM": 22,
         "HARD": 12
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735838",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.347,
@@ -802,7 +802,7 @@
         "SOFT": 4,
         "MEDIUM": 23
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.736131",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.635,
@@ -836,7 +836,7 @@
         "MEDIUM": 16,
         "HARD": 26
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735812",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "MEDIUM": 0.525,
@@ -871,7 +871,7 @@
         "MEDIUM": 4,
         "HARD": 5
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735866",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
         "SOFT": 0.51,
@@ -887,8 +887,8 @@
       "abrasiveness_multiplier": 1.0,
       "base_degradation": {
         "SOFT": 0.065,
-        "MEDIUM": 0.045,
-        "HARD": 0.0767
+        "MEDIUM": 0.0979,
+        "HARD": 0.0668
       },
       "degradation_acceleration": {
         "SOFT": 0.0027,
@@ -897,18 +897,20 @@
       },
       "optimal_stint_length": {
         "SOFT": 18,
-        "MEDIUM": 21,
-        "HARD": 22
+        "MEDIUM": 18,
+        "HARD": 24
       },
       "notes": "日落賽事，溫度變化影響輪胎表現",
       "trained_from_data": true,
       "training_samples": {
-        "HARD": 21
+        "MEDIUM": 24,
+        "HARD": 39
       },
-      "last_trained": "2025-12-04T09:04:41.658200",
+      "last_trained": "2025-12-30T20:18:29.735532",
       "training_method": "Cappello & Hoegh 2025 lap time degradation analysis",
       "training_r_squared": {
-        "HARD": 0.564
+        "MEDIUM": 0.697,
+        "HARD": 0.571
       }
     }
   },

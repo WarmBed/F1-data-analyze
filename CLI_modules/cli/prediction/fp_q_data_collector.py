@@ -264,9 +264,124 @@ class FPQDataCollector:
         
         return q_data
     
+    def _identify_quali_sim_laps(self, driver_laps: pd.DataFrame) -> pd.DataFrame:
+        """
+        識別 FP2 中的排位模擬圈速（與 Function 76 相同邏輯）
+        
+        過濾策略（多層回退）：
+        層級 1: SOFT 胎 + 短 stint (1-3 圈) + 新胎 (胎齡≤3)
+        層級 2: SOFT 胎 + 任意 stint + 新胎 (胎齡≤3)
+        層級 3: SOFT 胎 + 任意條件
+        層級 4: 所有有效圈速（在外部處理）
+        
+        嚴格過濾：
+        - Out Lap (PitOutTime 存在)
+        - In Lap (下一圈 PitInTime 存在)
+        - IsAccurate == False
+        - 黃旗/安全車圈（TrackStatus）
+        
+        Args:
+            driver_laps: 單一車手的所有圈速 DataFrame
+            
+        Returns:
+            符合 Quali Sim 條件的圈速 DataFrame（可能為空）
+        """
+        if driver_laps.empty:
+            return pd.DataFrame()
+        
+        # ========== 階段 1: 基礎過濾（嚴格模式） ==========
+        filtered_laps = driver_laps.copy()
+        
+        # 1. IsAccurate 檢查
+        if 'IsAccurate' in filtered_laps.columns:
+            filtered_laps = filtered_laps[filtered_laps['IsAccurate'] == True]
+        
+        # 2. Out Lap 過濾 (PitOutTime 存在)
+        if 'PitOutTime' in filtered_laps.columns:
+            filtered_laps = filtered_laps[pd.isna(filtered_laps['PitOutTime'])]
+        
+        # 3. In Lap 過濾（當前圈或下一圈有 PitInTime）
+        if 'PitInTime' in filtered_laps.columns:
+            # 排除本身是進站圈的
+            filtered_laps = filtered_laps[pd.isna(filtered_laps['PitInTime'])]
+            
+            # 排除下一圈是進站圈的（In Lap）
+            if 'LapNumber' in filtered_laps.columns and not filtered_laps.empty:
+                in_lap_numbers = set()
+                all_lap_numbers = set(driver_laps['LapNumber'].values)
+                pit_in_laps = driver_laps[pd.notna(driver_laps['PitInTime'])]['LapNumber'].values
+                
+                for pit_lap in pit_in_laps:
+                    # 前一圈是 In Lap
+                    if pit_lap - 1 in all_lap_numbers:
+                        in_lap_numbers.add(pit_lap - 1)
+                
+                if in_lap_numbers:
+                    filtered_laps = filtered_laps[~filtered_laps['LapNumber'].isin(in_lap_numbers)]
+        
+        # 4. 黃旗/安全車過濾
+        if 'TrackStatus' in filtered_laps.columns:
+            # 過濾包含黃旗、安全車、VSC 的圈速
+            filtered_laps = filtered_laps[
+                ~filtered_laps['TrackStatus'].astype(str).str.contains(
+                    'Yellow|SafetyCar|VSC', 
+                    case=False, 
+                    na=False
+                )
+            ]
+        
+        if filtered_laps.empty:
+            return pd.DataFrame()
+        
+        # ========== 階段 2: Quali Sim 識別（多層回退） ==========
+        
+        # 層級 1: SOFT 胎 + 短 stint (≤3 圈) + 新胎 (胎齡≤3)
+        if 'Compound' in filtered_laps.columns and 'Stint' in filtered_laps.columns:
+            soft_laps = filtered_laps[filtered_laps['Compound'].str.upper() == 'SOFT']
+            
+            if not soft_laps.empty and 'TyreLife' in soft_laps.columns:
+                # 檢查每個 stint
+                quali_sim_candidates = []
+                
+                for stint_num in soft_laps['Stint'].unique():
+                    stint_laps = soft_laps[soft_laps['Stint'] == stint_num]
+                    stint_length = len(stint_laps)
+                    
+                    # 檢查是否為短 stint (1-3 圈)
+                    if stint_length <= 3:
+                        # 檢查胎齡 (≤3)
+                        new_tire_laps = stint_laps[stint_laps['TyreLife'] <= 3]
+                        
+                        if not new_tire_laps.empty:
+                            # 找出這個 stint 的最快圈
+                            fastest_in_stint = new_tire_laps.loc[new_tire_laps['LapTime'].idxmin()]
+                            quali_sim_candidates.append(fastest_in_stint)
+                
+                if quali_sim_candidates:
+                    # 從所有候選 stint 中找出最快的一次
+                    result_df = pd.DataFrame(quali_sim_candidates)
+                    return result_df
+            
+            # 層級 2: SOFT 胎 + 任意 stint + 新胎 (胎齡≤3)
+            if not soft_laps.empty and 'TyreLife' in soft_laps.columns:
+                new_tire_laps = soft_laps[soft_laps['TyreLife'] <= 3]
+                if not new_tire_laps.empty:
+                    return new_tire_laps
+            
+            # 層級 3: SOFT 胎 + 任意條件
+            if not soft_laps.empty:
+                return soft_laps
+        
+        # 如果沒有 Compound 資料，返回空（外部會使用層級 4 回退）
+        return pd.DataFrame()
+    
     def _extract_practice_session(self, fp_session) -> Dict[str, Any]:
         """
         提取練習賽數據
+        
+        ⚠️ FP2 特殊處理：使用 Quali Sim 過濾邏輯
+        - FP2 數據將優先提取 SOFT 胎的短 stint（排位模擬）
+        - FP1/FP3 使用所有有效圈速
         
         Args:
             fp_session: FastF1 練習賽 Session 物件
@@ -283,6 +398,12 @@ class FPQDataCollector:
             "driver_data": {}
         }
         
+        # 判斷是否為 FP2
+        is_fp2 = fp_session.name == 'Practice 2' or 'FP2' in str(fp_session.name)
+        
+        if is_fp2:
+            print(f"  🎯 檢測到 FP2，將使用 Quali Sim 過濾邏輯")
+        
         # 提取每位車手的數據
         for driver in fp_session.laps['Driver'].unique():
             driver_laps = fp_session.laps.pick_driver(driver)
@@ -290,17 +411,52 @@ class FPQDataCollector:
             if len(driver_laps) == 0:
                 continue
             
-            # 過濾有效圈速 (排除 pit lap, out lap)
-            valid_laps = driver_laps[
-                (driver_laps['LapTime'].notna()) & 
-                (~driver_laps['IsAccurate'] | driver_laps['IsAccurate'])  # 包含所有圈
-            ]
+            # ========== FP2 特殊處理：Quali Sim 過濾 ==========
+            if is_fp2:
+                quali_sim_laps = self._identify_quali_sim_laps(driver_laps)
+                
+                if not quali_sim_laps.empty:
+                    # 使用 Quali Sim 圈速作為主要特徵
+                    valid_laps = quali_sim_laps
+                    print(f"    ✅ {driver}: 使用 SOFT 胎 Quali Sim 圈速 ({len(quali_sim_laps)} 圈)")
+                else:
+                    # 回退：使用所有有效圈速
+                    valid_laps = driver_laps[
+                        (driver_laps['LapTime'].notna()) & 
+                        (driver_laps['IsAccurate'] == True)
+                    ]
+                    print(f"    ⚠️  {driver}: 無 Quali Sim，使用所有有效圈速 ({len(valid_laps)} 圈)")
+            else:
+                # FP1/FP3：使用所有有效圈速
+                valid_laps = driver_laps[
+                    (driver_laps['LapTime'].notna()) & 
+                    (~driver_laps['IsAccurate'] | driver_laps['IsAccurate'])
+                ]
             
             if len(valid_laps) == 0:
                 continue
             
             # 計算統計數據（使用所有有效圈）
             lap_times = valid_laps['LapTime'].dt.total_seconds()
+            
+            # 🆕 Quali Sim 專用欄位計算 (2026-01-05 新增)
+            quali_sim_best_time = None
+            quali_sim_tire_age = None
+            has_quali_sim = False
+            
+            if is_fp2:
+                # 重新識別 Quali Sim 圈以獲取精確數據
+                qs_laps = self._identify_quali_sim_laps(driver_laps)
+                if not qs_laps.empty:
+                    has_quali_sim = True
+                    qs_times = qs_laps['LapTime'].dt.total_seconds()
+                    quali_sim_best_time = float(qs_times.min())
+                    
+                    # 獲取最快 Quali Sim 圈的胎齡
+                    fastest_qs_idx = qs_times.idxmin()
+                    if 'TyreLife' in qs_laps.columns and fastest_qs_idx in qs_laps.index:
+                        tire_life = qs_laps.loc[fastest_qs_idx, 'TyreLife']
+                        quali_sim_tire_age = int(tire_life) if pd.notna(tire_life) else None
             
             # 🆕 階段 1：全圈分析特徵
             # 找出最速圈
@@ -344,6 +500,11 @@ class FPQDataCollector:
                 "all_laps_std": all_laps_std,     # 所有圈標準差（一致性）
                 "race_sim_avg": race_sim_avg,     # 長距離模擬平均（10+ 圈）
                 "race_sim_degradation": race_sim_degradation,  # 圈速衰退率 (%)
+                
+                # 🆕 Quali Sim 專用欄位 (2026-01-05 新增)
+                "quali_sim_best_time": quali_sim_best_time if is_fp2 else None,
+                "quali_sim_tire_age": quali_sim_tire_age if is_fp2 else None,
+                "has_quali_sim": has_quali_sim if is_fp2 else False,
                 
                 "team": driver_laps.iloc[0]['Team'] if 'Team' in driver_laps.columns else None,
                 

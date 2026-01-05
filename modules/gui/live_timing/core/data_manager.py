@@ -180,6 +180,10 @@ class LiveTimingDataManager(QObject):
         # 格式: {driver_num: {'samples': list, 'current_lap': int}}
         self._driver_throttle_samples: Dict[str, Dict[str, Any]] = {}
         
+        # Top Speed 追蹤器 (用於計算每圈最高速)
+        # 格式: {driver_num: {'current_lap': int, 'current_max_speed': float, 'lap_top_speeds': {lap: speed}, 'personal_best': float}}
+        self._driver_speed_samples: Dict[str, Dict[str, Any]] = {}
+        
         logger.info("[DATA_MANAGER] LiveTimingDataManager 初始化完成")
     
     def _init_overtake_predictor(self):
@@ -980,6 +984,7 @@ class LiveTimingDataManager(QObject):
         
         # ✅ 更新追蹤數據
         self._update_tire_saving_scores(snapshot)
+        self._update_top_speed_tracking(snapshot)
         # ❌ 性能優化：禁用 OT% 和 CC% 預測（占用 80% CPU）
         # self._update_overtake_predictions(snapshot)
         # self._update_close_combat_predictions(snapshot)
@@ -1009,6 +1014,7 @@ class LiveTimingDataManager(QObject):
         
         # ✅ 更新追蹤數據
         self._update_tire_saving_scores(snapshot)
+        self._update_top_speed_tracking(snapshot)
         # ❌ 性能優化：禁用 OT% 和 CC% 預測（占用 80% CPU）
         # self._update_overtake_predictions(snapshot)
         # self._update_close_combat_predictions(snapshot)
@@ -1464,6 +1470,75 @@ class LiveTimingDataManager(QObject):
             drivers[driver_num]['fuel_saving_lamp'] = tracker['current_lamp']
             drivers[driver_num]['throttle_95_pct'] = tracker['current_throttle_pct']
             drivers[driver_num]['throttle_baseline'] = tracker.get('dynamic_baseline', 0)
+    
+    def _update_top_speed_tracking(self, snapshot: Dict[str, Any]):
+        """
+        追蹤每圈最高速度並更新 snapshot
+        
+        追蹤邏輯:
+        - 持續追蹤每位車手當前圈的最高速度
+        - 圈數變化時，儲存上一圈的最高速度
+        - 計算個人最高速 (personal_best_speed)
+        - 輸出到 snapshot: lap_top_speed, personal_best_speed
+        """
+        drivers = snapshot.get('drivers', {})
+        if not drivers:
+            return
+        
+        for driver_num, driver_data in drivers.items():
+            # 獲取當前速度
+            current_speed = driver_data.get('speed', 0)
+            if current_speed is None:
+                current_speed = 0
+            try:
+                current_speed = float(current_speed)
+            except (ValueError, TypeError):
+                current_speed = 0
+            
+            # 獲取當前圈數
+            current_lap = driver_data.get('lap', 0) or 0
+            
+            # 初始化追蹤器
+            if driver_num not in self._driver_speed_samples:
+                self._driver_speed_samples[driver_num] = {
+                    'current_lap': 0,
+                    'current_max_speed': 0.0,
+                    'lap_top_speeds': {},  # {lap_num: top_speed}
+                    'personal_best': 0.0,
+                }
+            
+            tracker = self._driver_speed_samples[driver_num]
+            
+            # 更新當前圈的最高速度
+            if current_speed > tracker['current_max_speed']:
+                tracker['current_max_speed'] = current_speed
+            
+            # 圈數變化：儲存上一圈的最高速度
+            if current_lap > tracker['current_lap'] and tracker['current_lap'] > 0:
+                completed_lap = tracker['current_lap']
+                top_speed = tracker['current_max_speed']
+                
+                if top_speed > 0:
+                    # 儲存上一圈的最高速
+                    tracker['lap_top_speeds'][completed_lap] = top_speed
+                    
+                    # 更新個人最高速
+                    if top_speed > tracker['personal_best']:
+                        tracker['personal_best'] = top_speed
+                
+                # 重置當前圈追蹤
+                tracker['current_max_speed'] = current_speed
+            
+            # 初始化第一圈
+            if tracker['current_lap'] == 0:
+                tracker['current_max_speed'] = current_speed
+            
+            # 更新圈數
+            tracker['current_lap'] = current_lap
+            
+            # 輸出到 snapshot
+            drivers[driver_num]['lap_top_speed'] = tracker['current_max_speed']
+            drivers[driver_num]['personal_best_speed'] = tracker['personal_best']
     
     def _update_overtake_predictions(self, snapshot: Dict[str, Any]):
         """
@@ -1994,6 +2069,7 @@ class LiveTimingDataManager(QObject):
             # 取得快照並更新追蹤數據
             snapshot = self._snapshots[self._current_index]
             self._update_tire_saving_scores(snapshot)
+            self._update_top_speed_tracking(snapshot)
             
             # ✅ 策略 A：將 OT%/CC% 預測移到背景執行緒
             if self._prediction_worker:

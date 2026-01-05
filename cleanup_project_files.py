@@ -73,6 +73,7 @@ def main():
         "f1t_gui_main.py",
         "f1_analysis_modular_main.py",
         "refactored_api.py",
+        "strategy_simulator_main.py",  # 策略模擬器主程式
         "batch_generate_gui_data.py",
         "batch_generator_gui.py",  # 批次生成器 GUI
         "build_exe_gui.py",  # EXE 建構工具 GUI

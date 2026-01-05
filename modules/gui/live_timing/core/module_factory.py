@@ -222,6 +222,13 @@ class LiveTimingModuleFactory:
         "車流時間線": "live_traffic_timeline",
         "トラフィックタイムライン": "live_traffic_timeline",
         "live_traffic_timeline": "live_traffic_timeline",
+        
+        # Top Speed History 每圈最高速歷史
+        "Top Speed History": "top_speed_history",
+        "Top Speed": "top_speed_history",
+        "最高速歷史": "top_speed_history",
+        "トップスピード履歴": "top_speed_history",
+        "top_speed_history": "top_speed_history",
     }
     
     # 模組鍵值 → 模組元數據
@@ -404,6 +411,12 @@ class LiveTimingModuleFactory:
             "display_name": "Traffic Timeline",
             "description": "Real-time traffic heatmap showing lap-by-lap traffic status",
             "icon": "traffic_timeline.png",
+            "implemented": True,
+        },
+        "top_speed_history": {
+            "display_name": "Top Speed History",
+            "description": "Top speed history for all drivers per lap with personal best highlighting",
+            "icon": "top_speed_history.png",
             "implemented": True,
         },
     }
@@ -643,6 +656,10 @@ class LiveTimingModuleFactory:
             elif module_key == "live_traffic_timeline":
                 from ..live_timing_modules.live_traffic_timeline import LiveTrafficTimelineMDI
                 module_class = LiveTrafficTimelineMDI
+                
+            elif module_key == "top_speed_history":
+                from ..live_timing_modules.top_speed_history import LiveTimingTopSpeedHistory
+                module_class = LiveTimingTopSpeedHistory
                 
             else:
                 self._logger.warning("Unknown module key: %s", module_key)

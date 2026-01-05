@@ -36,11 +36,24 @@ from .lap_filter_utils import (
     normalize_lap_number,
 )
 
+# 跨模組同步信號
+from modules.gui.base.global_chart_sync_signal import GlobalChartSyncSignal
+
+# 統一顏色系統
+from modules.gui.themes.color_palette_provider import color_palette_provider
+
 logger = get_logger(__name__)
+
+# 模組標識常量
+MODULE_DETAILED_LAP = GlobalChartSyncSignal.MODULE_DETAILED_LAP
+
+# 未選中車手的灰色
+GRAY_COLOR = QColor(180, 180, 180)
 
 
 class ChartTheme:
-    """圖表主題配置"""
+    """圖表主題配置 - 現在使用 color_palette_provider 獲取車手顏色"""
+    # 舊的靜態顏色（向後兼容）
     DRIVER1_COLOR = QColor(220, 53, 69)    # 紅色
     DRIVER2_COLOR = QColor(0, 123, 255)    # 藍色
     DRIVER3_COLOR = QColor(40, 167, 69)    # 綠色
@@ -50,6 +63,38 @@ class ChartTheme:
     BACKGROUND = QColor(255, 255, 255)
     GRID_COLOR = QColor(200, 200, 200)
     TEXT_COLOR = QColor(0, 0, 0)
+    
+    @staticmethod
+    def get_driver_color(driver_code: str, selected_drivers: list = None) -> QColor:
+        """
+        獲取車手顏色
+        
+        Args:
+            driver_code: 車手代碼 (VER, HAM, etc.)
+            selected_drivers: 被選中的車手列表。如果為空，則所有車手都顯示顏色。
+                             如果提供，只有在列表中的車手顯示顏色，其他顯示灰色。
+        
+        Returns:
+            QColor: 車手顏色（使用 color_palette_provider）或灰色
+        """
+        if not driver_code:
+            return GRAY_COLOR
+        
+        code = str(driver_code).strip().upper()
+        
+        # 如果有選中列表且車手不在其中，返回灰色
+        if selected_drivers is not None:
+            selected_upper = [d.upper() for d in selected_drivers if d]
+            if code not in selected_upper:
+                return GRAY_COLOR
+        
+        # 使用 color_palette_provider 獲取顏色
+        qcolor = color_palette_provider.get_driver_color(code, format="qcolor")
+        if qcolor and isinstance(qcolor, QColor) and qcolor.isValid():
+            return qcolor
+        
+        # 如果獲取失敗，使用默認灰色
+        return GRAY_COLOR
 
 
 class ChartDataPoint:
@@ -62,12 +107,14 @@ class ChartDataPoint:
 
 class ChartSeries:
     """圖表數據系列"""
-    def __init__(self, name, data, color, line_width=2, style='line'):
+    def __init__(self, name, data, color, line_width=2, style='line', line_style=None, marker_only_points=None):
         self.name = name
         self.data = data
         self.color = color
         self.line_width = line_width
         self.style = style
+        self.line_style = line_style  # Qt.SolidLine, Qt.DashLine, etc.
+        self.marker_only_points = marker_only_points or []  # 被過濾但仍需繪製標記的點
 
 
 class LaptimeChartWidget(QWidget):
@@ -75,6 +122,7 @@ class LaptimeChartWidget(QWidget):
     
     # 🆕 信號定義
     pinned_tooltips_changed = pyqtSignal(int, str)  # (固定數量, 時間差文字)
+    zoom_changed = pyqtSignal(bool)  # True=已縮放, False=全視圖
     
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -82,6 +130,14 @@ class LaptimeChartWidget(QWidget):
         self.setMinimumSize(200, 100)  # 調整為與 Tire Analysis 一致的最小尺寸
         # 移除固定的白色背景，讓paint事件處理背景色
         self.setStyleSheet("border: 1px solid #ccc;")
+        
+        # 🆕 縮放功能變數
+        self.zoom_rect_start = None  # 右鍵框選起始點
+        self.zoom_rect_end = None    # 右鍵框選結束點
+        self.is_zooming = False      # 是否正在框選
+        self.zoom_x_range = None     # 自定義 X 軸範圍 (縮放後)
+        self.zoom_y_range = None     # 自定義 Y 軸範圍 (縮放後)
+        self.is_zoomed = False       # 是否已縮放
         
         # 標記顏色配置 - 新的旗幟標記系統
         self.marker_colors = {
@@ -114,9 +170,19 @@ class LaptimeChartWidget(QWidget):
         self.x_range = (0, 1)  # X 軸範圍
         self.y_range = (0, 1)  # Y 軸範圍
         
-        # 🆕 固定 Tooltip 功能（左鍵點擊固定，最多2個）
-        self.pinned_tooltips = []  # 固定的 Tooltip 列表 [{point, screen_pos, text, lap_time}, ...]
-        self.max_pinned = 2  # 最多固定2個
+        # 🆕 固定 Tooltip 功能（左鍵點擊固定，無限制）
+        self.pinned_tooltips = []  # 固定的 Tooltip 列表 [{point, screen_pos, text, lap_time, tooltip_rect, custom_pos, driver_color}, ...]
+        self.max_pinned = 999  # 無限制（原本為 2）
+        
+        # 🆕 左鍵框選功能
+        self.selection_rect_start = None  # 框選起始點
+        self.selection_rect_end = None  # 框選結束點
+        self.is_selecting = False  # 是否正在框選
+        
+        # 🆕 Tooltip 拖動功能
+        self.dragging_tooltip = False  # 是否正在拖動 tooltip
+        self.dragging_tooltip_index = -1  # 正在拖動的 tooltip 索引
+        self.tooltip_drag_offset = QPoint(0, 0)  # tooltip 拖動偏移量
         
         logger.debug("[LAPTIME_CHART_WIDGET] 專用圖表組件初始化完成")
     
@@ -189,21 +255,55 @@ class LaptimeChartWidget(QWidget):
                 painter.setBrush(Qt.NoBrush)
                 painter.drawEllipse(self.hover_screen_pos, 12, 12)  # 繪製高亮圓圈
             
+            # 🆕 繪製縮放選擇框（右鍵拖動時）
+            if self.is_zooming and self.zoom_rect_start and self.zoom_rect_end:
+                zoom_rect = QRect(self.zoom_rect_start, self.zoom_rect_end).normalized()
+                # 半透明藍色填充
+                painter.setBrush(QBrush(QColor(100, 150, 255, 50)))
+                painter.setPen(QPen(QColor(50, 100, 200), 2, Qt.DashLine))
+                painter.drawRect(zoom_rect)
+            
+            # 🆕 繪製選取框（左鍵拖動時）
+            if self.is_selecting and self.selection_rect_start and self.selection_rect_end:
+                selection_rect = QRect(self.selection_rect_start, self.selection_rect_end).normalized()
+                # 半透明綠色填充（與縮放框區分）
+                painter.setBrush(QBrush(QColor(100, 255, 150, 50)))
+                painter.setPen(QPen(QColor(50, 200, 100), 2, Qt.DashLine))
+                painter.drawRect(selection_rect)
+            
             # 繪製圖例 (重疊模式，右上角覆蓋)
             self._draw_legend(painter)
             
-            # 🆕 繪製固定的 Tooltip（使用不同顏色標示）
-            for pinned in self.pinned_tooltips:
-                # 繪製固定點的高亮（藍色外框）
-                painter.setPen(QPen(QColor(0, 123, 255), 3))  # 藍色外框
-                painter.setBrush(Qt.NoBrush)
-                painter.drawEllipse(pinned['screen_pos'], 12, 12)
-                # 繪製固定的 Tooltip（藍色背景）
-                self._draw_custom_tooltip(painter, pinned['screen_pos'], pinned['text'], is_pinned=True)
+            # 繪製固定的 Tooltip（使用車手顏色邊框和輪胎 highlight，支援拖動）
+            for i, pinned in enumerate(self.pinned_tooltips):
+                # 繪製固定的 Tooltip（根據車手顏色和輪胎顏色，支援 custom_pos）
+                tire = pinned.get('tire_compound')
+                custom_pos = pinned.get('custom_pos')
+                driver_color = pinned.get('driver_color')
+                tooltip_rect = self._draw_custom_tooltip(
+                    painter, 
+                    pinned['screen_pos'], 
+                    pinned['text'], 
+                    is_pinned=True, 
+                    tire_compound=tire,
+                    custom_pos=custom_pos,
+                    driver_color=driver_color
+                )
+                # 更新 tooltip_rect 供拖動檢測使用
+                if tooltip_rect:
+                    self.pinned_tooltips[i]['tooltip_rect'] = tooltip_rect
             
-            # 🆕 繪製懸停 Tooltip（黃色背景，最後繪製確保在最上層）
+            # 繪製懸停 Tooltip（根據車手顏色和輪胎顏色，最後繪製確保在最上層）
             if self.hover_tooltip_text and self.hover_screen_pos:
-                self._draw_custom_tooltip(painter, self.hover_screen_pos, self.hover_tooltip_text, is_pinned=False)
+                hover_tire = self.hover_point.metadata.get('tire_compound') if self.hover_point else None
+                hover_driver_color = None
+                if self.hover_point and hasattr(self.hover_point, 'metadata'):
+                    driver_code = self.hover_point.metadata.get('driver_code') or self.hover_point.metadata.get('driver')
+                    if driver_code:
+                        # 確保顏色數據已載入
+                        color_palette_provider.ensure_loaded()
+                        hover_driver_color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
+                self._draw_custom_tooltip(painter, self.hover_screen_pos, self.hover_tooltip_text, is_pinned=False, tire_compound=hover_tire, driver_color=hover_driver_color)
             
         except Exception as e:
             logger.debug(f"[LAPTIME_CHART_WIDGET] 繪製錯誤: {e}")
@@ -272,7 +372,11 @@ class LaptimeChartWidget(QWidget):
         }
     
     def _calculate_data_range(self):
-        """計算數據範圍"""
+        """計算數據範圍（優先使用縮放範圍）"""
+        # 🆕 如果已縮放，返回縮放範圍
+        if self.is_zoomed and self.zoom_x_range and self.zoom_y_range:
+            return self.zoom_x_range[0], self.zoom_x_range[1], self.zoom_y_range[0], self.zoom_y_range[1]
+        
         x_values = []
         y_values = []
         
@@ -357,7 +461,11 @@ class LaptimeChartWidget(QWidget):
             if not series.data:
                 continue
             
-            painter.setPen(QPen(series.color, series.line_width))
+            # 使用 line_style 參數，預設為實線
+            pen = QPen(series.color, series.line_width)
+            if series.line_style is not None:
+                pen.setStyle(series.line_style)
+            painter.setPen(pen)
             
             prev_point = None
             for data_point in series.data:
@@ -367,8 +475,8 @@ class LaptimeChartWidget(QWidget):
                 
                 current_point = QPoint(int(screen_x), int(screen_y))
                 
-                # 繪製數據點
-                painter.drawEllipse(current_point, 3, 3)
+                # 繪製數據點（已禁用 - 用戶要求不顯示圓點）
+                # painter.drawEllipse(current_point, 3, 3)
                 
                 # 繪製連接線
                 if prev_point:
@@ -377,14 +485,15 @@ class LaptimeChartWidget(QWidget):
                 prev_point = current_point
     
     def _draw_smart_markers(self, painter: QPainter, rect: QRect, x_range: Tuple[float, float], y_range: Tuple[float, float]):
-        """繪製智能標記"""
+        """繪製智能標記 - 使用垂直虛線顯示"""
         # 防護檢查：確保 series_list 已初始化且不為空
         if not hasattr(self, 'series_list') or not self.series_list:
-            logger.warning(f"[LAPTIME_CHART_WIDGET] ⚠️ series_list 未初始化或為空，跳過智能標記繪製")
+            logger.warning(f"[LAPTIME_CHART_WIDGET] series_list 未初始化或為空，跳過智能標記繪製")
             return
             
         marker_count = 0
         for series in self.series_list:
+            # 繪製普通數據點的標記
             for data_point in series.data:
                 markers = data_point.metadata.get('markers', [])
                 
@@ -393,27 +502,59 @@ class LaptimeChartWidget(QWidget):
                 
                 marker_count += len(markers)
                 
-                # 座標轉換
+                # 座標轉換 - 只需要 X 座標
                 screen_x = rect.left() + (data_point.x - x_range[0]) * rect.width() / (x_range[1] - x_range[0])
-                screen_y = rect.bottom() - (data_point.y - y_range[0]) * rect.height() / (y_range[1] - y_range[0])
                 
-                position = QPoint(int(screen_x), int(screen_y))
-                
-                # 繪製標記
+                # 繪製垂直虛線和標記文字
                 for i, marker_type in enumerate(markers):
                     color = self.marker_colors.get(marker_type, QColor(128, 128, 128))
-                    offset_y = position.y() - 20 - i * 12  # 增加偏移距離避免重疊
-                    self._draw_marker(painter, QPoint(position.x(), offset_y), marker_type, color)
+                    self._draw_vertical_marker_line(painter, rect, int(screen_x), marker_type, color, i)
+            
+            # 繪製被過濾但保留標記的點（如 Pit 圈垂直線）
+            if hasattr(series, 'marker_only_points') and series.marker_only_points:
+                for data_point in series.marker_only_points:
+                    markers = data_point.metadata.get('markers', [])
+                    
+                    if not markers:
+                        continue
+                    
+                    marker_count += len(markers)
+                    
+                    # 座標轉換 - 只需要 X 座標
+                    screen_x = rect.left() + (data_point.x - x_range[0]) * rect.width() / (x_range[1] - x_range[0])
+                    
+                    # 繪製垂直虛線和標記文字
+                    for i, marker_type in enumerate(markers):
+                        color = self.marker_colors.get(marker_type, QColor(128, 128, 128))
+                        self._draw_vertical_marker_line(painter, rect, int(screen_x), marker_type, color, i)
         
         # 調試信息
         if marker_count > 0:
-            logger.debug(f"[LAPTIME_CHART_WIDGET] 繪製了 {marker_count} 個智能標記")
-        else:
-            logger.warning(f"[LAPTIME_CHART_WIDGET] ⚠️ 沒有找到智能標記數據")
+            logger.debug(f"[LAPTIME_CHART_WIDGET] 繪製了 {marker_count} 個智能標記（垂直虛線）")
+    
+    def _draw_vertical_marker_line(self, painter: QPainter, rect: QRect, screen_x: int, marker_type: str, color: QColor, offset_index: int = 0):
+        """繪製垂直虛線標記 - PIT STOP, FASTEST LAP 等"""
+        # 繪製垂直虛線（從圖表頂部到底部）
+        pen = QPen(color, 2, Qt.DashLine)
+        painter.setPen(pen)
+        painter.drawLine(screen_x, rect.top(), screen_x, rect.bottom())
+        
+        # 在頂部繪製標記文字
+        painter.setPen(QPen(color, 2))
+        font = QFont()
+        font.setPointSize(9)
+        font.setBold(True)
+        painter.setFont(font)
+        
+        # 計算文字位置（頂部，避免重疊）
+        text_y = rect.top() - 5 - offset_index * 15
+        text_x = screen_x - 6
+        
+        painter.drawText(text_x, text_y, marker_type)
     
     def _draw_marker(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor):
         """繪製單個標記 - 純文字版本，支援組合標記"""
-        logger.debug(f"[MARKER_TEXT] 🎯 繪製文字標記 {marker_type} (純文字版本)")
+        logger.debug(f"[MARKER_TEXT] 繪製文字標記 {marker_type} (純文字版本)")
         
         # 統一的文字設置 - 響應式字體大小
         painter.setPen(QPen(color, 2))  # 使用傳入的顏色
@@ -621,9 +762,81 @@ class LaptimeChartWidget(QWidget):
         # elif marker_type == 'A':  # 事故/危險 (已停用)
         #     painter.drawText(position.x() - 5, position.y() + 3, "A")
     
-    # 🆕 滑鼠事件處理 - 圖例拖移功能和顯示切換
+    # 🆕 滑鼠事件處理 - 圖例拖移功能、顯示切換和縮放功能
+    def wheelEvent(self, event):
+        """滾輪縮放 - 以滑鼠位置為中心進行縮放"""
+        if not self.chart_rect.contains(event.pos()):
+            super().wheelEvent(event)
+            return
+        
+        # 獲取滾動方向
+        delta = event.angleDelta().y()
+        if delta == 0:
+            super().wheelEvent(event)
+            return
+        
+        # 縮放因子
+        zoom_factor = 1.15 if delta > 0 else 0.87  # 放大或縮小
+        
+        # 獲取當前數據範圍
+        if self.is_zoomed and self.zoom_x_range and self.zoom_y_range:
+            current_x_min, current_x_max = self.zoom_x_range
+            current_y_min, current_y_max = self.zoom_y_range
+        else:
+            x_values = []
+            y_values = []
+            for series in self.series_list:
+                for point in series.data:
+                    x_values.append(point.x)
+                    y_values.append(point.y)
+            if not x_values or not y_values:
+                return
+            x_margin = max((max(x_values) - min(x_values)) * 0.05, 1)
+            y_margin = max((max(y_values) - min(y_values)) * 0.05, 0.1)
+            current_x_min = min(x_values) - x_margin
+            current_x_max = max(x_values) + x_margin
+            current_y_min = min(y_values) - y_margin
+            current_y_max = max(y_values) + y_margin
+        
+        # 計算滑鼠位置對應的數據座標（作為縮放中心）
+        mouse_x = event.pos().x()
+        mouse_y = event.pos().y()
+        
+        # 轉換為數據座標
+        data_x = current_x_min + (mouse_x - self.chart_rect.left()) * (current_x_max - current_x_min) / self.chart_rect.width()
+        data_y = current_y_max - (mouse_y - self.chart_rect.top()) * (current_y_max - current_y_min) / self.chart_rect.height()
+        
+        # 計算新的範圍（以滑鼠位置為中心縮放）
+        new_x_range = (current_x_max - current_x_min) / zoom_factor
+        new_y_range = (current_y_max - current_y_min) / zoom_factor
+        
+        # 保持滑鼠位置在相同的數據點上
+        x_ratio = (data_x - current_x_min) / (current_x_max - current_x_min)
+        y_ratio = (data_y - current_y_min) / (current_y_max - current_y_min)
+        
+        new_x_min = data_x - x_ratio * new_x_range
+        new_x_max = data_x + (1 - x_ratio) * new_x_range
+        new_y_min = data_y - y_ratio * new_y_range
+        new_y_max = data_y + (1 - y_ratio) * new_y_range
+        
+        # 確保範圍有效
+        if new_x_min >= new_x_max or new_y_min >= new_y_max:
+            return
+        
+        # 應用縮放
+        self.zoom_x_range = (new_x_min, new_x_max)
+        self.zoom_y_range = (new_y_min, new_y_max)
+        self.is_zoomed = True
+        
+        # 發射信號通知父組件
+        self.zoom_changed.emit(True)
+        
+        # 重繪圖表
+        self.update()
+        event.accept()
+    
     def mouseDoubleClickEvent(self, event):
-        """雙擊圖例切換顯示/隱藏標記"""
+        """雙擊圖例切換顯示/隱藏標記，雙擊圖表重置縮放"""
         if event.button() == Qt.LeftButton:
             if self.legend_rect.contains(event.pos()):
                 self.legend_show_markers = not self.legend_show_markers
@@ -631,10 +844,15 @@ class LaptimeChartWidget(QWidget):
                 self.update()  # 重繪圖表
                 event.accept()
                 return
+            # 🆕 雙擊圖表區域重置縮放
+            elif self.chart_rect.contains(event.pos()) and self.is_zoomed:
+                self.reset_zoom()
+                event.accept()
+                return
         super().mouseDoubleClickEvent(event)
     
     def mousePressEvent(self, event):
-        """滑鼠按下事件 - 檢查是否點擊圖例 / 固定 Tooltip / 清除固定"""
+        """滑鼠按下事件 - 檢查是否點擊圖例 / 固定 Tooltip / 拖動 Tooltip / 開始縮放框選 / 開始左鍵選取"""
         if event.button() == Qt.LeftButton:
             # 優先處理圖例拖移
             if self.legend_rect.contains(event.pos()):
@@ -644,26 +862,72 @@ class LaptimeChartWidget(QWidget):
                 event.accept()
                 return
             
-            # 🆕 左鍵點擊固定 Tooltip（最多2個）
+            # 🆕 【最優先】檢查是否點擊已固定的 tooltip 框（用於拖動）
+            for i, pinned in enumerate(self.pinned_tooltips):
+                tooltip_rect = pinned.get('tooltip_rect')
+                if tooltip_rect and tooltip_rect.contains(event.pos()):
+                    # 開始拖動此 tooltip
+                    self.dragging_tooltip = True
+                    self.dragging_tooltip_index = i
+                    self.tooltip_drag_offset = event.pos() - QPoint(tooltip_rect.x(), tooltip_rect.y())
+                    self.setCursor(Qt.ClosedHandCursor)
+                    logger.debug(f"[TOOLTIP] 開始拖動 Tooltip #{i}")
+                    event.accept()
+                    return
+            
+            # 左鍵點擊數據點固定 Tooltip
             if self.hover_point and self.hover_screen_pos:
                 self._pin_tooltip()
                 event.accept()
                 return
+            
+            # 🆕 左鍵在空白處開始拖曳選取（不是清除 tooltip）
+            if self.chart_rect.contains(event.pos()):
+                self.is_selecting = True
+                self.selection_rect_start = event.pos()
+                self.selection_rect_end = event.pos()
+                self.setCursor(Qt.CrossCursor)
+                logger.debug(f"[SELECTION] 開始拖曳選取: {event.pos()}")
+                event.accept()
+                return
         
         elif event.button() == Qt.RightButton:
-            # 🆕 右鍵清除所有固定的 Tooltip
-            if self.pinned_tooltips:
-                self.pinned_tooltips.clear()
-                logger.debug("[TOOLTIP] 🗑️ 已清除所有固定 Tooltip")
-                self._update_time_diff_display()  # 🆕 清空時間差顯示
-                self.update()
+            # 🆕 右鍵開始縮放框選（在圖表區域內）
+            if self.chart_rect.contains(event.pos()):
+                self.is_zooming = True
+                self.zoom_rect_start = event.pos()
+                self.zoom_rect_end = event.pos()
+                self.setCursor(Qt.CrossCursor)
+                logger.debug(f"[ZOOM] 開始框選縮放: {event.pos()}")
                 event.accept()
                 return
         
         super().mousePressEvent(event)
     
     def mouseMoveEvent(self, event):
-        """滑鼠移動事件 - 拖移圖例 + 顯示數據點 Tooltip"""
+        """滑鼠移動事件 - 拖移圖例 + 拖動 Tooltip + 顯示數據點 Tooltip + 縮放框選 + 選取框"""
+        # 🆕 處理 Tooltip 拖動
+        if self.dragging_tooltip and 0 <= self.dragging_tooltip_index < len(self.pinned_tooltips):
+            new_pos = event.pos() - self.tooltip_drag_offset
+            self.pinned_tooltips[self.dragging_tooltip_index]['custom_pos'] = new_pos
+            self.update()
+            event.accept()
+            return
+        
+        # 🆕 處理縮放框選
+        if self.is_zooming:
+            self.zoom_rect_end = event.pos()
+            self.update()  # 重繪以顯示選擇框
+            event.accept()
+            return
+        
+        # 🆕 處理左鍵拖曳選取
+        if self.is_selecting:
+            self.selection_rect_end = event.pos()
+            self.update()  # 重繪以顯示選取框
+            event.accept()
+            return
+        
         if self.legend_dragging:
             # 計算新的偏移量
             new_offset = event.pos() - self.legend_drag_start
@@ -685,20 +949,336 @@ class LaptimeChartWidget(QWidget):
             # 滑鼠懸停在圖例上，顯示可移動提示
             self.setCursor(Qt.OpenHandCursor)
         else:
-            self.setCursor(Qt.ArrowCursor)
-            # 🆕 檢查是否懸停在數據點上
-            self._check_hover_point(event.pos())
+            # 🆕 檢查是否懸停在固定的 tooltip 上
+            hovering_tooltip = False
+            for pinned in self.pinned_tooltips:
+                tooltip_rect = pinned.get('tooltip_rect')
+                if tooltip_rect and tooltip_rect.contains(event.pos()):
+                    self.setCursor(Qt.OpenHandCursor)
+                    hovering_tooltip = True
+                    break
+            
+            if not hovering_tooltip:
+                self.setCursor(Qt.ArrowCursor)
+                # 🆕 檢查是否懸停在數據點上
+                self._check_hover_point(event.pos())
         
         super().mouseMoveEvent(event)
     
     def mouseReleaseEvent(self, event):
-        """滑鼠釋放事件 - 結束拖移"""
+        """滑鼠釋放事件 - 結束拖移 / 結束 Tooltip 拖動 / 完成縮放框選 / 完成選取框"""
+        # 🆕 處理 Tooltip 拖動結束
+        if event.button() == Qt.LeftButton and self.dragging_tooltip:
+            self.dragging_tooltip = False
+            self.dragging_tooltip_index = -1
+            self.setCursor(Qt.ArrowCursor)
+            logger.debug("[TOOLTIP] 結束拖動 Tooltip")
+            event.accept()
+            return
+        
+        # 🆕 處理左鍵拖曳選取完成
+        if event.button() == Qt.LeftButton and self.is_selecting:
+            self.is_selecting = False
+            self.setCursor(Qt.ArrowCursor)
+            
+            # 計算選取框內的數據點並自動固定
+            if self.selection_rect_start and self.selection_rect_end:
+                self._apply_selection_from_rect()
+            
+            self.selection_rect_start = None
+            self.selection_rect_end = None
+            event.accept()
+            return
+        
+        # 🆕 處理縮放框選完成
+        if event.button() == Qt.RightButton and self.is_zooming:
+            self.is_zooming = False
+            self.setCursor(Qt.ArrowCursor)
+            
+            # 計算選擇框的範圍並應用縮放
+            if self.zoom_rect_start and self.zoom_rect_end:
+                self._apply_zoom_from_rect()
+            
+            self.zoom_rect_start = None
+            self.zoom_rect_end = None
+            event.accept()
+            return
+        
         if event.button() == Qt.LeftButton and self.legend_dragging:
             self.legend_dragging = False
             self.setCursor(Qt.ArrowCursor)
             event.accept()
             return
         super().mouseReleaseEvent(event)
+    
+    def _apply_zoom_from_rect(self):
+        """根據選擇框應用縮放"""
+        if not self.zoom_rect_start or not self.zoom_rect_end:
+            return
+        
+        # 計算選擇框的歸一化矩形
+        rect = QRect(self.zoom_rect_start, self.zoom_rect_end).normalized()
+        
+        # 確保選擇框有最小尺寸（避免誤觸）
+        if rect.width() < 20 or rect.height() < 20:
+            logger.debug("[ZOOM] 選擇框太小，忽略縮放")
+            return
+        
+        # 確保選擇框在圖表區域內
+        if not self.chart_rect.isValid():
+            return
+        
+        # 將螢幕座標轉換為數據座標
+        # 計算原始數據範圍（不使用縮放範圍）
+        x_values = []
+        y_values = []
+        for series in self.series_list:
+            for point in series.data:
+                x_values.append(point.x)
+                y_values.append(point.y)
+        
+        if not x_values or not y_values:
+            return
+        
+        # 如果已縮放，使用當前縮放範圍；否則使用原始數據範圍
+        if self.is_zoomed and self.zoom_x_range and self.zoom_y_range:
+            current_x_min, current_x_max = self.zoom_x_range
+            current_y_min, current_y_max = self.zoom_y_range
+        else:
+            x_margin = max((max(x_values) - min(x_values)) * 0.05, 1)
+            y_margin = max((max(y_values) - min(y_values)) * 0.05, 0.1)
+            current_x_min = min(x_values) - x_margin
+            current_x_max = max(x_values) + x_margin
+            current_y_min = min(y_values) - y_margin
+            current_y_max = max(y_values) + y_margin
+        
+        # 螢幕座標轉數據座標
+        chart_left = self.chart_rect.left()
+        chart_right = self.chart_rect.right()
+        chart_top = self.chart_rect.top()
+        chart_bottom = self.chart_rect.bottom()
+        
+        # X 座標轉換
+        new_x_min = current_x_min + (rect.left() - chart_left) * (current_x_max - current_x_min) / (chart_right - chart_left)
+        new_x_max = current_x_min + (rect.right() - chart_left) * (current_x_max - current_x_min) / (chart_right - chart_left)
+        
+        # Y 座標轉換（注意 Y 軸方向相反）
+        new_y_max = current_y_max - (rect.top() - chart_top) * (current_y_max - current_y_min) / (chart_bottom - chart_top)
+        new_y_min = current_y_max - (rect.bottom() - chart_top) * (current_y_max - current_y_min) / (chart_bottom - chart_top)
+        
+        # 確保範圍有效
+        if new_x_min >= new_x_max or new_y_min >= new_y_max:
+            logger.debug("[ZOOM] 無效的縮放範圍")
+            return
+        
+        # 應用縮放
+        self.zoom_x_range = (new_x_min, new_x_max)
+        self.zoom_y_range = (new_y_min, new_y_max)
+        self.is_zoomed = True
+        
+        logger.debug(f"[ZOOM] 應用縮放: X=({new_x_min:.1f}, {new_x_max:.1f}), Y=({new_y_min:.1f}, {new_y_max:.1f})")
+        
+        # 發射信號通知父組件
+        self.zoom_changed.emit(True)
+        
+        # 重繪圖表
+        self.update()
+    
+    def _apply_selection_from_rect(self):
+        """根據選取框自動固定所有選中的數據點"""
+        if not self.selection_rect_start or not self.selection_rect_end:
+            return
+        
+        # 計算選取框的歸一化矩形
+        rect = QRect(self.selection_rect_start, self.selection_rect_end).normalized()
+        
+        # 確保選取框有最小尺寸（避免誤觸）
+        if rect.width() < 10 and rect.height() < 10:
+            logger.debug("[SELECTION] 選取框太小，忽略選取")
+            return
+        
+        if not self.chart_rect.isValid() or not self.series_list:
+            return
+        
+        # 收集選取框內的所有數據點
+        selected_points = []
+        
+        for series in self.series_list:
+            for point in series.data:
+                # 計算數據點的螢幕座標
+                screen_pos = self._data_to_screen(point.x, point.y)
+                if screen_pos and rect.contains(screen_pos):
+                    # 取得車手顏色
+                    driver_color = None
+                    driver_code = (point.metadata.get('driver_code') or point.metadata.get('driver')) if hasattr(point, 'metadata') else None
+                    if driver_code:
+                        driver_color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
+                    
+                    selected_points.append({
+                        'point': point,
+                        'screen_pos': screen_pos,
+                        'series': series,
+                        'driver_color': driver_color
+                    })
+        
+        if not selected_points:
+            logger.debug("[SELECTION] 選取框內沒有數據點")
+            return
+        
+        logger.debug(f"[SELECTION] 選中 {len(selected_points)} 個數據點")
+        
+        # 清除現有的固定 tooltip（可選，或者追加）
+        # self._clear_all_pinned_tooltips()  # 如果想追加而不是替換，註釋此行
+        
+        # 自動固定所有選中的數據點並自動排列
+        self._pin_multiple_tooltips_with_arrangement(selected_points)
+        
+        self.update()
+    
+    def _pin_multiple_tooltips_with_arrangement(self, selected_points: list):
+        """固定多個 tooltip 並自動排列避免重疊"""
+        if not selected_points:
+            return
+        
+        # 計算 tooltip 的預設尺寸
+        tooltip_width = 150
+        tooltip_height = 60
+        spacing = 10
+        
+        # 計算起始排列位置（圖表右側）
+        start_x = self.chart_rect.right() - tooltip_width - 20
+        start_y = self.chart_rect.top() + 20
+        
+        # 追蹤已佔用的位置
+        used_rects = []
+        
+        for i, sel in enumerate(selected_points):
+            point = sel['point']
+            screen_pos = sel['screen_pos']
+            driver_color = sel['driver_color']
+            
+            # 檢查是否已經固定過這個點
+            already_pinned = False
+            for pinned in self.pinned_tooltips:
+                if pinned['point'] == point:
+                    already_pinned = True
+                    break
+            
+            if already_pinned:
+                continue
+            
+            # 建立 tooltip 文字
+            lap_num = int(point.x)
+            lap_time_seconds = point.y
+            lap_time_str = self._format_lap_time_from_seconds(lap_time_seconds)
+            tire = point.metadata.get('tire_compound', '') if hasattr(point, 'metadata') else ''
+            driver = point.metadata.get('driver_code', '') if hasattr(point, 'metadata') else ''
+            
+            tooltip_text = f"Lap {lap_num}\n{driver}: {lap_time_str}"
+            if tire:
+                tooltip_text += f"\n{tire}"
+            
+            # 計算自動排列位置
+            pos_x = start_x
+            pos_y = start_y + (len(self.pinned_tooltips) % 10) * (tooltip_height + spacing)
+            
+            # 如果超出圖表底部，換到左側
+            if pos_y + tooltip_height > self.chart_rect.bottom():
+                pos_x = self.chart_rect.left() + 20
+                pos_y = start_y + ((len(self.pinned_tooltips) % 10) - 5) * (tooltip_height + spacing)
+            
+            custom_pos = QPoint(pos_x, pos_y)
+            
+            # 建立 pinned 數據
+            pinned_data = {
+                'point': point,
+                'screen_pos': screen_pos,
+                'text': tooltip_text,
+                'lap_time': lap_time_seconds,
+                'tire_compound': tire,
+                'driver_color': driver_color,
+                'custom_pos': custom_pos,
+                'tooltip_rect': None
+            }
+            
+            self.pinned_tooltips.append(pinned_data)
+            logger.debug(f"[SELECTION] 自動固定 Tooltip: Lap {lap_num}, {driver}")
+        
+        # 發射信號通知父容器
+        pinned_count = len(self.pinned_tooltips)
+        time_diff_text = ""
+        if pinned_count == 2:
+            time_diff = self.get_pinned_time_diff()
+            if time_diff:
+                time_diff_text = f"Diff: {time_diff}"
+        
+        self.pinned_tooltips_changed.emit(pinned_count, time_diff_text)
+    
+    def _data_to_screen(self, data_x: float, data_y: float) -> QPoint:
+        """將數據座標轉換為螢幕座標"""
+        if not self.chart_rect.isValid():
+            return None
+        
+        # 取得當前顯示範圍
+        x_values = []
+        y_values = []
+        for series in self.series_list:
+            for point in series.data:
+                x_values.append(point.x)
+                y_values.append(point.y)
+        
+        if not x_values or not y_values:
+            return None
+        
+        # 使用縮放範圍或原始範圍
+        if self.is_zoomed and self.zoom_x_range and self.zoom_y_range:
+            x_min, x_max = self.zoom_x_range
+            y_min, y_max = self.zoom_y_range
+        else:
+            x_margin = max((max(x_values) - min(x_values)) * 0.05, 1)
+            y_margin = max((max(y_values) - min(y_values)) * 0.05, 0.1)
+            x_min = min(x_values) - x_margin
+            x_max = max(x_values) + x_margin
+            y_min = min(y_values) - y_margin
+            y_max = max(y_values) + y_margin
+        
+        # 座標轉換
+        x_range = x_max - x_min
+        y_range = y_max - y_min
+        
+        if x_range <= 0 or y_range <= 0:
+            return None
+        
+        screen_x = self.chart_rect.left() + (data_x - x_min) * self.chart_rect.width() / x_range
+        screen_y = self.chart_rect.bottom() - (data_y - y_min) * self.chart_rect.height() / y_range
+        
+        return QPoint(int(screen_x), int(screen_y))
+
+    def _format_lap_time_from_seconds(self, seconds: float) -> str:
+        """將秒數轉換為圈速格式 (M:SS.sss)"""
+        if seconds is None or math.isnan(seconds):
+            return "--:--.---"
+        
+        minutes = int(seconds // 60)
+        remaining_seconds = seconds % 60
+        return f"{minutes}:{remaining_seconds:06.3f}"
+
+    def reset_zoom(self):
+        """重置縮放，顯示全部數據"""
+        if not self.is_zoomed:
+            return
+        
+        self.zoom_x_range = None
+        self.zoom_y_range = None
+        self.is_zoomed = False
+        
+        logger.debug("[ZOOM] 重置縮放，顯示全部數據")
+        
+        # 發射信號通知父組件
+        self.zoom_changed.emit(False)
+        
+        # 重繪圖表
+        self.update()
     
     def _pin_tooltip(self):
         """固定當前懸停的 Tooltip（最多2個）"""
@@ -714,25 +1294,56 @@ class LaptimeChartWidget(QWidget):
         # 如果已達到最大固定數量，移除最舊的
         if len(self.pinned_tooltips) >= self.max_pinned:
             removed = self.pinned_tooltips.pop(0)
-            logger.debug(f"[TOOLTIP] 🗑️ 移除最舊的固定點")
+            logger.debug(f"[TOOLTIP] 移除最舊的固定點")
         
         # 提取圈速時間（用於計算時間差）
         lap_time = self.hover_point.y  # 假設 y 值就是圈速秒數
+        
+        # 提取輪胎類型
+        tire_compound = self.hover_point.metadata.get('tire_compound') if self.hover_point else None
+        
+        # 取得車手顏色（從 driver_code 或 driver 轉換）
+        driver_color = None
+        if self.hover_point and hasattr(self.hover_point, 'metadata'):
+            # 支援 driver_code 和 driver 兩種 key
+            driver_code = self.hover_point.metadata.get('driver_code') or self.hover_point.metadata.get('driver')
+            logger.info(f"[TOOLTIP_COLOR] driver_code from metadata: {driver_code}")
+            logger.info(f"[TOOLTIP_COLOR] metadata keys: {list(self.hover_point.metadata.keys())}")
+            if driver_code:
+                # 確保顏色數據已載入
+                color_palette_provider.ensure_loaded()
+                driver_color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
+                if driver_color:
+                    logger.info(f"[TOOLTIP_COLOR] driver_color for {driver_code}: RGB({driver_color.red()}, {driver_color.green()}, {driver_color.blue()}), valid: {driver_color.isValid()}")
+                else:
+                    logger.info(f"[TOOLTIP_COLOR] driver_color is None for {driver_code}")
         
         # 固定新的 Tooltip
         pinned_data = {
             'point': self.hover_point,
             'screen_pos': QPoint(self.hover_screen_pos),
             'text': self.hover_tooltip_text,
-            'lap_time': lap_time
+            'lap_time': lap_time,
+            'tire_compound': tire_compound,
+            'driver_color': driver_color,
+            'custom_pos': None,
+            'tooltip_rect': None
         }
         self.pinned_tooltips.append(pinned_data)
-        logger.debug(f"[TOOLTIP] 📌 已固定 Tooltip ({len(self.pinned_tooltips)}/{self.max_pinned})")
+        logger.debug(f"[TOOLTIP] 已固定 Tooltip ({len(self.pinned_tooltips)}/{self.max_pinned})")
         
-        # 🆕 更新時間差顯示
+        # 更新時間差顯示
         self._update_time_diff_display()
         
         self.update()
+    
+    def _clear_all_pinned_tooltips(self):
+        """清除所有固定的 Tooltip"""
+        if self.pinned_tooltips:
+            self.pinned_tooltips.clear()
+            logger.debug("[TOOLTIP] 已清除所有固定的 Tooltip")
+            self._update_time_diff_display()
+            self.update()
     
     def get_pinned_time_diff(self) -> Optional[str]:
         """獲取兩個固定點的時間差（供外部使用）"""
@@ -765,15 +1376,19 @@ class LaptimeChartWidget(QWidget):
         # 發射信號通知父容器
         self.pinned_tooltips_changed.emit(pinned_count, time_diff_text)
     
-    def _draw_custom_tooltip(self, painter: QPainter, anchor_pos: QPoint, text: str, is_pinned: bool = False):
-        """繪製自訂 Tooltip（直接在圖表上繪製）"""
+    def _draw_custom_tooltip(self, painter: QPainter, anchor_pos: QPoint, text: str, is_pinned: bool = False, tire_compound: str = None, custom_pos: QPoint = None, driver_color: QColor = None) -> QRect:
+        """繪製自訂 Tooltip（直接在圖表上繪製）- 支援車手顏色邊框、輪胎顏色 highlight 和拖動
+        
+        Returns:
+            QRect: tooltip 的矩形區域（供拖動檢測使用）
+        """
         # 分割多行文字
         lines = text.split('\n')
         
-        # 計算 Tooltip 尺寸
+        # 計算 Tooltip 尺寸 - 不使用粗體
         font = QFont()
         font.setPointSize(10)
-        font.setBold(True)
+        font.setBold(False)  # 不使用粗體
         painter.setFont(font)
         fm = QFontMetrics(font)
         
@@ -793,29 +1408,73 @@ class LaptimeChartWidget(QWidget):
         tooltip_width = max_width + 2 * padding
         tooltip_height = total_height + 2 * padding
         
-        # 計算 Tooltip 位置（在懸停點右上方）
-        offset_x = 15
-        offset_y = -15
-        tooltip_x = anchor_pos.x() + offset_x
-        tooltip_y = anchor_pos.y() + offset_y - tooltip_height
-        
-        # 確保 Tooltip 不超出視窗
-        if tooltip_x + tooltip_width > self.width():
-            tooltip_x = anchor_pos.x() - tooltip_width - 15
-        if tooltip_y < 0:
-            tooltip_y = anchor_pos.y() + 15
-        
-        # 繪製背景（懸停=淺黃色，固定=淺藍色）
-        tooltip_rect = QRect(tooltip_x, tooltip_y, tooltip_width, tooltip_height)
-        painter.setPen(QPen(QColor(50, 50, 50), 2))
-        if is_pinned:
-            painter.setBrush(QBrush(QColor(173, 216, 230, 230)))  # 淺藍色（固定）
+        # 🆕 如果有 custom_pos（拖動後的位置），使用它
+        if custom_pos is not None:
+            tooltip_x = custom_pos.x()
+            tooltip_y = custom_pos.y()
         else:
-            painter.setBrush(QBrush(QColor(255, 255, 200, 230)))  # 淺黃色（懸停）
+            # 計算 Tooltip 位置（在懸停點右上方）
+            offset_x = 15
+            offset_y = -15
+            tooltip_x = anchor_pos.x() + offset_x
+            tooltip_y = anchor_pos.y() + offset_y - tooltip_height
+            
+            # 確保 Tooltip 不超出視窗
+            if tooltip_x + tooltip_width > self.width():
+                tooltip_x = anchor_pos.x() - tooltip_width - 15
+            if tooltip_y < 0:
+                tooltip_y = anchor_pos.y() + 15
+        
+        # 建立 tooltip 矩形
+        tooltip_rect = QRect(tooltip_x, tooltip_y, tooltip_width, tooltip_height)
+        
+        # 🆕 繪製從錨點到 tooltip 的虛線連接
+        tooltip_center_x = tooltip_x + tooltip_width // 2
+        tooltip_center_y = tooltip_y + tooltip_height // 2
+        
+        # 確定連接點（tooltip 邊緣最近點）
+        if tooltip_x > anchor_pos.x():
+            connect_x = tooltip_x  # 連接到 tooltip 左邊
+        else:
+            connect_x = tooltip_x + tooltip_width  # 連接到 tooltip 右邊
+            
+        if tooltip_y > anchor_pos.y():
+            connect_y = tooltip_y  # 連接到 tooltip 上邊
+        else:
+            connect_y = tooltip_y + tooltip_height  # 連接到 tooltip 下邊
+        
+        # 繪製虛線 - 使用車手顏色或預設灰色
+        dash_pen = QPen(driver_color if driver_color else QColor(128, 128, 128), 1, Qt.DashLine)
+        painter.setPen(dash_pen)
+        painter.drawLine(anchor_pos.x(), anchor_pos.y(), connect_x, connect_y)
+        
+        # 🆕 繪製錨點小圓點 - 使用車手顏色
+        painter.setPen(QPen(Qt.black, 1))
+        painter.setBrush(QBrush(driver_color if driver_color else QColor(255, 165, 0)))
+        painter.drawEllipse(anchor_pos, 4, 4)
+        
+        # 繪製背景 - 使用車手顏色作為背景
+        if driver_color:
+            # 使用車手顏色作為背景，加點透明度
+            bg_color = QColor(driver_color.red(), driver_color.green(), driver_color.blue(), 230)
+        else:
+            bg_color = QColor(200, 200, 200, 230)  # 預設灰色背景
+        
+        border_color = QColor(50, 50, 50)  # 深灰色邊框
+        border_pen = QPen(border_color, 2)
+        painter.setPen(border_pen)
+        painter.setBrush(QBrush(bg_color))
         painter.drawRoundedRect(tooltip_rect, 5, 5)
         
-        # 繪製文字
-        painter.setPen(QPen(QColor(0, 0, 0), 1))
+        # 計算文字顏色 - 根據背景亮度決定黑色或白色
+        if driver_color:
+            # 計算背景亮度 (使用相對亮度公式)
+            luminance = 0.299 * driver_color.red() + 0.587 * driver_color.green() + 0.114 * driver_color.blue()
+            text_color = QColor(0, 0, 0) if luminance > 128 else QColor(255, 255, 255)
+        else:
+            text_color = QColor(0, 0, 0)
+        
+        painter.setPen(QPen(text_color, 1))
         current_y = tooltip_y + padding
         
         for i, line in enumerate(lines):
@@ -825,6 +1484,37 @@ class LaptimeChartWidget(QWidget):
                 line
             )
             current_y += line_heights[i]
+        
+        return tooltip_rect
+    
+    def _get_tire_colors(self, tire_compound: str, is_pinned: bool) -> tuple:
+        """根據輪胎類型返回背景色和文字色"""
+        if not tire_compound:
+            # 預設顏色
+            if is_pinned:
+                return QColor(173, 216, 230, 230), QColor(0, 0, 0)  # 淺藍色
+            else:
+                return QColor(255, 255, 200, 230), QColor(0, 0, 0)  # 淺黃色
+        
+        tire_upper = tire_compound.upper()
+        
+        # 輪胎顏色映射
+        if tire_upper in ('SOFT', 'S'):
+            return QColor(255, 60, 60, 230), QColor(255, 255, 255)  # 紅色底白字
+        elif tire_upper in ('MEDIUM', 'M'):
+            return QColor(255, 200, 0, 230), QColor(0, 0, 0)  # 黃色底黑字
+        elif tire_upper in ('HARD', 'H'):
+            return QColor(255, 255, 255, 230), QColor(0, 0, 0)  # 白色底黑字
+        elif tire_upper in ('INTERMEDIATE', 'I'):
+            return QColor(0, 180, 0, 230), QColor(255, 255, 255)  # 綠色底白字
+        elif tire_upper in ('WET', 'W'):
+            return QColor(0, 100, 255, 230), QColor(255, 255, 255)  # 藍色底白字
+        else:
+            # 未知輪胎類型，使用預設顏色
+            if is_pinned:
+                return QColor(173, 216, 230, 230), QColor(0, 0, 0)
+            else:
+                return QColor(255, 255, 200, 230), QColor(0, 0, 0)
     
     def _check_hover_point(self, mouse_pos: QPoint):
         """檢查滑鼠是否懸停在數據點上並顯示 Tooltip"""
@@ -876,13 +1566,16 @@ class LaptimeChartWidget(QWidget):
             else:
                 time_str = f"{seconds:.3f}s"
             
-            # 顯示 Tooltip（同時使用 Qt 原生和自繪）
-            tooltip_text = f"{closest_series_name} - Lap {lap_number}\nLap Time: {time_str}"
+            # 獲取輪胎種類
+            tire_compound = closest_point.metadata.get('tire_compound', 'N/A')
+            
+            # 顯示 Tooltip（同時使用 Qt 原生和自繪）- 添加輪胎種類
+            tooltip_text = f"{closest_series_name} - Lap {lap_number}\nLap Time: {time_str}\nTire: {tire_compound}"
             self.setToolTip(tooltip_text)  # Qt 原生 Tooltip（備用）
             self.hover_point = closest_point
             self.hover_screen_pos = closest_screen_pos
             self.hover_tooltip_text = tooltip_text  # 自繪 Tooltip 文字
-            logger.info(f"[TOOLTIP] ✅ 顯示: {tooltip_text.replace(chr(10), ' | ')} | 距離: {closest_distance:.1f}px")
+            logger.debug(f"[TOOLTIP] 顯示: {tooltip_text.replace(chr(10), ' | ')} | 距離: {closest_distance:.1f}px")
             self.update()  # 重繪以顯示高亮圓圈和 Tooltip
         else:
             self.setToolTip("")  # 清除 Tooltip
@@ -894,7 +1587,7 @@ class LaptimeChartWidget(QWidget):
 
 
 class DriverSelectionWidget(QWidget):
-    """車手選擇控制區"""
+    """車手選擇控制區 - 整合跨模組同步"""
     
     drivers_selected = pyqtSignal(list)
     
@@ -903,7 +1596,9 @@ class DriverSelectionWidget(QWidget):
         self.available_drivers = []
         self.selected_drivers = []
         self.driver_combos = []
+        self._is_syncing = False  # 防止循環觸發
         self.setup_ui()
+        self._register_global_sync()
         
     def setup_ui(self):
         """設置車手選擇介面 - 水平簡潔布局"""
@@ -935,6 +1630,12 @@ class DriverSelectionWidget(QWidget):
         self.clear_button.clicked.connect(self._clear_selections)
         self.clear_button.setMaximumWidth(60)  # 縮小按鈕
         
+        # 🆕 清除標籤按鈕（清除所有固定的 Tooltip）
+        self.clear_labels_button = QPushButton(tr('clear_labels', 'Clear Labels'))
+        self.clear_labels_button.clicked.connect(self._on_clear_labels_clicked)
+        self.clear_labels_button.setMaximumWidth(90)
+        self.clear_labels_button.setToolTip(tr('clear_labels_tooltip', 'Clear all pinned labels on chart'))
+        
         # 🆕 時間差顯示標籤（在 Clear 按鈕旁邊）
         self.time_diff_label = QLabel("")
         self.time_diff_label.setStyleSheet("QLabel { font-weight: bold; color: #0066cc; padding: 5px; }")
@@ -947,6 +1648,7 @@ class DriverSelectionWidget(QWidget):
         
         # driver_layout.addWidget(self.export_button)  # 已移除
         driver_layout.addWidget(self.clear_button)
+        driver_layout.addWidget(self.clear_labels_button)  # 🆕 添加清除標籤按鈕
         driver_layout.addWidget(self.time_diff_label)  # 🆕 添加時間差標籤
         driver_layout.addStretch()  # 推到左邊
         
@@ -1004,6 +1706,8 @@ class DriverSelectionWidget(QWidget):
                 
     def _on_driver_selection_changed(self):
         """車手選擇改變處理"""
+        if self._is_syncing:
+            return
         self._apply_selections()
         
     def _clear_selections(self):
@@ -1011,14 +1715,20 @@ class DriverSelectionWidget(QWidget):
         for combo in self.driver_combos:
             combo.setCurrentIndex(0)
         self._apply_selections()
+    
+    def _on_clear_labels_clicked(self):
+        """清除所有固定的標籤（Tooltip）"""
+        if self.chart_widget:
+            self.chart_widget._clear_all_pinned_tooltips()
+            logger.debug("[DRIVER_SELECTION] 已清除所有固定標籤")
         
     def _export_chart(self):
         """匯出圖表"""
-        logger.debug("[DRIVER_SELECTION] 📊 匯出圖表功能待實現")
+        logger.debug("[DRIVER_SELECTION] 匯出圖表功能待實現")
         # TODO: 實現圖表匯出功能
         
     def _apply_selections(self):
-        """應用車手選擇"""
+        """應用車手選擇並發送同步信號"""
         selected = []
         placeholder = f"-- {tr('please_select', '請選擇')} --"
         for combo in self.driver_combos:
@@ -1028,6 +1738,71 @@ class DriverSelectionWidget(QWidget):
         
         self.selected_drivers = selected
         self.drivers_selected.emit(selected)
+        
+        # 發送同步信號到其他模組
+        if not self._is_syncing:
+            sync = GlobalChartSyncSignal.get_instance()
+            sync.emit_drivers_changed(selected, MODULE_DETAILED_LAP)
+            logger.debug(f"[DRIVER_SELECTION] Sync emitted: {selected}")
+
+    # ------------------------------------------------------------------
+    # GlobalChartSyncSignal 跨模組同步
+    # ------------------------------------------------------------------
+    def _register_global_sync(self) -> None:
+        """註冊到全局同步信號"""
+        sync = GlobalChartSyncSignal.get_instance()
+        sync.register_module(MODULE_DETAILED_LAP)
+        sync.drivers_changed.connect(self._on_global_drivers_changed)
+        logger.debug("[DRIVER_SELECTION] Registered to GlobalChartSyncSignal")
+
+    def _unregister_global_sync(self) -> None:
+        """取消註冊全局同步信號"""
+        try:
+            sync = GlobalChartSyncSignal.get_instance()
+            sync.drivers_changed.disconnect(self._on_global_drivers_changed)
+            sync.unregister_module(MODULE_DETAILED_LAP)
+            logger.debug("[DRIVER_SELECTION] Unregistered from GlobalChartSyncSignal")
+        except (TypeError, RuntimeError):
+            pass
+
+    def _on_global_drivers_changed(self, drivers: list, source: str) -> None:
+        """處理來自其他模組的車手同步事件"""
+        if source == MODULE_DETAILED_LAP:
+            return  # 忽略自己發出的
+        
+        logger.info(f"[DRIVER_SELECTION] Sync drivers from {source}: {drivers}")
+        
+        self._is_syncing = True
+        
+        # 先清空所有選擇
+        placeholder = f"-- {tr('please_select', '請選擇')} --"
+        for combo in self.driver_combos:
+            combo.blockSignals(True)
+            combo.setCurrentIndex(0)
+            combo.blockSignals(False)
+        
+        # 設定新選擇
+        for i, driver in enumerate(drivers[:5]):  # 最多 5 個
+            if i < len(self.driver_combos):
+                combo = self.driver_combos[i]
+                combo.blockSignals(True)
+                index = combo.findText(driver.upper())
+                if index != -1:
+                    combo.setCurrentIndex(index)
+                combo.blockSignals(False)
+        
+        self.selected_drivers = [d.upper() for d in drivers if d]
+        self.drivers_selected.emit(self.selected_drivers)
+        
+        self._is_syncing = False
+
+    def set_selected_drivers(self, drivers: list) -> None:
+        """設定選中的車手（用於外部同步）"""
+        self._on_global_drivers_changed(drivers, "external")
+
+    def cleanup(self) -> None:
+        """清理資源"""
+        self._unregister_global_sync()
 
 
 class driverLapAnalysisChartWidget(QWidget):
@@ -1134,7 +1909,7 @@ class driverLapAnalysisChartWidget(QWidget):
             self.driver_selected.emit(drivers[0])
     
     def _update_chart_data(self):
-        """更新圖表數據"""
+        """更新圖表數據 - 使用動態顏色（選中車手顯示顏色，未選中顯示灰色）"""
         try:
             logger.debug(f"[LAPTIME_CHART] 更新圖表，選中車手: {self.selected_drivers}")
             
@@ -1147,13 +1922,9 @@ class driverLapAnalysisChartWidget(QWidget):
             
             # 轉換為圖表系列格式
             series_list = []
-            colors = [
-                ChartTheme.DRIVER1_COLOR,
-                ChartTheme.DRIVER2_COLOR,
-                ChartTheme.DRIVER3_COLOR,
-                ChartTheme.DRIVER4_COLOR,
-                ChartTheme.DRIVER5_COLOR
-            ]
+            
+            # 追蹤同隊車手，用於虛線區分（同隊第二位使用虛線）
+            team_driver_count: Dict[str, int] = {}
             
             for i, driver in enumerate(self.selected_drivers):
                 if driver not in detailed_laptime_data:
@@ -1169,6 +1940,7 @@ class driverLapAnalysisChartWidget(QWidget):
 
                 # 創建數據點列表
                 data_points = []
+                marker_only_points = []  # 被過濾但仍需繪製標記的圈（如 Pit 圈垂直線）
                 filtered_pit = 0
                 filtered_caution = 0
                 filtered_first_laps = 0
@@ -1201,15 +1973,26 @@ class driverLapAnalysisChartWidget(QWidget):
                         driver_data.get('smart_markers_summary'),
                     ):
                         filtered_pit += 1
+                        # 保留 Pit 圈的標記資訊用於繪製垂直線
+                        pit_markers = self._extract_markers(driver_data, lap_info, caution_laps)
+                        if pit_markers:  # 只有有標記時才保留
+                            marker_only_points.append(ChartDataPoint(
+                                x=lap_num_for_chart,
+                                y=0,  # Y 值不重要，只用於繪製垂直線
+                                metadata={'markers': pit_markers, 'driver': driver, 'filtered': True}
+                            ))
                         continue
 
                     # 提取智能標記
                     markers = self._extract_markers(driver_data, lap_info, caution_laps)
+                    
+                    # 提取輪胎種類
+                    tire_compound = lap_info.get('tire_compound', 'N/A')
 
                     data_point = ChartDataPoint(
                         x=lap_num_for_chart,
                         y=lap_time_sec,
-                        metadata={'markers': markers, 'driver': driver}
+                        metadata={'markers': markers, 'driver': driver, 'tire_compound': tire_compound}
                     )
                     data_points.append(data_point)
 
@@ -1219,14 +2002,26 @@ class driverLapAnalysisChartWidget(QWidget):
                     )
 
                 if data_points:
-                    color = colors[i % len(colors)]
+                    # 使用 color_palette_provider 獲取車手顏色
+                    color = ChartTheme.get_driver_color(driver, self.selected_drivers)
+                    
+                    # 同隊車手虛線區分：第二位同隊車手使用虛線
+                    driver_team = color_palette_provider.get_driver_team(driver)
+                    if driver_team:
+                        team_driver_count[driver_team] = team_driver_count.get(driver_team, 0) + 1
+                        use_dashed = team_driver_count[driver_team] > 1
+                    else:
+                        use_dashed = False
+                    line_style = Qt.DashLine if use_dashed else Qt.SolidLine
 
                     series = ChartSeries(
                         name=driver,
                         data=data_points,
                         color=color,
                         line_width=2,
-                        style='line'
+                        style='line',
+                        line_style=line_style,
+                        marker_only_points=marker_only_points,  # 傳入被過濾的 Pit 圈標記
                     )
                     series_list.append(series)
             
@@ -1265,14 +2060,24 @@ class driverLapAnalysisChartWidget(QWidget):
                 return any(normalize_lap_number(val) == lap_num for val in collection)
             return lookup_value in collection
 
-        # 進站檢測
-        if lap_is_pit_stop(lap_info, smart_markers_summary):
-            markers.append('P')
+        # 進站檢測 - 只標記進站圈（pit_in），不標記出站圈（pit_out）
+        smart_markers = lap_info.get('smart_markers', {})
+        if isinstance(smart_markers, dict):
+            pit_detection = smart_markers.get('pit_stop_detection', {})
+            # 檢查 pit_type 是否為 'pit_in'（只標記進站圈）
+            if pit_detection.get('is_pit_lap', False) and pit_detection.get('pit_type') == 'pit_in':
+                markers.append('P')
+        else:
+            # 備用檢測：使用舊邏輯（如果沒有 smart_markers）
+            if lap_is_pit_stop(lap_info, smart_markers_summary):
+                # 進一步檢查是否有 pit_in_time（只標記進站圈）
+                if lap_info.get('pit_in_time') is not None:
+                    markers.append('P')
 
-        # 輪胎更換檢測
-        tire_data = smart_markers_summary.get('tire_change_detection', {})
-        if _contains_lap(tire_data.get('tire_change_lap_numbers')):
-            markers.append('T')
+        # 輪胎更換檢測（已禁用 - 只顯示進站 P 標記）
+        # tire_data = smart_markers_summary.get('tire_change_detection', {})
+        # if _contains_lap(tire_data.get('tire_change_lap_numbers')):
+        #     markers.append('T')
 
         # 最快圈檢測
         fastest_data = smart_markers_summary.get('fastest_lap_detection', {})
@@ -1322,6 +2127,12 @@ class driverLapAnalysisChartWidget(QWidget):
     def update_chart(self):
         """兼容舊版介面"""
         self.chart_widget.update()
+    
+    def reset_zoom(self):
+        """重置縮放（供全局 Show All Data 按鈕調用）"""
+        if hasattr(self, 'chart_widget') and hasattr(self.chart_widget, 'reset_zoom'):
+            self.chart_widget.reset_zoom()
+            logger.debug("[LAPTIME_CHART] 縮放已重置")
 
 
 if __name__ == "__main__":

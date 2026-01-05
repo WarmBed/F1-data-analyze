@@ -2,11 +2,16 @@
   "_metadata": {
     "version": "1.0.0",
     "description": "F1 賽道進站時間損失資料庫 (Pit Lane Time Loss)",
-    "last_updated": "2025-12-03",
+    "last_updated": "2025-12-31",
     "sources": [
       "F1 Official Technical Documents",
       "FastF1 2023-2024 Season Data Analysis",
-      "AWS F1 Insights"
+      "AWS F1 Insights",
+      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
+      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
+      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
+      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
+      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)"
     ],
     "notes": {
       "green_flag": "正常比賽時的進站時間損失",
@@ -14,103 +19,150 @@
       "virtual_safety_car": "VSC 期間的進站時間損失 (約 35-40% of green)"
     }
   },
-  
   "circuits": {
     "Bahrain": {
       "official_name": "Bahrain International Circuit",
       "pit_loss_times": {
-        "green_flag": 21.0,
-        "safety_car": 11.0,
-        "virtual_safety_car": 8.0
-      }
+        "green_flag": 24.7,
+        "safety_car": 12.8,
+        "virtual_safety_car": 9.4
+      },
+      "trained_from_data": true,
+      "training_samples": 41,
+      "training_mean": 24.94,
+      "training_median": 24.7
     },
     "Jeddah": {
       "official_name": "Jeddah Corniche Circuit",
       "pit_loss_times": {
-        "green_flag": 23.0,
-        "safety_car": 12.0,
-        "virtual_safety_car": 9.0
-      }
+        "green_flag": 20.8,
+        "safety_car": 10.8,
+        "virtual_safety_car": 7.9
+      },
+      "trained_from_data": true,
+      "training_samples": 19,
+      "training_mean": 21.36,
+      "training_median": 20.8
     },
     "Melbourne": {
       "official_name": "Albert Park Circuit",
       "pit_loss_times": {
-        "green_flag": 20.0,
-        "safety_car": 10.5,
-        "virtual_safety_car": 7.5
-      }
+        "green_flag": 19.3,
+        "safety_car": 10.0,
+        "virtual_safety_car": 7.3
+      },
+      "trained_from_data": true,
+      "training_samples": 34,
+      "training_mean": 19.97,
+      "training_median": 19.3
     },
     "Suzuka": {
       "official_name": "Suzuka International Racing Course",
       "pit_loss_times": {
-        "green_flag": 24.0,
-        "safety_car": 12.5,
+        "green_flag": 23.6,
+        "safety_car": 12.3,
         "virtual_safety_car": 9.0
-      }
+      },
+      "trained_from_data": true,
+      "training_samples": 52,
+      "training_mean": 23.78,
+      "training_median": 23.6
     },
     "Shanghai": {
       "official_name": "Shanghai International Circuit",
       "pit_loss_times": {
-        "green_flag": 22.5,
-        "safety_car": 12.0,
-        "virtual_safety_car": 8.5
-      }
+        "green_flag": 22.6,
+        "safety_car": 11.8,
+        "virtual_safety_car": 8.6
+      },
+      "trained_from_data": true,
+      "training_samples": 24,
+      "training_mean": 22.68,
+      "training_median": 22.65
     },
     "Miami": {
       "official_name": "Miami International Autodrome",
       "pit_loss_times": {
-        "green_flag": 23.0,
-        "safety_car": 12.0,
+        "green_flag": 22.4,
+        "safety_car": 11.6,
         "virtual_safety_car": 8.5
-      }
+      },
+      "trained_from_data": true,
+      "training_samples": 18,
+      "training_mean": 22.6,
+      "training_median": 22.35
     },
     "Imola": {
       "official_name": "Autodromo Enzo e Dino Ferrari",
       "pit_loss_times": {
-        "green_flag": 24.0,
-        "safety_car": 12.5,
-        "virtual_safety_car": 9.0
-      }
+        "green_flag": 29.9,
+        "safety_car": 15.5,
+        "virtual_safety_car": 11.4
+      },
+      "trained_from_data": true,
+      "training_samples": 14,
+      "training_mean": 29.79,
+      "training_median": 29.85
     },
     "Monaco": {
       "official_name": "Circuit de Monaco",
       "pit_loss_times": {
-        "green_flag": 21.5,
-        "safety_car": 11.0,
-        "virtual_safety_car": 8.0
-      }
+        "green_flag": 24.2,
+        "safety_car": 12.6,
+        "virtual_safety_car": 9.2
+      },
+      "trained_from_data": true,
+      "training_samples": 38,
+      "training_mean": 24.2,
+      "training_median": 24.25
     },
     "Montreal": {
       "official_name": "Circuit Gilles Villeneuve",
       "pit_loss_times": {
-        "green_flag": 20.5,
-        "safety_car": 10.5,
-        "virtual_safety_car": 7.5
-      }
+        "green_flag": 23.2,
+        "safety_car": 12.1,
+        "virtual_safety_car": 8.8
+      },
+      "trained_from_data": true,
+      "training_samples": 113,
+      "training_mean": 21.59,
+      "training_median": 23.2
     },
     "Barcelona": {
       "official_name": "Circuit de Barcelona-Catalunya",
       "pit_loss_times": {
-        "green_flag": 22.0,
+        "green_flag": 22.2,
         "safety_car": 11.5,
-        "virtual_safety_car": 8.0
-      }
+        "virtual_safety_car": 8.4
+      },
+      "trained_from_data": true,
+      "training_samples": 135,
+      "training_mean": 22.49,
+      "training_median": 22.2
     },
     "Spielberg": {
       "official_name": "Red Bull Ring",
       "pit_loss_times": {
-        "green_flag": 19.0,
-        "safety_car": 10.0,
-        "virtual_safety_car": 7.0
-      }
+        "green_flag": 21.8,
+        "safety_car": 11.3,
+        "virtual_safety_car": 8.3
+      },
+      "trained_from_data": true,
+      "training_samples": 117,
+      "training_mean": 22.42,
+      "training_median": 21.8
     },
     "Silverstone": {
       "official_name": "Silverstone Circuit",
       "pit_loss_times": {
-        "green_flag": 21.0,
-        "safety_car": 11.0,
-        "virtual_safety_car": 8.0
-      }
+        "green_flag": 29.0,
+        "safety_car": 15.1,
+        "virtual_safety_car": 11.0
+      },
+      "trained_from_data": true,
+      "training_samples": 89,
+      "training_mean": 28.97,
+      "training_median": 29.0
     },
     "Hungaroring": {
       "official_name": "Hungaroring",
@@ -123,66 +175,98 @@
     "Spa": {
       "official_name": "Circuit de Spa-Francorchamps",
       "pit_loss_times": {
-        "green_flag": 23.5,
-        "safety_car": 12.5,
-        "virtual_safety_car": 9.0
-      }
+        "green_flag": 23.3,
+        "safety_car": 12.1,
+        "virtual_safety_car": 8.9
+      },
+      "trained_from_data": true,
+      "training_samples": 97,
+      "training_mean": 23.49,
+      "training_median": 23.3
     },
     "Zandvoort": {
       "official_name": "Circuit Zandvoort",
       "pit_loss_times": {
-        "green_flag": 18.5,
-        "safety_car": 9.5,
-        "virtual_safety_car": 7.0
-      }
+        "green_flag": 20.4,
+        "safety_car": 10.6,
+        "virtual_safety_car": 7.8
+      },
+      "trained_from_data": true,
+      "training_samples": 112,
+      "training_mean": 20.75,
+      "training_median": 20.4
     },
     "Monza": {
       "official_name": "Autodromo Nazionale di Monza",
       "pit_loss_times": {
-        "green_flag": 25.0,
-        "safety_car": 13.0,
-        "virtual_safety_car": 9.5
-      }
+        "green_flag": 24.5,
+        "safety_car": 12.7,
+        "virtual_safety_car": 9.3
+      },
+      "trained_from_data": true,
+      "training_samples": 67,
+      "training_mean": 24.75,
+      "training_median": 24.5
     },
     "Baku": {
       "official_name": "Baku City Circuit",
       "pit_loss_times": {
-        "green_flag": 22.0,
-        "safety_car": 11.5,
-        "virtual_safety_car": 8.5
-      }
+        "green_flag": 20.6,
+        "safety_car": 10.7,
+        "virtual_safety_car": 7.8
+      },
+      "trained_from_data": true,
+      "training_samples": 43,
+      "training_mean": 20.76,
+      "training_median": 20.6
     },
     "Singapore": {
       "official_name": "Marina Bay Street Circuit",
       "pit_loss_times": {
-        "green_flag": 28.0,
-        "safety_car": 14.5,
-        "virtual_safety_car": 10.5
-      }
+        "green_flag": 29.0,
+        "safety_car": 15.1,
+        "virtual_safety_car": 11.0
+      },
+      "trained_from_data": true,
+      "training_samples": 49,
+      "training_mean": 27.35,
+      "training_median": 29.0
     },
     "Austin": {
       "official_name": "Circuit of the Americas",
       "pit_loss_times": {
-        "green_flag": 22.0,
-        "safety_car": 11.5,
-        "virtual_safety_car": 8.0
-      }
+        "green_flag": 24.2,
+        "safety_car": 12.6,
+        "virtual_safety_car": 9.2
+      },
+      "trained_from_data": true,
+      "training_samples": 79,
+      "training_mean": 24.47,
+      "training_median": 24.2
     },
     "Mexico City": {
       "official_name": "Autódromo Hermanos Rodríguez",
       "pit_loss_times": {
-        "green_flag": 21.0,
-        "safety_car": 11.0,
-        "virtual_safety_car": 8.0
-      }
+        "green_flag": 22.5,
+        "safety_car": 11.7,
+        "virtual_safety_car": 8.6
+      },
+      "trained_from_data": true,
+      "training_samples": 60,
+      "training_mean": 22.86,
+      "training_median": 22.5
     },
     "Interlagos": {
       "official_name": "Autódromo José Carlos Pace",
       "pit_loss_times": {
-        "green_flag": 20.5,
-        "safety_car": 10.5,
-        "virtual_safety_car": 7.5
-      }
+        "green_flag": 23.6,
+        "safety_car": 12.3,
+        "virtual_safety_car": 9.0
+      },
+      "trained_from_data": true,
+      "training_samples": 95,
+      "training_mean": 23.65,
+      "training_median": 23.6
     },
     "Las Vegas": {
       "official_name": "Las Vegas Strip Circuit",
@@ -195,10 +279,14 @@
     "Lusail": {
       "official_name": "Lusail International Circuit",
       "pit_loss_times": {
-        "green_flag": 23.0,
-        "safety_car": 12.0,
-        "virtual_safety_car": 8.5
-      }
+        "green_flag": 28.4,
+        "safety_car": 14.8,
+        "virtual_safety_car": 10.8
+      },
+      "trained_from_data": true,
+      "training_samples": 118,
+      "training_mean": 27.76,
+      "training_median": 28.35
     },
     "Yas Marina": {
       "official_name": "Yas Marina Circuit",
@@ -209,7 +297,6 @@
       }
     }
   },
-  
   "aliases": {
     "Japan": "Suzuka",
     "Japanese": "Suzuka",
@@ -248,7 +335,6 @@
     "Qatar": "Lusail",
     "Abu Dhabi": "Yas Marina"
   },
-  
   "default": {
     "pit_loss_times": {
       "green_flag": 22.0,

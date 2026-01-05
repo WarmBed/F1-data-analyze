@@ -255,17 +255,15 @@ def lap_is_pit_stop(
 
     # 🔧 FIX: Backup detection methods (for Function 54 JSON without smart_markers)
     
-    # Method 2: Check pit_out_time (pit out lap)
-    if lap_info.get("pit_out_time") is not None:
-        return True
-    
-    # Method 3: Check pit_in_time (pit in lap)
+    # Method 2: Check pit_in_time (pit in lap) - 只檢測進站圈
+    # ⚠️ 不檢查 pit_out_time，避免出站圈也被標記
     if lap_info.get("pit_in_time") is not None:
         return True
     
-    # Method 4: Check pit_status field
+    # Method 3: Check pit_status field (但要排除 pit_out 狀態)
     pit_status = lap_info.get("pit_status")
-    if pit_status and str(pit_status).strip().lower() not in {"", "none", "normal"}:
+    if pit_status and str(pit_status).strip().lower() not in {"", "none", "normal", "pit_out"}:
+        # 只有 pit_in 等狀態才返回 True
         return True
 
     return False

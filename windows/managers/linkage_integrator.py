@@ -4,8 +4,8 @@ LinkageIntegrator - 從 f1t_gui_main.py 提取
 """
 
 from core.logger import get_logger
-from core.global_signals import global_signals
-from modules.gui.lap_analysis.linkage_manager import linkage_manager
+from windows.managers.signal_manager import global_signals
+from modules.gui.lap_analysis.linkage.linkage_manager import linkage_manager
 
 logger = get_logger(__name__)
 

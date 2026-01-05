@@ -6,7 +6,7 @@ LapAnalysisLauncher - 從 f1t_gui_main.py 提取
 from PyQt5.QtWidgets import QMessageBox, QDialog
 from core.gui_i18n import tr
 from core.logger import get_logger
-from windows.dialogs.lap_analysis_options import LapAnalysisOptionsDialog
+from windows.dialogs.lap_analysis_options_dialog import LapAnalysisOptionsDialog
 
 logger = get_logger(__name__)
 

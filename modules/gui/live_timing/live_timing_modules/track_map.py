@@ -78,6 +78,10 @@ class TrackMapWidget(QWidget):
         # 彎道資料
         self.official_corners: List[Dict[str, Any]] = []
         
+        # 超車事件標記 (2025-12 新增)
+        self.overtake_events: List[Dict[str, Any]] = []
+        self._show_overtakes: bool = True
+        
         # 車隊顏色
         self.team_colors = {
             'Red Bull Racing': '#3671C6',
@@ -309,6 +313,7 @@ class TrackMapWidget(QWidget):
             self._draw_track_outline(painter, transform)
             self._draw_corner_markers(painter, transform)
             self._draw_sector_markers(painter, transform)
+            self._draw_overtake_markers(painter, transform)  # 超車標記
             self._draw_driver_markers(painter, transform)
         else:
             # 顯示提示訊息
@@ -608,6 +613,65 @@ class TrackMapWidget(QWidget):
             label_x = screen_x - nx * (line_length + 12) - text_rect.width() / 2
             label_y = screen_y - ny * (line_length + 12) + text_rect.height() / 4
             painter.drawText(int(label_x), int(label_y), label)
+
+    def _draw_overtake_markers(self, painter: QPainter, transform: Dict[str, float]):
+        """繪製超車位置標記 - 綠色圓點標示超車發生地點"""
+        if not self.overtake_events or not self._show_overtakes:
+            return
+        
+        # 計算相同位置的超車次數（用於聚合顯示）
+        location_counts: Dict[Tuple[int, int], int] = {}
+        for event in self.overtake_events:
+            x = event.get('x', 0)
+            y = event.get('y', 0)
+            if x == 0 and y == 0:
+                continue
+            # 將座標四捨五入以聚合鄰近位置
+            key = (round(x / 100) * 100, round(y / 100) * 100)
+            location_counts[key] = location_counts.get(key, 0) + 1
+        
+        # 繪製超車標記
+        for (world_x, world_y), count in location_counts.items():
+            screen_x, screen_y = self._world_to_screen((world_x, world_y), transform)
+            
+            # 根據超車次數調整大小（1次=小圓，多次=大圓）
+            base_radius = 4
+            radius = min(base_radius + count * 2, 12)  # 最大 12
+            
+            # 綠色漸層：次數越多顏色越亮
+            green_intensity = min(100 + count * 30, 255)
+            color = QColor(0, green_intensity, 0, 180)
+            
+            # 繪製填充圓
+            painter.setBrush(QBrush(color))
+            painter.setPen(QPen(QColor(0, 255, 0), 1))
+            painter.drawEllipse(QPointF(screen_x, screen_y), radius, radius)
+            
+            # 如果超車次數 >= 3，顯示數字
+            if count >= 3:
+                painter.setPen(QColor(255, 255, 255))
+                font = QFont()
+                font.setPointSize(7)
+                font.setBold(True)
+                painter.setFont(font)
+                painter.drawText(
+                    int(screen_x - 4), int(screen_y + 3),
+                    str(count)
+                )
+    
+    def set_overtake_events(self, events: List[Dict[str, Any]]):
+        """設置超車事件列表
+        
+        Args:
+            events: 超車事件列表，每個事件包含 x, y 座標
+        """
+        self.overtake_events = events
+        self.update()
+    
+    def set_show_overtakes(self, show: bool):
+        """設置是否顯示超車標記"""
+        self._show_overtakes = show
+        self.update()
 
 
 class LiveTimingTrackMap(BaseLiveTimingMDI):

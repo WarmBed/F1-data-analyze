@@ -75,6 +75,27 @@ class LinkedUniversalChartWidget(UniversalChartWidget):
         finally:
             self._suppress_sync = False
 
+    def set_x_range(self, x_min: float, x_max: float) -> None:
+        """設定 X 軸範圍（用於跨模組同步）"""
+        if x_max <= x_min:
+            return
+        
+        self._suppress_sync = True
+        try:
+            # 使用 get_overall_x_range() 獲取數據範圍
+            data_x_min, data_x_max = self.get_overall_x_range()
+            if data_x_min is not None and data_x_max is not None:
+                full_range = data_x_max - data_x_min
+                if full_range > 0:
+                    visible_range = x_max - x_min
+                    self.x_scale = full_range / visible_range if visible_range > 0 else 1.0
+                    self.x_offset = (x_min - data_x_min) / full_range * self.x_scale
+            
+            self.recalculate_data_ranges()
+            self.update()
+        finally:
+            self._suppress_sync = False
+
     # ------------------------------------------------------------------
     # 事件覆寫 - 發送同步訊號
     # ------------------------------------------------------------------

@@ -20,6 +20,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from bisect import bisect_left
 
 from core.logger import get_logger
+from core.gui_i18n import tr
 from PyQt5.QtCore import QPointF, Qt, pyqtSignal, QSize, QPoint, QTimer, QRectF
 from PyQt5.QtGui import (
     QBrush,
@@ -147,6 +148,11 @@ class TrackMapWidget(QWidget):
         self.show_sector_boundaries: bool = True  # 預設開啟：顯示 Sector 邊界
         self._last_track_name: Optional[str] = None  # 記錄上次載入的賽道名稱（用於檢測賽道變更）
         
+        # 🏎️ 超車事件數據（用於超車點標記）
+        self.overtake_events: List[Dict[str, Any]] = []  # 超車事件列表
+        self.show_overtake_markers: bool = True  # 預設開啟：顯示超車標記
+        self.hovered_overtake_index: Optional[int] = None  # 當前懸停的超車事件索引
+        
         # ✅ 新版標籤系統：多標籤支援，隨視窗移動
         self.hovered_corner: Optional[str] = None  # 當前懸停的彎道（例如 "T7"）
         self.pinned_tooltips: List[Dict[str, Any]] = []  # 固定的標籤列表
@@ -207,6 +213,10 @@ class TrackMapWidget(QWidget):
             track_name = session_info.get("track_name") or session_info.get("event_name") or "Unknown"
             logger.info("[TRACK_MAP] 賽道名稱: %s", track_name)
             logger.debug("[TRACK_MAP] track_data keys: %s", list(track_data.keys()))
+            
+            # 🏎️ 清空舊的超車事件數據（避免賽道切換時座標錯位）
+            self.overtake_events = []
+            logger.debug("[TRACK_MAP] 已清空舊的超車事件數據")
             
             self.track_data = track_data or {}
             records = track_data.get("detailed_position_records") or track_data.get("position_records") or []
@@ -379,6 +389,42 @@ class TrackMapWidget(QWidget):
             for boundary in self.sector_boundaries:
                 logger.debug("[TRACK_MAP] Sector 邊界: %s 距離=%s", boundary.get("name", "Unknown"), boundary.get("distance_m", 0))
         self.update()  # 觸發重繪
+
+    def set_overtake_events(self, overtake_events_data: List[Dict[str, Any]]) -> None:
+        """
+        設定超車事件數據用於超車點標記繪製
+        
+        Args:
+            overtake_events_data: [
+                {
+                    "timestamp": "01:12:05.123",
+                    "lap": 5,
+                    "overtaking_driver_tla": "VER",
+                    "overtaken_driver_tla": "LEC",
+                    "x": 1234,  # GPS X 座標
+                    "y": -5678,  # GPS Y 座標
+                    "overtake_type": "on_track"
+                },
+                ...
+            ]
+        """
+        self.overtake_events = overtake_events_data or []
+        logger.info("[TRACK_MAP] 已載入 %d 個超車事件", len(self.overtake_events))
+        if self.overtake_events:
+            for event in self.overtake_events[:3]:  # 只顯示前3個
+                logger.debug(
+                    "[TRACK_MAP] 超車: %s 超越 %s @ (%s, %s)",
+                    event.get("overtaking_driver_tla", "?"),
+                    event.get("overtaken_driver_tla", "?"),
+                    event.get("x", 0),
+                    event.get("y", 0)
+                )
+        self.update()  # 觸發重繪
+
+    def set_show_overtake_markers(self, show: bool) -> None:
+        """設定是否顯示超車標記"""
+        self.show_overtake_markers = show
+        self.update()
 
     def set_track_data(self, position_data: List[Dict[str, Any]], track_bounds: Dict[str, float]) -> None:
         """兼容 legacy API。"""
@@ -558,6 +604,11 @@ class TrackMapWidget(QWidget):
                     "[TRACK_MAP] paintEvent: sector_boundaries 為空 (長度=%d)",
                     len(self.sector_boundaries),
                 )
+
+        # 🏎️ 繪製超車事件標記（綠色圓點）
+        if self.show_overtake_markers and self.overtake_events:
+            logger.debug("[TRACK_MAP] paintEvent: 準備繪製 %d 個超車標記", len(self.overtake_events))
+            self._draw_overtake_markers(painter)
 
         # 在路徑繪製後呈現同步標記
         self._draw_markers(painter)
@@ -1091,6 +1142,144 @@ class TrackMapWidget(QWidget):
                 position_y,
             )
     
+    def _draw_overtake_markers(self, painter: QPainter) -> None:
+        """
+        繪製超車事件標記（綠色圓點）
+        
+        在每個超車發生的 GPS 位置繪製綠色圓點標記，
+        Tooltip 顯示超車詳情（超車車手、被超車手、圈數）
+        """
+        logger.debug("[TRACK_MAP] 準備繪製 %d 個超車標記", len(self.overtake_events))
+        
+        for event in self.overtake_events:
+            # 獲取 GPS 座標
+            x = event.get('x', 0)
+            y = event.get('y', 0)
+            
+            # 跳過無效座標
+            if x == 0 and y == 0:
+                continue
+            
+            # 轉換到屏幕座標
+            screen_x, screen_y = self.world_to_screen(x, y)
+            
+            # 檢查是否在視口內
+            margin = 50
+            if (screen_x < -margin or screen_x > self.width() + margin or
+                screen_y < -margin or screen_y > self.height() + margin):
+                continue
+            
+            # 🎨 繪製綠色圓點標記
+            marker_radius = 6  # 圓點半徑（像素）
+            
+            # 綠色填充 (Material Green 500)
+            painter.setBrush(QBrush(QColor(76, 175, 80, 200)))  # 綠色，略透明
+            painter.setPen(QPen(QColor(255, 255, 255), 2))  # 白色邊框
+            painter.drawEllipse(
+                QPointF(screen_x, screen_y),
+                marker_radius,
+                marker_radius
+            )
+            
+            logger.debug(
+                "[TRACK_MAP] 繪製超車標記: %s > %s @ (%d, %d) -> screen (%d, %d)",
+                event.get("overtaking_driver_tla", "?"),
+                event.get("overtaken_driver_tla", "?"),
+                x,
+                y,
+                int(screen_x),
+                int(screen_y)
+            )
+    
+    def _get_overtake_at_position(self, screen_x: int, screen_y: int) -> Optional[int]:
+        """
+        檢測滑鼠位置是否在超車標記附近
+        
+        Args:
+            screen_x: 滑鼠屏幕 X 座標
+            screen_y: 滑鼠屏幕 Y 座標
+            
+        Returns:
+            超車事件索引，如果沒有懸停則返回 None
+        """
+        if not self.show_overtake_markers or not self.overtake_events:
+            return None
+        
+        hover_radius = 10  # 懸停檢測半徑（像素）
+        
+        for i, event in enumerate(self.overtake_events):
+            x = event.get('x', 0)
+            y = event.get('y', 0)
+            
+            if x == 0 and y == 0:
+                continue
+            
+            # 轉換到屏幕座標
+            marker_screen_x, marker_screen_y = self.world_to_screen(x, y)
+            
+            # 計算距離
+            dx = screen_x - marker_screen_x
+            dy = screen_y - marker_screen_y
+            distance = (dx * dx + dy * dy) ** 0.5
+            
+            if distance <= hover_radius:
+                return i
+        
+        return None
+    
+    def _format_overtake_tooltip(self, event_index: int) -> str:
+        """
+        格式化超車事件的 tooltip 顯示內容
+        
+        Args:
+            event_index: 超車事件索引
+            
+        Returns:
+            格式化的 HTML tooltip 內容
+        """
+        if not (0 <= event_index < len(self.overtake_events)):
+            return ""
+        
+        event = self.overtake_events[event_index]
+        
+        # 提取事件資訊
+        year = event.get('year', '?')
+        lap = event.get('lap', '?')
+        overtaking_driver = event.get('overtaking_driver_tla', '?')
+        overtaken_driver = event.get('overtaken_driver_tla', '?')
+        old_position = event.get('old_position', '?')
+        new_position = event.get('new_position', '?')
+        
+        # 計算排名變化
+        if isinstance(old_position, int) and isinstance(new_position, int):
+            position_gain = old_position - new_position
+            if position_gain > 0:
+                position_change_text = f"<span style='color: #4CAF50;'>↑ {position_gain}</span>"
+            elif position_gain < 0:
+                position_change_text = f"<span style='color: #F44336;'>↓ {abs(position_gain)}</span>"
+            else:
+                position_change_text = "="
+        else:
+            position_change_text = "?"
+        
+        # 格式化位置變化
+        position_text = f"P{old_position} → P{new_position} ({position_change_text})"
+        
+        # 構建 HTML tooltip（多國語言化）
+        tooltip = f"""
+        <div style='font-family: Arial; font-size: 11pt;'>
+            <b style='color: #4CAF50; font-size: 12pt;'>{tr("overtake_event", "Overtake Event")}</b><br>
+            <hr style='margin: 4px 0; border: none; border-top: 1px solid #ddd;'>
+            <b>{tr("year", "Year")}:</b> {year}<br>
+            <b>{tr("lap", "Lap")}:</b> {lap}<br>
+            <b>{tr("overtaking_driver", "Overtaking Driver")}:</b> <span style='color: #2196F3; font-weight: bold;'>{overtaking_driver}</span><br>
+            <b>{tr("overtaken_driver", "Overtaken Driver")}:</b> <span style='color: #FF9800;'>{overtaken_driver}</span><br>
+            <b>{tr("position_change", "Position Change")}:</b> {position_text}
+        </div>
+        """
+        
+        return tooltip
+    
     def _get_track_tangent_at_position(self, target_x: float, target_y: float) -> Optional[Tuple[float, float]]:
         """
         計算賽道在指定位置的切線方向
@@ -1198,6 +1387,23 @@ class TrackMapWidget(QWidget):
         if self.pinned_tooltips:
             super().mouseMoveEvent(event)
             return
+        
+        # 🏎️ 優先檢測滑鼠是否懸停在超車標記上
+        detected_overtake = self._get_overtake_at_position(event.x(), event.y())
+        
+        if detected_overtake is not None:
+            # 懸停在超車標記上
+            if detected_overtake != self.hovered_overtake_index:
+                self.hovered_overtake_index = detected_overtake
+                tooltip_text = self._format_overtake_tooltip(detected_overtake)
+                if tooltip_text:
+                    QToolTip.showText(event.globalPos(), tooltip_text, self)
+            super().mouseMoveEvent(event)
+            return
+        else:
+            # 沒有懸停在超車標記上，重置索引
+            if self.hovered_overtake_index is not None:
+                self.hovered_overtake_index = None
         
         # 檢測滑鼠是否懸停在彎道圓圈上
         detected_corner = self._get_corner_at_position(event.x(), event.y())

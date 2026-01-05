@@ -14,7 +14,7 @@ F1T Batch Data Generator GUI
 
 作者: F1T Team
 日期: 2025-12-20
-版本: 2.0.0
+版本: 0.13.2
 """
 
 import sys

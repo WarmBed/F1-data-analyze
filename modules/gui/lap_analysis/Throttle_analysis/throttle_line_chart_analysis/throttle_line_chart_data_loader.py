@@ -470,6 +470,7 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         )
         available_driver_codes = [code for code in available_driver_codes if code]
 
+        # 處理目標車手的數據（主要數據）
         target = self._normalize_driver_payload(drivers)
         if target is None:
             raise ValueError(f"找不到指定車手 {self._target_driver} 的 Function 54 數據")
@@ -477,16 +478,36 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         lap_records = self._process_lap_records(target.get("laps") or [])
         lap_records.sort(key=lambda item: item["lap_number"])
 
-        # 🔧 FIX: 先提取標記（從原始資料），再進行過濾
-        # 這樣即使啟用 filter_pit_laps，P 標記仍會顯示在 X 軸上
         helper_sets = self._extract_flag_sets(lap_records)
         stint_ranges = self._build_stint_segments(lap_records)
-
-        # 然後才過濾資料點（用於圖表繪製）
-        # ✅ 傳遞 helper_sets 給 _apply_filters，使用已提取的 flag 資訊
         lap_records, filter_stats = self._apply_filters(lap_records, target, helper_sets)
-
         chart_series = self._build_chart_series(lap_records)
+
+        # 處理所有車手的數據（用於多車手圖表）
+        all_drivers_data: Dict[str, List[Dict[str, Any]]] = {}
+        all_drivers_tooltip: Dict[str, Dict[int, Dict[str, Any]]] = {}
+        
+        for driver_payload in drivers:
+            driver_code = str(driver_payload.get("driver_code") or driver_payload.get("driver") or "").upper()
+            if not driver_code:
+                continue
+            
+            try:
+                driver_laps = self._process_lap_records(driver_payload.get("laps") or [])
+                driver_laps.sort(key=lambda item: item["lap_number"])
+                
+                # 套用過濾器
+                driver_helper_sets = self._extract_flag_sets(driver_laps)
+                filtered_laps, _ = self._apply_filters(driver_laps, driver_payload, driver_helper_sets)
+                
+                # 建構圖表系列
+                driver_chart_series = self._build_chart_series(filtered_laps)
+                
+                all_drivers_data[driver_code] = filtered_laps
+                all_drivers_tooltip[driver_code] = driver_chart_series.get("tooltip", {})
+            except Exception as exc:
+                self._debug(f"處理車手 {driver_code} 數據時出錯: {exc}")
+                continue
 
         result = {
             "metadata": self._enrich_metadata(metadata, analysis, available_driver_codes),
@@ -505,6 +526,9 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
                 "stint_ranges": stint_ranges,
             },
             "available_drivers": available_driver_codes,
+            # 新增：所有車手的數據
+            "all_drivers_data": all_drivers_data,
+            "all_drivers_tooltip": all_drivers_tooltip,
             "source_payload": {
                 "driver": target,
                 "analysis_summary": analysis.get("summary"),

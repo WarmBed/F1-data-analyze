@@ -119,6 +119,9 @@ class SeasonProgressWidget(QWidget):
         remaining = calendar.get("remaining", 0)
         total = calendar.get("total", 0)
         
+        # 🔧 檢測未來賽季（無完賽記錄）
+        is_future_season = (completed == 0 and total > 0)
+        
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
                 "[SEASON_PROGRESS_WIDGET] Calendar data: completed=%s, remaining=%s, total=%s",
@@ -127,14 +130,26 @@ class SeasonProgressWidget(QWidget):
                 total,
             )
         
-        self.completed_label.setText(
-            tr("completed_races", "Completed Races: {count} / {total}").format(
-                count=completed, total=total
+        # 🔜 未來賽季：顯示友善提示
+        if is_future_season:
+            separator = "━" * 40
+            future_message = tr("future_season_not_started", "Season Not Started Yet, Stay Tuned")
+            self.completed_label.setText(f"{separator}\n🔜 {future_message}\n{separator}")
+            self.completed_label.setStyleSheet("font-size: 14px; color: #0066cc; font-weight: bold;")
+            
+            # 隱藏剩餘賽事標籤
+            self.remaining_label.setText("")
+        else:
+            # ✅ 正常賽季：顯示已完成和剩餘賽事
+            self.completed_label.setText(
+                tr("completed_races", "Completed Races: {count} / {total}").format(
+                    count=completed, total=total
+                )
             )
-        )
-        self.remaining_label.setText(
-            tr("remaining_races", "Remaining Races: {count}").format(count=remaining)
-        )
+            self.completed_label.setStyleSheet("font-size: 14px;")  # 恢復正常樣式
+            self.remaining_label.setText(
+                tr("remaining_races", "Remaining Races: {count}").format(count=remaining)
+            )
         
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
@@ -147,18 +162,48 @@ class SeasonProgressWidget(QWidget):
         next_race = calendar.get("next_race")
         if next_race:
             race_name = next_race.get("name", "")
-            self.next_race_label.setText(
-                tr("next_race", "Next Race: {name}").format(name=race_name)
-            )
+            
+            # 🔜 未來賽季：顯示首場賽事資訊
+            if is_future_season:
+                self.next_race_label.setText(
+                    "📍 " + tr("future_season_first_race", "First Race: {name}").format(name=race_name)
+                )
+                self.next_race_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #ff6600;")
+            else:
+                # ✅ 正常賽季：下一場賽事
+                self.next_race_label.setText(
+                    tr("next_race", "Next Race: {name}").format(name=race_name)
+                )
+                self.next_race_label.setStyleSheet("font-size: 14px; font-weight: bold; color: #0066cc;")
             
             race_date_str = next_race.get("date", "")
             if race_date_str:
                 try:
                     race_dt = datetime.fromisoformat(race_date_str.replace("Z", "+00:00"))
-                    formatted_date = race_dt.strftime("%Y-%m-%d %H:%M")
-                    self.next_race_date_label.setText(
-                        tr("race_date", "Date: {date}").format(date=formatted_date)
-                    )
+                    
+                    # 🔜 未來賽季：顯示比賽時間（含UTC）
+                    if is_future_season:
+                        formatted_date = race_dt.strftime("%Y-%m-%d %H:%M UTC")
+                        self.next_race_date_label.setText(
+                            "📅 " + tr("future_season_race_time", "Race Time: {date}").format(date=formatted_date)
+                        )
+                        
+                        # 計算倒數天數
+                        from datetime import timezone as tz
+                        now = datetime.now(tz.utc)
+                        days_until = (race_dt - now).days
+                        
+                        if days_until > 0:
+                            # 添加倒數天數（顯示在 remaining_label）
+                            countdown_text = "⏳ " + tr("future_season_countdown", "{days} Days Until Season Start").format(days=days_until)
+                            self.remaining_label.setText(countdown_text)
+                            self.remaining_label.setStyleSheet("font-size: 14px; color: #ff6600; font-weight: bold;")
+                    else:
+                        # ✅ 正常賽季：普通日期格式
+                        formatted_date = race_dt.strftime("%Y-%m-%d %H:%M")
+                        self.next_race_date_label.setText(
+                            tr("race_date", "Date: {date}").format(date=formatted_date)
+                        )
                 except Exception:
                     self.next_race_date_label.setText(
                         tr("race_date", "Date: {date}").format(date=race_date_str)
@@ -170,30 +215,39 @@ class SeasonProgressWidget(QWidget):
         # Update leaders
         leaders = data.get("leaders", {})
         
-        # Driver leader
-        top_driver = leaders.get("driver")
-        if top_driver:
-            self.driver_leader_label.setText(
-                tr("driver_leader", "Driver Leader: {name} ({team}) - {points} pts").format(
-                    name=top_driver.get("full_name", ""),
-                    team=top_driver.get("constructor", ""),
-                    points=top_driver.get("points", 0)
-                )
-            )
+        # 🔜 未來賽季：隱藏積分領先者（顯示賽季資訊）
+        if is_future_season:
+            total_races_text = "📊 " + tr("future_season_total_races", "{total} Races This Season").format(total=total)
+            self.driver_leader_label.setText(total_races_text)
+            self.driver_leader_label.setStyleSheet("font-size: 14px; color: #495057;")
+            self.constructor_leader_label.setText("")
         else:
-            self.driver_leader_label.setText(tr("na", "N/A"))
-        
-        # Constructor leader
-        top_constructor = leaders.get("constructor")
-        if top_constructor:
-            self.constructor_leader_label.setText(
-                tr("constructor_leader", "Constructor Leader: {name} - {points} pts").format(
-                    name=top_constructor.get("name", ""),
-                    points=top_constructor.get("points", 0)
+            # ✅ 正常賽季：顯示積分領先者
+            # Driver leader
+            top_driver = leaders.get("driver")
+            if top_driver:
+                self.driver_leader_label.setText(
+                    tr("driver_leader", "Driver Leader: {name} ({team}) - {points} pts").format(
+                        name=top_driver.get("full_name", ""),
+                        team=top_driver.get("constructor", ""),
+                        points=top_driver.get("points", 0)
+                    )
                 )
-            )
-        else:
-            self.constructor_leader_label.setText(tr("na", "N/A"))
+                self.driver_leader_label.setStyleSheet("font-size: 14px;")  # 恢復正常樣式
+            else:
+                self.driver_leader_label.setText(tr("na", "N/A"))
+            
+            # Constructor leader
+            top_constructor = leaders.get("constructor")
+            if top_constructor:
+                self.constructor_leader_label.setText(
+                    tr("constructor_leader", "Constructor Leader: {name} - {points} pts").format(
+                        name=top_constructor.get("name", ""),
+                        points=top_constructor.get("points", 0)
+                    )
+                )
+            else:
+                self.constructor_leader_label.setText(tr("na", "N/A"))
         
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("[SEASON_PROGRESS_WIDGET] Data populated successfully")
