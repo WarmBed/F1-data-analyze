@@ -140,7 +140,9 @@ class OpponentStrategyPredictor:
         if pit_laps:
             strategy.pit_laps = pit_laps
         else:
-            strategy.pit_laps = self._calculate_pit_laps(num_stops, tire_sequence)
+            strategy.pit_laps = self._calculate_pit_laps(
+                num_stops, tire_sequence, strategy.starting_position
+            )
             
     def reset_to_default(self, driver_code: str):
         """Reset a driver's strategy to use global defaults."""
@@ -150,7 +152,7 @@ class OpponentStrategyPredictor:
             strategy.tire_sequence = self._global_settings.default_tire_sequence.copy()
             strategy.is_custom = False
             strategy.pit_laps = self._calculate_pit_laps(
-                strategy.num_stops, strategy.tire_sequence
+                strategy.num_stops, strategy.tire_sequence, strategy.starting_position
             )
             
     def predict_all_strategies(self):
@@ -165,15 +167,29 @@ class OpponentStrategyPredictor:
                 
             # Calculate pit laps
             strategy.pit_laps = self._calculate_pit_laps(
-                strategy.num_stops, strategy.tire_sequence
+                strategy.num_stops, strategy.tire_sequence, strategy.starting_position
             )
             
-    def _calculate_pit_laps(self, num_stops: int, tire_sequence: List[str]) -> List[int]:
+    def _calculate_pit_laps(self, num_stops: int, tire_sequence: List[str], 
+                           starting_position: int = 10) -> List[int]:
         """
         Calculate optimal pit stop laps based on tire strategy.
         
         Uses tire life estimates to determine when each stint should end.
+        Adds randomization to simulate realistic strategy variations:
+        - Different teams have different risk appetites
+        - Track position considerations (front runners vs midfield vs backmarkers)
+        - Undercut/overcut opportunities
+        
+        Real F1 teams typically vary pit timing by ±3-5 laps from the "optimal" window.
+        
+        Args:
+            num_stops: Number of pit stops
+            tire_sequence: List of tire compounds
+            starting_position: Grid position (1-20) - affects pit strategy aggressiveness
         """
+        import random
+        
         if num_stops == 0:
             return []
             
@@ -201,6 +217,36 @@ class OpponentStrategyPredictor:
             else:
                 # Not last stop - use tire life as guideline
                 stint_length = min(tire_life, remaining_laps // (remaining_stops + 1))
+            
+            # ✅ 真實化改進：基於位置的進站策略差異
+            # 前排車手（P1-P5）：保守策略，傾向較晚進站（保護賽道位置）
+            # 中游車手（P6-P12）：平衡策略，正常窗口進站
+            # 後排車手（P13-P20）：激進策略，傾向較早進站（嘗試 undercut）
+            
+            if starting_position <= 5:
+                # 前排：傾向延遲進站 +1 到 +3 圈（保護位置）
+                position_bias = random.randint(1, 3)
+                randomization_window = 3  # 較小的隨機範圍（更保守）
+            elif starting_position <= 12:
+                # 中游：平衡策略，正常隨機化
+                position_bias = random.randint(-2, 2)
+                randomization_window = 4  # 標準隨機範圍
+            else:
+                # 後排：傾向提前進站 -3 到 -1 圈（激進 undercut）
+                position_bias = random.randint(-3, -1)
+                randomization_window = 5  # 較大的隨機範圍（更激進）
+            
+            # 加入隨機化模擬不同車隊的策略風格
+            team_randomization = random.randint(-randomization_window, randomization_window)
+            
+            # 總調整 = 位置偏差 + 車隊隨機化
+            total_adjustment = position_bias + team_randomization
+            
+            # 確保進站圈數合理（不能太早或太晚）
+            min_stint = max(8, tire_life // 3)  # 最短單段至少 8 圈
+            max_stint = min(tire_life, remaining_laps - remaining_stops)  # 最長不超過輪胎壽命
+            
+            stint_length = max(min_stint, min(max_stint, stint_length + total_adjustment))
                 
             pit_lap = current_lap + stint_length
             pit_laps.append(pit_lap)
@@ -258,7 +304,7 @@ class OpponentStrategyPredictor:
                 
             # Calculate pit laps for all
             strategy.pit_laps = self._calculate_pit_laps(
-                strategy.num_stops, strategy.tire_sequence
+                strategy.num_stops, strategy.tire_sequence, strategy.starting_position
             )
                 
         return self._opponent_strategies.copy()
@@ -391,7 +437,7 @@ class OpponentStrategyPredictor:
             
             # Calculate pit laps
             strategy.pit_laps = self._calculate_pit_laps(
-                strategy.num_stops, strategy.tire_sequence
+                strategy.num_stops, strategy.tire_sequence, strategy.starting_position
             )
             
             self._opponent_strategies[driver] = strategy
