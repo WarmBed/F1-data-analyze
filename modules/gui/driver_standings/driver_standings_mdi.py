@@ -346,11 +346,43 @@ class DriverStandingsMDI(QWidget):
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗 - 嘗試本地 JSON 備援"""
         logger.error("[DRIVER_MDI] API 調用失敗: %s", error_msg)
-        self.status_label.setText(tr("api_failure_status", "API 失敗，嘗試本地檔案..."))
         
-        # 備援：嘗試本地 JSON
-        logger.warning("[DRIVER_MDI] 嘗試本地 JSON 備援")
-        self.data_loader.load_data(force_refresh=False)
+        # 偵測未來賽季錯誤（多種可能的錯誤訊息格式）
+        is_future_season_error = (
+            "422" in error_msg or 
+            "Unprocessable" in error_msg or
+            "尚未開始" in error_msg or 
+            "暫不可用" in error_msg or
+            "不可用" in error_msg or
+            "尚未可用" in error_msg or
+            "數據可能尚未" in error_msg
+        )
+        
+        if is_future_season_error:
+            # 未來賽季：顯示友善訊息
+            self.status_label.setText(tr("future_season_no_data", "賽季數據尚未發布"))
+            self.status_label.setStyleSheet("color: #6c757d; padding: 5px;")
+            self.progress_bar.setValue(0)
+            self.progress_bar.hide()
+            
+            # 在表格中顯示空狀態訊息
+            self._show_future_season_empty_state()
+        else:
+            # 其他錯誤：嘗試本地 JSON 備援
+            self.status_label.setText(tr("api_failure_status", "API 失敗，嘗試本地檔案..."))
+            logger.warning("[DRIVER_MDI] 嘗試本地 JSON 備援")
+            self.data_loader.load_data(force_refresh=False)
+    
+    def _show_future_season_empty_state(self):
+        """為未來賽季顯示空狀態表格"""
+        # 提供空數據但帶有未來賽季標記
+        empty_data = {
+            "season_year": int(self.year),
+            "round": 0,
+            "standings": [],  # 空空的積分榜
+            "_is_future_season": True  # 標記為未來賽季
+        }
+        self._on_data_loaded(empty_data)
     
     @pyqtSlot(str)
     def _on_status_changed(self, message: str):

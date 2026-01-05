@@ -1,0 +1,387 @@
+{
+  "_metadata": {
+    "version": "1.0.0",
+    "description": "輪胎配方速度差異資料庫 - 從真實賽事數據訓練",
+    "last_updated": "2025-12-31T00:33:50.595696",
+    "training_method": "Pair-wise compound comparison with fuel correction",
+    "notes": {
+      "SOFT_vs_MEDIUM": "SOFT - MEDIUM (負值 = SOFT 更快)",
+      "HARD_vs_MEDIUM": "HARD - MEDIUM (正值 = HARD 更慢)",
+      "interpretation": "compound_delta['SOFT'] 應為負值，compound_delta['HARD'] 應為正值"
+    }
+  },
+  "global_averages": {
+    "SOFT_vs_MEDIUM": {
+      "mean": -0.2016,
+      "median": -0.1352,
+      "std": 0.7241,
+      "min": -1.6949,
+      "max": 0.9484,
+      "samples": 36
+    },
+    "HARD_vs_MEDIUM": {
+      "mean": -0.2547,
+      "median": -0.3334,
+      "std": 0.6689,
+      "min": -1.7878,
+      "max": 1.7026,
+      "samples": 53
+    },
+    "SOFT_vs_HARD": {
+      "mean": 0.1036,
+      "median": 0.211,
+      "std": 1.1373,
+      "min": -2.257,
+      "max": 2.5993,
+      "samples": 34
+    }
+  },
+  "circuits": {
+    "Yas_Marina": {
+      "compound_deltas": {
+        "SOFT": 0.205,
+        "MEDIUM": 0.0,
+        "HARD": -0.281
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": 0.2054,
+          "std": 0.6122,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.2811,
+          "std": 0.7011,
+          "samples": 3
+        }
+      }
+    },
+    "Spielberg": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": 0.09
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": 0.0904,
+          "std": 0.2888,
+          "samples": 3
+        }
+      }
+    },
+    "Baku": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": 0.013
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": 0.013,
+          "std": 0.1827,
+          "samples": 3
+        }
+      }
+    },
+    "Bahrain": {
+      "compound_deltas": {
+        "SOFT": 0.594,
+        "MEDIUM": 0.0,
+        "HARD": 0.026
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": 0.5942,
+          "std": 0.501,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": 0.0258,
+          "std": 0.0588,
+          "samples": 2
+        }
+      }
+    },
+    "Spa": {
+      "compound_deltas": {
+        "SOFT": -0.118,
+        "MEDIUM": 0.0,
+        "HARD": -0.545
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.1181,
+          "std": 1.157,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.5446,
+          "std": 1.2454,
+          "samples": 2
+        }
+      }
+    },
+    "Montreal": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": 0.279
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": 0.2788,
+          "std": 0.0677,
+          "samples": 2
+        }
+      }
+    },
+    "Zandvoort": {
+      "compound_deltas": {
+        "SOFT": -0.399,
+        "MEDIUM": 0.0,
+        "HARD": -0.412
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.3993,
+          "std": 0.8846,
+          "samples": 3
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.4116,
+          "std": 0.1426,
+          "samples": 3
+        }
+      }
+    },
+    "Budapest": {
+      "compound_deltas": {
+        "SOFT": 0.577,
+        "MEDIUM": 0.0,
+        "HARD": -0.033
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": 0.5772,
+          "std": 0.3535,
+          "samples": 3
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.0334,
+          "std": 0.8234,
+          "samples": 3
+        }
+      }
+    },
+    "Monza": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": -0.28
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": -0.2802,
+          "std": 0.367,
+          "samples": 3
+        }
+      }
+    },
+    "Suzuka": {
+      "compound_deltas": {
+        "SOFT": 0.213,
+        "MEDIUM": 0.0,
+        "HARD": -0.991
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": 0.2126,
+          "std": 0.579,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.9907,
+          "std": 0.1262,
+          "samples": 2
+        }
+      }
+    },
+    "Las_Vegas": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": -0.853
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": -0.8532,
+          "std": 0.3725,
+          "samples": 3
+        }
+      }
+    },
+    "Mexico": {
+      "compound_deltas": {
+        "SOFT": -0.329,
+        "MEDIUM": 0.0,
+        "HARD": 0.338
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.3289,
+          "std": 0.319,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": 0.3377,
+          "std": 1.2037,
+          "samples": 3
+        }
+      }
+    },
+    "Miami": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": 0.187
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": 0.1868,
+          "std": 0.7071,
+          "samples": 2
+        }
+      }
+    },
+    "Monaco": {
+      "compound_deltas": {
+        "SOFT": -0.161,
+        "MEDIUM": 0.0,
+        "HARD": 0.29
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.161,
+          "std": 0.7283,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": 0.29,
+          "std": 0.313,
+          "samples": 2
+        }
+      }
+    },
+    "Lusail": {
+      "compound_deltas": {
+        "SOFT": -0.09,
+        "MEDIUM": 0.0,
+        "HARD": -1.58
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.0903,
+          "std": 0.3468,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -1.5797,
+          "std": 0.2966,
+          "samples": 3
+        }
+      }
+    },
+    "Jeddah": {
+      "compound_deltas": {
+        "SOFT": -0.202,
+        "MEDIUM": 0.0,
+        "HARD": -0.211
+      },
+      "statistics": {
+        "HARD_vs_MEDIUM": {
+          "mean": -0.2113,
+          "std": 0.5022,
+          "samples": 2
+        }
+      }
+    },
+    "Singapore": {
+      "compound_deltas": {
+        "SOFT": -0.931,
+        "MEDIUM": 0.0,
+        "HARD": -0.062
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.9312,
+          "std": 0.2249,
+          "samples": 3
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.0622,
+          "std": 0.837,
+          "samples": 3
+        }
+      }
+    },
+    "Barcelona": {
+      "compound_deltas": {
+        "SOFT": 0.226,
+        "MEDIUM": 0.0,
+        "HARD": -0.308
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": 0.2264,
+          "std": 0.2326,
+          "samples": 3
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": -0.3077,
+          "std": 0.3479,
+          "samples": 2
+        }
+      }
+    },
+    "Interlagos": {
+      "compound_deltas": {
+        "SOFT": -0.069,
+        "MEDIUM": 0.0,
+        "HARD": -0.255
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -0.0693,
+          "std": 0.1384,
+          "samples": 2
+        }
+      }
+    },
+    "Austin": {
+      "compound_deltas": {
+        "SOFT": -1.279,
+        "MEDIUM": 0.0,
+        "HARD": 0.016
+      },
+      "statistics": {
+        "SOFT_vs_MEDIUM": {
+          "mean": -1.2789,
+          "std": 0.3204,
+          "samples": 2
+        },
+        "HARD_vs_MEDIUM": {
+          "mean": 0.016,
+          "std": 0.8288,
+          "samples": 3
+        }
+      }
+    }
+  },
+  "compound_deltas": {
+    "SOFT": -0.202,
+    "MEDIUM": 0.0,
+    "HARD": -0.255,
+    "confidence": "high"
+  }
+}

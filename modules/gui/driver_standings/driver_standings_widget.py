@@ -81,32 +81,42 @@ class DriverStandingsWidget(QWidget):
         Args:
             data: 轉換後的積分資料（來自 DataLoader）
         """
-        # 🔍 調試：輸出接收到的數據結構
-        logger.debug(
-            "[DRIVER_WIDGET] 接收到的數據 keys: %s | season_year=%s | round=%s | standings=%s",
-            list(data.keys()),
-            data.get("season_year"),
-            data.get("round"),
-            len(data.get("standings", [])),
-        )
-        
+        # 解析數據
         self.standings_data = data.get("standings", [])
         self.season_year = data.get("season_year", 2024)
         round_num = data.get("round", 0)
+        is_future_season = data.get("_is_future_season", False)
         
         logger.debug(
-            "[DRIVER_WIDGET] 解析後: season_year=%s, round=%s",
+            "[DRIVER_WIDGET] 接收到的數據 keys: %s | season_year=%s | round=%s | standings=%s | is_future=%s",
+            list(data.keys()),
             self.season_year,
             round_num,
+            len(self.standings_data),
+            is_future_season,
         )
         
         # 更新標題
-        title = tr("driver_standings_title_with_round", "車手積分榜 - {year} 第 {round} 站").format(
-            year=self.season_year,
-            round=round_num
-        )
+        if is_future_season or (round_num == 0 and not self.standings_data):
+            # 未來賽季：顯示友善標題
+            title = tr("driver_standings_title", "車手積分榜 - {year}").format(year=self.season_year)
+        else:
+            title = tr("driver_standings_title_with_round", "車手積分榜 - {year} 第 {round} 站").format(
+                year=self.season_year,
+                round=round_num
+            )
         self.title_label.setText(title)
         logger.debug("[DRIVER_WIDGET] 標題已設置: %s", title)
+        
+        # 未來賽季或空數據：顯示友善訊息
+        if is_future_season or not self.standings_data:
+            self.table.setRowCount(1)
+            empty_item = QTableWidgetItem(tr("future_season_no_data", "賽季數據尚未發布"))
+            empty_item.setTextAlignment(Qt.AlignCenter)
+            empty_item.setForeground(QColor("#6c757d"))
+            self.table.setItem(0, 0, empty_item)
+            self.table.setSpan(0, 0, 1, self.table.columnCount())
+            return
         
         # 初始化顏色系統
         try:

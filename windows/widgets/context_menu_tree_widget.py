@@ -447,6 +447,11 @@ class ContextMenuTreeWidget(QTreeWidget):
             logger.debug(f"[TREE_CLICK] 開啟油門折線圖（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
+        # Long Run & Degradation Analysis
+        elif clean_name in ["Long Run & Degradation", "Long Run Analysis", "長跑分析", "衰退分析", "ロングラン分析"]:
+            logger.debug(f"[TREE_CLICK] 開啟 Long Run & Degradation 模組（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
         # Ideal Lap Analysis 子模組
         elif clean_name in ["Ideal Lap Ranking Table", "Ranking Table", "排名表格", "理想圈排名"]:
             logger.debug(f"[TREE_CLICK] 開啟理想圈排名表格（模組工廠模式）")

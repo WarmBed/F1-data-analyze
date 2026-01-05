@@ -1422,6 +1422,25 @@ class driverLapAnalysisMDI(UniversalAnalysisMDI):
         if chart and hasattr(chart, "apply_filter_settings"):
             chart.apply_filter_settings(settings)
 
+    def reset_chart_view(self):
+        """重置圖表視圖（供全局 Show All Data 按鈕調用）"""
+        try:
+            chart = getattr(self, "chart_widget", None)
+            if chart:
+                # 嘗試調用 reset_zoom 方法
+                if hasattr(chart, 'laptime_chart') and hasattr(chart.laptime_chart, 'reset_zoom'):
+                    chart.laptime_chart.reset_zoom()
+                    logger.debug(f"[LAPTIME_MDI] ✅ 成功調用 laptime_chart.reset_zoom()")
+                elif hasattr(chart, 'reset_zoom'):
+                    chart.reset_zoom()
+                    logger.debug(f"[LAPTIME_MDI] ✅ 成功調用 chart_widget.reset_zoom()")
+                else:
+                    logger.debug(f"[LAPTIME_MDI] ⚠️  chart_widget 沒有 reset_zoom 方法")
+            else:
+                logger.debug(f"[LAPTIME_MDI] ⚠️  無法獲取 chart_widget")
+        except Exception as e:
+            logger.error(f"[LAPTIME_MDI] ❌ reset_chart_view 失敗: {e}")
+
 
 # 導入專用圖表組件
 from .driverlap_analysis_chart_widget import driverLapAnalysisChartWidget

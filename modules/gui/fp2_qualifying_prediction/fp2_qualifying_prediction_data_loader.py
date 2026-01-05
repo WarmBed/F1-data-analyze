@@ -73,17 +73,30 @@ class FP2QualifyingPredictionDataLoader(UniversalDataLoader):
             race: 賽事名稱 (例如: "Japan", "Austria")
             parent: 父元件 (用於信號連接)
         """
+        print(f"[FP2_QUAL_LOADER] 初始化: year={year}, race={race}", flush=True)
+        
         # 調用基類 __init__ (只需要 analysis_type 和 parent)
         super().__init__(analysis_type=self.ANALYSIS_TYPE, parent=parent)
         
         self.year = str(year)
         self.race = race
 
-        # API-ONLY 模式：停用本地 JSON 後備
-        self._allow_local_fallback = False
-        self._debug("[FP2_QUAL_PRED_LOADER] 已停用本地 JSON 後備 (API-ONLY)")
+        # ⚠️ 臨時啟用本地 JSON 後備 (等待實現真正的 API 調用)
+        # TODO: 實現 API 調用邏輯後再設為 False
+        self._allow_local_fallback = True
+        print(f"[FP2_QUAL_LOADER] 已啟用本地 JSON 後備", flush=True)
         
-        self._debug(f"[FP2_QUAL_PRED_LOADER] 初始化完成: {year} {race}")
+        # 設定絕對路徑（解決 Strategy Simulator 的工作目錄問題）
+        import os
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        self._base_paths = [
+            os.path.join(project_root, "json"),
+            os.path.join(project_root, "json_exports"),
+            os.path.join(project_root, "cache")
+        ]
+        print(f"[FP2_QUAL_LOADER] 搜尋目錄: {self._base_paths[0]}", flush=True)
+        
+        print(f"[FP2_QUAL_LOADER] 初始化完成", flush=True)
     
     def _validate_data_format(self, data: Any) -> bool:
         """
@@ -402,12 +415,21 @@ class FP2QualifyingPredictionDataLoader(UniversalDataLoader):
         year = params.get("year", self.year)
         race = params.get("race", self.race)
         
+        print(f"[FP2_QUAL_LOADER] 建立搜尋模式: year={year}, race={race}", flush=True)
+        
         # FP2→Q 排位賽預測的檔案命名模式
+        # 注意：Abu Dhabi 等賽事名稱包含空格
         patterns = [
             f"fp2_qualifying_prediction_{year}_{race}.json",
+            f"fp2_qualifying_prediction_{year}_{race.replace(' ', '_')}.json",  # 空格轉底線
             f"fp2_qual_pred_{year}_{race}.json",
-            f"*fp2*qualifying*prediction*{year}*{race}*.json"
+            f"*fp2*qualifying*prediction*{year}*{race}*.json",
+            f"*fp2*qualifying*prediction*{year}*.json"  # 通配符
         ]
+        
+        print(f"[FP2_QUAL_LOADER] 搜尋模式列表:", flush=True)
+        for i, p in enumerate(patterns, 1):
+            print(f"[FP2_QUAL_LOADER]   {i}. {p}", flush=True)
         
         return patterns
 

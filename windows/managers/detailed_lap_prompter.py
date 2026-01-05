@@ -22,11 +22,12 @@ class DetailedLapPrompter:
             from modules.gui.driver_race.detailed_lap_analysis.detailed_lap_options_dialog import (
                 DetailedLapAnalysisOptionsDialog,
             )
+            from PyQt5.QtWidgets import QDialog
         except ImportError as exc:
             logger.debug(f"[DETAILED_LAP] 無法載入選項對話框: {exc}")
             return {"detail_table": True, "box_plot": False}
 
-        dialog = DetailedLapAnalysisOptionsDialog(self)
+        dialog = DetailedLapAnalysisOptionsDialog(self.main_window)
         result = dialog.exec_()
 
         if result != QDialog.Accepted:

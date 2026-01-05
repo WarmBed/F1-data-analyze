@@ -291,12 +291,12 @@ class RankingTableWidget(QWidget):
         # 表格設置
         self.table = QTableWidget()
         self.table.setProperty("is_live_timing_widget", True)  # 標記為 Live Timing widget
-        self.table.setColumnCount(19)  # 移除 P1% P2% P3% OT% CC% 欄位
+        self.table.setColumnCount(20)  # 新增 SPD 欄位
         self.table.setHorizontalHeaderLabels([
             "P", tr("driver"), "+/-", "No", tr("tyre"), tr("age"), "Pit", tr("tyre_hist"),
             "S1", "S2", "S3",
             tr("last_lap"), tr("best_lap"), tr("delta"), tr("gap_leader"), tr("gap_ahead"), "Trend", tr("fuel_save"),
-            "DRS"
+            "SPD", "DRS"
         ])
         
         # 啟用排序
@@ -354,6 +354,7 @@ class RankingTableWidget(QWidget):
             75,   # 前車
             36,   # Trend (趨勢)
             38,   # 省油% (原為圈)
+            45,   # SPD (最高速)
             32    # DRS
         ]
         
@@ -364,7 +365,7 @@ class RankingTableWidget(QWidget):
         self.table.hideColumn(3)   # No
         self.table.hideColumn(7)   # 換胎
         # self.table.hideColumn(17)  # 燃油節省燈號（已啟用）
-        self.table.hideColumn(22)  # ❌ CC% (近距離接觸 - 已禁用以提升性能)
+        self.table.hideColumn(23)  # ❌ CC% (近距離接觸 - 已禁用以提升性能)
     
     def _show_context_menu(self, pos):
         """顯示右鍵選單"""
@@ -1126,6 +1127,9 @@ class RankingTableWidget(QWidget):
         
         # 燃油節省燈號 (欄位 17)
         self._set_fuel_saving(row, driver_num, driver_data, default_text_color)
+        
+        # 最高速 SPD (欄位 18)
+        self._set_top_speed(row, driver_num, driver_data, default_text_color)
     
     def _set_delta(self, row: int, last_lap_time: str, best_lap_time: str):
         """
@@ -1372,6 +1376,66 @@ class RankingTableWidget(QWidget):
         
         self.table.setItem(row, 17, item)
     
+    def _set_top_speed(self, row: int, driver_num: str, driver_data: Dict, default_text_color: QColor):
+        """
+        設置最高速欄位 (欄位 18)
+        
+        顏色邏輯：
+        - 淺紫色: 個人最高速
+        - 淺綠色: 差距 -3 km/h 以內
+        - 淺黃色: 差距 -5 km/h 以內
+        - 淺紅色: 差距 -7 km/h 以內
+        - 白色: 差距超過 -7 km/h 或無數據
+        """
+        item = QTableWidgetItem()
+        item.setTextAlignment(Qt.AlignCenter)
+        
+        # 從 driver_data 讀取最高速數據
+        lap_top_speed = driver_data.get('lap_top_speed', 0)
+        personal_best_speed = driver_data.get('personal_best_speed', 0)
+        
+        # 顏色常數
+        COLOR_PERSONAL_BEST = '#DA70D6'   # 淺紫色 (個人最高速)
+        COLOR_GOOD = '#90EE90'             # 淺綠色 (差距 -3 km/h 以內)
+        COLOR_MEDIUM = '#FFFF99'           # 淺黃色 (差距 -5 km/h 以內)
+        COLOR_SLOW = '#FF9999'             # 淺紅色 (差距 -7 km/h 以內)
+        COLOR_NORMAL = '#E0E0E0'           # 淺灰色 (正常)
+        
+        if lap_top_speed > 0:
+            item.setText(f"{lap_top_speed:.0f}")
+            
+            # 計算與個人最高速的差距
+            if personal_best_speed > 0:
+                speed_diff = lap_top_speed - personal_best_speed
+                
+                if speed_diff >= 0:
+                    # 個人最高速 (包括等於)
+                    item.setForeground(QColor(COLOR_PERSONAL_BEST))
+                    font = item.font()
+                    font.setBold(True)
+                    item.setFont(font)
+                elif speed_diff >= -3:
+                    # 差距 -3 km/h 以內：淺綠色
+                    item.setForeground(QColor(COLOR_GOOD))
+                elif speed_diff >= -5:
+                    # 差距 -5 km/h 以內：淺黃色
+                    item.setForeground(QColor(COLOR_MEDIUM))
+                elif speed_diff >= -7:
+                    # 差距 -7 km/h 以內：淺紅色
+                    item.setForeground(QColor(COLOR_SLOW))
+                else:
+                    # 差距超過 -7 km/h：正常顏色
+                    item.setForeground(QColor(COLOR_NORMAL))
+            else:
+                # 沒有個人最高速數據
+                item.setForeground(default_text_color)
+        else:
+            # 沒有速度數據
+            item.setText('-')
+            item.setForeground(default_text_color)
+        
+        self.table.setItem(row, 18, item)
+    
     def _set_telemetry(self, row: int, driver_num: str):
         """設置遙測資料欄位（DRS）"""
         # 深色模式預設文字顏色
@@ -1379,7 +1443,7 @@ class RankingTableWidget(QWidget):
         
         car_data = self._current_car_data.get(driver_num, {})
         
-        # DRS (欄位 18 - 移除 OT% CC% 後)
+        # DRS (欄位 19 - 新增 SPD 後)
         # DRS 值說明 (來源: F1 Live Timing API):
         # - 0 = Off
         # - 1 = DRS Disabled (禁用 - 76% of the time)
@@ -1418,7 +1482,7 @@ class RankingTableWidget(QWidget):
         else:
             drs_item.setForeground(default_text_color)
         
-        self.table.setItem(row, 18, drs_item)
+        self.table.setItem(row, 19, drs_item)
     
     def _parse_lap_time(self, lap_time_str: str) -> Optional[float]:
         """解析圈時字串為秒數"""

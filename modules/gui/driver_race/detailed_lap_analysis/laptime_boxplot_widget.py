@@ -384,6 +384,22 @@ class BoxPlotCanvas(QWidget):
         self.update()
         super().leaveEvent(event)
 
+    def mousePressEvent(self, event):  # type: ignore[override]
+        """在點擊畫布時，無條件隱藏 tooltip 並清除 hover 狀態（避免 hover 區域過大導致點擊無效）"""
+        print(f"[DEBUG] BoxPlotCanvas.mousePressEvent 被觸發! pos={event.pos()}")
+        self._hover_index = None
+        QToolTip.hideText()
+        self.update()
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):  # type: ignore[override]
+        """釋放滑鼠按鍵後也無條件隱藏 tooltip，確保不會遺留"""
+        print(f"[DEBUG] BoxPlotCanvas.mouseReleaseEvent 被觸發! pos={event.pos()}")
+        self._hover_index = None
+        QToolTip.hideText()
+        self.update()
+        super().mouseReleaseEvent(event)
+
     # ------------------------------------------------------------------
     # 工具方法
     # ------------------------------------------------------------------

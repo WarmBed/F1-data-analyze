@@ -421,13 +421,24 @@ class WeatherTimelineWidget(QWidget):
             if item.widget():
                 item.widget().deleteLater()
         
-        # 顯示錯誤訊息
-        error_label = QLabel(tr("weather_error_message", "無法載入天氣數據\n{error}").format(error=error_msg), self)
+        # 🔧 改善錯誤訊息：隱藏技術性錯誤，顯示友善訊息
+        # 檢查是否為常見錯誤類型
+        friendly_message = tr("weather_no_data", "暫無天氣數據")
+        
+        if "Unaccessible" in error_msg or "Entity for url" in error_msg:
+            friendly_message = tr("weather_future_event", "未來賽事，天氣數據尚未發布")
+        elif "API" in error_msg or "連線" in error_msg or "網路" in error_msg:
+            friendly_message = tr("weather_api_error", "無法連接氣象服務")
+        elif "不存在" in error_msg or "not exist" in error_msg.lower():
+            friendly_message = tr("weather_no_event_data", "此賽事暫無天氣數據")
+        
+        # 顯示友善訊息
+        error_label = QLabel(friendly_message, self)
         error_label.setAlignment(Qt.AlignCenter)
         error_label.setStyleSheet("""
             QLabel {
-                color: #856404;
-                font-size: 12px;
+                color: #6c757d;
+                font-size: 14px;
                 padding: 20px;
                 background: transparent;
             }

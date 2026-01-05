@@ -198,7 +198,34 @@ class ChampionshipStandingsDemoWidget(QWidget):
 
     def _on_load_error(self, message: str) -> None:
         self.progress_bar.setVisible(False)
-        self._show_error(tr("standings_error_title", "載入失敗"), message)
+        
+        # 🔧 改善：檢測未來賽季錯誤，顯示友善訊息而不是彈窗
+        if "Unaccessible" in message or "Entity for url" in message or "尚未開始" in message:
+            friendly_msg = tr("standings_future_season", "未來賽季數據尚未發布")
+            self.status_label.setText(friendly_msg)
+            self.status_label.setStyleSheet("color: #6c757d; padding: 8px;")
+            
+            # 在表格中顯示友善訊息
+            self._show_empty_state_in_tables(friendly_msg)
+        else:
+            # 其他錯誤仍然彈出對話框
+            self._show_error(tr("standings_error_title", "載入失敗"), message)
+    
+    def _show_empty_state_in_tables(self, message: str):
+        """在表格中顯示空狀態訊息"""
+        # 車手表格
+        self.driver_table.setRowCount(1)
+        empty_item = QTableWidgetItem(message)
+        empty_item.setTextAlignment(Qt.AlignCenter)
+        self.driver_table.setItem(0, 0, empty_item)
+        self.driver_table.setSpan(0, 0, 1, self.driver_table.columnCount())
+        
+        # 車隊表格
+        self.constructor_table.setRowCount(1)
+        empty_item_2 = QTableWidgetItem(message)
+        empty_item_2.setTextAlignment(Qt.AlignCenter)
+        self.constructor_table.setItem(0, 0, empty_item_2)
+        self.constructor_table.setSpan(0, 0, 1, self.constructor_table.columnCount())
 
     # ------------------------------------------------------------------
     # Rendering helpers

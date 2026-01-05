@@ -1,0 +1,17 @@
+{
+  "model_version": "v3.10_FP2",
+  "filtering_method": "Quali Sim (SOFT tire + ≤3 lap stint + tire age ≤3)",
+  "races_analyzed": 17,
+  "total_predictions": 335,
+  "avg_time_mae": 2.472160154765588,
+  "avg_time_rmse": 3.3602980302777725,
+  "avg_spearman_corr": 0.410434390474456,
+  "avg_top_1_accuracy": 0.008823529411764707,
+  "avg_top_3_accuracy": 0.019768375186331844,
+  "avg_top_5_accuracy": 0.026886824905400755,
+  "avg_rank_deviation": 4.6497076023391815,
+  "avg_perfect_predictions_rate": 0.11532507739938082,
+  "avg_predicted_improvement": 2.955042597674307,
+  "avg_actual_improvement": 2.2474324905400755,
+  "avg_improvement_error": 2.472160154765588
+}

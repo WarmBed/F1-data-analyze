@@ -116,13 +116,30 @@ class AnalysisWindowCreator:
             
             return
         
-        # 特殊處理：遙測/圈速分析概覽直接調用 lap_analysis 方法（排除詳細圈速分析）
-        is_detailed_lap = (
-            ("詳細圈速分析" in function_name)
-            or ("Detailed Lap Analysis" in function_name)
+        # 特殊處理：遙測/圈速分析概覽直接調用 lap_analysis 方法（排除詳細圈速分析、圈速表格和圈速箱型圖）
+        # is_detailed_lap_parent: 只有「詳細圈速分析」父項目才彈出選項對話框
+        is_detailed_lap_parent = (
+            ("詳細圈速分析" in function_name and "表格" not in function_name)
+            or ("Detailed Lap Analysis" in function_name and "Table" not in function_name)
             or ("詳細ラップ分析" in function_name)
         )
-        if (not is_detailed_lap) and (
+        
+        # is_detailed_lap: 詳細圈速相關（用於排除遙測分析對話框）
+        is_detailed_lap = (
+            ("詳細圈速" in function_name)
+            or ("Detailed Lap" in function_name)
+            or ("詳細ラップ" in function_name)
+        )
+        
+        # 排除圈速箱型圖/箱線圖 - 這些是獨立模組，不需要彈出遙測分析選項
+        is_boxplot = (
+            ("箱型圖" in function_name)
+            or ("箱線圖" in function_name)
+            or ("Box Plot" in function_name)
+            or ("Boxplot" in function_name)
+        )
+        
+        if (not is_detailed_lap) and (not is_boxplot) and (
             ("圈速" in function_name)
             or ("遙測分析" in function_name)
             or ("Telemetry Analysis" in function_name)
@@ -214,7 +231,9 @@ class AnalysisWindowCreator:
         logger.info(f"[MULTI_WINDOW] ✅ 允許創建多個視窗: {function_name}")
 
         detailed_lap_selection = {"detail_table": True, "box_plot": False}
-        if is_detailed_lap:
+        # 只有點擊「詳細圈速分析」父項目時才彈出選項對話框
+        # 直接點擊「詳細圈速表格」或「圈速箱型圖」不需要對話框
+        if is_detailed_lap_parent:
             selection = self.main_window._prompt_detailed_lap_options()
             if selection is None:
                 logger.debug("[DETAILED_LAP] 使用者取消了詳細圈速分析選項對話框")

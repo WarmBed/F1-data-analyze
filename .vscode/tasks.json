@@ -356,6 +356,109 @@
 			"args": [
 				"temp_sampling_rate.py"
 			]
+		},
+		{
+			"label": "Test Abu Dhabi Overtakes",
+			"type": "shell",
+			"command": "python test_abu_dhabi_overtakes.py"
+		},
+		{
+			"label": "Test Abu Dhabi Overtakes 2",
+			"type": "shell",
+			"command": "python test_abu_dhabi_overtakes.py"
+		},
+		{
+			"label": "Test Abu Dhabi 3",
+			"type": "shell",
+			"command": "python test_abu_dhabi_overtakes.py"
+		},
+		{
+			"label": "Test Overtake Simple",
+			"type": "shell",
+			"command": "python test_overtake_simple.py"
+		},
+		{
+			"label": "Regenerate Abu Dhabi F100",
+			"type": "shell",
+			"command": "python f1_analysis_modular_main.py -f 100 -y 2025 -r \"Abu Dhabi\""
+		},
+		{
+			"label": "Regenerate Abu Dhabi F100 v2",
+			"type": "shell",
+			"command": "python f1_analysis_modular_main.py -f 100 -y 2025 -r Abu_Dhabi"
+		},
+		{
+			"label": "Regenerate Abu Dhabi F100",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"f1_analysis_modular_main.py",
+				"-f",
+				"100",
+				"-y",
+				"2025",
+				"-r",
+				"Abu Dhabi",
+				"-s",
+				"R"
+			]
+		},
+		{
+			"label": "Regenerate Abu Dhabi F100 v2",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"f1_analysis_modular_main.py",
+				"-f",
+				"100",
+				"-r",
+				"'Abu Dhabi'"
+			]
+		},
+		{
+			"label": "Regenerate Abu Dhabi F100 v3",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"f1_analysis_modular_main.py",
+				"-f",
+				"100",
+				"-r",
+				"Abu_Dhabi"
+			]
+		},
+		{
+			"label": "Debug F100 Abu Dhabi",
+			"type": "shell",
+			"command": "python",
+			"args": [
+				"debug_f100_abu_dhabi.py"
+			]
+		},
+		{
+			"label": "Debug F100 v2",
+			"type": "shell",
+			"command": "python debug_f100_abu_dhabi.py 2>&1"
+		},
+		{
+			"label": "Regenerate F100 Abu Dhabi",
+			"type": "shell",
+			"command": "python f1_analysis_modular_main.py -f 100 -y 2025 -r \"Abu Dhabi\" -s R 2>&1"
+		},
+		{
+			"label": "Regen F100",
+			"type": "shell",
+			"command": "python regenerate_f100_abu_dhabi.py 2>&1"
+		},
+		{
+			"label": "Regen F100 LiveTiming",
+			"type": "shell",
+			"command": "python regenerate_f100_abu_dhabi.py"
+		},
+		{
+			"label": "F100 LiveTiming v2",
+			"type": "shell",
+			"command": "python regenerate_f100_abu_dhabi.py"
 		}
 	]
 }

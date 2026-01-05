@@ -80,13 +80,28 @@ class ConstructorStandingsWidget(QWidget):
         self.standings_data = data.get("standings", [])
         self.season_year = data.get("season_year", 2024)
         round_num = data.get("round", 0)
+        is_future_season = data.get("_is_future_season", False)
         
         # 更新標題
-        title = tr("constructor_standings_title_with_round", "車隊積分榜 - {year} 第 {round} 站").format(
-            year=self.season_year,
-            round=round_num
-        )
+        if is_future_season or (round_num == 0 and not self.standings_data):
+            # 未來賽季：顯示友善標題
+            title = tr("constructor_standings_title", "車隊積分榜 - {year}").format(year=self.season_year)
+        else:
+            title = tr("constructor_standings_title_with_round", "車隊積分榜 - {year} 第 {round} 站").format(
+                year=self.season_year,
+                round=round_num
+            )
         self.title_label.setText(title)
+        
+        # 未來賽季或空數據：顯示友善訊息
+        if is_future_season or not self.standings_data:
+            self.table.setRowCount(1)
+            empty_item = QTableWidgetItem(tr("future_season_no_data", "賽季數據尚未發布"))
+            empty_item.setTextAlignment(Qt.AlignCenter)
+            empty_item.setForeground(QColor("#6c757d"))
+            self.table.setItem(0, 0, empty_item)
+            self.table.setSpan(0, 0, 1, self.table.columnCount())
+            return
         
         # 初始化顏色系統
         try:

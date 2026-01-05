@@ -118,8 +118,9 @@ class UniversalChartWidget(QWidget):
         self.show_value_tooltips = True  # 是否顯示數值提示
         
         # 🆕 數據點互動功能（參考 Detailed Lap Analysis）
-        self.hover_data_point = None  # 當前懸停的數據點 {'series_idx': int, 'point_idx': int, 'x': float, 'y': float, 'screen_pos': QPoint}
-        self.pinned_data_points = []  # 固定的數據點列表（最多2個），每個元素: {'series_idx', 'point_idx', 'x', 'y', 'screen_pos', 'tooltip_rect', 'custom_pos'}
+        self.hover_data_point = None  # 當前懸停的數據點 {'series_idx': int, 'point_idx': int, 'x': float, 'y': float, 'screen_pos': QPoint, 'driver_color': QColor}
+        self.pinned_data_points = []  # 固定的數據點列表（無上限），每個元素: {'series_idx', 'point_idx', 'x', 'y', 'screen_pos', 'tooltip_rect', 'custom_pos', 'driver_color'}
+        self.max_pinned_points = 999  # 🆕 允許無限個固定點
         self.data_point_search_radius = 20  # 數據點檢測半徑（像素）
         self.data_point_radius = 3  # 數據點繪製半徑（像素）
         self.show_data_points = True  # 是否顯示數據點（線+點模式）
@@ -128,6 +129,11 @@ class UniversalChartWidget(QWidget):
         self.dragging_tooltip = False  # 是否正在拖動 tooltip
         self.dragging_tooltip_index = -1  # 正在拖動的 tooltip 索引
         self.tooltip_drag_offset = QPoint(0, 0)  # tooltip 拖動偏移量
+        
+        # 🆕 左鍵選取框功能
+        self.is_selecting = False  # 是否正在選取
+        self.selection_rect_start = None  # 選取框起始點
+        self.selection_rect_end = None  # 選取框結束點
         
         # 座標軸範圍控制 - 支援使用者自訂範圍
         self.manual_x_range = None      # (min, max) 或 None 表示自動
@@ -607,6 +613,14 @@ class UniversalChartWidget(QWidget):
             
             # 🆕 繪製懸停和固定的數據點（線+點互動）
             self.draw_hover_and_pinned_data_points(painter, chart_area)
+            
+            # 🆕 繪製選取框（左鍵拖動時）
+            if self.is_selecting and self.selection_rect_start and self.selection_rect_end:
+                selection_rect = QRect(self.selection_rect_start, self.selection_rect_end).normalized()
+                # 半透明綠色填充（與縮放框區分）
+                painter.setBrush(QBrush(QColor(100, 255, 150, 50)))
+                painter.setPen(QPen(QColor(50, 200, 100), 2, Qt.DashLine))
+                painter.drawRect(selection_rect)
             
             # 取消裁切
             painter.setClipping(False)
@@ -1163,12 +1177,12 @@ class UniversalChartWidget(QWidget):
             painter.drawLine(points[i], points[i + 1])
             line_count += 1
         
-        # 🆕 繪製數據點（線+點模式）
-        if self.show_data_points:
-            for point in points:
-                # 🔧 跳過包含 NaN 的點
-                if not (math.isnan(point.x()) or math.isnan(point.y())):
-                    painter.drawEllipse(point, self.data_point_radius, self.data_point_radius)
+        # 🆕 繪製數據點（線+點模式）- 已禁用圓點顯示
+        # if self.show_data_points:
+        #     for point in points:
+        #         # 🔧 跳過包含 NaN 的點
+        #         if not (math.isnan(point.x()) or math.isnan(point.y())):
+        #             painter.drawEllipse(point, self.data_point_radius, self.data_point_radius)
         
         # print(f"[DEBUG] 繪製了 {line_count} 條線段")
     
@@ -1246,6 +1260,12 @@ class UniversalChartWidget(QWidget):
                 f"Y: {y_val:.2f}",
             ]
         
+        # 設置字體（不使用粗體）
+        font = QFont()
+        font.setPointSize(10)
+        font.setBold(False)
+        painter.setFont(font)
+        
         # 計算 Tooltip 尺寸
         fm = painter.fontMetrics()
         max_width = 0
@@ -1287,26 +1307,54 @@ class UniversalChartWidget(QWidget):
         if is_pinned and pinned_index >= 0:
             data_point['tooltip_rect'] = tooltip_rect
         
-        # 🆕 如果是固定 tooltip，繪製連接線（數據點 → tooltip）
+        # 🆕 取得車手顏色（如果有）
+        driver_color = data_point.get('driver_color')
+        
+        # 🆕 如果是固定 tooltip，繪製連接線（數據點 → tooltip）- 使用車手顏色
         if is_pinned:
             painter.save()
-            painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.DashLine))
-            # 從數據點繪製到 tooltip 的中心
-            tooltip_center_x = tooltip_x + tooltip_width // 2
-            tooltip_center_y = tooltip_y + tooltip_height // 2
-            painter.drawLine(screen_pos.x(), screen_pos.y(), tooltip_center_x, tooltip_center_y)
+            line_color = driver_color if driver_color else QColor(100, 100, 100)
+            painter.setPen(QPen(line_color, 1, Qt.DashLine))
+            # 計算連接點（tooltip 邊緣最近點）
+            if tooltip_x > screen_pos.x():
+                connect_x = tooltip_x  # 連接到 tooltip 左邊
+            else:
+                connect_x = tooltip_x + tooltip_width  # 連接到 tooltip 右邊
+                
+            if tooltip_y > screen_pos.y():
+                connect_y = tooltip_y  # 連接到 tooltip 上邊
+            else:
+                connect_y = tooltip_y + tooltip_height  # 連接到 tooltip 下邊
+            
+            painter.drawLine(screen_pos.x(), screen_pos.y(), connect_x, connect_y)
+            
+            # 繪製錨點小圓點 - 使用車手顏色
+            painter.setPen(QPen(Qt.black, 1))
+            painter.setBrush(QBrush(driver_color if driver_color else QColor(255, 165, 0)))
+            painter.drawEllipse(screen_pos, 4, 4)
             painter.restore()
         
-        # 繪製背景（懸停=淺黃色，固定=淺藍色）
-        painter.setPen(QPen(QColor(50, 50, 50), 2))
-        if is_pinned:
-            painter.setBrush(QBrush(QColor(173, 216, 230, 230)))  # 淺藍色（固定）
+        # 繪製背景 - 使用車手顏色作為背景
+        if driver_color:
+            # 使用車手顏色作為背景，加點透明度
+            bg_color = QColor(driver_color.red(), driver_color.green(), driver_color.blue(), 230)
         else:
-            painter.setBrush(QBrush(QColor(255, 255, 200, 230)))  # 淺黃色（懸停）
+            bg_color = QColor(200, 200, 200, 230)  # 預設灰色背景
+        
+        border_color = QColor(50, 50, 50)  # 深灰色邊框
+        painter.setPen(QPen(border_color, 2))
+        painter.setBrush(QBrush(bg_color))
         painter.drawRoundedRect(tooltip_rect, 5, 5)
         
+        # 計算文字顏色 - 根據背景亮度決定黑色或白色
+        if driver_color:
+            luminance = 0.299 * driver_color.red() + 0.587 * driver_color.green() + 0.114 * driver_color.blue()
+            text_color = QColor(0, 0, 0) if luminance > 128 else QColor(255, 255, 255)
+        else:
+            text_color = QColor(0, 0, 0)
+        
         # 繪製文字
-        painter.setPen(QPen(QColor(0, 0, 0), 1))
+        painter.setPen(QPen(text_color, 1))
         current_y = tooltip_y + padding
         
         for i, line in enumerate(lines):
@@ -1363,6 +1411,7 @@ class UniversalChartWidget(QWidget):
     
     def _check_hover_data_point(self, mouse_pos):
         """檢查滑鼠是否懸停在數據點上（參考 Detailed Lap Analysis）"""
+        print(f"[DEBUG] _check_hover_data_point called, data_series count: {len(self.data_series) if self.data_series else 0}")
         if not self.data_series:
             self.hover_data_point = None
             return
@@ -1396,12 +1445,33 @@ class UniversalChartWidget(QWidget):
                 
                 if distance < closest_distance:
                     closest_distance = distance
+                    # 🆕 嘗試獲取車手顏色（從系列名稱解析車手代碼）
+                    driver_color = None
+                    series_name = series.name if hasattr(series, 'name') else ""
+                    if series_name:
+                        # 嘗試從系列名稱獲取車手代碼（例如 "VER - Throttle"）
+                        driver_code = series_name.split(' - ')[0].split(' ')[0].upper() if ' - ' in series_name or ' ' in series_name else series_name.upper()[:3]
+                        print(f"[DEBUG] Series name: '{series_name}' -> driver_code: '{driver_code}'")
+                        if len(driver_code) == 3:
+                            try:
+                                from modules.gui.themes.color_palette_provider import color_palette_provider
+                                # 確保顏色數據已載入
+                                color_palette_provider.ensure_loaded()
+                                driver_color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
+                                if driver_color:
+                                    print(f"[DEBUG] Got driver_color for {driver_code}: RGB({driver_color.red()}, {driver_color.green()}, {driver_color.blue()})")
+                                else:
+                                    print(f"[DEBUG] driver_color is None for {driver_code}")
+                            except Exception as e:
+                                print(f"[DEBUG] Exception getting driver color for {driver_code}: {e}")
+                    
                     closest_point = {
                         'series_idx': series_idx,
                         'point_idx': point_idx,
                         'x': x_val,
                         'y': y_val,
-                        'screen_pos': screen_point
+                        'screen_pos': screen_point,
+                        'driver_color': driver_color
                     }
         
         self.hover_data_point = closest_point
@@ -1469,8 +1539,8 @@ class UniversalChartWidget(QWidget):
                 logger.debug("[DEBUG] 該數據點已固定，跳過")
                 return
         
-        # 限制最多2個固定點
-        if len(self.pinned_data_points) >= 2:
+        # 限制固定點數量
+        if len(self.pinned_data_points) >= self.max_pinned_points:
             # 移除最舊的固定點
             removed = self.pinned_data_points.pop(0)
             logger.debug(
@@ -1491,6 +1561,122 @@ class UniversalChartWidget(QWidget):
         )
         self.update()
     
+    def _apply_selection_from_rect(self):
+        """根據選取框自動固定所有選中的數據點"""
+        if not self.selection_rect_start or not self.selection_rect_end:
+            return
+        
+        # 計算選取框的歸一化矩形
+        rect = QRect(self.selection_rect_start, self.selection_rect_end).normalized()
+        
+        # 確保選取框有最小尺寸（避免誤觸）
+        if rect.width() < 10 and rect.height() < 10:
+            logger.debug("[SELECTION] 選取框太小，忽略選取")
+            return
+        
+        chart_area = self.get_chart_area()
+        if not chart_area.isValid() or not self.data_series:
+            return
+        
+        # 收集選取框內的所有數據點
+        selected_points = []
+        
+        for series_idx, series in enumerate(self.data_series):
+            for point_idx, (x_val, y_val) in enumerate(zip(series.x_data, series.y_data)):
+                # 跳過 NaN 值
+                if math.isnan(x_val) or math.isnan(y_val):
+                    continue
+                
+                # 計算數據點的螢幕座標
+                screen_x, screen_y = self._data_to_screen(x_val, y_val, series.y_axis, chart_area)
+                
+                if math.isnan(screen_x) or math.isnan(screen_y):
+                    continue
+                
+                screen_pos = QPoint(int(screen_x), int(screen_y))
+                
+                if rect.contains(screen_pos):
+                    # 取得車手顏色
+                    driver_color = None
+                    series_name = series.name if hasattr(series, 'name') else ""
+                    if series_name:
+                        driver_code = series_name.split(' - ')[0].split(' ')[0].upper() if ' - ' in series_name or ' ' in series_name else series_name.upper()[:3]
+                        if len(driver_code) == 3:
+                            try:
+                                from modules.gui.themes.color_palette_provider import color_palette_provider
+                                driver_color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
+                            except Exception:
+                                pass
+                    
+                    selected_points.append({
+                        'series_idx': series_idx,
+                        'point_idx': point_idx,
+                        'x': x_val,
+                        'y': y_val,
+                        'screen_pos': screen_pos,
+                        'driver_color': driver_color
+                    })
+        
+        if not selected_points:
+            logger.debug("[SELECTION] 選取框內沒有數據點")
+            return
+        
+        logger.debug("[SELECTION] 選中 %d 個數據點", len(selected_points))
+        
+        # 自動固定所有選中的數據點並自動排列
+        self._pin_multiple_points_with_arrangement(selected_points)
+        
+        self.update()
+    
+    def _pin_multiple_points_with_arrangement(self, selected_points: list):
+        """固定多個數據點並自動排列避免重疊"""
+        if not selected_points:
+            return
+        
+        # 計算 tooltip 的預設尺寸
+        tooltip_width = 150
+        tooltip_height = 60
+        spacing = 10
+        
+        chart_area = self.get_chart_area()
+        
+        # 計算起始排列位置（圖表右側）
+        start_x = chart_area.right() - tooltip_width - 20
+        start_y = chart_area.top() + 20
+        
+        for i, sel in enumerate(selected_points):
+            series_idx = sel['series_idx']
+            point_idx = sel['point_idx']
+            
+            # 檢查是否已經固定過這個點
+            already_pinned = False
+            for pinned in self.pinned_data_points:
+                if pinned['series_idx'] == series_idx and pinned['point_idx'] == point_idx:
+                    already_pinned = True
+                    break
+            
+            if already_pinned:
+                continue
+            
+            # 計算自動排列位置
+            pos_x = start_x
+            pos_y = start_y + (len(self.pinned_data_points) % 10) * (tooltip_height + spacing)
+            
+            # 如果超出圖表底部，換到左側
+            if pos_y + tooltip_height > chart_area.bottom():
+                pos_x = chart_area.left() + 20
+                pos_y = start_y + ((len(self.pinned_data_points) % 10) - 5) * (tooltip_height + spacing)
+            
+            custom_pos = QPoint(pos_x, pos_y)
+            
+            # 建立 pinned 數據
+            pinned_data = dict(sel)
+            pinned_data['tooltip_rect'] = None
+            pinned_data['custom_pos'] = custom_pos
+            
+            self.pinned_data_points.append(pinned_data)
+            logger.debug("[SELECTION] 自動固定數據點: 系列 %d, 點 %d", series_idx, point_idx)
+
     def reset_view(self):
         """重置視圖縮放和偏移到預設值"""
         logger.info("[DEBUG] 重置通用圖表視圖")
@@ -1640,11 +1826,12 @@ class UniversalChartWidget(QWidget):
                     self.add_fixed_vertical_line(event.pos())
                     logger.debug("[DEBUG] 固定垂直虛線於 X=%s", event.x())
                 else:
-                    # 純左鍵: 開始拖拉圖表
-                    self.dragging = True
-                    self.last_drag_pos = event.pos()
-                    self.setCursor(Qt.ClosedHandCursor)
-                    logger.debug("[DEBUG] 開始拖拉圖表")
+                    # 🆕 左鍵在空白處開始拖曳選取
+                    self.is_selecting = True
+                    self.selection_rect_start = event.pos()
+                    self.selection_rect_end = event.pos()
+                    self.setCursor(Qt.CrossCursor)
+                    logger.debug("[DEBUG] 開始拖曳選取: %s", event.pos())
                 
                 event.accept()
             elif event.button() == Qt.RightButton:
@@ -1693,6 +1880,13 @@ class UniversalChartWidget(QWidget):
             event.accept()
             return
         
+        # 🆕 處理選取框拖動
+        if self.is_selecting:
+            self.selection_rect_end = event.pos()
+            self.update()
+            event.accept()
+            return
+        
         # 檢查滑鼠是否懸停在圖例上（顯示手型游標）
         if self.legend_rect and self.legend_rect.contains(event.pos()):
             self.setCursor(Qt.OpenHandCursor)
@@ -1727,7 +1921,7 @@ class UniversalChartWidget(QWidget):
         event.accept()
     
     def mouseReleaseEvent(self, event):
-        """滑鼠釋放事件 - 結束拖拉和 tooltip 拖動"""
+        """滑鼠釋放事件 - 結束拖拉、tooltip 拖動和選取框"""
         if event.button() == Qt.LeftButton:
             if self.legend_dragging:
                 # 結束圖例拖拉
@@ -1746,6 +1940,18 @@ class UniversalChartWidget(QWidget):
                 self.dragging_tooltip_index = -1
                 self.tooltip_drag_offset = QPoint(0, 0)
                 self.setCursor(Qt.ArrowCursor)
+                event.accept()
+            elif self.is_selecting:
+                # 🆕 處理選取框完成
+                self.is_selecting = False
+                self.setCursor(Qt.ArrowCursor)
+                
+                # 計算選取框內的數據點並自動固定
+                if self.selection_rect_start and self.selection_rect_end:
+                    self._apply_selection_from_rect()
+                
+                self.selection_rect_start = None
+                self.selection_rect_end = None
                 event.accept()
             elif self.dragging:
                 # 結束圖表拖拉

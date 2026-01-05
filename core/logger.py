@@ -302,7 +302,7 @@ def _build_default_config(
     # 🚫 停用 console handler - 不再輸出到終端機
     console_level_value = console_level or level
 
-    return {
+    result = {
         "version": 1,
         "disable_existing_loggers": False,
         "formatters": {
@@ -358,6 +358,7 @@ def _build_default_config(
             "level": "WARNING",
         },
     }
+    return result
 
 
 def _normalise_component(component: Optional[str]) -> str:

@@ -1,0 +1,169 @@
+{
+  "timestamp": "2026-01-04T22:08:56.655272",
+  "version": "v3.10_FP2_weighted",
+  "year_weights": {
+    "2025": 1.5,
+    "2024": 1.3,
+    "2023": 1.0,
+    "2022": 0.8,
+    "2021": 0.6,
+    "2020": 0.5
+  },
+  "team_weights": {
+    "Red Bull Racing": 1.2,
+    "Ferrari": 1.2,
+    "McLaren": 1.1,
+    "Mercedes": 1.1,
+    "Aston Martin": 1.0,
+    "Alpine": 1.0,
+    "Williams": 1.0,
+    "Haas F1 Team": 0.9,
+    "Kick Sauber": 0.8,
+    "Racing Bulls": 0.8
+  },
+  "tracks": {
+    "Abu Dhabi": {
+      "train_mae": 0.677138523888279,
+      "cv_mae": 1.369901119726866,
+      "sample_count": 77,
+      "weighted_sample_count": 115.015
+    },
+    "Australia": {
+      "train_mae": 0.37341330219948193,
+      "cv_mae": 1.2102997451851105,
+      "sample_count": 73,
+      "weighted_sample_count": 109.995
+    },
+    "Austria": {
+      "train_mae": 2.1001636311769483,
+      "cv_mae": 2.8358203649149707,
+      "sample_count": 40,
+      "weighted_sample_count": 52.865
+    },
+    "Azerbaijan": {
+      "train_mae": 0.5738002736224571,
+      "cv_mae": 0.9177217593725464,
+      "sample_count": 52,
+      "weighted_sample_count": 89.29
+    },
+    "Bahrain": {
+      "train_mae": 0.5419754690543591,
+      "cv_mae": 1.2774447769756796,
+      "sample_count": 76,
+      "weighted_sample_count": 111.02000000000001
+    },
+    "Belgium": {
+      "train_mae": 1.3126996553891739,
+      "cv_mae": 2.9699877587220604,
+      "sample_count": 39,
+      "weighted_sample_count": 55.62500000000002
+    },
+    "Brazil": {
+      "train_mae": 1.372936951436495,
+      "cv_mae": 1.7646478985074971,
+      "sample_count": 19,
+      "weighted_sample_count": 17.96
+    },
+    "Canada": {
+      "train_mae": 2.0134889432075727,
+      "cv_mae": 5.045480245316456,
+      "sample_count": 77,
+      "weighted_sample_count": 125.46999999999998
+    },
+    "Emilia Romagna": {
+      "train_mae": 1.034858237245018,
+      "cv_mae": 3.4756895914364736,
+      "sample_count": 54,
+      "weighted_sample_count": 84.52000000000001
+    },
+    "France": {
+      "train_mae": 1.0860534077750306,
+      "cv_mae": 1.2738685498767446,
+      "sample_count": 18,
+      "weighted_sample_count": 17.84
+    },
+    "Great Britain": {
+      "train_mae": 1.8763320295724002,
+      "cv_mae": 3.6569262696444107,
+      "sample_count": 55,
+      "weighted_sample_count": 77.405
+    },
+    "Hungary": {
+      "train_mae": 0.5402966960049875,
+      "cv_mae": 1.5313546211313078,
+      "sample_count": 79,
+      "weighted_sample_count": 104.56000000000002
+    },
+    "Italy": {
+      "train_mae": 0.5087130199670791,
+      "cv_mae": 1.1699912887913138,
+      "sample_count": 76,
+      "weighted_sample_count": 109.655
+    },
+    "Japan": {
+      "train_mae": 0.42829276777716174,
+      "cv_mae": 1.2439230641709325,
+      "sample_count": 68,
+      "weighted_sample_count": 88.37500000000001
+    },
+    "Las Vegas": {
+      "train_mae": 2.34215543498023,
+      "cv_mae": 6.171061439711456,
+      "sample_count": 59,
+      "weighted_sample_count": 109.69
+    },
+    "Mexico": {
+      "train_mae": 0.5065571281259718,
+      "cv_mae": 1.6741373953569854,
+      "sample_count": 77,
+      "weighted_sample_count": 104.025
+    },
+    "Miami": {
+      "train_mae": 0.912487109555137,
+      "cv_mae": 1.9774995532035826,
+      "sample_count": 36,
+      "weighted_sample_count": 47.870000000000005
+    },
+    "Monaco": {
+      "train_mae": 0.5054349428158765,
+      "cv_mae": 1.6674563020813047,
+      "sample_count": 79,
+      "weighted_sample_count": 135.02
+    },
+    "Netherlands": {
+      "train_mae": 1.7293784960476983,
+      "cv_mae": 3.811899949695391,
+      "sample_count": 76,
+      "weighted_sample_count": 109.98499999999999
+    },
+    "Saudi Arabia": {
+      "train_mae": 0.3988983621128285,
+      "cv_mae": 1.768432042071933,
+      "sample_count": 61,
+      "weighted_sample_count": 95.445
+    },
+    "Singapore": {
+      "train_mae": 1.0845002444737575,
+      "cv_mae": 2.1805383367235134,
+      "sample_count": 73,
+      "weighted_sample_count": 103.54499999999999
+    },
+    "Spain": {
+      "train_mae": 0.9031278705239295,
+      "cv_mae": 1.9940155252753726,
+      "sample_count": 80,
+      "weighted_sample_count": 106.19500000000001
+    },
+    "United States": {
+      "train_mae": 0.8242454283714281,
+      "cv_mae": 1.0066259176768926,
+      "sample_count": 20,
+      "weighted_sample_count": 17.64
+    }
+  },
+  "summary": {
+    "total_tracks": 23,
+    "avg_train_mae": 1.0281281706662304,
+    "avg_cv_mae": 2.260640152850818
+  }
+}

@@ -36,7 +36,13 @@ try:  # pragma: no cover - 避免相對匯入在測試環境失敗
 except ImportError:  # pragma: no cover
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
 
-from .lap_time_chart_widget import LapTimeChartWidget
+# 跨模組同步信號
+from modules.gui.base.global_chart_sync_signal import GlobalChartSyncSignal
+
+# 模組標識常量
+MODULE_THROTTLE_LINE = GlobalChartSyncSignal.MODULE_THROTTLE_LINE
+
+# from .lap_time_chart_widget import LapTimeChartWidget  # 已移除 - 只顯示 throttle chart
 from .signal_bus import ThrottleLineChartSignalBus
 from .throttle_duration_chart_widget import ThrottleDurationChartWidget
 from .throttle_line_chart_data_loader import ThrottleLineChartDataLoader
@@ -57,21 +63,22 @@ logger = get_logger(component="ThrottleLineChartMDI")
 
 
 class ThrottleLineChartControlPanel(QWidget):
-    """側邊控制面板，調整圖表顯示設定。"""
+    """側邊控制面板，調整圖表顯示設定。改為5個車手選擇器與 Detailed Lap Analysis 同步。"""
 
     settingsChanged = pyqtSignal(dict)
     reloadRequested = pyqtSignal()
     exportRequested = pyqtSignal()
     resetRequested = pyqtSignal()
-    driverChanged = pyqtSignal(str)
-    driver2Changed = pyqtSignal(str)  # 新增：第二位車手變更訊號
+    driversChanged = pyqtSignal(list)  # 改為多車手信號
+    clearLabelsRequested = pyqtSignal()  # 清除圖表標籤信號
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self._settings = dict(_DEFAULT_SETTINGS)
         self._available_drivers: List[str] = []
-        self._selected_driver: Optional[str] = None
-        self._selected_driver2: Optional[str] = None  # 新增：第二位車手
+        self._selected_drivers: List[str] = []  # 改為列表
+        self.driver_combos: List[QComboBox] = []  # 5 個選擇器
+        self._is_syncing = False  # 防止循環觸發
         self._build_ui()
 
     def _build_ui(self) -> None:
@@ -79,190 +86,191 @@ class ThrottleLineChartControlPanel(QWidget):
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
 
-        # 移除 "Driver Selection" 標題，直接顯示車手選擇器
-
-        # 車手選擇器（並排顯示以節省空間）
+        # 車手選擇區域 - 水平布局（與 Detailed Lap Analysis 一致）
         drivers_layout = QHBoxLayout()
-        drivers_layout.setSpacing(10)  # 與 Detailed Lap Analysis 一致
+        drivers_layout.setSpacing(10)
         
-        # Driver 1（左側）
-        driver1_label = QLabel(tr("throttle_line_chart.option_driver1", "Driver 1"))
-        driver1_label.setFixedWidth(55)
-        self.driver_combo = QComboBox()
-        self.driver_combo.setEditable(False)
-        self.driver_combo.setMaximumWidth(100)
-        self.driver_combo.currentTextChanged.connect(self._emit_driver_change)
-        drivers_layout.addWidget(driver1_label)
-        drivers_layout.addWidget(self.driver_combo)
+        # 創建5個車手選擇下拉選單
+        placeholder = tr("throttle_line_chart.option_driver_placeholder", "-- Select --")
+        for i in range(5):
+            combo = QComboBox()
+            combo.setEditable(False)
+            combo.addItem(placeholder, "")
+            combo.currentTextChanged.connect(self._on_driver_selection_changed)
+            combo.setMinimumWidth(50)
+            combo.setMaximumWidth(120)
+            
+            self.driver_combos.append(combo)
+            drivers_layout.addWidget(combo)
         
-        drivers_layout.addSpacing(10)  # 間隔（與 Detailed Lap Analysis 一致）
+        drivers_layout.addSpacing(10)
         
-        # Driver 2（右側）
-        driver2_label = QLabel(tr("throttle_line_chart.option_driver2", "Driver 2"))
-        driver2_label.setFixedWidth(55)
-        self.driver2_combo = QComboBox()
-        self.driver2_combo.setEditable(False)
-        self.driver2_combo.setMaximumWidth(100)
-        self.driver2_combo.currentTextChanged.connect(self._emit_driver2_change)
-        drivers_layout.addWidget(driver2_label)
-        drivers_layout.addWidget(self.driver2_combo)
+        # Clear 按鈕
+        self.clear_button = QPushButton(tr('clear_button', 'Clear'))
+        self.clear_button.clicked.connect(self._clear_selections)
+        self.clear_button.setMaximumWidth(60)
         
-        drivers_layout.addStretch()  # 右側留空
+        drivers_layout.addWidget(self.clear_button)
+        
+        # Clear Labels 按鈕 - 清除圖表上的標籤
+        self.clear_labels_button = QPushButton(tr('clear_labels_button', 'Clear Labels'))
+        self.clear_labels_button.clicked.connect(self._on_clear_labels_clicked)
+        self.clear_labels_button.setMaximumWidth(100)
+        self.clear_labels_button.setToolTip(tr('clear_labels_tooltip', 'Clear all pinned labels on the chart'))
+        
+        drivers_layout.addWidget(self.clear_labels_button)
+        drivers_layout.addStretch()
+        
         layout.addLayout(drivers_layout)
 
-        # 移除提示文字和隱藏按鈕，保持簡潔
-        # 不新增 layout.addStretch()，讓控制面板自動縮小到內容高度
+    def _on_driver_selection_changed(self) -> None:
+        """車手選擇變更處理"""
+        if self._is_syncing:
+            return
+            
+        # 收集所有選中的車手
+        placeholder = tr("throttle_line_chart.option_driver_placeholder", "-- Select --")
+        selected = []
+        for combo in self.driver_combos:
+            text = combo.currentText()
+            if text and text != placeholder and text.strip():
+                driver = text.strip().upper()
+                if driver not in selected:  # 避免重複
+                    selected.append(driver)
+        
+        if selected != self._selected_drivers:
+            self._selected_drivers = selected
+            self.driversChanged.emit(selected)
+
+    def _clear_selections(self) -> None:
+        """清除所有選擇"""
+        self._is_syncing = True
+        placeholder = tr("throttle_line_chart.option_driver_placeholder", "-- Select --")
+        for combo in self.driver_combos:
+            combo.blockSignals(True)
+            combo.setCurrentIndex(0)  # 選擇 placeholder
+            combo.blockSignals(False)
+        self._is_syncing = False
+        
+        self._selected_drivers = []
+        self.driversChanged.emit([])
+
+    def _on_clear_labels_clicked(self) -> None:
+        """清除圖表上的所有標籤"""
+        self.clearLabelsRequested.emit()
 
     def _emit_settings(self) -> None:
-        """不再從控制面板發射設定變更（設定已移至 System Settings）"""
-        # 設定現在由系統設定管理，此方法保留以維持相容性
+        """設定現在由系統設定管理，此方法保留以維持相容性"""
         pass
 
     def apply_settings(self, settings: Dict[str, Any]) -> None:
-        """外部下發設定時更新控制面板狀態（簡化版本，只更新內部狀態）"""
-        self._settings.update(settings)
+        """外部下發設定時更新控制面板狀態"""
         self._settings.update(settings)
 
-    def set_available_drivers(self, drivers: Sequence[str], selected: Optional[str], selected2: Optional[str] = None) -> None:
-        """設定可用車手列表，並同時更新兩個選擇器"""
+    def set_available_drivers(self, drivers: Sequence[str], selected: Optional[List[str]] = None) -> None:
+        """設定可用車手列表"""
         normalized = [str(driver).upper() for driver in drivers if driver]
-        if normalized == self._available_drivers and (selected or "") == (self._selected_driver or ""):
+        if normalized == self._available_drivers:
             return
 
         self._available_drivers = normalized
+        placeholder = tr("throttle_line_chart.option_driver_placeholder", "-- Select --")
         
-        # 更新車手1選擇器
-        self.driver_combo.blockSignals(True)
-        self.driver_combo.clear()
-        placeholder = tr("throttle_line_chart.option_driver_placeholder", "Select driver")
-        if not normalized:
-            self.driver_combo.addItem(placeholder, "")
-            self.driver_combo.setCurrentIndex(0)
-            self._selected_driver = None
-        else:
+        self._is_syncing = True
+        for combo in self.driver_combos:
+            combo.blockSignals(True)
+            current = combo.currentText()
+            combo.clear()
+            combo.addItem(placeholder, "")
             for code in normalized:
-                self.driver_combo.addItem(code, code)
-
-            desired = (selected or self._selected_driver or normalized[0]).upper()
-            if desired not in normalized:
-                desired = normalized[0]
-            index = self.driver_combo.findData(desired)
-            if index == -1:
-                index = self.driver_combo.findText(desired)
-            if index != -1:
-                self.driver_combo.setCurrentIndex(index)
-                self._selected_driver = desired
-            else:
-                self.driver_combo.setCurrentIndex(0)
-                self._selected_driver = normalized[0]
-
-        self.driver_combo.blockSignals(False)
-        
-        # 更新車手2選擇器（新增）
-        self.driver2_combo.blockSignals(True)
-        self.driver2_combo.clear()
-        if not normalized:
-            self.driver2_combo.addItem(placeholder, "")
-            self.driver2_combo.setCurrentIndex(0)
-            self._selected_driver2 = None
-        else:
-            # 新增「無」選項
-            self.driver2_combo.addItem(tr("throttle_line_chart.option_no_driver2", "None"), "")
-            for code in normalized:
-                self.driver2_combo.addItem(code, code)
-
-            # 🔧 修改：預設選擇「無」（None）
-            if selected2 and selected2.upper() in normalized:
-                # 只有明確指定 selected2 時才設定
-                desired2 = selected2.upper()
-                index = self.driver2_combo.findData(desired2)
-                if index == -1:
-                    index = self.driver2_combo.findText(desired2)
+                combo.addItem(code, code)
+            
+            # 嘗試恢復之前的選擇
+            if current and current != placeholder and current.upper() in normalized:
+                index = combo.findText(current.upper())
                 if index != -1:
-                    self.driver2_combo.setCurrentIndex(index)
-                    self._selected_driver2 = desired2
-                else:
-                    # 找不到則預設為 None
-                    self.driver2_combo.setCurrentIndex(0)
-                    self._selected_driver2 = None
-            else:
-                # 未指定 selected2，預設為 None
-                self.driver2_combo.setCurrentIndex(0)
-                self._selected_driver2 = None
+                    combo.setCurrentIndex(index)
+            combo.blockSignals(False)
+        self._is_syncing = False
+        
+        # 如果有指定初始選擇
+        if selected:
+            self.set_selected_drivers(selected)
 
-        self.driver2_combo.blockSignals(False)
+    def set_selected_drivers(self, drivers: List[str]) -> None:
+        """設定選中的車手（用於同步）"""
+        if self._is_syncing:
+            return
+            
+        self._is_syncing = True
+        placeholder = tr("throttle_line_chart.option_driver_placeholder", "-- Select --")
+        
+        # 先清空所有選擇
+        for combo in self.driver_combos:
+            combo.blockSignals(True)
+            combo.setCurrentIndex(0)
+            combo.blockSignals(False)
+        
+        # 設定新選擇
+        for i, driver in enumerate(drivers[:5]):  # 最多 5 個
+            if i < len(self.driver_combos):
+                combo = self.driver_combos[i]
+                combo.blockSignals(True)
+                index = combo.findText(driver.upper())
+                if index != -1:
+                    combo.setCurrentIndex(index)
+                combo.blockSignals(False)
+        
+        self._selected_drivers = [d.upper() for d in drivers if d]
+        self._is_syncing = False
 
-    def _emit_driver_change(self, value: str) -> None:
-        driver = str(value).strip().upper()
-        if not driver:
-            return
-        if driver == self._selected_driver:
-            return
-        self._selected_driver = driver
-        self.driverChanged.emit(driver)
-    
-    def _emit_driver2_change(self, value: str) -> None:
-        """發射第二位車手變更訊號（新增）"""
-        driver = str(value).strip().upper()
-        # 允許空值（表示取消第二位車手）
-        if driver == self._selected_driver2:
-            return
-        self._selected_driver2 = driver if driver else None
-        self.driver2Changed.emit(driver if driver else "")
+    def get_selected_drivers(self) -> List[str]:
+        """獲取當前選中的車手列表"""
+        return self._selected_drivers.copy()
 
 
 class ThrottleLineChartView(QWidget):
-    """主視圖，包含雙圖表與同步功能。"""
+    """主視圖，只包含油門圖表。支援多車手顯示。"""
 
     def __init__(self, signal_bus: ThrottleLineChartSignalBus, parent=None):
         super().__init__(parent)
         self.signal_bus = signal_bus
         self._settings = dict(_DEFAULT_SETTINGS)
         self._prepared_cache: Optional[Dict[str, Any]] = None
-        self._prepared_cache_driver2: Optional[Dict[str, Any]] = None  # 新增：第二位車手緩存
+        self._prepared_cache_driver2: Optional[Dict[str, Any]] = None  # 舊版相容
         self._last_tooltip_key: Optional[Tuple[str, int]] = None
+        
+        # 多車手數據緩存
+        self._all_drivers_data: Dict[str, Sequence[Dict[str, Any]]] = {}  # {driver_code: [lap_records]}
+        self._all_drivers_tooltip: Dict[str, Dict[int, Dict[str, Any]]] = {}  # {driver_code: {lap: tooltip}}
+        self._selected_drivers: List[str] = []  # 當前選中的車手
+        self._available_drivers: List[str] = []  # 所有可用車手
 
         self.throttle_chart = ThrottleDurationChartWidget(self)
-        self.laptime_chart = LapTimeChartWidget(self)
-        # 移除底部資訊摘要列（summary_label）以保持簡潔
+        # 移除 lap time chart - 只顯示 throttle
+        self.laptime_chart = None
 
-        splitter = QSplitter(Qt.Vertical)
-        throttle_frame = QFrame()
-        throttle_layout = QVBoxLayout(throttle_frame)
-        throttle_layout.setContentsMargins(0, 0, 0, 0)
-        throttle_layout.addWidget(self.throttle_chart)
-        splitter.addWidget(throttle_frame)
-
-        lap_frame = QFrame()
-        lap_layout = QVBoxLayout(lap_frame)
-        lap_layout.setContentsMargins(0, 0, 0, 0)
-        lap_layout.addWidget(self.laptime_chart)
-        splitter.addWidget(lap_frame)
-        splitter.setSizes([700, 400])
-
+        # 簡化佈局 - 只顯示 throttle chart
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
-        layout.addWidget(splitter)
-        # 不再新增 summary_label 到佈局
+        layout.addWidget(self.throttle_chart)
 
         self._connect_signals()
 
     # ------------------------------------------------------------------
     def _connect_signals(self) -> None:
         self.throttle_chart.lapHover.connect(lambda lap, record: self._on_chart_hover("throttle", lap, record))
-        self.laptime_chart.lapHover.connect(lambda lap, record: self._on_chart_hover("laptime", lap, record))
+        # laptime_chart 已移除
 
         self.throttle_chart.lapClicked.connect(lambda lap, record: self._handle_lap_clicked("throttle", lap))
-        self.laptime_chart.lapClicked.connect(lambda lap, record: self._handle_lap_clicked("laptime", lap))
+        # laptime_chart 已移除
         self.throttle_chart.pinnedCleared.connect(lambda: self._handle_pinned_cleared("throttle"))
-        self.laptime_chart.pinnedCleared.connect(lambda: self._handle_pinned_cleared("laptime"))
+        # laptime_chart 已移除
 
         self.throttle_chart.viewTransformChanged.connect(
             lambda scale, offset: self.signal_bus.emit_view_transform("throttle", scale, offset)
         )
-        self.laptime_chart.viewTransformChanged.connect(
-            lambda scale, offset: self.signal_bus.emit_view_transform("laptime", scale, offset)
-        )
+        # laptime_chart 已移除
 
         self.signal_bus.hoverLapChanged.connect(self._on_bus_hover)
         self.signal_bus.viewTransformChanged.connect(self._on_bus_view_transform)
@@ -270,38 +278,119 @@ class ThrottleLineChartView(QWidget):
 
     # ------------------------------------------------------------------
     def update_data(self, payload: Dict[str, Any], payload_driver2: Optional[Dict[str, Any]] = None) -> None:
-        """更新資料，支援雙車手模式"""
-        self._prepared_cache = self._prepare_payload(payload)
-        self._prepared_cache_driver2 = self._prepare_payload(payload_driver2) if payload_driver2 else None
-        self._render_prepared()
+        """更新資料，支援多車手模式"""
+        # 檢查是否有多車手數據
+        all_drivers_data = payload.get("all_drivers_data", {})
+        all_drivers_tooltip = payload.get("all_drivers_tooltip", {})
+        available_drivers = payload.get("available_drivers", [])
+        annotations = payload.get("annotations", {})
+        
+        if all_drivers_data:
+            # 新版：使用多車手數據
+            self._all_drivers_data = dict(all_drivers_data)
+            self._all_drivers_tooltip = dict(all_drivers_tooltip)
+            self._available_drivers = list(available_drivers)
+            self._annotations = dict(annotations)
+            
+            # 如果沒有選中的車手，使用主車手
+            if not self._selected_drivers:
+                driver_code = payload.get("driver", {}).get("code", "")
+                if driver_code:
+                    self._selected_drivers = [driver_code.upper()]
+            
+            self._render_multi_driver()
+        else:
+            # 舊版：向下相容
+            self._prepared_cache = self._prepare_payload(payload)
+            self._prepared_cache_driver2 = self._prepare_payload(payload_driver2) if payload_driver2 else None
+            self._render_prepared()
+
+    def update_multi_driver_data(
+        self,
+        all_drivers_data: Dict[str, Sequence[Dict[str, Any]]],
+        all_drivers_tooltip: Dict[str, Dict[int, Dict[str, Any]]],
+        available_drivers: List[str],
+        selected_drivers: List[str],
+        annotations: Optional[Dict[str, Any]] = None,
+    ) -> None:
+        """
+        更新多車手數據（新版 API）
+        
+        Args:
+            all_drivers_data: 所有車手的圈數數據 {driver_code: [lap_records]}
+            all_drivers_tooltip: 所有車手的 tooltip {driver_code: {lap: tooltip}}
+            available_drivers: 所有可用車手列表
+            selected_drivers: 選中的車手列表
+            annotations: 標記數據（旗幟等）
+        """
+        self._all_drivers_data = dict(all_drivers_data or {})
+        self._all_drivers_tooltip = dict(all_drivers_tooltip or {})
+        self._available_drivers = list(available_drivers or [])
+        self._selected_drivers = list(selected_drivers or [])
+        self._annotations = dict(annotations or {})
+        
+        self._render_multi_driver()
+
+    def update_selected_drivers(self, drivers: List[str]) -> None:
+        """更新選中的車手（用於同步）"""
+        if drivers == self._selected_drivers:
+            return
+        
+        self._selected_drivers = list(drivers or [])
+        
+        # 如果有多車手數據，重新渲染
+        if self._all_drivers_data:
+            self._render_multi_driver()
+
+    def _render_multi_driver(self) -> None:
+        """渲染多車手圖表"""
+        if not self._all_drivers_data:
+            return
+        
+        flag_markers = self._annotations.get("flag_labels") or {} if hasattr(self, '_annotations') else {}
+        
+        self.throttle_chart.update_series_multi_driver(
+            all_drivers_data=self._all_drivers_data,
+            all_tooltip_maps=self._all_drivers_tooltip,
+            selected_drivers=self._selected_drivers,
+            show_ratio=self._settings.get("show_ratio", True),
+            show_average=self._settings.get("show_average", False),
+            flag_markers=flag_markers,
+        )
 
     def clear(self) -> None:
         self._prepared_cache = None
-        self._prepared_cache_driver2 = None  # 新增
+        self._prepared_cache_driver2 = None
+        self._all_drivers_data = {}
+        self._all_drivers_tooltip = {}
+        self._selected_drivers = []
+        self._available_drivers = []
         self._last_tooltip_key = None
         self.throttle_chart.clear_data()
-        self.laptime_chart.clear_data()
-        # 移除 summary_label 更新（已移除該元件）
+        # laptime_chart 已移除
 
     def apply_settings(self, settings: Dict[str, Any]) -> None:
         self._settings.update(settings)
         self._render_prepared()
 
     def reset_view(self) -> None:
+        """重置視圖 - 包含縮放重置"""
+        # 先重置縮放狀態
+        if hasattr(self.throttle_chart, "reset_zoom"):
+            self.throttle_chart.reset_zoom()
+        # 再調用父類的 reset_view
         if hasattr(self.throttle_chart, "reset_view"):
             self.throttle_chart.reset_view()
-        if hasattr(self.laptime_chart, "reset_view"):
-            self.laptime_chart.reset_view()
+        # laptime_chart 已移除
 
     def export_charts(self, directory: str, base_name: str) -> List[str]:
         exported: List[str] = []
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         throttle_path = os.path.join(directory, f"{base_name}_throttle_{timestamp}.png")
-        laptime_path = os.path.join(directory, f"{base_name}_lap_{timestamp}.png")
+        # laptime_chart 已移除
         if self.throttle_chart.grab().save(throttle_path):
             exported.append(throttle_path)
-        if self.laptime_chart.grab().save(laptime_path):
-            exported.append(laptime_path)
+        # laptime_chart 已移除
         return exported
 
     # ------------------------------------------------------------------
@@ -380,18 +469,7 @@ class ThrottleLineChartView(QWidget):
             tooltip_map_driver2=tooltip_map_d2,  # 新增
         )
 
-        self.laptime_chart.update_series(
-            lap_records=records,
-            tooltip_map=tooltip_map,
-            show_delta=self._settings.get("show_delta", True),
-            rolling_average=self._settings.get("rolling_average", False),
-            rolling_window=self._settings.get("rolling_window", 3),
-            highlight_invalid=annotations.get("invalid_laps"),
-            highlight_caution=annotations.get("caution_laps"),
-            flag_markers=flag_markers,
-            lap_records_driver2=records_d2,  # 新增
-            tooltip_map_driver2=tooltip_map_d2,  # 新增
-        )
+        # laptime_chart 已移除
 
         self._update_summary(metadata, driver_info, len(records))
 
@@ -412,10 +490,10 @@ class ThrottleLineChartView(QWidget):
 
     def _handle_lap_clicked(self, source: str, lap: int) -> None:
         throttle_payload = self.throttle_chart.get_tooltip_payload(lap)
-        laptime_payload = self.laptime_chart.get_tooltip_payload(lap)
+        # laptime_chart 已移除
 
         self.throttle_chart.set_pinned_marker(lap, throttle_payload)
-        self.laptime_chart.set_pinned_marker(lap, laptime_payload)
+        # laptime_chart 已移除
         self.signal_bus.emit_highlight(source, int(lap))
 
     def _handle_pinned_cleared(self, source: str) -> None:
@@ -425,8 +503,7 @@ class ThrottleLineChartView(QWidget):
     def _on_bus_hover(self, source: str, lap: int, payload: Dict[str, Any]) -> None:
         if source != "throttle":
             self.throttle_chart.set_external_highlight(lap)
-        if source != "laptime":
-            self.laptime_chart.set_external_highlight(lap)
+        # laptime_chart 已移除
 
         # ❌ 已禁用原生 QToolTip（改用新的數據點互動系統）
         # key = (source, lap)
@@ -435,30 +512,28 @@ class ThrottleLineChartView(QWidget):
         #     QToolTip.showText(QCursor.pos(), self._format_tooltip(payload), self)
 
     def _on_bus_view_transform(self, source: str, x_scale: float, x_offset: float) -> None:
-        if source == "throttle":
-            self.laptime_chart.apply_view_transform(x_scale, x_offset)
-        elif source == "laptime":
-            self.throttle_chart.apply_view_transform(x_scale, x_offset)
+        # laptime_chart 已移除，不再需要同步視圖轉換
+        pass
 
     def _on_bus_highlight(self, source: str, lap: int) -> None:
         if lap is None or lap <= 0:
             self._clear_pinned_markers()
             self.throttle_chart.set_external_highlight(None)
-            self.laptime_chart.set_external_highlight(None)
+            # laptime_chart 已移除
             QToolTip.hideText()
             return
 
         self.throttle_chart.set_external_highlight(lap)
-        self.laptime_chart.set_external_highlight(lap)
+        # laptime_chart 已移除
         self.throttle_chart.set_pinned_marker(lap, self.throttle_chart.get_tooltip_payload(lap))
-        self.laptime_chart.set_pinned_marker(lap, self.laptime_chart.get_tooltip_payload(lap))
+        # laptime_chart 已移除
 
     # ------------------------------------------------------------------
     def _clear_pinned_markers(self) -> None:
         self.throttle_chart.set_pinned_marker(None, None)
-        self.laptime_chart.set_pinned_marker(None, None)
+        # laptime_chart 已移除
         self.throttle_chart.set_external_highlight(None)
-        self.laptime_chart.set_external_highlight(None)
+        # laptime_chart 已移除
         QToolTip.hideText()
 
     # ------------------------------------------------------------------
@@ -549,6 +624,7 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         self.signal_bus = ThrottleLineChartSignalBus()
         self.control_panel: Optional[ThrottleLineChartControlPanel] = None
         self._available_drivers: List[str] = []
+        self._selected_drivers: List[str] = []  # 選中的車手列表
         self.settings_manager = gui_settings_manager
         self._global_filter_settings: Dict[str, Any] = dict(self.settings_manager.get_boxplot_settings())
 
@@ -601,15 +677,51 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         self.control_panel.reloadRequested.connect(self._on_reload_requested)
         self.control_panel.resetRequested.connect(self._on_reset_requested)
         self.control_panel.exportRequested.connect(self._on_export_requested)
+        self.control_panel.clearLabelsRequested.connect(self._on_clear_labels_requested)
         self.control_panel.apply_settings(self._settings_cache)
-        self.control_panel.driverChanged.connect(self._on_driver_selection_changed)
-        self.control_panel.driver2Changed.connect(self._on_driver2_selection_changed)  # 新增：連接第二位車手訊號
-        initial_driver = (self.driver1 or self._desired_driver) if hasattr(self, "driver1") else self._desired_driver
-        initial_driver2 = getattr(self, "driver2", "")
-        drivers_seed = self._available_drivers or ([initial_driver] if initial_driver else [])
+        # 改為使用多車手信號
+        self.control_panel.driversChanged.connect(self._on_drivers_selection_changed)
+        
+        # 初始化車手列表
+        initial_drivers = []
+        if hasattr(self, "driver1") and self.driver1:
+            initial_drivers.append(self.driver1)
+        elif self._desired_driver:
+            initial_drivers.append(self._desired_driver)
+        
+        drivers_seed = self._available_drivers or initial_drivers
         if drivers_seed:
-            self.control_panel.set_available_drivers(drivers_seed, initial_driver, initial_driver2)  # 更新參數
+            self.control_panel.set_available_drivers(drivers_seed, initial_drivers)
+        
+        # 連接 chart widget 的 view transform 到全局同步
+        if hasattr(self.chart_widget, 'throttle_chart'):
+            self.chart_widget.throttle_chart.viewTransformChanged.connect(
+                self._on_local_view_transform_changed
+            )
+        
+        # 註冊 GlobalChartSyncSignal
+        self._register_global_sync()
+        
         return [self.control_panel]
+
+    def _on_local_view_transform_changed(self, x_scale: float, x_offset: float) -> None:
+        """處理本地視圖變換變更，發送到全局同步"""
+        # 計算 x_min 和 x_max
+        if hasattr(self.chart_widget, 'throttle_chart'):
+            chart = self.chart_widget.throttle_chart
+            # 使用 get_overall_x_range() 獲取數據範圍
+            if hasattr(chart, 'get_overall_x_range'):
+                data_x_min, data_x_max = chart.get_overall_x_range()
+                if data_x_min is not None and data_x_max is not None:
+                    full_range = data_x_max - data_x_min
+                    if full_range > 0 and x_scale > 0:
+                        visible_range = full_range / x_scale
+                        x_min = data_x_min + (x_offset / x_scale) * full_range
+                        x_max = x_min + visible_range
+                        
+                        # 發送到全局同步
+                        sync = GlobalChartSyncSignal.get_instance()
+                        sync.emit_x_range_changed(x_min, x_max, MODULE_THROTTLE_LINE)
 
     # ------------------------------------------------------------------
     def _apply_initial_parameters(self) -> None:
@@ -652,6 +764,15 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
                 tr("throttle_line_chart.export_success", "匯出成功"),
                 "\n".join(exported),
             )
+
+    def _on_clear_labels_requested(self) -> None:
+        """清除圖表上的所有固定標籤（pinned data points）"""
+        if hasattr(self.chart_widget, "throttle_chart"):
+            chart = self.chart_widget.throttle_chart
+            if hasattr(chart, "pinned_data_points"):
+                chart.pinned_data_points.clear()
+                chart.update()
+                logger.info("[DEBUG] Throttle Line Chart: 已清除所有固定標籤")
 
     # ------------------------------------------------------------------
     def _load_data_with_current_parameters(self):
@@ -702,6 +823,99 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         if hasattr(self.chart_widget, "clear"):
             self.chart_widget.clear()
 
+    def reset_chart_view(self) -> None:
+        """重置圖表視圖 - 供 Show All Data 按鈕使用"""
+        logger.debug("[THROTTLE_LINE_CHART] reset_chart_view called")
+        
+        # 重置 ThrottleLineChartView 的視圖
+        if hasattr(self.chart_widget, 'reset_view'):
+            self.chart_widget.reset_view()
+        
+        # 重置 throttle_chart (ThrottleDurationChartWidget) 的縮放
+        if hasattr(self.chart_widget, 'throttle_chart') and hasattr(self.chart_widget.throttle_chart, 'reset_zoom'):
+            self.chart_widget.throttle_chart.reset_zoom()
+
+    # ------------------------------------------------------------------
+    # GlobalChartSyncSignal 跨模組同步
+    # ------------------------------------------------------------------
+    def _register_global_sync(self) -> None:
+        """註冊到全局同步信號"""
+        sync = GlobalChartSyncSignal.get_instance()
+        sync.register_module(MODULE_THROTTLE_LINE)
+        # 監聽來自其他模組的同步事件
+        sync.drivers_changed.connect(self._on_global_drivers_changed)
+        sync.x_range_changed.connect(self._on_global_x_range_changed)
+        sync.reset_view.connect(self._on_global_reset_view)
+        logger.debug("[THROTTLE_LINE_CHART] Registered to GlobalChartSyncSignal")
+
+    def _unregister_global_sync(self) -> None:
+        """取消註冊全局同步信號"""
+        try:
+            sync = GlobalChartSyncSignal.get_instance()
+            sync.drivers_changed.disconnect(self._on_global_drivers_changed)
+            sync.x_range_changed.disconnect(self._on_global_x_range_changed)
+            sync.reset_view.disconnect(self._on_global_reset_view)
+            sync.unregister_module(MODULE_THROTTLE_LINE)
+            logger.debug("[THROTTLE_LINE_CHART] Unregistered from GlobalChartSyncSignal")
+        except (TypeError, RuntimeError):
+            pass
+
+    def _on_global_drivers_changed(self, drivers: List[str], source: str) -> None:
+        """處理來自其他模組的車手同步事件"""
+        if source == MODULE_THROTTLE_LINE:
+            return  # 忽略自己發出的
+        
+        logger.info("[THROTTLE_LINE_CHART] Sync drivers from %s: %s", source, drivers)
+        
+        # 更新控制面板選擇
+        if hasattr(self, 'control_panel') and self.control_panel:
+            self.control_panel.set_selected_drivers(drivers)
+        
+        # 更新選中的車手列表
+        self._selected_drivers = drivers
+        
+        # 重新渲染圖表
+        if hasattr(self.chart_widget, 'update_selected_drivers'):
+            self.chart_widget.update_selected_drivers(drivers)
+
+    def _on_global_x_range_changed(self, x_min: float, x_max: float, source: str) -> None:
+        """處理來自其他模組的X軸範圍同步事件"""
+        if source == MODULE_THROTTLE_LINE:
+            return  # 忽略自己發出的
+        
+        logger.debug("[THROTTLE_LINE_CHART] Sync X range from %s: %.2f - %.2f", source, x_min, x_max)
+        
+        # 同步X軸範圍到圖表
+        if hasattr(self.chart_widget, 'throttle_chart') and hasattr(self.chart_widget.throttle_chart, 'set_x_range'):
+            # chart_widget 是 ThrottleLineChartView
+            self.chart_widget.throttle_chart.set_x_range(x_min, x_max)
+        elif hasattr(self.chart_widget, 'set_x_range'):
+            self.chart_widget.set_x_range(x_min, x_max)
+
+    def _on_global_reset_view(self, source: str) -> None:
+        """處理來自其他模組的重置視圖事件"""
+        if source == MODULE_THROTTLE_LINE:
+            return  # 忽略自己發出的
+        
+        logger.debug("[THROTTLE_LINE_CHART] Reset view from %s", source)
+        
+        if hasattr(self.chart_widget, 'reset_view'):
+            self.chart_widget.reset_view()
+
+    def _on_drivers_selection_changed(self, drivers: List[str]) -> None:
+        """處理本模組的車手選擇變更"""
+        logger.info("[THROTTLE_LINE_CHART] Drivers selection changed: %s", drivers)
+        
+        self._selected_drivers = drivers
+        
+        # 發送同步信號到其他模組
+        sync = GlobalChartSyncSignal.get_instance()
+        sync.emit_drivers_changed(drivers, MODULE_THROTTLE_LINE)
+        
+        # 更新圖表顯示
+        if hasattr(self.chart_widget, 'update_selected_drivers'):
+            self.chart_widget.update_selected_drivers(drivers)
+
     def export_data(self, export_path: str, export_format: str = "json") -> bool:
         if export_format.lower() != "json":
             self._error(f"不支援的匯出格式: {export_format}")
@@ -740,16 +954,18 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
 
     def cleanup(self) -> None:  # type: ignore[override]
         try:
-            # 🔴 新增：斷開 control_panel 的所有信號連接（修復洩漏）
+            # 取消註冊 GlobalChartSyncSignal
+            self._unregister_global_sync()
+            
+            # 斷開 control_panel 的所有信號連接
             if hasattr(self, 'control_panel') and self.control_panel:
                 try:
                     self.control_panel.settingsChanged.disconnect(self._on_control_settings_changed)
                     self.control_panel.reloadRequested.disconnect(self._on_reload_requested)
                     self.control_panel.resetRequested.disconnect(self._on_reset_requested)
                     self.control_panel.exportRequested.disconnect(self._on_export_requested)
-                    self.control_panel.driverChanged.disconnect(self._on_driver_selection_changed)
-                    self.control_panel.driver2Changed.disconnect(self._on_driver2_selection_changed)
-                    logger.debug("[THROTTLE_LINE_CHART] control_panel signals disconnected (6)")
+                    self.control_panel.driversChanged.disconnect(self._on_drivers_selection_changed)
+                    logger.debug("[THROTTLE_LINE_CHART] control_panel signals disconnected (5)")
                 except (TypeError, RuntimeError):
                     pass
                 
@@ -794,96 +1010,12 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         if not drivers and getattr(self, "driver1", None):
             drivers = [self.driver1]
         self._available_drivers = drivers
-        current = getattr(self, "driver1", None) or self._desired_driver
-        current2 = getattr(self, "driver2", "")
-        self.control_panel.set_available_drivers(drivers, current, current2)  # 更新參數
-
-    def _on_driver_selection_changed(self, driver_code: str) -> None:
-        """處理 Driver 1 選擇變更 - 只更新 Driver 1 資料，不影響 Driver 2"""
-        code = str(driver_code or "").strip().upper()
-        if not code:
-            return
-        if code == getattr(self, "driver1", None):
-            return
-        
-        # 更新 Driver 1
-        self.driver1 = code
-        self._desired_driver = code
-        self.driverChanged.emit(code)
-        
-        # 🔧 修改：只重新載入 Driver 1 資料，不清除整個圖表
-        logger.info(
-            "[Driver1 Changed] New driver1: %s, driver2: %s",
-            self.driver1,
-            getattr(self, "driver2", None) or "(None)",
-        )
-        
-        # 重新載入 Driver 1 資料（preserve_driver2=True 保留 Driver 2）
-        self.load_data(
-            year=self.current_year,
-            race=self.current_race,
-            session=self.current_session,
-            driver=code,
-            force_refresh=False,
-        )
-    
-    def _on_driver2_selection_changed(self, driver_code: str) -> None:
-        """處理第二位車手選擇變更（新增）"""
-        logger.debug("[_on_driver2_selection_changed] Called with driver_code: %s", driver_code)
-        logger.debug("[MDI] Current _global_filter_settings: %s", self._global_filter_settings)
-        
-        code = str(driver_code or "").strip().upper()
-        # 允許空值（取消第二位車手）
-        if code == getattr(self, "driver2", ""):
-            logger.debug("[_on_driver2_selection_changed] Driver2 unchanged: %s", code)
-            return
-        self.driver2 = code
-        
-        # 重新載入資料以顯示雙車手比較
-        logger.info("[Driver2 Changed] New driver2: %s", self.driver2 or "(None)")
-        
-        # 如果 driver2 為空，清除第二位車手資料
-        if not self.driver2:
-            if hasattr(self.chart_widget, "_prepared_cache_driver2"):
-                self.chart_widget._prepared_cache_driver2 = None
-                self.chart_widget._render_prepared()
-            logger.info("[_on_driver2_selection_changed] Driver2 cleared")
-            return
-        
-        # 載入第二位車手資料
-        if hasattr(self.data_manager, "load_data"):
-            # 建立第二個資料載入器實例
-            from .throttle_line_chart_data_loader import ThrottleLineChartDataLoader
-            
-            # ✅ 修復：temp_loader 在 __init__() 中會自動從 settings_manager 讀取最新設定
-            # 不需要再次調用 update_filter_settings()，避免重複設定和時序問題
-            logger.debug("[_on_driver2_selection_changed] Creating temp_loader for Driver2...")
-            temp_loader = ThrottleLineChartDataLoader(self)
-            
-            # 🔍 DEBUG: 顯示 temp_loader 實際使用的過濾設定（來自 __init__）
-            logger.debug(
-                "[Driver2 Loader Created] Filter settings: pit=%s, yellow=%s, red=%s",
-                temp_loader._filter_pit_laps,
-                temp_loader._filter_yellow_flags,
-                temp_loader._filter_red_flags,
-            )
-            
-            # 載入第二位車手資料
-            temp_loader.data_loaded.connect(self._on_driver2_data_loaded)
-            logger.debug(
-                "[_on_driver2_selection_changed] Calling temp_loader.load_data() for %s",
-                self.driver2,
-            )
-            temp_loader.load_data(
-                year=self.current_year,
-                race=self.current_race,
-                session=self.current_session,
-                driver=self.driver2,
-                force_refresh=False,
-            )
+        # 更新控制面板可用車手列表
+        if hasattr(self, '_selected_drivers'):
+            self.control_panel.set_available_drivers(drivers, self._selected_drivers)
         else:
-            logger.error("[_on_driver2_selection_changed] data_manager has no load_data method")
-    
+            self.control_panel.set_available_drivers(drivers)
+
     def _on_driver2_data_loaded(self, data: Dict[str, Any]) -> None:
         """處理第二位車手資料載入完成（新增）"""
         logger.debug("[_on_driver2_data_loaded] Called")

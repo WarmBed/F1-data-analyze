@@ -1064,54 +1064,278 @@ def extract_track_position_with_speed(session) -> Dict[str, Any]:
         return {"position_records": [], "track_bounds": None, "sector_boundaries": []}
 
 
-def _calculate_position_changes_for_year(year: int, race: str, session_type: str = 'R') -> int:
+def _calculate_position_changes_for_year(year: int, race: str, session_type: str = 'R', auto_download: bool = True) -> dict:
     """
-    計算特定年份特定賽事的名次變更總次數
+    計算特定年份特定賽事的名次變更統計
     
-    整合 Function 15 的邏輯，但簡化為只計算 total_position_changes
+    只使用 Live Timing 數據進行精確超車檢測。
+    如果 Live Timing 數據不存在，返回 source="unavailable"。
+    
+    注意：舊年份 (2022-2024) 的 Live Timing 原始數據通常無法從 F1 官方 API 下載，
+    因此只有 2025 年及之後的賽事能使用 Live Timing 分析。
     
     Args:
         year: 年份
         race: 賽道名稱
         session_type: 會話類型
+        auto_download: 是否自動下載缺失的數據（預設關閉，舊數據無法下載）
         
     Returns:
-        名次變更總次數 (所有車手的超車次數 + 被超次數總和)
+        字典格式的統計結果：
+        {
+            "total": 總位置變化次數,
+            "on_track": 賽道上真正超車次數,
+            "pit_related": 進站相關位置變化,
+            "lap_one": 第一圈混戰,
+            "source": "live_timing" 或 "unavailable"
+        }
     """
+    result = {
+        "total": 0,
+        "on_track": 0,
+        "pit_related": 0,
+        "lap_one": 0,
+        "sc_related": 0,
+        "source": "unavailable"
+    }
+    
+    import os
+    import importlib.util
+    
+    # 計算專案根目錄
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
+    
+    # 導入 overtake_detector
+    detector_path = os.path.join(
+        project_root, "modules", "gui", "live_timing", "utils", "overtake_detector.py"
+    )
+    
+    if not os.path.exists(detector_path):
+        print(f"[POSITION_CHANGES] ❌ overtake_detector.py 不存在: {detector_path}")
+        return result
+    
     try:
-        print(f"[POSITION_CHANGES] 計算 {year} {race} 的名次變更...")
+        spec = importlib.util.spec_from_file_location("overtake_detector", detector_path)
+        module = importlib.util.module_from_spec(spec)
+        import sys
+        sys.modules["overtake_detector"] = module
+        spec.loader.exec_module(module)
         
-        # 載入會話
-        session = fastf1.get_session(year, race, session_type)
-        session.load(laps=True, telemetry=False)  # 只載入圈速數據，不需要遙測
+        # 創建檢測器
+        detector = module.LiveTimingOvertakeDetector(year, race, session_type)
         
-        # 獲取所有車手
-        drivers = pd.unique(session.laps['Driver'])
-        
-        total_position_changes = 0
-        
-        for driver in drivers:
-            driver_laps = session.laps.pick_drivers(driver)
+        # 檢查數據目錄是否存在
+        if not os.path.exists(detector.data_dir):
+            # 舊年份無法下載，直接返回 unavailable
+            if year < 2025:
+                print(f"[POSITION_CHANGES] ⚠️ {year} 年 Live Timing 數據不可用（舊年份數據無法從 F1 官方 API 下載）")
+                return result
             
-            if len(driver_laps) < 2:
-                continue
+            print(f"[POSITION_CHANGES] ⚠️ Live Timing 數據目錄不存在: {detector.data_dir}")
             
-            # 計算該車手的名次變化次數
-            positions = driver_laps['Position'].tolist()
-            
-            # 計算連續圈速之間的名次變化（絕對值）
-            for i in range(1, len(positions)):
-                if pd.notna(positions[i]) and pd.notna(positions[i-1]):
-                    pos_change = abs(positions[i] - positions[i-1])
-                    if pos_change > 0:
-                        total_position_changes += int(pos_change)
+            if auto_download:
+                # 只對 2025 年及之後的賽事嘗試下載
+                print(f"[POSITION_CHANGES] 📥 嘗試自動下載 {year} {race} 的 Live Timing 數據...")
+                download_success = _download_live_timing_data(year, race, session_type, project_root)
+                
+                if download_success:
+                    print(f"[POSITION_CHANGES] ✅ 下載完成，重新分析...")
+                    detector = module.LiveTimingOvertakeDetector(year, race, session_type)
+                else:
+                    print(f"[POSITION_CHANGES] ❌ 下載失敗，無法計算超車數據")
+                    return result
+            else:
+                return result
         
-        print(f"[POSITION_CHANGES] {year} {race}: {total_position_changes} 次名次變更")
-        return total_position_changes
+        # 執行分析
+        print(f"[POSITION_CHANGES] 🔍 使用 Live Timing 計算 {year} {race} 的超車數據...")
+        stats = detector.analyze()
+        
+        # 將超車事件轉換為可序列化的格式（包含 GPS 座標）
+        overtake_events_list = []
+        for event in stats.overtake_events:
+            overtake_events_list.append({
+                "timestamp": event.timestamp,
+                "lap": event.lap,
+                "overtaking_driver": event.overtaking_driver,
+                "overtaken_driver": event.overtaken_driver,
+                "overtaking_driver_tla": event.overtaking_driver_tla,
+                "overtaken_driver_tla": event.overtaken_driver_tla,
+                "new_position": event.new_position,
+                "old_position": event.old_position,
+                "overtake_type": event.overtake_type,
+                "x": event.x,  # GPS X 座標
+                "y": event.y,  # GPS Y 座標
+                "location_type": event.location_type
+            })
+        
+        # 過濾出 on_track 超車事件（用於 GUI 繪製）
+        on_track_events = [e for e in overtake_events_list if e["overtake_type"] == "on_track"]
+        
+        result = {
+            "total": stats.total_overtakes,
+            "on_track": stats.on_track_overtakes,
+            "pit_related": stats.pit_related_changes,
+            "lap_one": stats.lap_one_changes,
+            "sc_related": stats.sc_related_changes,
+            "source": "live_timing",
+            "overtake_events": on_track_events  # 只輸出 on_track 超車事件（含 GPS 座標）
+        }
+        
+        print(f"[POSITION_CHANGES] ✅ Live Timing 分析完成:")
+        print(f"    總計: {result['total']}, 賽道超車: {result['on_track']}, 進站相關: {result['pit_related']}, 第一圈: {result['lap_one']}")
+        print(f"    超車事件數據點: {len(on_track_events)} 個（含 GPS 座標）")
+        return result
         
     except Exception as e:
-        print(f"[WARNING] 計算 {year} {race} 名次變更失敗: {e}")
-        return 0
+        import traceback
+        print(f"[POSITION_CHANGES] ❌ Live Timing 分析失敗: {e}")
+        traceback.print_exc()
+        return result
+
+
+def _download_live_timing_data(year: int, race: str, session_type: str, project_root: str) -> bool:
+    """
+    下載 Live Timing 數據到 json/LiveF1/ 目錄
+    
+    Args:
+        year: 年份
+        race: 賽道名稱 (例如 "Abu Dhabi Grand Prix")
+        session_type: 會話類型
+        project_root: 專案根目錄
+        
+    Returns:
+        是否下載成功
+    """
+    import os
+    import importlib.util
+    
+    # 導入 f1_api_downloader
+    downloader_path = os.path.join(
+        project_root, "modules", "gui", "live_timing", "core", "f1_api_downloader.py"
+    )
+    
+    if not os.path.exists(downloader_path):
+        print(f"[DOWNLOAD] ❌ f1_api_downloader.py 不存在")
+        return False
+    
+    try:
+        spec = importlib.util.spec_from_file_location("f1_api_downloader", downloader_path)
+        module = importlib.util.module_from_spec(spec)
+        import sys
+        sys.modules["f1_api_downloader"] = module
+        spec.loader.exec_module(module)
+        
+        # 標準化 race 名稱
+        race_clean = race.replace(" Grand Prix", "").strip()
+        
+        # 對應會話類型
+        session_map = {
+            'R': 'Race',
+            'Q': 'Qualifying', 
+            'FP1': 'Practice 1',
+            'FP2': 'Practice 2',
+            'FP3': 'Practice 3',
+        }
+        session_name = session_map.get(session_type, 'Race')
+        
+        print(f"[DOWNLOAD] 📥 下載 {year} {race_clean} {session_name} 的 Live Timing 數據...")
+        
+        # 使用便捷函數下載
+        result = module.download_race_data(year, race_clean, session_name, force=False)
+        
+        if result:
+            print(f"[DOWNLOAD] ✅ 下載完成")
+            
+            # 需要轉換為 JSON 格式並存到 json/LiveF1/ 目錄
+            # 因為 overtake_detector 期望從那裡讀取
+            return _convert_pkl_to_json(result, year, race, session_type, project_root)
+        else:
+            print(f"[DOWNLOAD] ❌ 下載失敗")
+            return False
+            
+    except Exception as e:
+        import traceback
+        print(f"[DOWNLOAD] ❌ 下載失敗: {e}")
+        traceback.print_exc()
+        return False
+
+
+def _convert_pkl_to_json(data: dict, year: int, race: str, session_type: str, project_root: str) -> bool:
+    """
+    將下載的 PKL 數據轉換為 JSON 並存到 json/LiveF1/ 目錄
+    """
+    import os
+    import json
+    
+    # 標準化目錄名稱
+    race_clean = race.replace(" Grand Prix", "").strip()
+    
+    # 對應目錄格式
+    folder_mapping = {
+        "Japan": "Japanese",
+        "China": "Chinese",
+        "Australia": "Australian",
+        "Great Britain": "British",
+        "Belgium": "Belgian",
+        "Netherlands": "Dutch",
+        "Italy": "Italian",
+        "Spain": "Spanish",
+        "Hungary": "Hungarian",
+        "Austria": "Austrian",
+        "Saudi Arabia": "Saudi_Arabian",
+        "United States": "United_States",
+        "Las Vegas": "Las_Vegas",
+        "Mexico": "Mexico_City",
+        "Brazil": "Sao_Paulo",
+        "São Paulo": "São_Paulo",
+        "Canada": "Canadian",
+        "Abu Dhabi": "Abu_Dhabi",
+        "Emilia Romagna": "Emilia_Romagna",
+    }
+    
+    folder_name = folder_mapping.get(race_clean, race_clean.replace(" ", "_"))
+    folder_name += "_Race"  # 假設是正賽
+    
+    output_dir = os.path.join(project_root, "json", "LiveF1", str(year), folder_name)
+    os.makedirs(output_dir, exist_ok=True)
+    
+    print(f"[CONVERT] 📂 輸出目錄: {output_dir}")
+    
+    # 將每個數據流存為 JSON
+    stream_mapping = {
+        "position": "Position.json",
+        "timing_data": "TimingData.json",
+        "car_data": "CarData.json",
+        "timing_app_data": "TimingAppData.json",
+        "weather_data": "WeatherData.json",
+        "race_control_messages": "RaceControlMessages.json",
+        "track_status": "TrackStatus.json",
+        "lap_count": "LapCount.json",
+        "driver_list": "DriverList.json",
+        "pit_lane_time": "PitLaneTimeCollection.json",
+        "session_info": "SessionInfo.json",
+        "session_data": "SessionData.json",
+        "lap_series": "LapSeries.json",
+        "top_three": "TopThree.json",
+        "timing_stats": "TimingStats.json",
+        "tyre_stint_series": "TyreStintSeries.json",
+    }
+    
+    saved_count = 0
+    for key, filename in stream_mapping.items():
+        if key in data and data[key]:
+            filepath = os.path.join(output_dir, filename)
+            try:
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    json.dump(data[key], f, ensure_ascii=False, indent=2)
+                saved_count += 1
+            except Exception as e:
+                print(f"[CONVERT] ⚠️ 無法保存 {filename}: {e}")
+    
+    print(f"[CONVERT] ✅ 已保存 {saved_count} 個 JSON 檔案")
+    return saved_count > 0
 
 
 def _calculate_max_speed_for_year(year: int, race: str, session_type: str = 'R') -> float:
@@ -1221,7 +1445,9 @@ def analyze_historical_flags(
         包含完整統計的字典
     """
     # ⚠️ 賽道名稱標準化映射（參考 run_rain_intensity_analysis_json.py）
+    # 擴展支援多種輸入格式（如 'British', 'Great Britain', 'British Grand Prix'）
     RACE_NAME_MAPPING = {
+        # 標準格式
         'Bahrain': 'Bahrain Grand Prix',
         'Saudi Arabia': 'Saudi Arabian Grand Prix',
         'Australia': 'Australian Grand Prix',
@@ -1244,7 +1470,34 @@ def analyze_historical_flags(
         'Mexico': 'Mexico City Grand Prix',
         'Brazil': 'São Paulo Grand Prix',  # ✅ 修復：2025 年起改名
         'Las Vegas': 'Las Vegas Grand Prix',
-        'Abu Dhabi': 'Abu Dhabi Grand Prix'
+        'Abu Dhabi': 'Abu Dhabi Grand Prix',
+        'China': 'Chinese Grand Prix',
+        # ⚠️ 擴展：支援其他常見輸入格式
+        'British': 'British Grand Prix',
+        'Italian': 'Italian Grand Prix',
+        'Dutch': 'Dutch Grand Prix',
+        'Hungarian': 'Hungarian Grand Prix',
+        'Belgian': 'Belgian Grand Prix',
+        'Austrian': 'Austrian Grand Prix',
+        'Canadian': 'Canadian Grand Prix',
+        'Spanish': 'Spanish Grand Prix',
+        'Saudi Arabian': 'Saudi Arabian Grand Prix',
+        'Japanese': 'Japanese Grand Prix',
+        'Chinese': 'Chinese Grand Prix',
+        'Australian': 'Australian Grand Prix',
+        # 完整名稱也加入（保持不變）
+        'British Grand Prix': 'British Grand Prix',
+        'Italian Grand Prix': 'Italian Grand Prix',
+        'Dutch Grand Prix': 'Dutch Grand Prix',
+        'Hungarian Grand Prix': 'Hungarian Grand Prix',
+        'Belgian Grand Prix': 'Belgian Grand Prix',
+        'Austrian Grand Prix': 'Austrian Grand Prix',
+        'Canadian Grand Prix': 'Canadian Grand Prix',
+        'Spanish Grand Prix': 'Spanish Grand Prix',
+        'Saudi Arabian Grand Prix': 'Saudi Arabian Grand Prix',
+        'Japanese Grand Prix': 'Japanese Grand Prix',
+        'Chinese Grand Prix': 'Chinese Grand Prix',
+        'Australian Grand Prix': 'Australian Grand Prix',
     }
     
     # 標準化賽道名稱
@@ -1425,7 +1678,8 @@ def analyze_historical_flags(
         stats = events['statistics']
         
         # ✅ 計算該年度的 position changes (超車次數)
-        position_changes = _calculate_position_changes_for_year(year, race, session_type)
+        # 返回字典格式，包含詳細的超車分類
+        position_result = _calculate_position_changes_for_year(year, race, session_type)
         
         # ✅ 計算該年度的最高時速
         max_speed = _calculate_max_speed_for_year(year, race, session_type)
@@ -1437,7 +1691,17 @@ def analyze_historical_flags(
             'safety_cars': stats['safety_car_count'],
             'total_incidents': stats['total_flags'],
             'session_type': session_type,
-            'position_changes': position_changes,
+            # ✅ 修正: position_changes 現在顯示真正賽道超車 (on_track)，而非總計
+            'position_changes': position_result.get('on_track', 0),  # 真正賽道超車（排除進站/第一圈）
+            'position_changes_detail': {
+                'total': position_result.get('total', 0),  # 總位置變化（包含進站相關）
+                'on_track_overtakes': position_result.get('on_track', 0),  # 賽道上真正超車
+                'pit_related': position_result.get('pit_related', 0),  # 進站相關位置變化
+                'lap_one': position_result.get('lap_one', 0),  # 第一圈混戰
+                'sc_related': position_result.get('sc_related', 0),  # SC/VSC 相關
+                'source': position_result.get('source', 'unknown'),  # 數據來源
+                'overtake_events': position_result.get('overtake_events', [])  # 超車事件列表（含 GPS 座標）
+            },
             'max_speed': round(max_speed, 1)  # ✅ 新增最高時速（保留1位小數）
         }
         
@@ -1641,7 +1905,9 @@ def get_race_top3_drivers_2022_2023(race: str) -> Dict[str, Any]:
         }
     """
     # 賽道名稱標準化映射（複用現有映射）
+    # 擴展支援多種輸入格式（如 'British', 'Great Britain', 'British Grand Prix'）
     RACE_NAME_MAPPING = {
+        # 標準格式
         'Bahrain': 'Bahrain Grand Prix',
         'Saudi Arabia': 'Saudi Arabian Grand Prix',
         'Australia': 'Australian Grand Prix',
@@ -1664,7 +1930,21 @@ def get_race_top3_drivers_2022_2023(race: str) -> Dict[str, Any]:
         'Mexico': 'Mexico City Grand Prix',
         'Brazil': 'São Paulo Grand Prix',
         'Las Vegas': 'Las Vegas Grand Prix',
-        'Abu Dhabi': 'Abu Dhabi Grand Prix'
+        'Abu Dhabi': 'Abu Dhabi Grand Prix',
+        'China': 'Chinese Grand Prix',
+        # ⚠️ 擴展：支援其他常見輸入格式
+        'British': 'British Grand Prix',
+        'Italian': 'Italian Grand Prix',
+        'Dutch': 'Dutch Grand Prix',
+        'Hungarian': 'Hungarian Grand Prix',
+        'Belgian': 'Belgian Grand Prix',
+        'Austrian': 'Austrian Grand Prix',
+        'Canadian': 'Canadian Grand Prix',
+        'Spanish': 'Spanish Grand Prix',
+        'Saudi Arabian': 'Saudi Arabian Grand Prix',
+        'Japanese': 'Japanese Grand Prix',
+        'Chinese': 'Chinese Grand Prix',
+        'Australian': 'Australian Grand Prix',
     }
     
     # 標準化賽道名稱
