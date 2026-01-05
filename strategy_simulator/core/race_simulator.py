@@ -683,6 +683,11 @@ class FullRaceSimulator:
         """
         Determine if driver should make a reactive pit stop to cover rivals.
         
+        Implements real F1 strategy dynamics:
+        1. Defensive cover: React to rival pitting (prevent undercut)
+        2. Offensive undercut: Pit before rival if they're vulnerable
+        3. Position-based aggression: Lower positions more aggressive
+        
         Args:
             driver_code: Driver to check
             lap: Current lap
@@ -690,7 +695,7 @@ class FullRaceSimulator:
             drivers_pitting: List of drivers already planning to pit
             
         Returns:
-            True if should make cover pit
+            True if should make cover pit or undercut attempt
         """
         state = self._drivers[driver_code]
         
@@ -706,11 +711,16 @@ class FullRaceSimulator:
         current_compound = state.current_tire.value if hasattr(state.current_tire, 'value') else str(state.current_tire)
         max_tire_life = tire_durability.get(current_compound.upper(), 28)
         
-        if state.tire_age < max_tire_life * 0.5:
-            # Fresh tires, no need to react
+        # ✅ 改進 1: 更真實的輪胎狀況評估
+        tire_worn_percentage = state.tire_age / max_tire_life
+        tire_viable = tire_worn_percentage >= 0.4  # 40% 以上才考慮進站
+        
+        if not tire_viable:
+            # 輪胎太新，不會反應進站
             return False
         
-        # Check if direct rival (within 5 positions and 5 seconds) is pitting
+        # ✅ 改進 2: 防守性反制 (Defensive Cover)
+        # 檢查直接對手是否正在進站
         for rival_code in drivers_pitting:
             rival = self._drivers.get(rival_code)
             if not rival:
@@ -719,13 +729,65 @@ class FullRaceSimulator:
             pos_diff = abs(state.position - rival.position)
             gap_diff = abs(state.gap_to_leader - rival.gap_to_leader)
             
-            # Close rival pitting - consider cover
+            # 近距離對手進站 - 強烈考慮反制
             if pos_diff <= 3 and gap_diff <= 5.0:
-                # Under SC, more likely to react
-                if sc_active:
-                    return random.random() < 0.6  # 60% chance to cover under SC
+                # 根據位置調整反應機率
+                if state.position <= 5:
+                    # 前排車手：非常保守防守（80-90% 反制）
+                    cover_probability = 0.85 if sc_active else 0.80
+                elif state.position <= 12:
+                    # 中游車手：標準防守（60-70% 反制）
+                    cover_probability = 0.70 if sc_active else 0.60
                 else:
-                    return random.random() < 0.3  # 30% chance to cover under green
+                    # 後排車手：較不在意防守（40-50% 反制）
+                    cover_probability = 0.50 if sc_active else 0.40
+                
+                if random.random() < cover_probability:
+                    print(f"[STRATEGY] L{lap}: {driver_code} (P{state.position}) "
+                          f"反制 {rival_code} 進站 - Defensive Cover")
+                    return True
+        
+        # ✅ 改進 3: 進攻性 Undercut（針對前車）
+        # 如果前車輪胎老化且即將進站，搶先進站嘗試 undercut
+        if tire_worn_percentage >= 0.6:  # 自己輪胎已用 60% 以上
+            # 找出正前方的對手
+            sorted_drivers = sorted(
+                [(code, s) for code, s in self._drivers.items() if not s.retired],
+                key=lambda x: x[1].position
+            )
+            
+            for i, (code, s) in enumerate(sorted_drivers):
+                if code == driver_code and i > 0:
+                    # 找到前一位車手
+                    ahead_code, ahead_state = sorted_drivers[i - 1]
+                    
+                    # 檢查前車是否即將進站（輪胎老化）
+                    if ahead_state.stints and ahead_state.current_stint < len(ahead_state.stints):
+                        ahead_stint = ahead_state.stints[ahead_state.current_stint]
+                        ahead_planned_pit_lap = ahead_stint.start_lap + ahead_stint.laps
+                        
+                        # 前車預計在未來 2-4 圈進站
+                        laps_until_ahead_pits = ahead_planned_pit_lap - lap
+                        
+                        if 2 <= laps_until_ahead_pits <= 4:
+                            # 檢查差距是否適合 undercut（5 秒內）
+                            gap = abs(state.gap_to_leader - ahead_state.gap_to_leader)
+                            
+                            if gap <= 5.0:
+                                # 根據位置決定激進程度
+                                if state.position <= 5:
+                                    undercut_probability = 0.4  # 前排較保守
+                                elif state.position <= 12:
+                                    undercut_probability = 0.6  # 中游標準
+                                else:
+                                    undercut_probability = 0.8  # 後排激進
+                                
+                                if random.random() < undercut_probability:
+                                    print(f"[STRATEGY] L{lap}: {driver_code} (P{state.position}) "
+                                          f"嘗試 Undercut {ahead_code} (P{ahead_state.position}) "
+                                          f"- 提前 {laps_until_ahead_pits} 圈進站")
+                                    return True
+                    break
         
         return False
     
