@@ -330,15 +330,33 @@ class WeatherTimelineMDI(QWidget):
         """Data loading failed - 顯示錯誤訊息而不是完全隱藏"""
         logger.error("[WEATHER_MDI] Data loading failed: %s", error_msg)
         
-        # 顯示錯誤狀態標籤
-        self.status_label.setText(tr("weather_load_failed", "天氣數據載入失敗"))
-        self.status_label.setStyleSheet("""
-            padding: 8px;
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
-            border-radius: 4px;
-        """)
+        # ✅ 修復：對於當前年份或未來年份，顯示友善的「賽季尚未開始」訊息
+        from datetime import datetime
+        year_int = int(self.year)
+        current_year = datetime.now().year
+        
+        if year_int >= current_year:
+            # 當前年份或未來年份：顯示友善訊息
+            logger.info(f"[WEATHER_MDI] 當前/未來年份 {year_int}，顯示賽季尚未開始訊息")
+            self.status_label.setText(tr("future_season_weather", "賽季尚未開始，天氣數據暫不可用"))
+            self.status_label.setStyleSheet("""
+                padding: 8px;
+                background: #e7f3ff;
+                color: #0066cc;
+                border: 1px solid #b3d9ff;
+                border-radius: 4px;
+            """)
+        else:
+            # 過去年份：顯示一般錯誤訊息
+            self.status_label.setText(tr("weather_load_failed", "天氣數據載入失敗"))
+            self.status_label.setStyleSheet("""
+                padding: 8px;
+                background: #fff3cd;
+                color: #856404;
+                border: 1px solid #ffeeba;
+                border-radius: 4px;
+            """)
+        
         self.status_label.show()
         
         # Hide progress bar

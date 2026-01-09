@@ -47,11 +47,11 @@ class SimulationTab(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
         
-        # Main splitter - top animation, bottom MC charts
+        # Main splitter - top animation (hidden), bottom MC charts
         splitter = QSplitter(Qt.Vertical)
         layout.addWidget(splitter)
         
-        # Top: Race Animation
+        # Top: Race Animation (HIDDEN - user requested to disable)
         animation_group = QGroupBox("賽事模擬動畫")
         animation_layout = QVBoxLayout(animation_group)
         animation_layout.setContentsMargins(5, 5, 5, 5)
@@ -60,8 +60,9 @@ class SimulationTab(QWidget):
         animation_layout.addWidget(self.animation_widget)
         
         splitter.addWidget(animation_group)
+        animation_group.setVisible(False)  # ✅ 隱藏動畫區塊
         
-        # Bottom: Monte Carlo Charts
+        # Bottom: Monte Carlo Charts (now takes full space)
         mc_group = QGroupBox("Monte Carlo 分析")
         mc_layout = QVBoxLayout(mc_group)
         mc_layout.setContentsMargins(5, 5, 5, 5)
@@ -71,9 +72,9 @@ class SimulationTab(QWidget):
         
         splitter.addWidget(mc_group)
         
-        # Set splitter stretch factors (60% animation, 40% MC)
-        splitter.setStretchFactor(0, 6)  # Animation widget
-        splitter.setStretchFactor(1, 4)  # MC charts
+        # Set splitter stretch factors (MC takes all space now)
+        splitter.setStretchFactor(0, 0)  # Animation widget (hidden)
+        splitter.setStretchFactor(1, 1)  # MC charts (full)
         
         # Placeholder message
         self.placeholder = QLabel(

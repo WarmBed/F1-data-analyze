@@ -132,3 +132,5 @@ config/local_*.json
 # 測試資料
 tests/__pycache__/
 tests/*.pyc
+
+.venv/

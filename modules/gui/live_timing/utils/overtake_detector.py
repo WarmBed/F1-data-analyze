@@ -12,8 +12,15 @@ Live Timing Overtake Detector
 4. 配合 TrackStatus.json 過濾 SC/VSC 期間
 5. 分類統計：賽道超車 vs 進站相關 vs 第一圈混戰
 
+相關模組:
+- CLI_modules/cli/utils/base_overtake_detector.py: 統一超車分類邏輯基類
+- CLI_modules/cli/analyzer/overtake_history_collector.py (F134): 使用 PKL 數據源的收集器
+- 本模組使用 json/LiveF1/ 的 JSON 數據，F134 使用 data/live_timing_cache/ 的 PKL 數據
+- 分類邏輯與 BaseOvertakeDetector 保持一致: on_track, pit_related, sc_related, lap_one
+
 Author: F1T Team
 Date: 2025-12-25
+Updated: 2026-01-05 (添加 BaseOvertakeDetector 相關說明)
 """
 
 from __future__ import annotations

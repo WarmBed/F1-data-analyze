@@ -819,6 +819,31 @@ class GuiTranslator:
             'all_drivers_brake_chart': {'zh': '煞車圖表', 'en': 'Brake Chart', 'ja': 'ブレーキチャート'},
             'all_drivers_brake_all_laps_analysis': {'zh': '全車手煞車全圈數分析', 'en': 'All Drivers Brake All Laps Analysis', 'ja': '全ドライバーブレーキ全周分析'},
             'long_run_analysis': {'zh': '長距離與輪胎衰退', 'en': 'Long Run & Degradation', 'ja': 'ロングラン＆劣化'},
+            
+            # Long Run Analysis Tab Labels
+            'long_run.tab.stint': {'zh': '長跑選擇', 'en': 'Stint Selection', 'ja': 'スティント選択'},
+            'long_run.tab.fuel': {'zh': '燃油設定', 'en': 'Fuel Settings', 'ja': '燃料設定'},
+            'long_run.tab.track': {'zh': '賽道演進', 'en': 'Track Evolution', 'ja': 'トラック進化'},
+            'long_run.tab.results': {'zh': '衰退結果', 'en': 'Degradation Results', 'ja': '劣化結果'},
+            'long_run.tab.chart': {'zh': '圖表檢視', 'en': 'Chart View', 'ja': 'チャートビュー'},
+            
+            # Long Run Analysis Translations
+            'long_run.chart.drivers': {'zh': '車手', 'en': 'Drivers', 'ja': 'ドライバー'},
+            'long_run.chart.options': {'zh': '圖表選項', 'en': 'Chart Options', 'ja': 'チャートオプション'},
+            'long_run.filter.all': {'zh': '所有配方', 'en': 'All Compounds', 'ja': 'すべてのコンパウンド'},
+            'long_run.filter.soft': {'zh': '僅 SOFT', 'en': 'SOFT only', 'ja': 'SOFTのみ'},
+            'long_run.filter.medium': {'zh': '僅 MEDIUM', 'en': 'MEDIUM only', 'ja': 'MEDIUMのみ'},
+            'long_run.filter.hard': {'zh': '僅 HARD', 'en': 'HARD only', 'ja': 'HARDのみ'},
+            'long_run.sim.label': {'zh': '模擬:', 'en': 'Sim:', 'ja': 'シム:'},
+            'long_run.sim.tooltip_recommended': {'zh': '建議 Sim 值: {0} (基於 {1} 車隊燃油習慣)\n0 = FP2 模式, >0 = 賽車模擬模式', 'en': 'Recommended Sim: {0} (based on {1} fuel habits)\n0 = FP2 mode, >0 = Race simulation mode', 'ja': '推奨Sim値: {0} ({1}の燃料習慣に基づく)\n0 = FP2モード, >0 = レースシミュレーションモード'},
+            'long_run.sim.tooltip_default': {'zh': '模擬 {0} 的賽車圈速 (0 = FP2 模式)', 'en': 'Simulate race lap for {0} (0 = FP2 mode)', 'ja': '{0}のレースラップをシミュレート (0 = FP2モード)'},
+            'long_run.excl.placeholder': {'zh': '排除: 20,22', 'en': 'Excl: 20,22', 'ja': '除外: 20,22'},
+            'long_run.excl.tooltip': {'zh': '排除 {0} 的圈數: 例如 20,22 或 18-20', 'en': 'Exclude laps for {0}: e.g. 20,22 or 18-20', 'ja': '{0}の周回を除外: 例: 20,22 または 18-20'},
+            'long_run.status.long_run': {'zh': '長距離 (std={0:.2f}s)', 'en': 'Long Run (std={0:.2f}s)', 'ja': 'ロングラン (std={0:.2f}s)'},
+            'long_run.status.short': {'zh': '短距離 ({0} 圈)', 'en': 'Short ({0} laps)', 'ja': '短距離 ({0}周)'},
+            'long_run.status.inconsistent': {'zh': '不穩定 (std={0:.2f}s)', 'en': 'Inconsistent (std={0:.2f}s)', 'ja': '不安定 (std={0:.2f}s)'},
+            'long_run.action.double_click': {'zh': '雙擊以編輯', 'en': 'Double-click to edit', 'ja': 'ダブルクリックして編集'},
+            
             'pole_defense_statistics': {'zh': '桿位防守統計', 'en': 'Pole Defense Statistics', 'ja': 'ポールディフェンス統計'},
             'traffic_analysis': {'zh': '車流分析', 'en': 'Traffic Analysis', 'ja': 'トラフィック分析'},
             'time_diff_analysis': {'zh': '時間差分析', 'en': 'Time Diff Analysis', 'ja': 'タイム差分析'},

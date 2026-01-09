@@ -139,10 +139,11 @@ class CompetitiveMCSummary:
     scenario_win_rates: Dict[str, Dict[str, float]] = field(default_factory=dict)
     
     def get_ranking(self) -> List[Tuple[str, float]]:
-        """Get strategies ranked by mean finish position (lower is better)."""
+        """Get strategies ranked by win probability (higher is better)."""
         return sorted(
-            [(name, s.mean_finish_position) for name, s in self.strategy_summaries.items()],
-            key=lambda x: x[1]
+            [(name, s.win_probability) for name, s in self.strategy_summaries.items()],
+            key=lambda x: x[1],
+            reverse=True  # Higher win rate is better
         )
     
     def to_dict(self) -> dict:
@@ -304,11 +305,12 @@ class CompetitiveMonteCarloSimulator:
     ) -> CompetitiveIterationResult:
         """Run one iteration with a specific strategy."""
         
-        # Create race simulator
+        # Create race simulator (simple_mode=True for MC performance)
         simulator = FullRaceSimulator(
             sim_params=self.sim_params,
             sc_probability=0,  # We inject SC events manually
             overtaking_difficulty=0.5,
+            simple_mode=True,  # Use simple mode for Monte Carlo iterations
         )
         
         # Load all drivers

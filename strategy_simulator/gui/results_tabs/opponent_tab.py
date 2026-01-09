@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
     QFormLayout, QTabWidget
 )
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QFont, QColor
+from PyQt5.QtGui import QFont, QColor, QBrush
 
 try:
     import pyqtgraph as pg
@@ -59,6 +59,7 @@ class OpponentTab(QWidget):
         self._current_gap: float = 0.0
         self._predictions: List[Dict] = []
         self._mc_summary = None  # Store MC results with position predictions
+        self._phase1_strategy_details = {}  # Store detailed Phase 1 optimization data
         self._setup_ui()
     
     def _setup_ui(self):
@@ -89,6 +90,10 @@ class OpponentTab(QWidget):
         # Tab 3: Position Battle Analysis (NEW)
         position_widget = self._create_position_battle_tab()
         self.tabs.addTab(position_widget, tr("POSITION_BATTLE", "Position Battle"))
+        
+        # Tab 4: Phase 1 Optimization Results (NEW)
+        phase1_widget = self._create_phase1_results_tab()
+        self.tabs.addTab(phase1_widget, "Phase 1 優化結果")
         
     def _create_analysis_tab(self) -> QWidget:
         """Create the undercut/overcut analysis tab."""
@@ -588,9 +593,17 @@ class OpponentTab(QWidget):
         """
         self._mc_summary = mc_summary
         
+        print(f"[OPPONENT_TAB] update_position_predictions called")
+        print(f"[OPPONENT_TAB]   mc_summary: {mc_summary}")
+        print(f"[OPPONENT_TAB]   starting_position: {starting_position}")
+        print(f"[OPPONENT_TAB]   self._predictions count: {len(self._predictions)}")
+        
         if mc_summary is None or not hasattr(mc_summary, 'position_predictions'):
+            print(f"[OPPONENT_TAB]   No MC summary or position_predictions, showing empty state")
             self._update_position_battle_empty()
             return
+        
+        print(f"[OPPONENT_TAB]   Generating battle analysis...")
         
         # Update position label
         self.battle_position_label.setText(
@@ -600,6 +613,7 @@ class OpponentTab(QWidget):
         
         # Generate battle analysis with nearby opponents
         battle_data = self._analyze_position_battles(starting_position, mc_summary)
+        print(f"[OPPONENT_TAB]   Battle data count: {len(battle_data)}")
         self._update_battle_table(battle_data)
         
         # Update prediction summary
@@ -624,11 +638,34 @@ class OpponentTab(QWidget):
         else:
             opponent_settings = {}
         
-        # Use FP2 predictions for driver order
-        for pred in self._predictions:
-            driver = pred.get("driver", "")
-            rank = pred.get("rank", 20)
-            
+        print(f"[OPPONENT_TAB]   opponent_settings keys: {list(opponent_settings.keys())}")
+        
+        # Build driver-position mapping from FP2 predictions or MC results
+        driver_positions = {}
+        
+        if self._predictions:
+            # Use FP2 predictions (preferred)
+            print(f"[OPPONENT_TAB]   Using FP2 predictions for driver order")
+            for pred in self._predictions:
+                driver = pred.get("driver", "")
+                rank = pred.get("rank", 20)
+                driver_positions[driver] = rank
+        else:
+            # Fallback: Use opponent settings (which includes rank from FP2/Q)
+            print(f"[OPPONENT_TAB]   No FP2 predictions, using opponent_settings rank")
+            for driver, settings in opponent_settings.items():
+                # Get their rank from settings (stored during load_predictions)
+                rank = settings.get('rank', None)
+                if rank is not None:
+                    driver_positions[driver] = rank
+                    print(f"[OPPONENT_TAB]     {driver}: P{rank} (from settings)")
+                else:
+                    print(f"[OPPONENT_TAB]     {driver}: No rank available, skipping")
+        
+        print(f"[OPPONENT_TAB]   driver_positions: {driver_positions}")
+        
+        # Analyze battles with nearby drivers
+        for driver, rank in driver_positions.items():
             # Focus on drivers within 3 positions of us
             if abs(rank - our_position) <= 3 and rank != our_position:
                 # Get their strategy settings
@@ -672,10 +709,13 @@ class OpponentTab(QWidget):
                     'overcut_risk': overcut_risk,
                     'action': action
                 })
+                
+                print(f"[OPPONENT_TAB]     Added battle: {driver} P{rank} ({threat})")
         
         # Sort by position
         battles.sort(key=lambda x: x['position'])
         
+        print(f"[OPPONENT_TAB]   Total battles found: {len(battles)}")
         return battles
     
     def _estimate_risk_level(self, our_pos: int, their_pos: int, attack_type: str) -> str:
@@ -797,3 +837,278 @@ class OpponentTab(QWidget):
                     f"P{best_pred.best_case_position} - P{best_pred.worst_case_position}")
         
         self.prediction_label.setText("<br>".join(lines))
+    
+    def _create_phase1_results_tab(self) -> QWidget:
+        """Create Phase 1 optimization results tab."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Header info
+        header_label = QLabel(
+            "<h3>Phase 1: 對手策略優化結果</h3>"
+            "<p>此頁面顯示 Phase 1 階段為 19 位對手車手優化出的最佳策略與勝率。</p>"
+            "<p><b>說明：</b>系統根據排位順序，為前排車手分配更多迭代次數以獲得更準確的策略。</p>"
+        )
+        header_label.setWordWrap(True)
+        header_label.setStyleSheet("padding: 10px; background-color: #E8F5E9; border-radius: 4px;")
+        layout.addWidget(header_label)
+        
+        # Results table (full width)
+        self.phase1_table = QTableWidget()
+        self.phase1_table.setColumnCount(6)
+        self.phase1_table.setHorizontalHeaderLabels([
+            "排名", "車手", "車隊", "最佳策略", "進站次數", "勝率 %"
+        ])
+        
+        # Table styling
+        header = self.phase1_table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)  # 排名
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)  # 車手
+        header.setSectionResizeMode(2, QHeaderView.Stretch)  # 車隊
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)  # 策略
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)  # 進站
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)  # 勝率
+        
+        self.phase1_table.setAlternatingRowColors(True)
+        self.phase1_table.setSelectionBehavior(QTableWidget.SelectRows)
+        
+        layout.addWidget(self.phase1_table)
+        
+        # Status label
+        self.phase1_status_label = QLabel("尚未執行 Phase 1 優化")
+        self.phase1_status_label.setStyleSheet("padding: 5px; color: #666;")
+        layout.addWidget(self.phase1_status_label)
+        
+        return widget
+    
+    def _create_phase1_detail_panel(self) -> QWidget:
+        """Create detail panel for selected driver's Phase 1 analysis."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(5, 5, 5, 5)
+        
+        # Title
+        title_label = QLabel("<h3>車手詳細分析</h3>")
+        layout.addWidget(title_label)
+        
+        # Driver info card
+        self.phase1_driver_info = QLabel("請選擇左側表格中的車手以查看詳細分析")
+        self.phase1_driver_info.setWordWrap(True)
+        self.phase1_driver_info.setStyleSheet("""
+            padding: 15px;
+            background-color: #F5F5F5;
+            border: 1px solid #E0E0E0;
+            border-radius: 4px;
+            font-size: 11pt;
+        """)
+        self.phase1_driver_info.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        layout.addWidget(self.phase1_driver_info)
+        
+        # Strategy comparison table
+        strategy_label = QLabel("<b>測試策略對比：</b>")
+        layout.addWidget(strategy_label)
+        
+        self.phase1_strategy_table = QTableWidget()
+        self.phase1_strategy_table.setColumnCount(4)
+        self.phase1_strategy_table.setHorizontalHeaderLabels([
+            "策略", "勝率 %", "平均位置", "測試次數"
+        ])
+        self.phase1_strategy_table.horizontalHeader().setStretchLastSection(True)
+        self.phase1_strategy_table.setMaximumHeight(200)
+        layout.addWidget(self.phase1_strategy_table)
+        
+        layout.addStretch()
+        
+        return widget
+    
+    def _on_phase1_driver_selected(self):
+        """Handle driver selection in Phase 1 table."""
+        selected_items = self.phase1_table.selectedItems()
+        if not selected_items:
+            self.phase1_driver_info.setText("請選擇左側表格中的車手以查看詳細分析")
+            self.phase1_strategy_table.setRowCount(0)
+            return
+        
+        # Get selected row
+        row = self.phase1_table.currentRow()
+        if row < 0:
+            return
+        
+        # Extract driver info from table
+        rank_item = self.phase1_table.item(row, 0)
+        driver_item = self.phase1_table.item(row, 1)
+        team_item = self.phase1_table.item(row, 2)
+        strategy_item = self.phase1_table.item(row, 3)
+        stops_item = self.phase1_table.item(row, 4)
+        win_rate_item = self.phase1_table.item(row, 5)
+        
+        if not all([rank_item, driver_item, team_item, strategy_item, stops_item, win_rate_item]):
+            return
+        
+        rank = rank_item.text()
+        driver = driver_item.text()
+        team = team_item.text()
+        strategy = strategy_item.text()
+        stops = stops_item.text()
+        win_rate = win_rate_item.text()
+        
+        # Get cached strategy data if available
+        strategy_data = self._phase1_strategy_details.get(driver, {})
+        
+        # Build detail text
+        detail_html = f"""
+        <h2 style='color: #1976D2;'>{driver}</h2>
+        <p><b>車隊：</b>{team}</p>
+        <p><b>排位：</b>{rank}</p>
+        <hr>
+        <h3 style='color: #388E3C;'>最佳策略</h3>
+        <p><b>輪胎策略：</b><span style='font-family: Consolas; font-size: 14pt; color: #D32F2F;'>{strategy}</span></p>
+        <p><b>進站次數：</b>{stops}</p>
+        <p><b>勝率：</b><span style='font-size: 13pt; font-weight: bold; color: #388E3C;'>{win_rate}</span></p>
+        <hr>
+        <h3>優化過程</h3>
+        """
+        
+        # Add optimization details if available
+        if strategy_data:
+            iterations = strategy_data.get('iterations', 'N/A')
+            tested_strategies = strategy_data.get('tested_strategies', 0)
+            tier = strategy_data.get('tier', 'N/A')
+            
+            detail_html += f"""
+            <p><b>優化層級：</b>{tier}</p>
+            <p><b>測試迭代：</b>{iterations} 次</p>
+            <p><b>測試策略數：</b>{tested_strategies} 種</p>
+            """
+            
+            # Show tested strategies in comparison table
+            tested_list = strategy_data.get('all_strategies', [])
+            if tested_list:
+                self.phase1_strategy_table.setRowCount(len(tested_list))
+                for i, strat in enumerate(tested_list):
+                    self.phase1_strategy_table.setItem(i, 0, QTableWidgetItem(strat.get('name', '-')))
+                    self.phase1_strategy_table.setItem(i, 1, QTableWidgetItem(f"{strat.get('win_rate', 0):.1f}%"))
+                    self.phase1_strategy_table.setItem(i, 2, QTableWidgetItem(f"P{strat.get('avg_pos', 0):.1f}"))
+                    self.phase1_strategy_table.setItem(i, 3, QTableWidgetItem(f"{iterations}"))
+        else:
+            detail_html += "<p><i>詳細優化資訊未記錄</i></p>"
+            self.phase1_strategy_table.setRowCount(0)
+        
+        detail_html += """
+        <hr>
+        <p style='font-size: 9pt; color: #666;'>
+        <i>此資料來自 Phase 1 快速優化階段，用於為對手選擇最佳策略。</i>
+        </p>
+        """
+        
+        self.phase1_driver_info.setText(detail_html)
+    
+    def display_phase1_results(self, opponent_strategies: Dict[str, Dict], fp2_predictions: List[Dict]):
+        """
+        Display Phase 1 optimization results in the GUI.
+        
+        Args:
+            opponent_strategies: Dict mapping driver_code to optimized strategy
+                Format: {
+                    'VER': {
+                        'tire_sequence': ['M', 'H'],
+                        'num_stops': 1,
+                        'win_rate': 15.3,
+                        'note': 'P1 Quick MC: M-H'
+                    },
+                    ...
+                }
+            fp2_predictions: List of FP2 prediction dicts for getting team names and ranks
+        """
+        if not opponent_strategies:
+            self.phase1_status_label.setText("Phase 1 未產生任何結果")
+            return
+        
+        # Create driver lookup dict
+        driver_info = {p.get('driver'): p for p in fp2_predictions}
+        
+        # Sort by rank
+        sorted_drivers = sorted(
+            opponent_strategies.items(),
+            key=lambda x: driver_info.get(x[0], {}).get('rank', 99)
+        )
+        
+        # Populate table
+        self.phase1_table.setRowCount(len(sorted_drivers))
+        
+        for row, (driver_code, strategy) in enumerate(sorted_drivers):
+            info = driver_info.get(driver_code, {})
+            rank = info.get('rank', '-')
+            team = info.get('team', '-')
+            
+            tire_seq = '-'.join(strategy.get('tire_sequence', []))
+            num_stops = strategy.get('num_stops', 0)
+            win_rate = strategy.get('win_rate', 0.0)
+            
+            # Rank
+            rank_item = QTableWidgetItem(f"P{rank}")
+            rank_item.setTextAlignment(Qt.AlignCenter)
+            if rank <= 3:
+                rank_item.setBackground(QBrush(QColor(255, 215, 0, 50)))  # Gold tint
+            elif rank <= 10:
+                rank_item.setBackground(QBrush(QColor(192, 192, 192, 30)))  # Silver tint
+            self.phase1_table.setItem(row, 0, rank_item)
+            
+            # Driver
+            driver_item = QTableWidgetItem(driver_code)
+            driver_item.setTextAlignment(Qt.AlignCenter)
+            driver_item.setFont(QFont("Consolas", 10, QFont.Bold))
+            self.phase1_table.setItem(row, 1, driver_item)
+            
+            # Team
+            team_item = QTableWidgetItem(team)
+            self.phase1_table.setItem(row, 2, team_item)
+            
+            # Strategy
+            strategy_item = QTableWidgetItem(tire_seq)
+            strategy_item.setTextAlignment(Qt.AlignCenter)
+            strategy_item.setFont(QFont("Consolas", 10))
+            self.phase1_table.setItem(row, 3, strategy_item)
+            
+            # Num stops
+            stops_item = QTableWidgetItem(f"{num_stops} 停")
+            stops_item.setTextAlignment(Qt.AlignCenter)
+            self.phase1_table.setItem(row, 4, stops_item)
+            
+            # Win rate
+            win_rate_item = QTableWidgetItem(f"{win_rate:.1f}%")
+            win_rate_item.setTextAlignment(Qt.AlignCenter)
+            
+            # Color code by win rate
+            if win_rate >= 10.0:
+                win_rate_item.setBackground(QBrush(QColor(76, 175, 80, 50)))  # Green
+                win_rate_item.setForeground(QBrush(QColor(27, 94, 32)))
+            elif win_rate >= 5.0:
+                win_rate_item.setBackground(QBrush(QColor(255, 235, 59, 50)))  # Yellow
+            else:
+                win_rate_item.setForeground(QBrush(QColor(100, 100, 100)))
+            
+            self.phase1_table.setItem(row, 5, win_rate_item)
+            
+            # ✅ Store detailed strategy data for detail panel
+            self._phase1_strategy_details[driver_code] = {
+                'iterations': strategy.get('iterations', 0),
+                'tested_strategies': strategy.get('tested_strategies', 0),
+                'tier': strategy.get('tier', 'N/A'),
+                'all_strategies': strategy.get('all_tested_strategies', [])  # ✅ Get from strategy data
+            }
+        
+        # Update status
+        total_drivers = len(sorted_drivers)
+        avg_win_rate = sum(s.get('win_rate', 0) for s in opponent_strategies.values()) / total_drivers
+        
+        self.phase1_status_label.setText(
+            f"✅ Phase 1 優化完成：共 {total_drivers} 位對手 | "
+            f"平均勝率：{avg_win_rate:.1f}% | "
+            f"前三名平均：{sum(s.get('win_rate', 0) for _, s in sorted_drivers[:3]) / 3:.1f}%"
+        )
+        self.phase1_status_label.setStyleSheet("padding: 5px; color: #2E7D32; font-weight: bold;")
+        
+        print(f"[OPPONENT_TAB] Phase 1 results displayed: {total_drivers} drivers")
+

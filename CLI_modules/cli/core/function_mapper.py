@@ -148,8 +148,17 @@ class F1AnalysisFunctionMapper:
             126: self._execute_live_timing_weather_analysis,  # Live Timing 天氣分析（逐圈氣溫/賽道溫度/降雨）(2025-12-21)
             127: self._execute_live_timing_traffic_distance_analysis,  # Live Timing traffic 分析（距離門檻版，SC/VSC整圈排除）(2025-12-23)
             
-            # 130-139: FP2-Race Long Run 相關性分析系統
+            # 130-141: Position Tracking Simulator 數據收集系統
             131: self._execute_fp2_race_correlation_analysis,  # FP2-Race Long Run 相關性分析 (2025-01-01)
+            134: self._execute_overtake_history_collector,  # 超車事件歷史收集器 (2026-01-05)
+            135: self._execute_overtake_attempt_failed_collector,  # 超車嘗試失敗收集器 (2026-01-05)
+            136: self._execute_track_overtake_difficulty_analyzer,  # 賽道超車難度分析器 (2026-01-05)
+            137: self._execute_team_performance_matrix_calculator,  # 車隊性能差係數計算器 (2026-01-05)
+            138: self._execute_overtake_success_model_trainer,  # 超車成功率模型訓練器 (2026-01-05)
+            139: self._execute_new_driver_coefficient_completer,  # 新車手係數補全器 (2026-01-05)
+            140: self._execute_qualifying_result_collector,  # 排位賽結果收集器 (2026-01-05)
+            141: self._execute_sc_trigger_probability_model,  # SC 觸發機率模型 (2026-01-05)
+            142: self._execute_pit_lane_time_analyzer,  # 進站時間損失分析器 (2026-01-05)
         }
         
         # 子功能映射表
@@ -7823,6 +7832,159 @@ class F1AnalysisFunctionMapper:
                 "message": f"F131 執行失敗: {str(e)}",
                 "function_id": "131"
             }
+
+    # ===== F134-F141: Position Tracking Simulator 數據收集系統 =====
+
+    def _execute_overtake_history_collector(self, **kwargs):
+        """功能 134: 超車事件歷史收集器
+
+        從 PKL 快取提取 2024-2025 所有超車事件，用於訓練超車成功率模型。
+
+        輸出:
+            - json/overtake_events_history_2024_2025.json
+        """
+        print("\n" + "="*70)
+        print("功能 134: 超車事件歷史收集器 (Overtake History Collector)")
+        print("="*70)
+
+        try:
+            from CLI_modules.cli.analyzer.overtake_history_collector import execute_overtake_history_collector
+            return execute_overtake_history_collector(**kwargs)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F134 執行失敗: {str(e)}",
+                "function_id": "134"
+            }
+
+    def _execute_overtake_attempt_failed_collector(self, **kwargs):
+        """功能 135: 超車嘗試失敗收集器
+
+        識別超車嘗試但失敗的事件，補充 F134 的成功案例用於模型訓練。
+
+        輸出:
+            - json/overtake_attempts_failed_2024_2025.json
+        """
+        print("\n" + "="*70)
+        print("功能 135: 超車嘗試失敗收集器 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F135 尚未實作", "function_id": "135"}
+
+    def _execute_track_overtake_difficulty_analyzer(self, **kwargs):
+        """功能 136: 賽道超車難度分析器
+
+        計算每條賽道的基礎超車難度係數。
+
+        輸出:
+            - json/track_overtake_difficulty.json
+        """
+        print("\n" + "="*70)
+        print("功能 136: 賽道超車難度分析器 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F136 尚未實作", "function_id": "136"}
+
+    def _execute_team_performance_matrix_calculator(self, **kwargs):
+        """功能 137: 車隊性能差係數計算器
+
+        計算車隊間的相對性能差異係數。
+
+        輸出:
+            - json/team_performance_matrix.json
+        """
+        print("\n" + "="*70)
+        print("功能 137: 車隊性能差係數計算器 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F137 尚未實作", "function_id": "137"}
+
+    def _execute_overtake_success_model_trainer(self, **kwargs):
+        """功能 138: 超車成功率模型訓練器
+
+        訓練 Logistic Regression 超車成功率模型。
+
+        輸出:
+            - models/overtake_success_model.pkl
+            - json/overtake_model_coefficients.json
+            - json/overtake_model_evaluation.json
+        """
+        print("\n" + "="*70)
+        print("功能 138: 超車成功率模型訓練器 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F138 尚未實作", "function_id": "138"}
+
+    def _execute_new_driver_coefficient_completer(self, **kwargs):
+        """功能 139: 新車手係數補全器
+
+        為缺乏歷史數據的新車手/替補車手生成預設係數。
+
+        輸出:
+            - json/driver_coefficients_complete.json
+        """
+        print("\n" + "="*70)
+        print("功能 139: 新車手係數補全器 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F139 尚未實作", "function_id": "139"}
+
+    def _execute_qualifying_result_collector(self, **kwargs):
+        """功能 140: 排位賽結果收集器
+
+        收集排位賽結果作為比賽起跑位置。
+
+        輸出:
+            - json/qualifying_results_{year}.json
+        """
+        print("\n" + "="*70)
+        print("功能 140: 排位賽結果收集器 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F140 尚未實作", "function_id": "140"}
+
+    def _execute_sc_trigger_probability_model(self, **kwargs):
+        """功能 141: SC 觸發機率模型
+
+        從歷史數據統計 SC 觸發機率和彎道分布。
+
+        輸出:
+            - json/sc_trigger_probability.json
+        """
+        print("\n" + "="*70)
+        print("功能 141: SC 觸發機率模型 (待開發)")
+        print("="*70)
+        return {"success": False, "message": "F141 尚未實作", "function_id": "141"}
+
+    def _execute_pit_lane_time_analyzer(self, **kwargs):
+        """功能 142: 進站時間損失分析器
+
+        分析 2022-2025 所有賽道的進站時間損失，用於策略模擬器。
+
+        輸出:
+            - json/pit_lane_time_loss_all_tracks.json
+        """
+        print("\n" + "="*70)
+        print("功能 142: 進站時間損失分析器 (Pit Lane Time Loss Analyzer)")
+        print("="*70)
+
+        try:
+            from CLI_modules.cli.analyzer.pit_lane_time_analyzer import execute_pit_lane_time_analyzer
+
+            # 執行分析
+            result = execute_pit_lane_time_analyzer(
+                years=[2022, 2023, 2024, 2025],
+                save_json=True
+            )
+
+            return self._standardize_result(result, 142, "進站時間損失分析")
+
+        except Exception as e:
+            print(f"[ERROR] F142 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F142 執行失敗: {str(e)}",
+                "function_id": "142"
+            }
+
 
 # ===== 支援函數和工具 =====
 

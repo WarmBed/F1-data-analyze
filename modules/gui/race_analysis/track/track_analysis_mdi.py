@@ -1163,6 +1163,15 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
                 success = self.chart_widget.load_track_data(track_data)
                 if success:
                     logger.info("[TRACK_ANALYSIS_MDI] 賽道數據已載入至地圖組件")
+                    
+                    # 🟢 載入 DRS 區域數據
+                    drs_zones = self._load_drs_zones_from_circuit_data(data)
+                    if drs_zones and hasattr(self.chart_widget, 'set_drs_zones'):
+                        self.chart_widget.set_drs_zones(drs_zones)
+                        if hasattr(self.chart_widget, 'show_drs_zones'):
+                            self.chart_widget.show_drs_zones = True
+                        logger.info("[TRACK_ANALYSIS_MDI] ✅ 已載入 %d 個 DRS 區域", len(drs_zones))
+                    
                     self.chart_widget.update()  # 強制重繪
                 else:
                     logger.error("[TRACK_ANALYSIS_MDI] 地圖組件載入數據失敗")
@@ -1178,6 +1187,56 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         except Exception as e:
             logger.exception("[ERROR] 處理賽道數據失敗: %s", e)
             self.on_data_error(f"處理數據失敗: {str(e)}")
+    
+    def _load_drs_zones_from_circuit_data(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        從 track_circuit_data JSON 檔案載入 DRS 區域數據
+        
+        Args:
+            data: 完整的分析數據（包含 session_info）
+            
+        Returns:
+            List[Dict]: DRS 區域列表
+        """
+        try:
+            # 從 session_info 或 params 取得賽事名稱
+            session_info = data.get("session_info", {})
+            race_name = session_info.get("race_name") or session_info.get("race") or self.params.get("race", "")
+            
+            if not race_name:
+                logger.warning("[TRACK_ANALYSIS_MDI] 無法取得賽事名稱，跳過 DRS 載入")
+                return []
+            
+            # 建構 JSON 檔案路徑
+            json_dir = Path(__file__).parent.parent.parent.parent.parent / "json"
+            filename = f"track_circuit_data_{race_name.replace(' ', '_')}.json"
+            json_path = json_dir / filename
+            
+            logger.debug("[TRACK_ANALYSIS_MDI] 嘗試載入 DRS 數據: %s", json_path)
+            
+            if not json_path.exists():
+                # 嘗試其他可能的檔名格式
+                alt_path = json_dir / f"track_circuit_data_{race_name}.json"
+                if alt_path.exists():
+                    json_path = alt_path
+                else:
+                    logger.warning("[TRACK_ANALYSIS_MDI] DRS 數據檔案不存在: %s", json_path)
+                    return []
+            
+            # 讀取 JSON
+            with open(json_path, 'r', encoding='utf-8') as f:
+                circuit_data = json.load(f)
+            
+            drs_zones = circuit_data.get("drs_zones", [])
+            
+            if drs_zones:
+                logger.info("[TRACK_ANALYSIS_MDI] ✅ 從 %s 載入 %d 個 DRS 區域", filename, len(drs_zones))
+            
+            return drs_zones
+            
+        except Exception as e:
+            logger.error("[TRACK_ANALYSIS_MDI] 載入 DRS 區域失敗: %s", e)
+            return []
     
     def on_data_error(self, error_msg: str):
         """數據載入錯誤處理"""

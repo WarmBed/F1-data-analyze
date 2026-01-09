@@ -126,6 +126,10 @@ class LongRunAnalysis(QWidget):
         self._data: Optional[Dict[str, Any]] = None
         self._is_loading: bool = False
         self._data_loader = None
+        self._team_fuel_habits: Dict[str, Dict] = {}  # Team -> habits data
+        
+        # Load team fuel habits training data
+        self._load_team_fuel_habits()
         
         # Setup UI
         self._setup_ui()
@@ -179,6 +183,157 @@ class LongRunAnalysis(QWidget):
         layout.addWidget(refresh_btn)
         
         return header
+    
+    def _load_team_fuel_habits(self):
+        """
+        Load team fuel habits - API-ONLY 模式下此方法不再主動載入本地 JSON
+        
+        燃油習慣數據現在從 Function 28 API 返回，在 _on_data_loaded 中處理
+        此方法保留作為向後兼容的入口點（初始化時調用但不執行實際載入）
+        """
+        # API-ONLY 模式：不再主動載入本地 JSON
+        # 燃油習慣數據將在 _on_data_loaded 中從 API 數據提取
+        _get_logger().debug("Team fuel habits will be loaded from API data")
+    
+    def _load_team_fuel_habits_local(self):
+        """
+        備用方法：從本地 JSON 載入車隊燃油習慣
+        
+        僅當 API 沒有返回 team_fuel_habits 時才調用此方法
+        """
+        try:
+            import json
+            
+            # 🔧 EXE 模式路徑處理
+            if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+                # EXE 模式：從 PyInstaller 解壓目錄載入
+                base_path = Path(sys._MEIPASS)
+            elif _PROJECT_ROOT:
+                base_path = Path(_PROJECT_ROOT)
+            else:
+                # 後備：使用當前文件的父目錄向上查找
+                base_path = Path(__file__).resolve().parent.parent.parent.parent
+            
+            habits_path = base_path / 'training_data' / 'team_fuel_habits.json'
+            
+            if not habits_path.exists():
+                _get_logger().warning(f"[FALLBACK] Team fuel habits file not found: {habits_path}")
+                return
+            
+            with open(habits_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                self._team_fuel_habits = data.get('team_habits', {})
+            
+            _get_logger().info(f"[FALLBACK] Loaded team fuel habits from local file: {len(self._team_fuel_habits)} teams")
+            
+        except Exception as e:
+            _get_logger().error(f"[FALLBACK] Failed to load team fuel habits: {e}")
+            self._team_fuel_habits = {}
+    
+    def _get_recommended_sim_lap(self, team_name: str) -> int:
+        """
+        Get recommended simulate from lap based on team fuel habits.
+        
+        Args:
+            team_name: Team name (e.g., "Red Bull Racing")
+        
+        Returns:
+            Recommended lap number (0 = use FP2 mode, >0 = race sim mode)
+        """
+        if not self._team_fuel_habits or team_name not in self._team_fuel_habits:
+            return 0  # Default: FP2 mode
+        
+        habits = self._team_fuel_habits[team_name]
+        
+        # Estimate FP2 fuel load in kg
+        fp2_fuel_kg = habits.get('estimated_fp2_fuel_kg', 0)
+        
+        if fp2_fuel_kg <= 0:
+            return 0  # No data, use FP2 mode
+        
+        # Constants (from learn_team_fuel_habits.py)
+        FUEL_COEF = 0.032  # s/kg
+        RACE_START_FUEL_KG = 110  # Race start fuel (full tank)
+        RACE_FUEL_PER_LAP_KG = 1.8  # Fuel consumption per lap
+        
+        # Calculate which race lap would have similar fuel load as FP2
+        # FP2_fuel = RACE_START - (lap * FUEL_PER_LAP)
+        # lap = (RACE_START - FP2_fuel) / FUEL_PER_LAP
+        
+        sim_lap = round((RACE_START_FUEL_KG - fp2_fuel_kg) / RACE_FUEL_PER_LAP_KG)
+        
+        # Clamp to reasonable range
+        sim_lap = max(0, min(sim_lap, 40))
+        
+        return sim_lap
+    
+    def _get_driver_team(self, driver_code: str) -> Optional[str]:
+        """
+        Get team name for a driver.
+        
+        Args:
+            driver_code: Driver code (e.g., "VER")
+        
+        Returns:
+            Team name or None if not found
+        """
+        # Try to get from data first
+        if hasattr(self, '_data') and self._data:
+            # Check if data contains team info
+            if 'all_drivers_detailed_laptime' in self._data:
+                driver_data = self._data['all_drivers_detailed_laptime'].get(driver_code)
+                if isinstance(driver_data, dict) and 'team' in driver_data:
+                    team = driver_data['team']
+                    _get_logger().info(f"Driver {driver_code} team from data: {team}")
+                    return team
+        
+        # Fallback: 2025 driver-team mapping (expanded)
+        DRIVER_TEAM_2025 = {
+            # Red Bull Racing
+            'VER': 'Red Bull Racing',
+            'PER': 'Red Bull Racing',
+            # McLaren
+            'NOR': 'McLaren',
+            'PIA': 'McLaren',
+            # Ferrari
+            'LEC': 'Ferrari',
+            'SAI': 'Ferrari',
+            'HAM': 'Ferrari',  # 2025 transfer
+            # Mercedes
+            'RUS': 'Mercedes',
+            'ANT': 'Mercedes',  # Antonelli (2025 rookie)
+            # Aston Martin
+            'ALO': 'Aston Martin',
+            'STR': 'Aston Martin',
+            # Racing Bulls (RB)
+            'TSU': 'Racing Bulls',
+            'LAW': 'Racing Bulls',
+            'HAD': 'Racing Bulls',  # Hadjar (potential 2025)
+            # Haas F1 Team
+            'HUL': 'Haas F1 Team',
+            'MAG': 'Haas F1 Team',
+            'BEA': 'Haas F1 Team',  # Bearman (2025)
+            # Alpine
+            'GAS': 'Alpine',
+            'OCO': 'Alpine',
+            'DOO': 'Alpine',  # Doohan (2025)
+            # Williams
+            'ALB': 'Williams',
+            'SAR': 'Williams',
+            'COL': 'Williams',  # Colapinto (test/reserve)
+            # Kick Sauber (Alfa Romeo)
+            'BOT': 'Kick Sauber',
+            'ZHO': 'Kick Sauber',
+            'POR': 'Kick Sauber',  # Pourchaire (reserve)
+        }
+        
+        team = DRIVER_TEAM_2025.get(driver_code)
+        if team:
+            _get_logger().info(f"Driver {driver_code} team from mapping: {team}")
+        else:
+            _get_logger().warning(f"Driver {driver_code} not found in mapping")
+        
+        return team
     
     def _create_tabs(self):
         """Create the tab pages"""
@@ -1201,7 +1356,12 @@ class LongRunAnalysis(QWidget):
         
         # Tire compound filter
         self.tire_filter_combo = QComboBox()
-        self.tire_filter_combo.addItems(["All Compounds", "SOFT only", "MEDIUM only", "HARD only"])
+        self.tire_filter_combo.addItems([
+            _lazy_tr("long_run.filter.all", "All Compounds"),
+            _lazy_tr("long_run.filter.soft", "SOFT only"),
+            _lazy_tr("long_run.filter.medium", "MEDIUM only"),
+            _lazy_tr("long_run.filter.hard", "HARD only")
+        ])
         options_layout.addRow(_lazy_tr("long_run.chart.tire_filter", "Tire Filter:"),
                              self.tire_filter_combo)
         
@@ -1287,20 +1447,40 @@ class LongRunAnalysis(QWidget):
             
             row_layout.addWidget(checkbox)
             
+            # Get driver's team for recommended Sim value
+            driver_team = self._get_driver_team(driver)
+            recommended_sim = self._get_recommended_sim_lap(driver_team) if driver_team else 0
+            
             # Simulate from Lap spinbox (per driver)
             sim_lap_spin = QSpinBox()
             sim_lap_spin.setRange(0, 70)
-            sim_lap_spin.setValue(0)
+            sim_lap_spin.setValue(recommended_sim)
             sim_lap_spin.setMaximumWidth(50)
-            sim_lap_spin.setToolTip(f"Simulate race lap for {driver} (0 = FP2 mode)")
-            row_layout.addWidget(QLabel("Sim:"))
+            
+            # Enhanced tooltip with recommendation info
+            if recommended_sim > 0:
+                tooltip_text = _lazy_tr(
+                    "long_run.sim.tooltip_recommended",
+                    f"Recommended Sim: {recommended_sim} (based on {driver_team} fuel habits)\n0 = FP2 mode, >0 = Race simulation mode"
+                )
+            else:
+                tooltip_text = _lazy_tr(
+                    "long_run.sim.tooltip_default",
+                    f"Simulate race lap for {driver} (0 = FP2 mode)"
+                )
+            sim_lap_spin.setToolTip(tooltip_text)
+            
+            row_layout.addWidget(QLabel(_lazy_tr("long_run.sim.label", "Sim:")))
             row_layout.addWidget(sim_lap_spin)
             
             # Exclude laps input
             exclude_edit = QLineEdit()
-            exclude_edit.setPlaceholderText("Excl: 20,22")
+            exclude_edit.setPlaceholderText(_lazy_tr("long_run.excl.placeholder", "Excl: 20,22"))
             exclude_edit.setMaximumWidth(100)
-            exclude_edit.setToolTip(f"Exclude laps for {driver}: e.g. 20,22 or 18-20")
+            exclude_edit.setToolTip(_lazy_tr(
+                "long_run.excl.tooltip",
+                f"Exclude laps for {driver}: e.g. 20,22 or 18-20"
+            ))
             row_layout.addWidget(exclude_edit)
             
             row_layout.addStretch()
@@ -1845,6 +2025,14 @@ class LongRunAnalysis(QWidget):
             _get_logger().warning("No data received")
             return
         
+        # 🆕 從 API 數據中提取車隊燃油習慣（優先於本地讀取）
+        if isinstance(data, dict) and 'team_fuel_habits' in data:
+            self._team_fuel_habits = data['team_fuel_habits']
+            _get_logger().info(f"Loaded team fuel habits from API: {len(self._team_fuel_habits)} teams")
+        elif not self._team_fuel_habits:
+            # 備用：如果 API 沒有返回且本地也沒有，嘗試本地讀取
+            self._load_team_fuel_habits_local()
+        
         # Store raw lap data for later use
         self._raw_lap_data = self._extract_lap_data(data)
         
@@ -1989,15 +2177,19 @@ class LongRunAnalysis(QWidget):
                 # Status - show more info including std_dev
                 std_dev = stint_info.get('std_dev', 0)
                 if is_long_run:
-                    status = f"Long Run (std={std_dev:.2f}s)"
+                    # Get translated template and format with actual value
+                    status_template = _lazy_tr("long_run.status.long_run", "Long Run (std={0:.2f}s)")
+                    status = status_template.format(std_dev)
                 elif valid_count < 4:
-                    status = f"Short ({valid_count} laps)"
+                    status_template = _lazy_tr("long_run.status.short", "Short ({0} laps)")
+                    status = status_template.format(valid_count)
                 else:
-                    status = f"Inconsistent (std={std_dev:.2f}s)"
+                    status_template = _lazy_tr("long_run.status.inconsistent", "Inconsistent (std={0:.2f}s)")
+                    status = status_template.format(std_dev)
                 stint_item.setText(4, status)
                 
                 # Edit button placeholder
-                stint_item.setText(5, "Double-click to edit")
+                stint_item.setText(5, _lazy_tr("long_run.action.double_click", "Double-click to edit"))
                 
                 stint_count += 1
             

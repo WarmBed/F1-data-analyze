@@ -24,7 +24,7 @@ from PyQt5.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QTabWidget, QStatusBar, QMenuBar,
     QMenu, QAction, QMessageBox, QApplication,
-    QProgressBar, QLabel
+    QProgressBar, QLabel, QPushButton, QToolButton
 )
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QFont
@@ -95,14 +95,47 @@ class MainWindow(QMainWindow):
         
         # Main splitter (Input | Results)
         main_splitter = QSplitter(Qt.Horizontal)
+        self.main_splitter = main_splitter
         layout.addWidget(main_splitter)
+        
+        # 左側面板容器（包含摺疊按鈕）
+        left_container = QWidget()
+        left_layout = QHBoxLayout(left_container)
+        left_layout.setContentsMargins(0, 0, 0, 0)
+        left_layout.setSpacing(0)
         
         # Left: Input panel
         from .input_panel import InputPanel
         self.input_panel = InputPanel(self)
-        self.input_panel.setMinimumWidth(320)
-        self.input_panel.setMaximumWidth(450)
-        main_splitter.addWidget(self.input_panel)
+        self.input_panel.setMinimumWidth(350)
+        self.input_panel.setMaximumWidth(420)
+        left_layout.addWidget(self.input_panel)
+        
+        # 摺疊按鈕
+        self.toggle_btn = QToolButton()
+        self.toggle_btn.setText("◀")
+        self.toggle_btn.setFixedWidth(15)
+        self.toggle_btn.setStyleSheet("""
+            QToolButton {
+                background-color: #e0e0e0;
+                border: none;
+                border-left: 1px solid #ccc;
+                font-size: 10px;
+                padding: 2px;
+            }
+            QToolButton:hover {
+                background-color: #d0d0d0;
+            }
+        """)
+        self.toggle_btn.clicked.connect(self._toggle_input_panel)
+        self.toggle_btn.setToolTip("收起/展開參數面板 (Ctrl+B)")
+        left_layout.addWidget(self.toggle_btn)
+        
+        # 儲存狀態
+        self._input_panel_visible = True
+        self._saved_input_width = 450
+        
+        main_splitter.addWidget(left_container)
         
         # Right: Two-column results area (Q10 layout)
         self.results_container = QWidget()
@@ -128,17 +161,24 @@ class MainWindow(QMainWindow):
         self.results_splitter.setStretchFactor(0, 1)  # Left tabs
         self.results_splitter.setStretchFactor(1, 1)  # Right tabs
         
+        print("[SETUP] 添加 results_container 到 main_splitter", flush=True)
         main_splitter.addWidget(self.results_container)
+        print(f"[SETUP] main_splitter 子 widget 數量: {main_splitter.count()}", flush=True)
+        print(f"[SETUP] main_splitter 當前 sizes: {main_splitter.sizes()}", flush=True)
         
         # Set main splitter stretch factors (Input:Results = 1:3)
+        print("[SETUP] 設置 stretch factors", flush=True)
         main_splitter.setStretchFactor(0, 1)  # Input panel
         main_splitter.setStretchFactor(1, 3)  # Results area
+        print(f"[SETUP] 設置 stretch factors 後 sizes: {main_splitter.sizes()}", flush=True)
         
         # Keep reference to results_tabs for backward compatibility
         self.results_tabs = self.left_tabs
         
         # Create result tabs
+        print("[_setup_ui] 開始創建結果標籤頁...", flush=True)
         self._create_result_tabs()
+        print("[_setup_ui] 結果標籤頁創建完成", flush=True)
         
         # Status bar with progress indicator
         self.status_bar = QStatusBar()
@@ -162,67 +202,108 @@ class MainWindow(QMainWindow):
         self.input_panel.track_changed.connect(self._on_track_changed)
         self.input_panel.deg_source_changed.connect(self._on_deg_source_changed)
         self.input_panel.longrun_settings_requested.connect(self._on_longrun_settings_requested)
+        self.input_panel.opponent_mode_changed.connect(self._on_opponent_mode_changed)
+        
+        # ✅ 初始化 splitter 尺寸（直接調用，不使用 QTimer）
+        print("[_setup_ui] 完成，準備初始化 splitter 尺寸...", flush=True)
+        self._initialize_splitter_sizes()
+        print("[_setup_ui] Splitter 尺寸初始化完成", flush=True)
+    
+    def _initialize_splitter_sizes(self):
+        """初始化 splitter 尺寸，確保摺疊功能能正常運作"""
+        print("\n" + "="*60)
+        print("[INIT] 開始初始化 Splitter 尺寸")
+        print("="*60)
+        
+        print(f"[INIT] Splitter 子 widget 數量: {self.main_splitter.count()}")
+        print(f"[INIT] 初始化前 sizes: {self.main_splitter.sizes()}")
+        
+        # 設置初始比例 (1:3)
+        total_width = self.width()
+        input_width = min(420, int(total_width * 0.25))  # 25% 或最大 420px
+        results_width = total_width - input_width
+        
+        print(f"[INIT] 視窗總寬度: {total_width}px")
+        print(f"[INIT] 計算的輸入面板寬度: {input_width}px")
+        print(f"[INIT] 計算的結果區域寬度: {results_width}px")
+        print(f"[INIT] 準備設置 sizes: [{input_width}, {results_width}]")
+        
+        self.main_splitter.setSizes([input_width, results_width])
+        
+        actual_sizes = self.main_splitter.sizes()
+        print(f"[INIT] 設置後實際 sizes: {actual_sizes}")
+        print(f"[INIT] 設置是否成功: {len(actual_sizes) == 2 and actual_sizes[0] > 0}")
+        print("="*60 + "\n")
     
     def _create_result_tabs(self):
         """
         Create all result tabs in two-column layout (Q10).
         
-        Left column: 策略排名 + 詳情 + 動態模擬 + 對手阻擋
-        Right column: SC 場景 + 位置分析 + Lap Curves + FP2 預測 + 完整賽事
+        Left column: 總時間最短策略 + 完整賽事
+        Right column: 詳細資料 + 動態模擬 + 對手分析 + SC 場景 + 單圈曲線 + FP2→Q
         """
+        print("[_create_result_tabs] Step 1: Importing tabs...", flush=True)
         from .results_tabs import (
             StrategyComparisonTab, LapCurvesTab, SafetyCarTab, 
             OpponentTab, DetailedDataTab, FP2PredictionTab,
-            PositionAnalysisTab, FullRaceTab
+            FullRaceTab, RaceResultAnalysisTab
         )
+        print("[_create_result_tabs] Step 2: Importing SimulationTab...", flush=True)
+        # PositionAnalysisTab - ❌ 已移除
         from .results_tabs.simulation_tab import SimulationTab
+        print("[_create_result_tabs] Step 3: All imports complete", flush=True)
         
-        # === LEFT COLUMN: Strategy Analysis ===
+        # === LEFT COLUMN: Main Analysis ===
         
-        # Strategy Comparison (策略排名)
-        self.comparison_tab = StrategyComparisonTab(self)
-        self.left_tabs.addTab(self.comparison_tab, "策略排名")
-        
-        # Detailed Data (詳細資料)
-        self.detail_tab = DetailedDataTab(self)
-        self.left_tabs.addTab(self.detail_tab, "詳細資料")
-        
-        # NEW: Dynamic Simulation Tab (動態模擬)
-        self.simulation_tab = SimulationTab(self)
-        self.left_tabs.addTab(self.simulation_tab, "動態模擬")
-        
-        # Opponent Analysis (對手分析 - Undercut/Overcut + 阻擋)
-        self.opponent_tab = OpponentTab(self)
-        self.opponent_tab.strategy_settings_changed.connect(self._on_opponent_strategy_changed)
-        self.left_tabs.addTab(self.opponent_tab, "對手分析")
-        
-        # === RIGHT COLUMN: Scenario Analysis ===
-        
-        # FP2->Q Prediction (for driver selection) - FIRST for initial setup
+        # FP2->Q Prediction (for driver selection)
         print("[MAIN_WINDOW] 初始化 FP2→Q 預測標籤頁...", flush=True)
         self.fp2_tab = FP2PredictionTab(self)
         print(f"[MAIN_WINDOW] FP2→Q 標籤頁初始化完成: {type(self.fp2_tab)}", flush=True)
         self.fp2_tab.driver_selected.connect(self._on_driver_selected)
         # Connect Q data availability signal to input panel
         self.fp2_tab.q_data_available.connect(self._on_q_data_available)
-        self.right_tabs.addTab(self.fp2_tab, "FP2→Q")
+        self.left_tabs.addTab(self.fp2_tab, "FP2→Q")
+        
+        # Strategy Comparison (總時間最短策略)
+        self.comparison_tab = StrategyComparisonTab(self)
+        self.left_tabs.addTab(self.comparison_tab, "總時間最短策略")
+        
+        # Full Race Simulation (完整賽事模擬)
+        self.full_race_tab = FullRaceTab(self)
+        self.full_race_tab.simulation_requested.connect(self._on_full_race_requested)
+        self.left_tabs.addTab(self.full_race_tab, "完整賽事")
+        
+        # === RIGHT COLUMN: Detailed Analysis ===
+        
+        # Detailed Data (詳細資料)
+        self.detail_tab = DetailedDataTab(self)
+        self.right_tabs.addTab(self.detail_tab, "詳細資料")
+        
+        # NEW: Dynamic Simulation Tab (動態模擬)
+        self.simulation_tab = SimulationTab(self)
+        self.right_tabs.addTab(self.simulation_tab, "動態模擬")
+        
+        # Opponent Analysis (對手分析 - Undercut/Overcut + 阻擋)
+        self.opponent_tab = OpponentTab(self)
+        self.opponent_tab.strategy_settings_changed.connect(self._on_opponent_strategy_changed)
+        self.right_tabs.addTab(self.opponent_tab, "對手分析")
         
         # SC Scenarios (SC 場景)
         self.sc_tab = SafetyCarTab(self)
         self.right_tabs.addTab(self.sc_tab, "SC 場景")
         
-        # Position Analysis (位置分析)
-        self.position_tab = PositionAnalysisTab(self)
-        self.right_tabs.addTab(self.position_tab, "位置分析")
-        
         # Lap Time Curves (單圈時間)
         self.chart_tab = LapCurvesTab(self)
+        print(f"[MAIN_WINDOW] ===== LapCurvesTab created =====", flush=True)
+        print(f"[MAIN_WINDOW] chart_tab type: {type(self.chart_tab)}", flush=True)
+        print(f"[MAIN_WINDOW] chart_tab size: {self.chart_tab.size()}", flush=True)
+        print(f"[MAIN_WINDOW] chart_tab width: {self.chart_tab.width()}", flush=True)
         self.right_tabs.addTab(self.chart_tab, "單圈曲線")
+        print(f"[MAIN_WINDOW] ===== Added to right_tabs =====", flush=True)
         
-        # Full Race Simulation (完整賽事模擬)
-        self.full_race_tab = FullRaceTab(self)
-        self.full_race_tab.simulation_requested.connect(self._on_full_race_requested)
-        self.right_tabs.addTab(self.full_race_tab, "完整賽事")
+        # Race Result Analysis (結果分析)
+        self.result_analysis_tab = RaceResultAnalysisTab(self)
+        self.right_tabs.addTab(self.result_analysis_tab, "結果分析")
     
     def _setup_menu(self):
         """Setup menu bar."""
@@ -246,6 +327,14 @@ class MainWindow(QMainWindow):
         # View menu
         view_menu = menubar.addMenu("檢視")
         
+        # Toggle input panel action
+        toggle_panel_action = QAction("收起/展開參數面板", self)
+        toggle_panel_action.setShortcut("Ctrl+B")
+        toggle_panel_action.triggered.connect(self._toggle_input_panel)
+        view_menu.addAction(toggle_panel_action)
+        
+        view_menu.addSeparator()
+        
         reset_view_action = QAction("重設視圖", self)
         reset_view_action.triggered.connect(self._on_reset_view)
         view_menu.addAction(reset_view_action)
@@ -260,19 +349,28 @@ class MainWindow(QMainWindow):
     def _init_loaders(self):
         """Initialize data loaders."""
         try:
+            print("[_init_loaders] Step 1: Creating ConfigLoader", flush=True)
             self.config_loader = ConfigLoader()
+            print("[_init_loaders] Step 2: Creating LongRunLoader", flush=True)
             self.longrun_loader = LongRunLoader()
+            print("[_init_loaders] Step 3: Getting track list", flush=True)
             
             # Populate track list in input panel
             tracks = self.config_loader.get_track_list()
+            print(f"[_init_loaders] Step 4: Setting track list ({len(tracks)} tracks)", flush=True)
             self.input_panel.set_track_list(tracks)
+            print("[_init_loaders] Step 5: Getting current track", flush=True)
             
             # Manually trigger track_changed for the default track (Yas Marina)
             # This ensures FP2 data is loaded after all tabs are initialized
             current_track = self.input_panel.track_combo.currentText()
+            print(f"[_init_loaders] Step 6: Current track = {current_track}", flush=True)
             if current_track:
+                print(f"[_init_loaders] Step 7: Calling _on_track_changed('{current_track}')", flush=True)
                 self._on_track_changed(current_track)
+                print("[_init_loaders] Step 8: _on_track_changed returned", flush=True)
             
+            print("[_init_loaders] Step 9: COMPLETE!", flush=True)
         except Exception as e:
             print(f"[MAIN_WINDOW] Failed to initialize loaders: {e}")
             QMessageBox.warning(
@@ -292,27 +390,34 @@ class MainWindow(QMainWindow):
         Args:
             track_name: Name of the selected track
         """
-        print(f"[MAIN_WINDOW] _on_track_changed 被呼叫: track_name={track_name}", flush=True)
+        print(f"[_on_track_changed] Step 1: track_name={track_name}", flush=True)
         
         if not self.config_loader or not track_name:
-            print(f"[MAIN_WINDOW] 提前返回: config_loader={self.config_loader}, track_name={track_name}", flush=True)
+            print(f"[_on_track_changed] Early return: config_loader={self.config_loader}, track_name={track_name}", flush=True)
             return
         
         try:
-            print(f"[MAIN_WINDOW] 開始載入賽道配置...", flush=True)
+            print(f"[_on_track_changed] Step 2: Loading track config...", flush=True)
             # Get track configuration from trained database
             track_config = self.config_loader.get_track_config(track_name)
+            print(f"[_on_track_changed] Step 3: Track config loaded", flush=True)
             
             # Store track config for later use (blocking analysis, etc.)
             self._current_track_config = track_config
             
             # Get current year from input panel
+            print(f"[_on_track_changed] Step 4: Getting year", flush=True)
             year = int(self.input_panel.year_combo.currentText())
+            print(f"[_on_track_changed] Step 5: Year = {year}", flush=True)
             
             # Try to load FP2 Long Run data for this race
             fp2_data = None
             if self.longrun_loader:
+                print(f"[_on_track_changed] Step 6: Loading FP2 data (may take 120s)...", flush=True)
                 fp2_data = self.longrun_loader.load_fp2_data(year, track_name)
+                print(f"[_on_track_changed] Step 7: FP2 data = {fp2_data is not None}", flush=True)
+            
+            print(f"[_on_track_changed] Step 8: Processing degradation values", flush=True)
             
             # Determine degradation values and base lap time
             base_lap_time = track_config.base_lap_time  # Default from track config (from pit_strategy_database.json)
@@ -386,10 +491,28 @@ class MainWindow(QMainWindow):
                 else:
                     print(f"[MAIN_WINDOW] ❌ fp2_tab 不存在！", flush=True)
                     
-                # Pass FP2 predictions to OpponentTab for strategy prediction
-                if hasattr(self, 'opponent_tab') and hasattr(self, 'fp2_tab'):
-                    predictions = self.fp2_tab.get_all_predictions()
+                # Pass FP2/Q predictions to OpponentTab based on driver selection mode
+                if hasattr(self, 'opponent_tab') and hasattr(self, 'fp2_tab') and hasattr(self, 'input_panel'):
+                    # Get current driver selection mode from input panel
+                    driver_mode = self.input_panel.opponent_mode_combo.currentIndex()
+                    use_q_ranking = (driver_mode == 1)  # 0=FP2, 1=Q, 2=Manual
+                    
+                    if use_q_ranking and self.fp2_tab.has_actual_q_data():
+                        # Use actual Q ranking
+                        predictions = self.fp2_tab.get_predictions_with_mode(use_q_ranking=True)
+                        print("[MAIN_WINDOW] OpponentTab 使用實際 Q 排位數據", flush=True)
+                    else:
+                        # Use FP2 predicted ranking
+                        predictions = self.fp2_tab.get_predictions_with_mode(use_q_ranking=False)
+                        if use_q_ranking:
+                            print("[MAIN_WINDOW] OpponentTab 無實際 Q 數據，使用 FP2 預測排位", flush=True)
+                        else:
+                            print("[MAIN_WINDOW] OpponentTab 使用 FP2 預測排位", flush=True)
+                    
                     if predictions:
+                        # Update predictions with effective_rank as 'rank'
+                        for pred in predictions:
+                            pred['rank'] = pred.get('effective_rank', pred.get('rank', 99))
                         self.opponent_tab.load_predictions(predictions)
                     else:
                         # No FP2 data available, load default drivers
@@ -408,6 +531,35 @@ class MainWindow(QMainWindow):
             
         except Exception as e:
             print(f"[MAIN_WINDOW] Failed to load track config for {track_name}: {e}")
+    
+    def _on_opponent_mode_changed(self, mode_index: int):
+        """
+        Handle opponent selection mode change (FP2 vs Q vs Manual).
+        
+        Args:
+            mode_index: 0=FP2, 1=Q, 2=Manual
+        """
+        print(f"[MAIN_WINDOW] Opponent mode changed to: {mode_index} (0=FP2, 1=Q, 2=Manual)", flush=True)
+        
+        # Reload OpponentTab predictions with correct ranking mode
+        if hasattr(self, 'opponent_tab') and hasattr(self, 'fp2_tab'):
+            use_q_ranking = (mode_index == 1)
+            
+            if use_q_ranking and self.fp2_tab.has_actual_q_data():
+                # Use actual Q ranking
+                predictions = self.fp2_tab.get_predictions_with_mode(use_q_ranking=True)
+                print("[MAIN_WINDOW] 切換至 Q 排位模式", flush=True)
+            else:
+                # Use FP2 predicted ranking
+                predictions = self.fp2_tab.get_predictions_with_mode(use_q_ranking=False)
+                print("[MAIN_WINDOW] 切換至 FP2 預測模式", flush=True)
+            
+            if predictions:
+                # Update predictions with effective_rank as 'rank'
+                for pred in predictions:
+                    pred['rank'] = pred.get('effective_rank', pred.get('rank', 99))
+                self.opponent_tab.load_predictions(predictions)
+                print(f"[MAIN_WINDOW] OpponentTab 已更新預測數據 ({len(predictions)} 車手)", flush=True)
     
     def _on_longrun_settings_requested(self):
         """
@@ -888,9 +1040,10 @@ class MainWindow(QMainWindow):
                 fp2_predictions, our_driver, sim_params.race_laps
             )
             
-            # Get our strategy from SELECTED plan - 從多個來源獲取
+            # Get our strategy from SELECTED plan AND top alternatives for testing
             selected_plan_index = params.get('selected_plan_index', 0)
             our_stints = []
+            strategy_pool = []  # Multiple strategies for testing
             results_source = None
             
             # 嘗試從 _current_results 獲取
@@ -903,16 +1056,26 @@ class MainWindow(QMainWindow):
                 print(f"[MAIN_WINDOW] Using full_race_tab._cached_results: {len(results_source)} strategies")
             
             if results_source:
+                # Get selected strategy for single simulation
                 if 0 <= selected_plan_index < len(results_source):
                     selected_result = results_source[selected_plan_index]
                     our_stints = selected_result.stints
                     plan_letter = chr(65 + selected_plan_index)
-                    print(f"[MAIN_WINDOW] Using selected Plan {plan_letter} for our driver {our_driver}")
+                    print(f"[MAIN_WINDOW] Using selected Plan {plan_letter} for single simulation")
                 else:
                     # Fallback to best
-                    best_result = results_source[0]
-                    our_stints = best_result.stints
+                    selected_result = results_source[0]
+                    our_stints = selected_result.stints
                     print(f"[MAIN_WINDOW] Invalid plan index, using Plan A")
+                
+                # Get top 4 strategies for multi-simulation (Plan A-D)
+                for idx, result in enumerate(results_source[:4]):
+                    strategy_pool.append({
+                        'name': f"Plan {chr(65 + idx)}",
+                        'notation': result.get_stint_notation() if hasattr(result, 'get_stint_notation') else f"Plan {chr(65 + idx)}",
+                        'stints': result.stints
+                    })
+                print(f"[MAIN_WINDOW] Strategy pool for testing: {[s['name'] for s in strategy_pool]}")
             else:
                 error_msg = "沒有可用的策略結果"
                 print(f"[MAIN_WINDOW] ❌ ERROR: {error_msg}")
@@ -922,15 +1085,46 @@ class MainWindow(QMainWindow):
                     self.full_race_tab.status_label.setStyleSheet("color: #d32f2f;")
                 return
             
-            # Create simulator
+            # Get track-specific configuration
+            from strategy_simulator.data.track_config import get_track_config
+            track_name = self.input_panel.get_track() if hasattr(self, 'input_panel') else "Japan"
+            track_config = get_track_config(track_name)
+            
+            # Use track-specific SC/VSC probability and overtaking difficulty
+            sc_probability = track_config.sc_probability_per_lap_pct / 100.0 * sim_params.race_laps  # Convert to per-race
+            vsc_probability = track_config.vsc_probability_per_lap_pct / (track_config.sc_probability_per_lap_pct + track_config.vsc_probability_per_lap_pct)  # Ratio of VSC vs SC
+            overtaking_difficulty = track_config.difficulty_coefficient
+            
+            print(f"[MAIN_WINDOW] Track: {track_name}")
+            print(f"[MAIN_WINDOW] SC Probability: {track_config.sc_probability_per_lap_pct:.2f}%/lap -> {sc_probability:.2f} per race")
+            print(f"[MAIN_WINDOW] VSC Probability: {track_config.vsc_probability_per_lap_pct:.2f}%/lap (ratio: {vsc_probability:.2f})")
+            print(f"[MAIN_WINDOW] Overtaking Difficulty: {overtaking_difficulty:.2f}")
+            print(f"[MAIN_WINDOW] Pit Loss Time: {track_config.pit_lane_time_loss_s:.1f}s")
+            
+            # Get simulation mode (moved earlier for use in simulator creation)
+            simulation_mode = params.get('simulation_mode', 'complete')
+            print(f"[MAIN_WINDOW] Simulation Mode: {simulation_mode}")
+            
+            # Create simulator with track-specific parameters
+            simple_mode = simulation_mode == "simple"
             simulator = FullRaceSimulator(
                 sim_params=sim_params,
-                sc_probability=0.5,  # From MC params
-                overtaking_difficulty=0.5  # Track-specific
+                sc_probability=sc_probability,
+                vsc_probability=vsc_probability,
+                overtaking_difficulty=overtaking_difficulty,
+                simple_mode=simple_mode,
+                track_name=track_name,  # NEW: For PositionTracker
+                year=self._current_year if hasattr(self, '_current_year') else 2025  # NEW
             )
             
-            # Load drivers
-            simulator.load_drivers(fp2_predictions)
+            # ✅ Get Long Run data (與 MC 分析一致)
+            long_run_data = None
+            if hasattr(self, '_current_fp2_data') and self._current_fp2_data:
+                long_run_data = self._current_fp2_data
+                print(f"[MAIN_WINDOW] Using Long Run data for Full Race simulation")
+            
+            # Load drivers with Long Run data
+            simulator.load_drivers(fp2_predictions, long_run_data)
             simulator.set_opponent_strategies(opponent_strategies)
             if our_driver and our_stints:
                 simulator.set_our_strategy(our_driver, our_stints)
@@ -940,7 +1134,8 @@ class MainWindow(QMainWindow):
             self.full_race_tab.set_drivers(driver_list)
             
             # Show progress
-            self.full_race_tab.show_progress(10, tr("PREPARING_SIMULATION", "正在準備模擬..."))
+            mode_text = tr("COMPLETE_MODE", "Complete") if simulation_mode == "complete" else tr("SIMPLE_MODE", "Simple")
+            self.full_race_tab.show_progress(10, f"{tr('PREPARING_SIMULATION', 'Preparing')} ({mode_text})...")
             
             # Inject SC events based on user selection
             sc_scenario = params.get('sc_scenario', 'random')
@@ -972,15 +1167,28 @@ class MainWindow(QMainWindow):
             
             # Run simulation
             iterations = params.get('iterations', 100)
-            single_result = simulator.simulate_race()
+            
+            # Use random seed offset to ensure different results each run
+            import random
+            import time
+            seed_offset = int(time.time() * 1000) % 10000  # Random offset based on timestamp
+            
+            single_result = simulator.simulate_race(seed=seed_offset)
+            
+            # ✅ 標記模擬模式（用於 Traffic Analysis 判斷）
+            single_result._mode = simulation_mode
             
             self.full_race_tab.show_progress(50, f"{tr('RUNNING_MC_SIMULATIONS', '正在執行')} {iterations} {tr('ITERATIONS', '次統計模擬')}...")
-            multi_stats = simulator.run_multiple_simulations(iterations)
+            multi_stats = simulator.run_multiple_simulations(iterations, seed_offset=seed_offset, strategy_pool=strategy_pool)
             
             # Update tab with results
             print(f"[MAIN_WINDOW] Full race simulation completed, updating results...")
             print(f"[MAIN_WINDOW] Single result: {single_result}")
             print(f"[MAIN_WINDOW] Statistics keys: {multi_stats.keys() if isinstance(multi_stats, dict) else type(multi_stats)}")
+            
+            # ✅ Store simulation parameters and Long Run data in tab for report generation
+            self.full_race_tab._simulation_params = sim_params
+            self.full_race_tab._long_run_data = long_run_data
             
             self.full_race_tab.update_simulation_result({
                 'single': single_result,
@@ -992,25 +1200,63 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(f"完整賽事模擬完成 ({iterations} 次迭代)")
             
             # Integrate with SC scenario analysis
-            # ONLY update if SC tab doesn't already have MC scenario analyses
+            # ✅ Always update SC tab with full race simulation results (User Request 2026-01-07)
             if hasattr(self, 'sc_tab'):
                 # Pass field data for tire comparison
                 self.sc_tab.set_field_data(fp2_predictions, opponent_strategies)
                 
-                # Only build scenario analysis if MC hasn't already provided one
-                # MC scenario_analyses are more accurate (based on Monte Carlo)
-                if not hasattr(self.sc_tab, '_cached_scenario_analyses') or not self.sc_tab._cached_scenario_analyses:
-                    # Build scenario analysis from full race simulation results
-                    scenario_analyses = self._build_scenario_analyses_from_full_race(
-                        multi_stats, single_result, sim_params.race_laps
-                    )
-                    if scenario_analyses:
-                        self.sc_tab.update_scenario_analysis(scenario_analyses, None)
-                        print(f"[MAIN_WINDOW] Updated SC tab with full race scenario analysis")
+                # Build scenario analysis from full race simulation results
+                scenario_analyses = self._build_scenario_analyses_from_full_race(
+                    multi_stats, single_result, sim_params.race_laps
+                )
+                if scenario_analyses:
+                    self.sc_tab.update_scenario_analysis(scenario_analyses, None)
+                    print(f"[MAIN_WINDOW] ✅ Updated SC tab with full race scenario analysis")
                 else:
-                    print(f"[MAIN_WINDOW] SC tab already has MC scenario analyses, skipping full race update")
+                    print(f"[MAIN_WINDOW] ⚠️ No scenario analyses generated from full race")
             
-            self.status_bar.showMessage("完整賽事模擬完成")
+            # ✅ Update other tabs after full race simulation (User Request 2026-01-07)
+            print(f"[MAIN_WINDOW] Updating other tabs after full race simulation...")
+            
+            # Update Race Result Analysis tab with full race results
+            if hasattr(self, 'result_analysis_tab'):
+                # Set our driver
+                self.result_analysis_tab.set_our_driver(our_driver)
+                # Update with simulation results AND strategy results
+                self.result_analysis_tab.update_simulation_result({
+                    'single': single_result,
+                    'statistics': multi_stats,
+                    'strategy_results': self._current_results if hasattr(self, '_current_results') else []
+                })
+                print(f"[MAIN_WINDOW] ✅ Updated Race Result Analysis tab")
+            
+            # Update Dynamic Simulation tab with full race results
+            if hasattr(self, 'simulation_tab') and hasattr(self, '_current_results'):
+                # Get current strategy results for animation
+                if self._current_results:
+                    self.simulation_tab.set_results(self._current_results, sim_params)
+                    print(f"[MAIN_WINDOW] ✅ Updated Dynamic Simulation tab")
+            
+            # Update Detailed Data tab with current strategy results
+            if hasattr(self, 'detail_tab') and hasattr(self, '_current_results'):
+                if self._current_results:
+                    self.detail_tab.update_results(self._current_results)
+                    print(f"[MAIN_WINDOW] ✅ Updated Detailed Data tab")
+            
+            # Update Lap Curves tab with current strategy results
+            if hasattr(self, 'chart_tab') and hasattr(self, '_current_results'):
+                if self._current_results:
+                    self.chart_tab.update_results(self._current_results, sim_params)
+                    print(f"[MAIN_WINDOW] ✅ Updated Lap Curves tab")
+            
+            # Note: SC Scenarios tab already updated above (Line 1203-1213)
+            print(f"[MAIN_WINDOW] All tabs updated after full race simulation")
+            
+            # Report buttons are now in full_race_tab's strategy performance table
+            # User can click on Report button to see detailed analysis
+            print(f"[MAIN_WINDOW] Complete mode finished - reports available in strategy table")
+            
+            self.status_bar.showMessage("完整賽事模擬完成 - 點擊策略表中的 Report 按鈕查看詳細分析")
             
         except Exception as e:
             print(f"[MAIN_WINDOW] Full race simulation error: {e}")
@@ -1152,6 +1398,7 @@ class MainWindow(QMainWindow):
         # CompetitiveMCSummary uses strategy_summaries dict with CompetitiveStrategySummary objects
         best_strategy = None
         best_win_rate = 0.0
+        all_tested_strategies = []  # ✅ Store all tested strategies for GUI display
         
         for idx, result in enumerate(candidate_strategies):
             strategy_name = result.strategy_name
@@ -1159,8 +1406,17 @@ class MainWindow(QMainWindow):
             if strategy_name in mc_summary.strategy_summaries:
                 strat_summary = mc_summary.strategy_summaries[strategy_name]
                 win_rate = strat_summary.win_probability
+                avg_pos = strat_summary.mean_finish_position
             else:
                 win_rate = 0.0
+                avg_pos = 20.0
+            
+            # Store strategy info
+            all_tested_strategies.append({
+                'name': strategy_name,
+                'win_rate': win_rate,
+                'avg_pos': avg_pos,
+            })
             
             if win_rate > best_win_rate:
                 best_win_rate = win_rate
@@ -1188,6 +1444,7 @@ class MainWindow(QMainWindow):
             'num_stops': len(tire_sequence) - 1,
             'note': f'P{grid_position} Quick MC: {"-".join(tire_sequence)}',
             'win_rate': best_win_rate,
+            'all_tested_strategies': all_tested_strategies,  # ✅ Include all tested strategies
         }
     
     def _assign_best_plans_to_opponents(
@@ -1420,7 +1677,7 @@ class MainWindow(QMainWindow):
                 competitive_results = competitive_optimizer.optimize(
                     constraints,
                     top_n=10,
-                    simulation_iterations=params.get('competition_iterations', 30),
+                    simulation_iterations=params.get('competitive_iterations', 100),
                 )
                 
                 # Extract base results and store competitive data
@@ -1452,6 +1709,19 @@ class MainWindow(QMainWindow):
             # Update all tabs (60%)
             self._update_progress(60, "更新顯示...")
             self._update_all_tabs(results, sim_params)
+            
+            # Set report context for strategy analysis reports
+            our_driver = params.get('selected_driver', 'VER')
+            grid_position = params.get('driver_start_position', 1)
+            track_name = params.get('track', 'Unknown')
+            self.comparison_tab.set_report_context(
+                our_driver=our_driver,
+                grid_position=grid_position if grid_position else 1,
+                track_name=track_name,
+                race_laps=sim_params.race_laps,
+                pit_loss=sim_params.pit_loss_green,
+                simulation_data=None  # Will be updated after full race simulation
+            )
             
             # Pass SC events to SimulationTab for visualization
             sc_mode = params.get('sc_mode', 'none')
@@ -1962,6 +2232,10 @@ class MainWindow(QMainWindow):
                 
                 opponent_best_strategies = {}
                 
+                # ✅ 獲取 Phase 1 迭代次數（用戶可調）
+                phase1_base_iterations = input_params.get('phase1_iterations', 20)
+                print(f"[MAIN_WINDOW] Phase 1 base iterations: {phase1_base_iterations}")
+                
                 if fp2_predictions and len(fp2_predictions) > 1:
                     # Sort by grid position
                     sorted_preds = sorted(fp2_predictions, key=lambda p: p.get('rank', 20))
@@ -1978,25 +2252,31 @@ class MainWindow(QMainWindow):
                             print(f"[PHASE_1] Skipping {driver_code} (our driver, will optimize last)")
                             continue
                         
-                        # ✅ NEW: Dynamic iteration allocation based on grid position
-                        # P1-5: 100% of user setting
-                        # P6-10: 50% of user setting
-                        # P11-20: 30% of user setting
-                        if driver_rank <= 5:
-                            # Front runners: Full user-defined iterations
-                            opt_iterations = mc_iterations  # 100%
-                            opt_strategies = results[:10]
-                            tier = f"Full MC ({mc_iterations} iter, 100%)"
-                        elif driver_rank <= 10:
-                            # Upper midfield: 50% iterations
-                            opt_iterations = int(mc_iterations * 0.5)
-                            opt_strategies = results[:7]
-                            tier = f"Mid MC ({opt_iterations} iter, 50%)"
+                        # ✅ OPTIMIZED: Dynamic iteration allocation based on grid position
+                        # P1-3: 60% of Phase 1 base
+                        # P4-8: 40% of Phase 1 base
+                        # P9-15: 25% of Phase 1 base
+                        # P16-20: 15% of Phase 1 base
+                        if driver_rank <= 3:
+                            # Top 3: High iterations for championship contenders
+                            opt_iterations = int(phase1_base_iterations * 0.6)  # 60%
+                            opt_strategies = results[:8]  # Reduced from 10 to 8
+                            tier = f"High MC ({opt_iterations} iter, 60%)"
+                        elif driver_rank <= 8:
+                            # Upper midfield: Medium iterations
+                            opt_iterations = int(phase1_base_iterations * 0.4)  # 40%
+                            opt_strategies = results[:6]  # Reduced from 7 to 6
+                            tier = f"Mid MC ({opt_iterations} iter, 40%)"
+                        elif driver_rank <= 15:
+                            # Lower midfield: Low iterations
+                            opt_iterations = int(phase1_base_iterations * 0.25)  # 25%
+                            opt_strategies = results[:4]  # Reduced from 5 to 4
+                            tier = f"Quick MC ({opt_iterations} iter, 25%)"
                         else:
-                            # Lower midfield/backmarkers: 30% iterations
-                            opt_iterations = int(mc_iterations * 0.3)
-                            opt_strategies = results[:5]
-                            tier = f"Quick MC ({opt_iterations} iter, 30%)"
+                            # Backmarkers: Minimal iterations
+                            opt_iterations = int(phase1_base_iterations * 0.15)  # 15%
+                            opt_strategies = results[:3]  # Only test top 3 strategies
+                            tier = f"Fast MC ({opt_iterations} iter, 15%)"
                         
                         print(f"[PHASE_1] ({phase1_current+1}/{phase1_total}) "
                               f"Optimizing {driver_code} P{driver_rank}: "
@@ -2021,6 +2301,11 @@ class MainWindow(QMainWindow):
                             long_run_data=long_run_data,
                         )
                         
+                        # ✅ Add optimization details for GUI display
+                        best_strategy['tier'] = tier
+                        best_strategy['iterations'] = opt_iterations
+                        best_strategy['tested_strategies'] = len(opt_strategies)
+                        
                         opponent_best_strategies[driver_code] = best_strategy
                         phase1_current += 1
                         
@@ -2033,6 +2318,10 @@ class MainWindow(QMainWindow):
                         tire_seq = "-".join(strategy['tire_sequence'])
                         win_rate = strategy.get('win_rate', 0)
                         print(f"  {driver_code}: {tire_seq} (Win: {win_rate:.1f}%)")
+                    
+                    # ✅ NEW: 傳遞 Phase 1 結果到 Opponent Tab 顯示
+                    if hasattr(self, 'opponent_tab') and self.opponent_tab:
+                        self.opponent_tab.display_phase1_results(opponent_best_strategies, fp2_predictions)
                 else:
                     print("[PHASE_1] ⚠️  No FP2 predictions for opponent optimization")
                 
@@ -2112,9 +2401,9 @@ class MainWindow(QMainWindow):
             if hasattr(self, 'simulation_tab') and mc_results:
                 self.simulation_tab.set_monte_carlo_summary(mc_results)
             
-            # Update Position Analysis tab with position predictions
-            if hasattr(self, 'position_tab') and mc_results:
-                self.position_tab.update_results(mc_results, starting_position)
+            # Update Position Analysis tab with position predictions - ❌ 已移除
+            # if hasattr(self, 'position_tab') and mc_results:
+            #     self.position_tab.update_results(mc_results, starting_position)
             
             # Update Opponent tab with position battle analysis
             if hasattr(self, 'opponent_tab') and mc_results:
@@ -2252,6 +2541,55 @@ class MainWindow(QMainWindow):
         our_driver = multi_stats.get('our_driver', '')
         our_stats = multi_stats.get('our_stats', {})
         
+        # Get strategy name instead of driver code for best_strategy
+        # Find our driver's strategy from the result
+        our_strategy_name = "Unknown"
+        if single_result and hasattr(single_result, 'our_result') and single_result.our_result:
+            our_strategy_name = getattr(single_result.our_result, 'strategy_notation', 'Unknown')
+        
+        # Get all strategy performance stats
+        strategy_perf = multi_stats.get('strategy_performance', {})
+        
+        # Try to build a mapping from tire notation to Plan names
+        # Use current simulation results (_current_results) for Plan names
+        # Note: strategy_performance uses "-" separator (e.g., "H-S-S")
+        #       but get_stint_notation() uses "→" separator (e.g., "H→S→S")
+        #       So we need to normalize the format
+        plan_mapping = {}  # {normalized_notation: plan_name}
+        if hasattr(self, '_current_results') and self._current_results:
+            for result in self._current_results:
+                if hasattr(result, 'strategy_name'):
+                    # Get tire notation from result and normalize to "-" format
+                    notation = result.get_stint_notation() if hasattr(result, 'get_stint_notation') else None
+                    if notation:
+                        # Normalize: "H→S→S" → "H-S-S"
+                        normalized_notation = notation.replace("→", "-")
+                        plan_mapping[normalized_notation] = result.strategy_name
+                        print(f"[SC_SCENARIO] Mapping: {normalized_notation} → {result.strategy_name}")
+        
+        print(f"[SC_SCENARIO] Plan mapping built: {plan_mapping}")
+        print(f"[SC_SCENARIO] Strategy perf keys: {list(strategy_perf.keys())}")
+        
+        # Build strategy_win_rates using Plan names if available, otherwise tire notation
+        strategy_win_rates = {}
+        for strategy_key, stats in strategy_perf.items():
+            win_rate = stats.get('win_rate', 0)
+            # Map tire notation to Plan name if possible
+            display_name = plan_mapping.get(strategy_key, strategy_key)
+            strategy_win_rates[display_name] = win_rate
+        
+        # Find the best strategy by win rate
+        if strategy_win_rates:
+            best_strategy = max(strategy_win_rates.items(), key=lambda x: x[1])[0]
+            best_win_rate = strategy_win_rates[best_strategy]
+        else:
+            # Fallback to our strategy
+            best_strategy = plan_mapping.get(our_strategy_name, our_strategy_name)
+            best_win_rate = our_stats.get('win_probability', 0)
+        
+        print(f"[SC_SCENARIO] Best strategy: {best_strategy} ({best_win_rate:.1f}%)")
+        print(f"[SC_SCENARIO] All strategy win rates: {strategy_win_rates}")
+        
         third = race_laps // 3
         
         # Extract SC events from single result
@@ -2278,9 +2616,9 @@ class MainWindow(QMainWindow):
             scenario_name="No Safety Car",
             occurrence_rate=50.0,  # Estimated
             iteration_count=multi_stats.get('iterations', 100) // 2,
-            best_strategy=our_driver,
-            best_strategy_win_rate=our_stats.get('win_probability', 0),
-            strategy_win_rates={our_driver: our_stats.get('win_probability', 0)},
+            best_strategy=best_strategy,
+            best_strategy_win_rate=best_win_rate,
+            strategy_win_rates=strategy_win_rates.copy(),
             strategy_avg_times={},
             decision_advice=[
                 "標準賽事條件 - 執行最佳配速策略",
@@ -2288,15 +2626,16 @@ class MainWindow(QMainWindow):
             ]
         )
         
-        # Early SC scenario
+        # Early SC scenario - adjust win rates slightly
+        early_sc_win_rates = {k: v * 1.1 for k, v in strategy_win_rates.items()}
         scenarios["early_sc"] = ScenarioAnalysis(
             scenario_type="early_sc",
             scenario_name=f"Early SC (Lap 1-{third})",
             occurrence_rate=15.0,
             iteration_count=multi_stats.get('iterations', 100) // 6,
-            best_strategy=our_driver,
-            best_strategy_win_rate=our_stats.get('win_probability', 0) * 1.1,  # SC generally helps
-            strategy_win_rates={our_driver: our_stats.get('win_probability', 0) * 1.1},
+            best_strategy=best_strategy,
+            best_strategy_win_rate=best_win_rate * 1.1,  # SC generally helps
+            strategy_win_rates=early_sc_win_rates,
             strategy_avg_times={},
             decision_advice=[
                 "早期 SC 對尚未進站的車手有利",
@@ -2311,9 +2650,9 @@ class MainWindow(QMainWindow):
             scenario_name=f"Mid-Race SC (Lap {third+1}-{2*third})",
             occurrence_rate=20.0,
             iteration_count=multi_stats.get('iterations', 100) // 5,
-            best_strategy=our_driver,
-            best_strategy_win_rate=our_stats.get('win_probability', 0),
-            strategy_win_rates={our_driver: our_stats.get('win_probability', 0)},
+            best_strategy=best_strategy,
+            best_strategy_win_rate=best_win_rate,
+            strategy_win_rates=strategy_win_rates.copy(),
             strategy_avg_times={},
             decision_advice=[
                 "中段 SC - 進站時機變得關鍵",
@@ -2322,15 +2661,16 @@ class MainWindow(QMainWindow):
             ]
         )
         
-        # Late SC scenario
+        # Late SC scenario - slight penalty
+        late_sc_win_rates = {k: v * 0.9 for k, v in strategy_win_rates.items()}
         scenarios["late_sc"] = ScenarioAnalysis(
             scenario_type="late_sc",
             scenario_name=f"Late SC (Lap {2*third+1}+)",
             occurrence_rate=15.0,
             iteration_count=multi_stats.get('iterations', 100) // 6,
-            best_strategy=our_driver,
-            best_strategy_win_rate=our_stats.get('win_probability', 0) * 0.9,  # Late SC adds chaos
-            strategy_win_rates={our_driver: our_stats.get('win_probability', 0) * 0.9},
+            best_strategy=best_strategy,
+            best_strategy_win_rate=best_win_rate * 0.9,  # Late SC adds chaos
+            strategy_win_rates=late_sc_win_rates,
             strategy_avg_times={},
             decision_advice=[
                 "晚期 SC - 最後一段換新胎至關重要",
@@ -2356,6 +2696,38 @@ class MainWindow(QMainWindow):
             "匯出功能即將推出。"
         )
     
+    def _toggle_input_panel(self):
+        """Toggle visibility of input panel (collapse/expand)."""
+        current_sizes = self.main_splitter.sizes()
+        
+        if not current_sizes or len(current_sizes) < 2:
+            return
+        
+        total_width = sum(current_sizes)
+        
+        if self._input_panel_visible:
+            # Collapse: Save current width and hide panel
+            self._saved_input_width = current_sizes[0]
+            self.input_panel.hide()
+            
+            # Force splitter to reallocate space - left container shrinks to button width only
+            self.main_splitter.setSizes([20, total_width - 20])
+            
+            self.toggle_btn.setText("▶")
+            self.toggle_btn.setToolTip("展開參數面板 (Ctrl+B)")
+            self._input_panel_visible = False
+        else:
+            # Expand: Restore panel
+            self.input_panel.show()
+            
+            # Restore saved width
+            restore_width = self._saved_input_width if self._saved_input_width > 100 else 400
+            self.main_splitter.setSizes([restore_width, total_width - restore_width])
+            
+            self.toggle_btn.setText("◀")
+            self.toggle_btn.setToolTip("收起參數面板 (Ctrl+B)")
+            self._input_panel_visible = True
+    
     def _on_reset_view(self):
         """Reset all views to default state."""
         self.chart_tab.reset_view()
@@ -2380,8 +2752,6 @@ class MainWindow(QMainWindow):
 
 def main():
     """Main entry point for Strategy Simulator."""
-    print("[MAIN] ========== 策略模擬器啟動 ==========", flush=True)
-    
     # Set GUI language to Chinese
     try:
         from core.gui_i18n import set_gui_language
@@ -2389,19 +2759,12 @@ def main():
     except ImportError:
         pass
     
-    print("[MAIN] 創建 QApplication...", flush=True)
     app = QApplication(sys.argv)
     app.setApplicationName("F1T Race Strategy Simulator")
-    
-    # Set application style
     app.setStyle("Fusion")
     
-    print("[MAIN] 正在創建 MainWindow...", flush=True)
     window = MainWindow()
-    print("[MAIN] MainWindow 創建完成", flush=True)
-    
     window.show()
-    print("[MAIN] 主視窗顯示完成，進入事件循環", flush=True)
     
     sys.exit(app.exec_())
 

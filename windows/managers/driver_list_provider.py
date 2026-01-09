@@ -42,6 +42,18 @@ class DriverListProvider:
         if not IS_EXE_MODE:
             logger.debug(f"[DRIVER_CACHE] DEBUG: get_drivers_for_year called, year={year}")
             logger.debug(f"[DRIVER_CACHE] DEBUG: Cache keys: {list(self.main_window._cached_drivers_by_year.keys())}")
+        
+        # 🆕 早期檢測：當前或未來年份無數據時快速返回空列表
+        # 避免 API 請求超時導致 GUI 卡住
+        from datetime import datetime
+        current_year = datetime.now().year
+        if year >= current_year:
+            if not IS_EXE_MODE:
+                logger.debug(f"[DRIVER_CACHE] INFO: Year {year} >= current year {current_year}, returning empty list (no F1 data available yet)")
+            # 直接緩存空列表，避免重複 API 請求
+            if year not in self.main_window._cached_drivers_by_year:
+                self.main_window._cached_drivers_by_year[year] = []
+            return []
 
         # 檢查快取
         if year in self.main_window._cached_drivers_by_year:

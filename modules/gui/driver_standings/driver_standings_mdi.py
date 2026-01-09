@@ -347,16 +347,21 @@ class DriverStandingsMDI(QWidget):
         """API 請求失敗 - 嘗試本地 JSON 備援"""
         logger.error("[DRIVER_MDI] API 調用失敗: %s", error_msg)
         
-        # 偵測未來賽季錯誤（多種可能的錯誤訊息格式）
-        is_future_season_error = (
-            "422" in error_msg or 
-            "Unprocessable" in error_msg or
-            "尚未開始" in error_msg or 
-            "暫不可用" in error_msg or
-            "不可用" in error_msg or
-            "尚未可用" in error_msg or
-            "數據可能尚未" in error_msg
-        )
+        # ✅ 修復：對於當前年份或未來年份，API 失敗視為賽季尚未開始
+        from datetime import datetime
+        year_int = int(self.year)
+        current_year = datetime.now().year
+        
+        if year_int >= current_year:
+            # 當前年份或未來年份：API 失敗就視為賽季尚未開始
+            is_future_season_error = True
+            logger.info(f"[DRIVER_MDI] 當前/未來年份 {year_int}，API 失敗，判定為賽季尚未開始")
+        else:
+            # 過去年份：檢查特定錯誤訊息
+            is_future_season_error = (
+                "422" in error_msg or 
+                "Unprocessable" in error_msg
+            )
         
         if is_future_season_error:
             # 未來賽季：顯示友善訊息

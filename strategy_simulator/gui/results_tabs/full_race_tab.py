@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QSplitter,
     QGroupBox, QTableWidget, QTableWidgetItem, QHeaderView,
     QLabel, QPushButton, QSpinBox, QComboBox, QFrame,
-    QProgressBar, QGridLayout
+    QProgressBar, QGridLayout, QTabWidget
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QFont, QColor, QBrush
@@ -30,6 +30,10 @@ except ImportError:
 
 # Import i18n with lazy loading
 from strategy_simulator.gui.i18n_helper import tr
+
+# Import report generator
+from strategy_simulator.gui.widgets.strategy_report_generator import StrategyReportGenerator
+from strategy_simulator.gui.widgets.strategy_report_dialog import StrategyReportDialog
 
 
 class SimulationWorker(QThread):
@@ -111,63 +115,20 @@ class FullRaceTab(QWidget):
         controls_layout = self._create_controls()
         layout.addLayout(controls_layout)
         
-        # Main content: Splitter
-        splitter = QSplitter(Qt.Horizontal)
-        
-        # Left: Standings Table
-        left_widget = QWidget()
-        left_layout = QVBoxLayout(left_widget)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        
+        # Main content: Race Standings (full width)
         standings_group = QGroupBox(tr("RACE_STANDINGS", "Race Standings"))
         standings_layout = QVBoxLayout(standings_group)
         
         self.standings_table = self._create_standings_table()
         standings_layout.addWidget(self.standings_table)
         
-        left_layout.addWidget(standings_group)
-        splitter.addWidget(left_widget)
+        layout.addWidget(standings_group, 1)
         
-        # Right: Charts and Analysis
-        right_widget = QWidget()
-        right_layout = QVBoxLayout(right_widget)
-        right_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Position Chart
-        chart_group = QGroupBox(tr("POSITION_CHART", "Position History"))
-        chart_layout = QVBoxLayout(chart_group)
-        
-        if HAS_PYQTGRAPH:
-            self.position_plot = pg.PlotWidget()
-            self.position_plot.setBackground('w')
-            self.position_plot.setLabel('left', tr("POSITION", "Position"))
-            self.position_plot.setLabel('bottom', tr("LAP", "Lap"))
-            self.position_plot.showGrid(x=True, y=True, alpha=0.3)
-            self.position_plot.invertY(True)  # P1 at top
-            chart_layout.addWidget(self.position_plot)
-        else:
-            chart_layout.addWidget(QLabel(tr("PYQTGRAPH_REQUIRED", "pyqtgraph required for charts")))
-        
-        right_layout.addWidget(chart_group, 2)
-        
-        # Our Driver Summary
-        summary_group = QGroupBox(tr("OUR_DRIVER_SUMMARY", "Our Driver Summary"))
+        # Driver Summary (below Race Standings)
+        summary_group = QGroupBox(tr("DRIVER_SUMMARY", "Driver Summary"))
         self.summary_layout = QGridLayout(summary_group)
-        self._setup_summary_labels()
-        right_layout.addWidget(summary_group, 1)
-        
-        # Monte Carlo Statistics (if available)
-        self.mc_stats_group = QGroupBox(tr("MONTE_CARLO_STATS", "Monte Carlo Statistics"))
-        self.mc_stats_layout = QGridLayout(self.mc_stats_group)
-        self._setup_mc_stats_labels()
-        right_layout.addWidget(self.mc_stats_group, 1)
-        self.mc_stats_group.hide()  # Initially hidden until we have MC data
-        
-        splitter.addWidget(right_widget)
-        
-        # Set splitter sizes
-        splitter.setSizes([400, 600])
-        layout.addWidget(splitter, 1)
+        self._setup_driver_summary_labels()
+        layout.addWidget(summary_group)
         
         # Bottom: Progress
         self.progress_bar = QProgressBar()
@@ -178,21 +139,57 @@ class FullRaceTab(QWidget):
         self.status_label.setStyleSheet("color: #666;")
         layout.addWidget(self.status_label)
         
-    def _create_controls(self) -> QHBoxLayout:
-        """Create control buttons."""
-        layout = QHBoxLayout()
+    def _create_controls(self) -> QVBoxLayout:
+        """Create control buttons in two rows."""
+        main_layout = QVBoxLayout()
+        main_layout.setSpacing(5)
+        
+        # === Row 1: Mode, Strategy, Highlight ===
+        row1 = QHBoxLayout()
+        
+        from PyQt5.QtWidgets import QButtonGroup, QRadioButton
+        
+        row1.addWidget(QLabel(tr("SIM_MODE", "Mode") + ":"))
+        self.mode_group = QButtonGroup(self)
+        
+        self.simple_mode_radio = QRadioButton(tr("SIMPLE_MODE", "Simple"))
+        self.simple_mode_radio.setToolTip(tr("SIMPLE_MODE_TOOLTIP", "Fast lap-time simulation without position tracking"))
+        self.mode_group.addButton(self.simple_mode_radio, 0)
+        row1.addWidget(self.simple_mode_radio)
+        
+        self.full_mode_radio = QRadioButton(tr("FULL_MODE", "Complete"))
+        self.full_mode_radio.setToolTip(tr("FULL_MODE_TOOLTIP", "Full position tracking with SC/DRS/overtaking (experimental)"))
+        self.mode_group.addButton(self.full_mode_radio, 1)
+        row1.addWidget(self.full_mode_radio)
+        
+        self.simple_mode_radio.setChecked(True)
+        
+        row1.addSpacing(15)
         
         # Our Strategy Selection
-        layout.addWidget(QLabel(tr("OUR_STRATEGY", "Our Strategy") + ":"))
+        row1.addWidget(QLabel(tr("OUR_STRATEGY", "我方策略") + ":"))
         self.plan_combo = QComboBox()
         self.plan_combo.setMinimumWidth(120)
         self.plan_combo.setToolTip(tr("SELECT_PLAN_TOOLTIP", "Select which plan to test in full race simulation"))
-        layout.addWidget(self.plan_combo)
+        row1.addWidget(self.plan_combo)
         
-        layout.addSpacing(20)
+        row1.addSpacing(20)
+        
+        # Driver highlight
+        row1.addWidget(QLabel(tr("HIGHLIGHT_DRIVER", "Highlight") + ":"))
+        self.driver_combo = QComboBox()
+        self.driver_combo.setMinimumWidth(100)
+        self.driver_combo.currentTextChanged.connect(self._on_driver_selected)
+        row1.addWidget(self.driver_combo)
+        
+        row1.addStretch()
+        main_layout.addLayout(row1)
+        
+        # === Row 2: SC Scenario, Iterations, Run Button ===
+        row2 = QHBoxLayout()
         
         # SC Scenario Selection
-        layout.addWidget(QLabel(tr("SC_SCENARIO", "SC Scenario") + ":"))
+        row2.addWidget(QLabel(tr("SC_SCENARIO", "SC Scenario") + ":"))
         self.sc_scenario_combo = QComboBox()
         self.sc_scenario_combo.setMinimumWidth(120)
         self.sc_scenario_combo.addItems([
@@ -203,38 +200,31 @@ class FullRaceTab(QWidget):
             tr("SC_LATE", "Late SC (L45-50)")
         ])
         self.sc_scenario_combo.setToolTip(tr("SELECT_SC_TOOLTIP", "Choose SC timing scenario for simulation"))
-        layout.addWidget(self.sc_scenario_combo)
+        row2.addWidget(self.sc_scenario_combo)
         
-        layout.addSpacing(20)
+        row2.addSpacing(20)
         
         # Iterations
-        layout.addWidget(QLabel(tr("ITERATIONS", "Iterations") + ":"))
+        row2.addWidget(QLabel(tr("ITERATIONS", "迭代次數") + ":"))
         self.iterations_spin = QSpinBox()
         self.iterations_spin.setRange(10, 1000)
-        self.iterations_spin.setValue(100)
-        self.iterations_spin.setSingleStep(50)
-        layout.addWidget(self.iterations_spin)
+        self.iterations_spin.setValue(10)
+        self.iterations_spin.setSingleStep(10)
+        row2.addWidget(self.iterations_spin)
         
-        layout.addSpacing(20)
+        row2.addStretch()
         
-        # Driver highlight
-        layout.addWidget(QLabel(tr("HIGHLIGHT_DRIVER", "Highlight") + ":"))
-        self.driver_combo = QComboBox()
-        self.driver_combo.setMinimumWidth(100)
-        self.driver_combo.currentTextChanged.connect(self._on_driver_selected)
-        layout.addWidget(self.driver_combo)
-        
-        layout.addStretch()
-        
-        # Run Full Race button (uses MC strategy assignments)
+        # Run Full Race button
         self.run_btn = QPushButton(tr("RUN_FULL_RACE", "執行完整賽事"))
         self.run_btn.setMinimumWidth(200)
         self.run_btn.setToolTip(tr("RUN_FULL_RACE_TOOLTIP", "使用 MC 策略分配執行 20 車完整模擬"))
-        self.run_btn.setEnabled(False)  # Disabled until MC results received
+        self.run_btn.setEnabled(False)
         self.run_btn.clicked.connect(self._on_run_full_race_clicked)
-        layout.addWidget(self.run_btn)
+        row2.addWidget(self.run_btn)
         
-        return layout
+        main_layout.addLayout(row2)
+        
+        return main_layout
     
     def _create_standings_table(self) -> QTableWidget:
         """Create standings table."""
@@ -267,7 +257,48 @@ class FullRaceTab(QWidget):
         
         return table
     
+    def _setup_driver_summary_labels(self):
+        """Setup driver summary labels below Race Standings."""
+        # Row 0: Final Position, Pit Stops
+        self.summary_layout.addWidget(QLabel(tr("FINAL_POSITION", "Final Position") + ":"), 0, 0)
+        self.lbl_final_pos = QLabel("--")
+        self.lbl_final_pos.setStyleSheet("font-size: 16px; font-weight: bold;")
+        self.summary_layout.addWidget(self.lbl_final_pos, 0, 1)
+        
+        self.summary_layout.addWidget(QLabel(tr("PIT_STOPS", "Pit Stops") + ":"), 0, 2)
+        self.lbl_pit_stops = QLabel("--")
+        self.summary_layout.addWidget(self.lbl_pit_stops, 0, 3)
+        
+        # Row 1: Grid Position, Total Time
+        self.summary_layout.addWidget(QLabel(tr("GRID_POSITION", "Grid Position") + ":"), 1, 0)
+        self.lbl_grid_pos = QLabel("--")
+        self.summary_layout.addWidget(self.lbl_grid_pos, 1, 1)
+        
+        self.summary_layout.addWidget(QLabel(tr("TOTAL_TIME", "Total Time") + ":"), 1, 2)
+        self.lbl_total_time = QLabel("--")
+        self.summary_layout.addWidget(self.lbl_total_time, 1, 3)
+        
+        # Row 2: Positions Gained, Gap to Leader
+        self.summary_layout.addWidget(QLabel(tr("POSITIONS_GAINED", "Positions +/-") + ":"), 2, 0)
+        self.lbl_pos_gained = QLabel("--")
+        self.summary_layout.addWidget(self.lbl_pos_gained, 2, 1)
+        
+        self.summary_layout.addWidget(QLabel(tr("GAP_TO_LEADER", "Gap to Leader") + ":"), 2, 2)
+        self.lbl_gap_leader = QLabel("--")
+        self.summary_layout.addWidget(self.lbl_gap_leader, 2, 3)
+        
+        # Row 3: Strategy
+        self.summary_layout.addWidget(QLabel(tr("STRATEGY", "Strategy") + ":"), 3, 0)
+        self.lbl_strategy = QLabel("--")
+        self.lbl_strategy.setStyleSheet("font-weight: bold; color: #2196F3;")
+        self.summary_layout.addWidget(self.lbl_strategy, 3, 1, 1, 3)  # Span 3 columns
+    
     def _setup_summary_labels(self):
+        """Deprecated: Summary labels removed (moved to Result Analysis tab)"""
+        # This method is no longer used
+        pass
+    
+    def _setup_summary_labels_old(self):
         """Setup summary labels."""
         labels = [
             ("lbl_driver", tr("DRIVER", "Driver"), 0, 0),
@@ -275,8 +306,8 @@ class FullRaceTab(QWidget):
             ("lbl_grid", tr("GRID_POSITION", "Grid Position"), 1, 0),
             ("lbl_change", tr("POSITIONS_CHANGED", "Positions Changed"), 1, 2),
             ("lbl_gap", tr("GAP_TO_WINNER", "Gap to Winner"), 2, 0),
-            ("lbl_win_prob", tr("WIN_PROBABILITY", "Win Probability"), 2, 2),
-            ("lbl_podium_prob", tr("PODIUM_PROBABILITY", "Podium Probability"), 3, 0),
+            ("lbl_win_prob", tr("WIN_PROBABILITY", "冠軍勝率 (P1)"), 2, 2),
+            ("lbl_podium_prob", tr("PODIUM_PROBABILITY", "領獎台機率 (P1-P3)"), 3, 0),
             ("lbl_points_prob", tr("POINTS_PROBABILITY", "Points Probability"), 3, 2),
         ]
         
@@ -353,9 +384,29 @@ class FullRaceTab(QWidget):
             self.mc_stats_layout.addWidget(value_label, row, col + 1)
     
     def set_drivers(self, driver_list: List[str]):
-        """Set available drivers for highlighting."""
+        """Set available drivers for highlighting and comparison."""
+        # Preserve current highlight driver selection
+        current_highlight = self.driver_combo.currentText() if self.driver_combo.count() > 0 else None
+        
         self.driver_combo.clear()
         self.driver_combo.addItems(driver_list)
+        
+        # Restore previous highlight driver if it exists in new list
+        if current_highlight and current_highlight in driver_list:
+            index = self.driver_combo.findText(current_highlight)
+            if index >= 0:
+                self.driver_combo.setCurrentIndex(index)
+        # If _our_driver is set, use it as default
+        elif hasattr(self, '_our_driver') and self._our_driver in driver_list:
+            index = self.driver_combo.findText(self._our_driver)
+            if index >= 0:
+                self.driver_combo.setCurrentIndex(index)
+        # Otherwise default to first driver
+        elif len(driver_list) > 0:
+            self.driver_combo.setCurrentIndex(0)
+        
+        # ❌ Comparison dropdowns removed (moved to Result Analysis tab)
+        # self.compare_driver1_combo and self.compare_driver2_combo no longer exist
     
     def receive_monte_carlo_results(self, mc_summary, results: list, params):
         """
@@ -490,13 +541,17 @@ class FullRaceTab(QWidget):
         # Get iterations
         iterations = self.iterations_spin.value()
         
-        print(f"[FULL_RACE_TAB] Requesting full race simulation: Plan {chr(65 + selected_plan_index)}, SC: {sc_scenario}, Iterations: {iterations}")
+        # Get simulation mode (NEW)
+        simulation_mode = "complete" if self.full_mode_radio.isChecked() else "simple"
+        
+        print(f"[FULL_RACE_TAB] Requesting full race simulation: Plan {chr(65 + selected_plan_index)}, SC: {sc_scenario}, Iterations: {iterations}, Mode: {simulation_mode}")
         
         # Emit signal to main window (will use MC strategy assignments)
         self.simulation_requested.emit({
             'iterations': iterations,
             'selected_plan_index': selected_plan_index,
-            'sc_scenario': sc_scenario
+            'sc_scenario': sc_scenario,
+            'simulation_mode': simulation_mode  # NEW: simple or complete
         })
     
     def _on_update_view_clicked(self):
@@ -540,50 +595,20 @@ class FullRaceTab(QWidget):
             # Use overall win rate
             win_rate = result.win_rate if hasattr(result, 'win_rate') else 0
         
-        # Update summary labels
-        avg_pos = result.expected_position if hasattr(result, 'expected_position') else 0
-        podium_prob = result.podium_probability if hasattr(result, 'podium_probability') else 0
-        points_prob = result.points_probability if hasattr(result, 'points_probability') else 0
+        # ❌ Summary labels removed (moved to Result Analysis tab)
+        # All lbl_* attributes no longer exist in FullRaceTab
+        # Data is now displayed in RaceResultAnalysisTab
         
-        self.lbl_position.setText(f"P{avg_pos:.1f}")
-        self.lbl_win_prob.setText(f"{win_rate:.1f}%")
-        self.lbl_podium_prob.setText(f"{podium_prob:.1f}%")
-        self.lbl_points_prob.setText(f"{points_prob:.1f}%")
+        print(f"[FULL_RACE_TAB] MC strategy stats cached (avg_pos: {result.expected_position if hasattr(result, 'expected_position') else 'N/A'})")
+        print(f"[FULL_RACE_TAB] Win rate: {win_rate:.1f}%")
         
-        # Update driver label if available
-        if hasattr(self, 'lbl_driver') and self._our_driver:
-            self.lbl_driver.setText(self._our_driver)
-        
-        # Update grid position if available
-        if hasattr(self, 'lbl_grid') and hasattr(mc, 'starting_position'):
-            self.lbl_grid.setText(f"P{mc.starting_position}")
-        
-        # Calculate positions changed
-        if hasattr(mc, 'starting_position'):
-            pos_change = mc.starting_position - avg_pos
-            if hasattr(self, 'lbl_change'):
-                if pos_change > 0:
-                    self.lbl_change.setText(f"+{pos_change:.1f}")
-                    self.lbl_change.setStyleSheet("color: green; font-weight: bold;")
-                elif pos_change < 0:
-                    self.lbl_change.setText(f"{pos_change:.1f}")
-                    self.lbl_change.setStyleSheet("color: red; font-weight: bold;")
-                else:
-                    self.lbl_change.setText("0.0")
-                    self.lbl_change.setStyleSheet("color: gray;")
-        
-        # Show MC stats if available
-        if hasattr(self, 'mc_stats_group'):
-            self.mc_stats_group.show()
-            iterations = mc.iterations if hasattr(mc, 'iterations') else 1000
-            self.lbl_mc_iterations.setText(str(iterations))
-            self.lbl_mc_avg_pos.setText(f"P{avg_pos:.1f}")
-            self.lbl_mc_win_rate.setText(f"{win_rate:.1f}%")
-            self.lbl_mc_podium_rate.setText(f"{podium_prob:.1f}%")
-            self.lbl_mc_points_rate.setText(f"{points_prob:.1f}%")
-            
-            avg_gain = result.avg_positions_gained if hasattr(result, 'avg_positions_gained') else 0
-            self.lbl_mc_avg_gain.setText(f"+{avg_gain:.1f}" if avg_gain > 0 else f"{avg_gain:.1f}")
+        # Store data for potential future use
+        self._last_mc_stats = {
+            'avg_pos': result.expected_position if hasattr(result, 'expected_position') else 0,
+            'win_rate': win_rate,
+            'podium_prob': result.podium_probability if hasattr(result, 'podium_probability') else 0,
+            'points_prob': result.points_probability if hasattr(result, 'points_probability') else 0
+        }
         
         # Display position distribution if available
         if hasattr(result, 'position_distribution') and result.position_distribution:
@@ -595,56 +620,30 @@ class FullRaceTab(QWidget):
         # Update standings table with statistical summary
         self._display_statistical_summary(result, sc_scenario, win_rate)
         
+        avg_pos = result.expected_position if hasattr(result, 'expected_position') else 0
         print(f"[FULL_RACE_TAB] Displayed MC stats for {strategy_name}: WinRate={win_rate:.1f}%, AvgPos=P{avg_pos:.1f}")
     
     def _display_position_distribution(self, distribution: dict, strategy_name: str):
-        """Display position distribution histogram."""
-        if not HAS_PYQTGRAPH:
-            return
+        """Display position distribution histogram. 
         
-        self.position_plot.clear()
-        
-        # Extract positions and frequencies
-        positions = sorted(distribution.keys())
-        frequencies = [distribution[p] for p in positions]
-        
-        # Create bar graph
-        bargraph = pg.BarGraphItem(
-            x=positions,
-            height=frequencies,
-            width=0.8,
-            brush='b'
-        )
-        self.position_plot.addItem(bargraph)
-        
-        # Update labels
-        self.position_plot.setLabel('left', tr("FREQUENCY", "频率 (%)"))
-        self.position_plot.setLabel('bottom', tr("FINISH_POSITION", "完赛位置"))
-        self.position_plot.setTitle(f"{strategy_name} - {tr('POSITION_DISTRIBUTION', '位置分布')}")
+        Note: position_plot has been moved to RaceResultAnalysisTab.
+        This method is now a no-op for backward compatibility.
+        """
+        # [2025-01-06] position_plot moved to race_result_analysis_tab
+        pass
     
     def _clear_chart_with_message(self):
-        """Clear chart and display message about MC-only data."""
-        if not HAS_PYQTGRAPH:
-            return
+        """Clear chart and display message about MC-only data.
         
-        self.position_plot.clear()
-        
-        # Add text item explaining no detailed simulation
-        text_item = pg.TextItem(
-            text=tr('MC_STATS_ONLY', 
-                   'Monte Carlo 統計結果\n'
-                   '(無詳細逐圈數據)\n\n'
-                   '顯示策略的統計表現\n'
-                   '而非單次完整比賽模擬'),
-            anchor=(0.5, 0.5),
-            color=(100, 100, 100)
-        )
-        text_item.setPos(30, 10)
-        self.position_plot.addItem(text_item)
+        Note: position_plot has been moved to RaceResultAnalysisTab.
+        This method is now a no-op for backward compatibility.
+        """
+        # [2025-01-06] position_plot moved to race_result_analysis_tab
+        pass
     
     def _display_statistical_summary(self, result, sc_scenario: str, win_rate: float):
         """Display statistical summary in standings table."""
-        self.standings_table.setRowCount(5)
+        self.standings_table.setRowCount(6)
         
         # Row 0: Strategy info
         self.standings_table.setItem(0, 0, QTableWidgetItem(tr("STRATEGY", "策略")))
@@ -654,20 +653,25 @@ class FullRaceTab(QWidget):
         self.standings_table.setItem(1, 0, QTableWidgetItem(tr("SC_SCENARIO", "SC 場景")))
         self.standings_table.setItem(1, 1, QTableWidgetItem(sc_scenario.upper()))
         
-        # Row 2: Win Rate
-        self.standings_table.setItem(2, 0, QTableWidgetItem(tr("WIN_RATE", "勝率")))
-        self.standings_table.setItem(2, 1, QTableWidgetItem(f"{win_rate:.1f}%"))
+        # Row 2: Win Rate (P1 only)
+        win_prob = result.win_probability if hasattr(result, 'win_probability') else win_rate
+        self.standings_table.setItem(2, 0, QTableWidgetItem(tr("WIN_RATE", "冠軍勝率 (P1)")))
+        self.standings_table.setItem(2, 1, QTableWidgetItem(f"{win_prob:.1f}%"))
         
-        # Row 3: Avg Position
-        avg_pos = result.expected_position if hasattr(result, 'expected_position') else 0
-        self.standings_table.setItem(3, 0, QTableWidgetItem(tr("AVG_POSITION", "平均位置")))
-        self.standings_table.setItem(3, 1, QTableWidgetItem(f"P{avg_pos:.1f}"))
-        
-        # Row 4: Podium/Points
+        # Row 3: Podium Probability (P1-P3)
         podium_prob = result.podium_probability if hasattr(result, 'podium_probability') else 0
+        self.standings_table.setItem(3, 0, QTableWidgetItem(tr("PODIUM_RATE", "領獎台機率 (P1-P3)")))
+        self.standings_table.setItem(3, 1, QTableWidgetItem(f"{podium_prob:.1f}%"))
+        
+        # Row 4: Avg Position
+        avg_pos = result.expected_position if hasattr(result, 'expected_position') else 0
+        self.standings_table.setItem(4, 0, QTableWidgetItem(tr("AVG_POSITION", "平均位置")))
+        self.standings_table.setItem(4, 1, QTableWidgetItem(f"P{avg_pos:.1f}"))
+        
+        # Row 5: Points Probability
         points_prob = result.points_probability if hasattr(result, 'points_probability') else 0
-        self.standings_table.setItem(4, 0, QTableWidgetItem(tr("PODIUM_POINTS", "頒獎台/積分")))
-        self.standings_table.setItem(4, 1, QTableWidgetItem(f"{podium_prob:.0f}% / {points_prob:.0f}%"))
+        self.standings_table.setItem(5, 0, QTableWidgetItem(tr("POINTS_RATE", "積分區機率 (P1-P10)")))
+        self.standings_table.setItem(5, 1, QTableWidgetItem(f"{points_prob:.1f}%"))
     
     def set_strategies(self, results: List, params=None):
         """
@@ -725,41 +729,33 @@ class FullRaceTab(QWidget):
         """
         Update with simulation results.
         
+        ⚠️ 注意：Position History、Summary、Traffic Analysis 等詳細分析
+        已移至「結果分析」tab，此處只更新 Standings Table
+        
         Args:
             result: Dict with 'single' (FullRaceSimulation) and 'statistics' (multi-run stats)
         """
         print(f"[FULL_RACE_TAB] ====== UPDATE_SIMULATION_RESULT CALLED ======")
         print(f"[FULL_RACE_TAB] Result keys: {result.keys() if result else 'None'}")
-        print(f"[FULL_RACE_TAB] Has 'single': {'single' in result if result else False}")
-        print(f"[FULL_RACE_TAB] Has 'statistics': {'statistics' in result if result else False}")
         
         self._simulation_result = result.get('single')
         self._statistics = result.get('statistics')
         
         print(f"[FULL_RACE_TAB] _simulation_result type: {type(self._simulation_result)}")
-        print(f"[FULL_RACE_TAB] _statistics type: {type(self._statistics)}")
         
         if self._simulation_result:
             print(f"[FULL_RACE_TAB] Updating standings table...")
             self._update_standings_table()
-            print(f"[FULL_RACE_TAB] Updating position chart...")
-            self._update_position_chart()
         else:
             print(f"[FULL_RACE_TAB] ⚠️ No simulation result to display!")
         
-        print(f"[FULL_RACE_TAB] Updating summary...")
-        self._update_summary()
-        
-        # Update Monte Carlo statistics if available
-        if self._statistics:
-            print(f"[FULL_RACE_TAB] Updating MC statistics...")
-            self._update_mc_statistics()
-        else:
-            print(f"[FULL_RACE_TAB] ⚠️ No statistics to display!")
-        
-        self.status_label.setText(tr("SIMULATION_COMPLETE_MSG", "Simulation complete. Select a driver to highlight."))
+        self.status_label.setText(
+            tr("SIMULATION_COMPLETE_SEE_RESULTS", 
+               "✅ 模擬完成！請切換到「結果分析」tab 查看詳細分析")
+        )
         self.status_label.setStyleSheet("color: #2e7d32;")  # Green for success
         print(f"[FULL_RACE_TAB] ====== UPDATE COMPLETE ======")
+
         
     def _update_standings_table(self):
         """Update standings table with results."""
@@ -816,7 +812,7 @@ class FullRaceTab(QWidget):
             if result.final_position == 1:
                 gap_text = "WINNER"
             else:
-                gap_text = f"+{result.gap_to_winner:.3f}s"
+                gap_text = f"+{result.gap_to_winner:.1f}s"
             gap_item = QTableWidgetItem(gap_text)
             gap_item.setTextAlignment(Qt.AlignCenter)
             self.standings_table.setItem(row, 5, gap_item)
@@ -830,135 +826,75 @@ class FullRaceTab(QWidget):
             self.standings_table.setItem(row, 7, QTableWidgetItem(result.strategy_notation))
             
     def _update_position_chart(self):
-        """Update position history chart with SC events and pit stop markers."""
-        if not HAS_PYQTGRAPH or not self._simulation_result:
-            return
+        """Update position history chart with SC events and pit stop markers.
         
-        self.position_plot.clear()
-        
-        # Get all drivers' position history
-        lap_states = self._simulation_result.lap_states
-        if not lap_states:
-            return
-        
-        laps = list(range(1, len(lap_states) + 1))
-        
-        # Add SC event regions
-        sc_events = self._simulation_result.sc_events
-        for event in sc_events:
-            start_lap = event.get('lap', 0)
-            duration = event.get('duration', 3)
-            is_vsc = event.get('is_vsc', False)
-            
-            color = (255, 255, 0, 50) if is_vsc else (255, 200, 0, 80)  # Yellow for SC
-            region = pg.LinearRegionItem(
-                values=[start_lap, start_lap + duration],
-                orientation='vertical',
-                brush=color,
-                movable=False
-            )
-            self.position_plot.addItem(region)
-            
-            # Add SC label
-            sc_text = pg.TextItem(
-                text=f"{'VSC' if is_vsc else 'SC'} L{start_lap}",
-                color='#f39c12',
-                anchor=(0, 0)
-            )
-            sc_text.setPos(start_lap, 1)
-            self.position_plot.addItem(sc_text)
-        
-        # Color map for teams (simplified)
-        colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeaa7',
-                  '#dfe6e9', '#74b9ff', '#a29bfe', '#fd79a8', '#00b894',
-                  '#e17055', '#0984e3', '#6c5ce7', '#2d3436', '#00cec9',
-                  '#fab1a0', '#81ecec', '#55efc4', '#ffeaa7', '#b2bec3']
-        
-        # Draw position lines for all drivers
-        driver_positions = {}
-        for lap_state in lap_states:
-            for driver, pos in lap_state.positions.items():
-                if driver not in driver_positions:
-                    driver_positions[driver] = []
-                driver_positions[driver].append(pos)
-        
-        for i, (driver_code, positions) in enumerate(driver_positions.items()):
-            color = colors[i % len(colors)]
-            width = 3 if driver_code == self._our_driver else 1
-            alpha = 255 if driver_code == self._our_driver else 150
-            
-            pen = pg.mkPen(color, width=width)
-            self.position_plot.plot(
-                laps[:len(positions)], positions,
-                pen=pen,
-                name=driver_code
-            )
-        
-        # Highlight our driver with thicker line
-        if self._our_driver and self._our_driver in driver_positions:
-            positions = driver_positions[self._our_driver]
-            self.position_plot.plot(
-                laps[:len(positions)], positions,
-                pen=pg.mkPen('#e74c3c', width=4),
-                name=f"{self._our_driver} (You)"
-            )
-            
-            # Add pit stop markers for our driver
-            for lap_state in lap_states:
-                if self._our_driver in lap_state.pit_stops:
-                    pit_lap = lap_state.lap
-                    pit_pos = lap_state.positions.get(self._our_driver, 10)
-                    
-                    # Add pit marker
-                    pit_marker = pg.ScatterPlotItem(
-                        [pit_lap], [pit_pos],
-                        symbol='o',
-                        size=12,
-                        brush=pg.mkBrush('#e74c3c'),
-                        pen=pg.mkPen('w', width=2)
-                    )
-                    self.position_plot.addItem(pit_marker)
-        
-        # Set axis limits
-        self.position_plot.setYRange(0.5, 20.5)
-        self.position_plot.setXRange(1, len(laps))
+        Note: position_plot has been moved to RaceResultAnalysisTab.
+        This method is now a no-op for backward compatibility.
+        """
+        # [2025-01-06] position_plot moved to race_result_analysis_tab
+        pass
                 
     def _update_chart_highlight(self):
         """Update chart to highlight selected driver."""
         self._update_position_chart()
         
     def _update_summary(self):
-        """Update driver summary section."""
-        if not self._our_driver:
+        """Update driver summary section below Race Standings."""
+        if not self._simulation_result or not self._our_driver:
             return
         
-        # Update from single simulation
-        if self._simulation_result and self._simulation_result.our_result:
-            result = self._simulation_result.our_result
-            self.lbl_driver.setText(result.driver_code)
-            self.lbl_position.setText(f"P{result.final_position}")
-            self.lbl_grid.setText(f"P{result.grid_position}")
-            
-            change = result.positions_gained
-            if change > 0:
-                self.lbl_change.setText(f"+{change}")
-                self.lbl_change.setStyleSheet("color: green; font-size: 14px;")
-            elif change < 0:
-                self.lbl_change.setText(str(change))
-                self.lbl_change.setStyleSheet("color: red; font-size: 14px;")
-            else:
-                self.lbl_change.setText("0")
-                self.lbl_change.setStyleSheet("font-size: 14px;")
-            
-            self.lbl_gap.setText(f"+{result.gap_to_winner:.3f}s" if result.final_position > 1 else "WINNER")
+        # Find our driver in final_standings
+        our_result = None
+        if hasattr(self._simulation_result, 'our_result') and self._simulation_result.our_result:
+            our_result = self._simulation_result.our_result
+        else:
+            # Search in final_standings
+            for result in self._simulation_result.final_standings:
+                if result.driver_code == self._our_driver:
+                    our_result = result
+                    break
         
-        # Update from statistics
-        if self._statistics:
-            our_stats = self._statistics.get('our_stats', {})
-            if our_stats:
-                self.lbl_win_prob.setText(f"{our_stats.get('win_probability', 0):.1f}%")
-                self.lbl_podium_prob.setText(f"{our_stats.get('podium_probability', 0):.1f}%")
-                self.lbl_points_prob.setText(f"{our_stats.get('points_probability', 0):.1f}%")
+        if not our_result:
+            print(f"[FULL_RACE_TAB] Driver {self._our_driver} not found in results")
+            return
+        
+        # Update labels
+        self.lbl_final_pos.setText(f"P{our_result.final_position}")
+        if our_result.final_position == 1:
+            self.lbl_final_pos.setStyleSheet("font-size: 16px; font-weight: bold; color: gold;")
+        elif our_result.final_position <= 3:
+            self.lbl_final_pos.setStyleSheet("font-size: 16px; font-weight: bold; color: #2196F3;")
+        else:
+            self.lbl_final_pos.setStyleSheet("font-size: 16px; font-weight: bold;")
+        
+        self.lbl_pit_stops.setText(str(our_result.pit_stops))
+        self.lbl_grid_pos.setText(f"P{our_result.grid_position}")
+        self.lbl_total_time.setText(f"{our_result.total_time:.3f}s")
+        
+        # Positions gained with color
+        gained = our_result.positions_gained
+        if gained > 0:
+            self.lbl_pos_gained.setText(f"+{gained}")
+            self.lbl_pos_gained.setStyleSheet("color: green; font-weight: bold;")
+        elif gained < 0:
+            self.lbl_pos_gained.setText(str(gained))
+            self.lbl_pos_gained.setStyleSheet("color: red; font-weight: bold;")
+        else:
+            self.lbl_pos_gained.setText("0")
+            self.lbl_pos_gained.setStyleSheet("")
+        
+        # Gap to leader
+        if our_result.final_position == 1:
+            self.lbl_gap_leader.setText("WINNER")
+            self.lbl_gap_leader.setStyleSheet("color: gold; font-weight: bold;")
+        else:
+            self.lbl_gap_leader.setText(f"+{our_result.gap_to_winner:.3f}s")
+            self.lbl_gap_leader.setStyleSheet("")
+        
+        # Strategy
+        self.lbl_strategy.setText(our_result.strategy_notation)
+        
+        print(f"[FULL_RACE_TAB] Summary updated for {self._our_driver}: P{our_result.final_position}")
                 
     def show_progress(self, value: int, message: str):
         """Show simulation progress."""
@@ -969,6 +905,349 @@ class FullRaceTab(QWidget):
     def hide_progress(self):
         """Hide progress bar."""
         self.progress_bar.setVisible(False)
+    
+    def _update_strategy_performance_table(self):
+        """
+        Display top 5 strategy performance statistics from multiple simulations.
+        Shows in Our Driver Summary area, not in Race Standings table.
+        """
+        # Clear old report buttons
+        for btn in getattr(self, '_report_buttons', []):
+            try:
+                btn.deleteLater()
+            except:
+                pass
+        self._report_buttons = []
+        
+        if not self._statistics or 'strategy_performance' not in self._statistics:
+            self.strategy_perf_group.hide()
+            return
+        
+        strategy_perf = self._statistics['strategy_performance']
+        if not strategy_perf:
+            self.strategy_perf_group.hide()
+            return
+        
+        print(f"[FULL_RACE_TAB] Strategy performance: {strategy_perf}")
+        
+        # Sort by win rate and take top 5
+        sorted_strategies = sorted(
+            strategy_perf.items(),
+            key=lambda x: x[1]['win_rate'],
+            reverse=True
+        )[:5]  # Top 5 only
+        
+        # Cache for report generation
+        self._sorted_strategies = sorted_strategies
+        
+        # Update strategy performance table
+        self.strategy_perf_table.setRowCount(len(sorted_strategies))
+        
+        for idx, (strategy, stats) in enumerate(sorted_strategies):
+            # Strategy name (欄0)
+            strat_item = QTableWidgetItem(strategy)
+            strat_item.setTextAlignment(Qt.AlignCenter)
+            self.strategy_perf_table.setItem(idx, 0, strat_item)
+            
+            # Win rate (欄1)
+            win_rate = stats['win_rate']
+            win_item = QTableWidgetItem(f"{win_rate:.1f}")
+            win_item.setTextAlignment(Qt.AlignCenter)
+            if win_rate > 20:
+                win_item.setBackground(QBrush(QColor(144, 238, 144)))  # Light green
+            elif win_rate > 10:
+                win_item.setBackground(QBrush(QColor(255, 255, 200)))  # Light yellow
+            self.strategy_perf_table.setItem(idx, 1, win_item)
+            
+            # Average position (欄2)
+            avg_pos = stats['avg_position']
+            avg_item = QTableWidgetItem(f"P{avg_pos:.1f}")
+            avg_item.setTextAlignment(Qt.AlignCenter)
+            self.strategy_perf_table.setItem(idx, 2, avg_item)
+            
+            # Most likely position (欄3) - 新增！
+            most_likely_pos = stats.get('most_likely_position', round(avg_pos))
+            most_likely_item = QTableWidgetItem(f"P{most_likely_pos}")
+            most_likely_item.setTextAlignment(Qt.AlignCenter)
+            most_likely_item.setFont(QFont("", -1, QFont.Bold))  # 加粗強調
+            if most_likely_pos <= 3:
+                most_likely_item.setBackground(QBrush(QColor(255, 215, 0, 120)))  # Gold highlight
+            elif most_likely_pos <= 6:
+                most_likely_item.setBackground(QBrush(QColor(144, 238, 144, 100)))  # Green
+            self.strategy_perf_table.setItem(idx, 3, most_likely_item)
+            
+            # Most likely position probability (欄4) - 新增！
+            most_likely_pct = stats.get('most_likely_position_pct', 0)
+            prob_item = QTableWidgetItem(f"{most_likely_pct:.1f}")
+            prob_item.setTextAlignment(Qt.AlignCenter)
+            if most_likely_pct > 30:  # 穩定性高
+                prob_item.setBackground(QBrush(QColor(46, 125, 50, 80)))  # Dark green
+                prob_item.setForeground(QBrush(QColor(255, 255, 255)))  # White text
+            elif most_likely_pct > 20:
+                prob_item.setBackground(QBrush(QColor(144, 238, 144, 100)))  # Light green
+            self.strategy_perf_table.setItem(idx, 4, prob_item)
+            
+            # Best position (欄5)
+            best_pos = stats.get('best_position', 20)
+            best_item = QTableWidgetItem(f"P{best_pos}")
+            best_item.setTextAlignment(Qt.AlignCenter)
+            if best_pos == 1:
+                best_item.setForeground(QBrush(QColor(255, 215, 0)))  # Gold text
+            elif best_pos <= 3:
+                best_item.setForeground(QBrush(QColor(192, 192, 192)))  # Silver text
+            self.strategy_perf_table.setItem(idx, 5, best_item)
+            
+            # Worst position (欄6)
+            worst_pos = stats.get('worst_position', 20)
+            worst_item = QTableWidgetItem(f"P{worst_pos}")
+            worst_item.setTextAlignment(Qt.AlignCenter)
+            if worst_pos > 10:
+                worst_item.setForeground(QBrush(QColor(200, 0, 0)))  # Red text
+            self.strategy_perf_table.setItem(idx, 6, worst_item)
+            
+            # Report button (欄7)
+            report_btn = QPushButton("Report")
+            report_btn.setFixedWidth(60)
+            report_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #4CAF50;
+                    color: white;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 2px 6px;
+                    font-size: 10px;
+                }
+                QPushButton:hover {
+                    background-color: #45a049;
+                }
+            """)
+            report_btn.clicked.connect(lambda checked, row=idx: self._show_strategy_report(row))
+            self.strategy_perf_table.setCellWidget(idx, 7, report_btn)  # 從第5欄改為第7欄
+            self._report_buttons.append(report_btn)
+        
+        # Show the group
+        self.strategy_perf_group.show()
+    
+    def _show_strategy_report(self, row: int):
+        """
+        Show detailed strategy report for selected row in strategy performance table.
+        Uses complete race simulation data for comprehensive analysis.
+        """
+        if not hasattr(self, '_sorted_strategies') or row >= len(self._sorted_strategies):
+            return
+        
+        strategy_name, stats = self._sorted_strategies[row]
+        
+        # Find matching OptimizationResult from cached results
+        strategy_result = None
+        if self._cached_results:
+            for result in self._cached_results:
+                result_name = getattr(result, 'strategy_name', '')
+                if result_name == strategy_name:
+                    strategy_result = result
+                    break
+        
+        if not strategy_result:
+            # Create a minimal result object from stats
+            class MinimalResult:
+                def __init__(self, name, stats):
+                    self.strategy_name = name
+                    self.win_probability = stats.get('win_rate', 0)
+                    self.expected_position = stats.get('avg_position', 10)
+                    self.stints = []
+            strategy_result = MinimalResult(strategy_name, stats)
+        
+        # Get context data
+        our_driver = self._our_driver or "VER"
+        grid_position = 1
+        track_name = ""
+        
+        # Try to get from main window
+        main_window = self.window()
+        if main_window:
+            if hasattr(main_window, 'input_panel'):
+                track_name = main_window.input_panel.track_combo.currentText()
+            if hasattr(main_window, 'params') and main_window.params:
+                grid_position = main_window.params.starting_position
+        
+        # Get simulation data for complete race analysis
+        simulation_data = None
+        traffic_data = None
+        
+        if self._simulation_result:
+            simulation_data = {
+                'final_standings': self._simulation_result.final_standings,
+                'lap_states': getattr(self._simulation_result, 'lap_states', []),
+                'race_laps': getattr(self._simulation_result, 'race_laps', 58),
+                'our_result': getattr(self._simulation_result, 'our_result', None),
+            }
+            traffic_data = getattr(self._simulation_result, 'traffic_data', None)
+        
+        # Get MC summary if available
+        mc_summary = self._cached_mc_summary
+        
+        # Get scenario analyses from SC tab if available
+        scenario_analyses = None
+        if main_window and hasattr(main_window, 'sc_tab'):
+            scenario_analyses = getattr(main_window.sc_tab, '_cached_scenario_analyses', None)
+        
+        # ✅ Get Long Run data and SimulationParams (與實際模擬一致)
+        long_run_data = getattr(self, '_long_run_data', None)
+        sim_params = getattr(self, '_simulation_params', None)
+        
+        if long_run_data:
+            print(f"[FULL_RACE_TAB] Report using Long Run data")
+        else:
+            print(f"[FULL_RACE_TAB] Report using SimulationParams defaults")
+        
+        # Generate report
+        generator = StrategyReportGenerator()
+        report_text = generator.generate_report(
+            strategy_result=strategy_result,
+            mc_summary=mc_summary,
+            simulation_data=simulation_data,
+            traffic_data=traffic_data,
+            competitors_data=None,
+            scenario_analyses=scenario_analyses,
+            our_driver=our_driver,
+            grid_position=grid_position,
+            track_name=track_name,
+            long_run_data=long_run_data,  # ✅ 新增
+            sim_params=sim_params,  # ✅ 新增
+        )
+        
+        # Show dialog
+        dialog = StrategyReportDialog(report_text, strategy_name, self)
+        dialog.exec_()
+    
+    def _update_traffic_analysis(self):
+        """
+        Update traffic analysis display from simulation results using heatmap.
+        """
+        if not self._simulation_result:
+            self.traffic_group.hide()
+            return
+        
+        # Prepare data for heatmap
+        drivers_data = self._prepare_traffic_heatmap_data()
+        
+        if not drivers_data:
+            self.traffic_group.hide()
+            return
+        
+        # Update heatmap
+        race_laps = self._simulation_result.race_laps
+        race_info = f"{race_laps} laps"
+        
+        # Try to get more detailed race info if available
+        if hasattr(self, 'year_edit') and hasattr(self, 'race_combo'):
+            try:
+                year = self.year_edit.text()
+                race = self.race_combo.currentText()
+                if year and race:
+                    race_info = f"{year} {race} - {race_laps} laps"
+            except:
+                pass
+        
+        self.traffic_heatmap.update_data(
+            drivers_data=drivers_data,
+            max_lap=race_laps,
+            race_info=race_info
+        )
+        
+        # Show the group
+        self.traffic_group.show()
+        print(f"[FULL_RACE_TAB] Traffic heatmap updated with {len(drivers_data)} drivers")
+    
+    def _prepare_traffic_heatmap_data(self) -> List[Dict[str, Any]]:
+        """
+        Prepare traffic data for heatmap visualization.
+        
+        Returns:
+            List of driver data dicts with lap-by-lap traffic states
+        """
+        if not self._simulation_result or not self._simulation_result.lap_states:
+            return []
+        
+        # Build driver data for all drivers
+        drivers_data = []
+        
+        # Get final standings to determine positions
+        final_standings = self._simulation_result.final_standings if hasattr(self._simulation_result, 'final_standings') else []
+        position_map = {standing.driver_code: standing.final_position for standing in final_standings}
+        
+        # Collect all unique drivers from lap_states
+        all_drivers = set()
+        for lap_state in self._simulation_result.lap_states:
+            all_drivers.update(lap_state.positions.keys())
+        
+        for driver_code in sorted(all_drivers):
+            lap_states_dict = {}
+            blocked_count = 0
+            clean_count = 0
+            sc_vsc_count = 0
+            
+            # Analyze each lap
+            for lap_state in self._simulation_result.lap_states:
+                lap_num = lap_state.lap
+                
+                # Check if driver is in this lap
+                if driver_code not in lap_state.positions:
+                    lap_states_dict[lap_num] = -1  # No data
+                    continue
+                
+                # Determine state
+                if lap_state.sc_active:
+                    # SC/VSC active
+                    lap_states_dict[lap_num] = 2
+                    sc_vsc_count += 1
+                else:
+                    # Check if in traffic (gap < 1.5s to car ahead)
+                    position = lap_state.positions.get(driver_code, 20)
+                    gap = lap_state.gaps.get(driver_code, 99.0)
+                    
+                    # Find gap to car ahead
+                    if position > 1:
+                        # Find car ahead
+                        car_ahead = None
+                        for d, p in lap_state.positions.items():
+                            if p == position - 1:
+                                car_ahead = d
+                                break
+                        
+                        if car_ahead:
+                            gap_ahead = lap_state.gaps.get(driver_code, 99.0) - lap_state.gaps.get(car_ahead, 0.0)
+                            
+                            if abs(gap_ahead) < 1.5:
+                                # In traffic
+                                lap_states_dict[lap_num] = 1
+                                blocked_count += 1
+                            else:
+                                # Clean lap
+                                lap_states_dict[lap_num] = 0
+                                clean_count += 1
+                        else:
+                            # Clean lap (no car ahead found)
+                            lap_states_dict[lap_num] = 0
+                            clean_count += 1
+                    else:
+                        # Leader - always clean
+                        lap_states_dict[lap_num] = 0
+                        clean_count += 1
+            
+            # Build driver data
+            drivers_data.append({
+                "driver_code": driver_code,
+                "final_position": position_map.get(driver_code, 20),
+                "lap_states": lap_states_dict,
+                "traffic_stats": {
+                    "blocked_laps": blocked_count,
+                    "clean_laps": clean_count,
+                    "sc_vsc_laps": sc_vsc_count
+                }
+            })
+        
+        return drivers_data
     
     def _update_mc_statistics(self):
         """
@@ -1028,3 +1307,13 @@ class FullRaceTab(QWidget):
               f"Avg P{avg_pos if 'avg_pos' in locals() else 0:.1f}, "
               f"Win {win_prob if 'win_prob' in locals() else 0:.1f}%, "
               f"Podium {podium_prob if 'podium_prob' in locals() else 0:.1f}%")
+
+    def _update_laptime_comparison(self):
+        """
+        Update lap time comparison chart.
+        
+        Note: laptime_plot and driver comparison combos have been moved to RaceResultAnalysisTab.
+        This method is now a no-op for backward compatibility.
+        """
+        # [2025-01-06] laptime_plot moved to race_result_analysis_tab
+        pass

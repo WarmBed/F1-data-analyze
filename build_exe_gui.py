@@ -582,87 +582,29 @@ coll = COLLECT(
                 version = self.version_var.get().strip()
                 version_suffix = f"-{version}" if version else ""
                 
+                # 🔧 修正：spec 文件生成的 EXE 名稱是 PitWall_{version}
+                # 例如：PitWall_V0.14.0.exe
+                pitwall_name = f"PitWall_{version}" if version else "PitWall"
+                
                 # 檢查輸出檔案（目錄模式或單檔案模式）
                 if self.onedir_mode_var.get():
-                    exe_path = self.project_root / "dist" / "F1T_GUI" / "F1T_GUI.exe"
-                    output_desc = "dist/F1T_GUI/ (目錄模式)"
+                    # 目錄模式：先找 PitWall_{version}，再找 F1T_GUI
+                    exe_path = self.project_root / "dist" / pitwall_name / f"{pitwall_name}.exe"
+                    if not exe_path.exists():
+                        exe_path = self.project_root / "dist" / "F1T_GUI" / "F1T_GUI.exe"
+                    output_desc = f"dist/{exe_path.parent.name}/ (目錄模式)"
                 else:
-                    exe_path = self.project_root / "dist" / "F1T_GUI.exe"
-                    output_desc = "dist/F1T_GUI.exe (單檔案模式)"
+                    # 單檔案模式：先找 PitWall_{version}.exe，再找 F1T_GUI.exe
+                    exe_path = self.project_root / "dist" / f"{pitwall_name}.exe"
+                    if not exe_path.exists():
+                        exe_path = self.project_root / "dist" / "F1T_GUI.exe"
+                    output_desc = f"dist/{exe_path.name} (單檔案模式)"
                 
                 if exe_path.exists():
                     size_mb = exe_path.stat().st_size / (1024 * 1024)
                     
-                    # 重新命名為版本號格式
-                    if version:
-                        import shutil
-                        import time
-                        
-                        versioned_name = f"F1-TelemetryStation-Pro-{version}"
-                        rename_success = False  # 追蹤重新命名是否成功
-                        
-                        if self.onedir_mode_var.get():
-                            # 目錄模式：重新命名資料夾和 EXE
-                            versioned_path = exe_path.parent.parent / versioned_name
-                            
-                            # 如果目標已存在，先刪除
-                            if versioned_path.exists():
-                                self.append_log(f"⚠️  刪除舊版本資料夾: {versioned_name}")
-                                try:
-                                    shutil.rmtree(versioned_path, ignore_errors=True)
-                                    time.sleep(0.5)  # 等待檔案系統釋放
-                                except Exception as e:
-                                    self.append_log(f"⚠️  刪除警告: {e}")
-                            
-                            # 使用 shutil.move 進行重新命名（更可靠）
-                            try:
-                                shutil.move(str(exe_path.parent), str(versioned_path))
-                                self.append_log(f"✅ 資料夾重新命名: {versioned_name}")
-                                rename_success = True
-                            except Exception as e:
-                                self.append_log(f"⚠️  資料夾重新命名失敗: {e}")
-                                self.append_log(f"💡 提示: 請手動重新命名 dist/F1T_GUI → {versioned_name}")
-                                versioned_path = exe_path.parent  # 使用原始路徑
-                            
-                            # 只有在資料夾重新命名成功時，才重新命名 EXE
-                            if rename_success:
-                                old_exe = versioned_path / "F1T_GUI.exe"
-                                new_exe = versioned_path / f"{versioned_name}.exe"
-                                if old_exe.exists():
-                                    try:
-                                        old_exe.rename(new_exe)
-                                        self.append_log(f"✅ EXE 重新命名: {versioned_name}.exe")
-                                        exe_path = new_exe
-                                    except Exception as e:
-                                        self.append_log(f"⚠️  EXE 重新命名失敗: {e}")
-                                        exe_path = old_exe
-                                else:
-                                    exe_path = new_exe if new_exe.exists() else old_exe
-                            else:
-                                # 重新命名失敗，使用原始路徑
-                                exe_path = versioned_path / "F1T_GUI.exe"
-                            
-                            output_desc = f"dist/{versioned_path.name}/ (目錄模式)"
-                        else:
-                            # 單檔案模式：重新命名 EXE
-                            versioned_path = exe_path.parent / f"{versioned_name}.exe"
-                            
-                            # 如果目標已存在，先刪除
-                            if versioned_path.exists():
-                                try:
-                                    versioned_path.unlink()
-                                except Exception as e:
-                                    self.append_log(f"⚠️  刪除舊 EXE 失敗: {e}")
-                            
-                            # 重新命名
-                            try:
-                                exe_path.rename(versioned_path)
-                                exe_path = versioned_path
-                                self.append_log(f"✅ EXE 重新命名: {versioned_name}.exe")
-                            except Exception as e:
-                                self.append_log(f"⚠️  重新命名失敗: {e}")
-                            
-                            output_desc = f"dist/{versioned_path.name} (單檔案模式)"
+                    # 🔧 簡化邏輯：spec 文件已經包含版本號，不需要重新命名
+                    # PitWall_V0.14.0.exe 已經是正確的名稱
                     
                     self.append_log("\n" + "=" * 60)
                     self.append_log("✅ EXE 建構成功！")
@@ -680,9 +622,30 @@ coll = COLLECT(
                     self.append_log("=" * 60)
                     self.on_build_finished(True)
                 else:
-                    self.append_log("\n❌ EXE 檔案未找到")
-                    self.on_build_finished(False)
-                    self.on_build_finished(False)
+                    # 🔧 額外嘗試：列出 dist 資料夾中的所有 EXE 檔案
+                    dist_dir = self.project_root / "dist"
+                    self.append_log(f"\n⚠️ 預期的 EXE 路徑不存在: {exe_path}")
+                    if dist_dir.exists():
+                        exe_files = list(dist_dir.glob("*.exe")) + list(dist_dir.glob("*/*.exe"))
+                        if exe_files:
+                            self.append_log(f"📂 dist 資料夾中找到的 EXE 檔案:")
+                            for ef in exe_files:
+                                self.append_log(f"   - {ef.relative_to(dist_dir)}")
+                            # 使用第一個找到的 EXE
+                            exe_path = exe_files[0]
+                            size_mb = exe_path.stat().st_size / (1024 * 1024)
+                            self.append_log("\n" + "=" * 60)
+                            self.append_log("✅ EXE 建構成功！")
+                            self.append_log(f"📍 位置: dist/{exe_path.relative_to(dist_dir)}")
+                            self.append_log(f"📦 EXE 大小: {size_mb:.2f} MB")
+                            self.append_log("=" * 60)
+                            self.on_build_finished(True)
+                        else:
+                            self.append_log("\n❌ EXE 檔案未找到")
+                            self.on_build_finished(False)
+                    else:
+                        self.append_log("\n❌ dist 資料夾不存在")
+                        self.on_build_finished(False)
             else:
                 self.append_log("\n❌ 建構失敗")
                 self.on_build_finished(False)
@@ -712,7 +675,16 @@ coll = COLLECT(
         """打開 dist 資料夾"""
         dist_path = self.project_root / "dist"
         if dist_path.exists():
-            subprocess.run(["explorer", str(dist_path)])
+            import os
+            # 使用 os.startfile 在 Windows 上更可靠
+            try:
+                os.startfile(str(dist_path))
+            except Exception as e:
+                # 備用方案：使用 explorer
+                try:
+                    subprocess.run(["explorer", str(dist_path)], shell=True)
+                except Exception as e2:
+                    messagebox.showerror("錯誤", f"無法開啟資料夾: {e2}")
         else:
             messagebox.showerror("錯誤", "dist 資料夾不存在")
 

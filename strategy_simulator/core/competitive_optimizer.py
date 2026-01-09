@@ -307,11 +307,12 @@ class CompetitiveStrategyOptimizer:
         Returns:
             CompetitiveResult with position predictions
         """
-        # Create race simulator
+        # Create race simulator (simple_mode for MC performance)
         simulator = FullRaceSimulator(
             sim_params=self.params,
             sc_probability=self.sc_probability * self.params.race_laps,  # Per-race probability
             overtaking_difficulty=self.overtaking_difficulty,
+            simple_mode=True,  # Use simple mode for optimizer iterations
         )
         
         # Build FP2 prediction format for simulator

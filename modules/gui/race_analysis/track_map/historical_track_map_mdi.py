@@ -1112,6 +1112,19 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_overtake_markers=True")
                 else:
                     logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 無超車事件數據或 TrackMapWidget 不支援")
+                
+                # 🟢 載入 DRS 區域數據（從 track_circuit_data JSON）
+                drs_zones = self._load_drs_zones_from_circuit_data(data)
+                if drs_zones and hasattr(self.track_map, 'set_drs_zones'):
+                    self.track_map.set_drs_zones(drs_zones)
+                    logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已傳遞 {len(drs_zones)} 個 DRS 區域給 TrackMapWidget")
+                    
+                    # ✅ 強制啟用 DRS 區域顯示
+                    if hasattr(self.track_map, 'show_drs_zones'):
+                        self.track_map.show_drs_zones = True
+                        logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 已設置 show_drs_zones=True")
+                else:
+                    logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 無 DRS 區域數據或 TrackMapWidget 不支援")
             else:
                 logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 跳過賽道地圖更新（無數據或 widget 不存在）")
             
@@ -1703,6 +1716,71 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
 
             traceback.print_exc()
             return {'2022': 0, '2023': 0, '2024': 0, '2025': 0}
+    
+    def _load_drs_zones_from_circuit_data(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        從 track_circuit_data JSON 檔案載入 DRS 區域數據
+        
+        Args:
+            data: 完整的分析數據（包含 metadata）
+            
+        Returns:
+            List[Dict]: DRS 區域列表，每個區域包含 zone_id, detection_distance_m, 
+                        activation_distance_m, end_distance_m
+        """
+        try:
+            # 從 metadata 取得賽事名稱
+            metadata = data.get("metadata", {})
+            circuit_name = metadata.get("circuit_name", "")
+            
+            if not circuit_name:
+                logger.warning("[HISTORICAL_TRACK_MAP_MDI] 無法取得賽道名稱，跳過 DRS 載入")
+                return []
+            
+            # 建構 JSON 檔案路徑
+            # 檔案格式: track_circuit_data_{race}.json (空格替換為底線)
+            json_dir = Path(__file__).parent.parent.parent.parent.parent / "json"
+            filename = f"track_circuit_data_{circuit_name.replace(' ', '_')}.json"
+            json_path = json_dir / filename
+            
+            logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 嘗試載入 DRS 數據: {json_path}")
+            
+            if not json_path.exists():
+                # 嘗試其他可能的檔名格式
+                alt_filename = f"track_circuit_data_{circuit_name}.json"
+                alt_path = json_dir / alt_filename
+                if alt_path.exists():
+                    json_path = alt_path
+                else:
+                    logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] DRS 數據檔案不存在: {json_path}")
+                    return []
+            
+            # 讀取 JSON
+            with open(json_path, 'r', encoding='utf-8') as f:
+                circuit_data = json.load(f)
+            
+            # 提取 DRS 區域
+            drs_zones = circuit_data.get("drs_zones", [])
+            
+            if drs_zones:
+                logger.info(f"[HISTORICAL_TRACK_MAP_MDI] ✅ 從 {filename} 載入 {len(drs_zones)} 個 DRS 區域")
+                for zone in drs_zones:
+                    logger.debug(
+                        f"  - DRS {zone.get('zone_id')}: "
+                        f"偵測={zone.get('detection_distance_m', 0):.0f}m, "
+                        f"啟用={zone.get('activation_distance_m', 0):.0f}m, "
+                        f"結束={zone.get('end_distance_m', 0):.0f}m"
+                    )
+            else:
+                logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] {filename} 中無 DRS 區域數據")
+            
+            return drs_zones
+            
+        except Exception as e:
+            logger.error(f"[HISTORICAL_TRACK_MAP_MDI] 載入 DRS 區域失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
     
     def _collect_all_overtake_events(self, data: Dict[str, Any]) -> List[Dict[str, Any]]:
         """

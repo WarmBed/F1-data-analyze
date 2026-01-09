@@ -102,6 +102,11 @@ class SeasonProgressWidget(QWidget):
         Args:
             data: Transformed season progress data from DataLoader
         """
+        print(f"\n{'='*80}")
+        print(f"[DEBUG WIDGET] populate_data() 被調用")
+        print(f"[DEBUG WIDGET] Data keys: {list(data.keys())}")
+        print(f"{'='*80}\n")
+        
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug("[SEASON_PROGRESS_WIDGET] populate_data called")
             logger.debug("[SEASON_PROGRESS_WIDGET] Data keys: %s", list(data.keys()))
@@ -109,9 +114,12 @@ class SeasonProgressWidget(QWidget):
         self.progress_data = data
         self.season_year = data.get("season_year", 2024)
         
+        print(f"[DEBUG WIDGET] season_year: {self.season_year}")
+        
         # Update title
         title = tr("season_progress_title", "Season Progress - {year}").format(year=self.season_year)
         self.title_label.setText(title)
+        print(f"[DEBUG WIDGET] 標題已更新: {title}")
         
         # Update calendar summary
         calendar = data.get("calendar", {})
@@ -119,8 +127,15 @@ class SeasonProgressWidget(QWidget):
         remaining = calendar.get("remaining", 0)
         total = calendar.get("total", 0)
         
+        print(f"[DEBUG WIDGET] calendar 數據:")
+        print(f"  - completed: {completed}")
+        print(f"  - remaining: {remaining}")
+        print(f"  - total: {total}")
+        
         # 🔧 檢測未來賽季（無完賽記錄）
         is_future_season = (completed == 0 and total > 0)
+        
+        print(f"[DEBUG WIDGET] is_future_season: {is_future_season}")
         
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(
@@ -132,14 +147,19 @@ class SeasonProgressWidget(QWidget):
         
         # 🔜 未來賽季：顯示友善提示
         if is_future_season:
+            print(f"[DEBUG WIDGET] ✅ 觸發未來賽季邏輯")
             separator = "━" * 40
             future_message = tr("future_season_not_started", "Season Not Started Yet, Stay Tuned")
+            print(f"[DEBUG WIDGET] future_message: {future_message}")
             self.completed_label.setText(f"{separator}\n🔜 {future_message}\n{separator}")
             self.completed_label.setStyleSheet("font-size: 14px; color: #0066cc; font-weight: bold;")
+            print(f"[DEBUG WIDGET] completed_label 文字已設定")
             
             # 隱藏剩餘賽事標籤
             self.remaining_label.setText("")
+            print(f"[DEBUG WIDGET] remaining_label 已清空")
         else:
+            print(f"[DEBUG WIDGET] ❌ 未觸發未來賽季邏輯（正常賽季模式）")
             # ✅ 正常賽季：顯示已完成和剩餘賽事
             self.completed_label.setText(
                 tr("completed_races", "Completed Races: {count} / {total}").format(

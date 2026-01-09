@@ -429,7 +429,7 @@ SUPPORTED_FUNCTION_IDS = sorted(FUNCTION_SPECS.keys(), key=function_id_sort_key)
 @router.post("/execute")
 async def execute_analysis(
     function_id: str = Query(..., description="分析功能 ID"),
-    year: Optional[int] = Query(None, ge=2020, le=2025, description="賽季年份 (2020-2025，Function 100 可選)"),
+    year: Optional[int] = Query(None, ge=2020, le=2026, description="賽季年份 (2020-2026，Function 100 可選)"),
     race: Optional[str] = Query(None, min_length=3, description="賽事名稱"),
     session: Optional[str] = Query(None, description="會話類型 (R/Q/FP1/FP2/FP3)"),
     driver1: Optional[str] = Query(None, min_length=3, max_length=3, description="主要車手代碼"),
@@ -568,7 +568,7 @@ async def get_supported_functions() -> Dict[str, Any]:
 @router.post("/cross-event-comparison")
 async def cross_event_comparison(
     driver1: str = Query(..., min_length=3, max_length=3, description="車手1代碼"),
-    year1: int = Query(..., ge=2020, le=2025, description="車手1賽季年份"),
+    year1: int = Query(..., ge=2020, le=2026, description="車手1賽季年份"),
     race1: str = Query(..., min_length=3, description="車手1賽事名稱"),
     session1: str = Query(..., description="車手1會話類型 (R/Q/FP1/FP2/FP3)"),
     lap1: int = Query(..., ge=1, description="車手1圈數"),

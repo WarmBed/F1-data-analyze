@@ -42,6 +42,9 @@ added_files = [
     # GUI 模組（整個資料夾）
     (str(project_root / 'modules' / 'gui'), 'modules/gui'),
     
+    # Strategy Simulator 模組（整個資料夾）- 新增
+    (str(project_root / 'strategy_simulator'), 'strategy_simulator'),
+    
     # Windows 模組（整個資料夾）- 新增
     (str(project_root / 'windows'), 'windows'),
     
@@ -363,6 +366,39 @@ hidden_imports = [
     
     # ========== Splash Screen ==========
     'modules.gui.splash_screen',
+    
+    # ========== Strategy Simulator 模組 ========== 
+    'strategy_simulator',
+    'strategy_simulator.gui',
+    'strategy_simulator.gui.main_window',
+    'strategy_simulator.gui.input_panel',
+    'strategy_simulator.gui.results_tabs',
+    'strategy_simulator.gui.results_tabs.chart_tab',
+    'strategy_simulator.gui.results_tabs.full_race_tab',
+    'strategy_simulator.gui.results_tabs.safety_car_tab',
+    'strategy_simulator.gui.results_tabs.strategy_comparison_tab',
+    'strategy_simulator.gui.results_tabs.tire_analysis_tab',
+    'strategy_simulator.gui.results_tabs.simulation_tab',
+    'strategy_simulator.gui.results_tabs.position_analysis_tab',
+    'strategy_simulator.gui.results_tabs.opponent_tab',
+    'strategy_simulator.gui.results_tabs.fp2_tab',
+    'strategy_simulator.gui.i18n_helper',
+    'strategy_simulator.core',
+    'strategy_simulator.core.lap_simulator',
+    'strategy_simulator.core.race_simulator',
+    'strategy_simulator.core.monte_carlo',
+    'strategy_simulator.core.competitive_monte_carlo',
+    'strategy_simulator.core.opponent_strategy_predictor',
+    'strategy_simulator.core.position_tracker',
+    'strategy_simulator.core.overtake_calculator',
+    'strategy_simulator.core.track_config',
+    'strategy_simulator.data',
+    'strategy_simulator.data.sc_probability_by_track',
+    'strategy_simulator.data.pit_lane_time_loss_all_tracks',
+    'strategy_simulator.data.track_overtake_difficulty',
+    'strategy_simulator.data.team_performance_matrix',
+    'strategy_simulator.data.driver_coefficients_complete',
+    'strategy_simulator.data.overtake_success_model',
     
     # ========== Windows 管理模組 ==========
     'windows',

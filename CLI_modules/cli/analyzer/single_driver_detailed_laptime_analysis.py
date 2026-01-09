@@ -1377,6 +1377,9 @@ class SingleDriverDetailedLaptimeAnalysis:
             print("❌ 沒有任何車手的有效數據")
             return None
         
+        # 🆕 載入車隊燃油習慣數據（供 Long Run GUI 使用）
+        team_fuel_habits = self._load_team_fuel_habits()
+        
         # 構建全部車手分析結果
         result = {
             "success": True,
@@ -1386,7 +1389,8 @@ class SingleDriverDetailedLaptimeAnalysis:
             "session": self.session,
             "analysis_mode": "all",
             "analysis_timestamp": pd.Timestamp.now().isoformat(),
-            "all_drivers_detailed_laptime": all_drivers_data
+            "all_drivers_detailed_laptime": all_drivers_data,
+            "team_fuel_habits": team_fuel_habits  # 🆕 添加車隊燃油習慣數據
         }
         
         print(f"✅ 完成 {len(all_drivers_data)} 位車手的詳細圈速分析")
@@ -1500,3 +1504,31 @@ class SingleDriverDetailedLaptimeAnalysis:
             
         except Exception as e:
             print(f"❌ 顯示全部車手緩存詳細輸出失敗: {e}")
+
+    def _load_team_fuel_habits(self) -> dict:
+        """
+        載入車隊燃油習慣訓練數據
+        
+        Returns:
+            dict: 車隊燃油習慣數據，格式為 {team_name: {estimated_fp2_fuel_kg, fuel_correction_seconds, ...}}
+        """
+        from pathlib import Path
+        
+        try:
+            # 從專案根目錄載入訓練數據
+            habits_path = Path(__file__).parent.parent.parent.parent / 'training_data' / 'team_fuel_habits.json'
+            
+            if not habits_path.exists():
+                print(f"⚠️ 車隊燃油習慣檔案不存在: {habits_path}")
+                return {}
+            
+            with open(habits_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            team_habits = data.get('team_habits', {})
+            print(f"✅ 載入車隊燃油習慣: {len(team_habits)} 個車隊")
+            return team_habits
+            
+        except Exception as e:
+            print(f"⚠️ 載入車隊燃油習慣失敗: {e}")
+            return {}

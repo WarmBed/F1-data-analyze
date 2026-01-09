@@ -58,7 +58,7 @@ class WinProbabilityChart(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
         
-        title = QLabel("勝率分佈")
+        title = QLabel("冠軍勝率分佈 (P1)")
         title.setFont(QFont("Arial", 12, QFont.Bold))
         title.setAlignment(Qt.AlignCenter)
         layout.addWidget(title)
@@ -345,7 +345,7 @@ class SCImpactChart(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(4)
         self.table.setHorizontalHeaderLabels([
-            "策略", "無SC勝率", "有SC勝率", "SC效益"
+            "策略", "無SC冠軍率", "有SC冠軍率", "SC效益"
         ])
         
         header = self.table.horizontalHeader()

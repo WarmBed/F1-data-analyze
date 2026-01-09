@@ -102,6 +102,7 @@ class ConfigLoader:
         self._tire_db: Dict[str, Any] = {}
         self._track_features_db: Dict[str, Any] = {}  # Track features (overtaking, etc.)
         self._overtaking_difficulty_db: Dict[str, Any] = {}  # Detailed overtaking stats from race data
+        self._pit_lane_time_loss_db: Dict[str, Any] = {}  # F142 統計數據：各賽道、各車隊進站損失
         
         # Track name alias mapping (normalized -> canonical)
         self._track_aliases: Dict[str, str] = {}
@@ -246,6 +247,24 @@ class ConfigLoader:
                         # Normalize track name (replace underscore with space)
                         normalized_name = track_key.replace('_', ' ')
                         self._base_lap_times[normalized_name] = base_time
+        
+        # F142 Pit Lane Time Loss Statistics (2022-2025 真實統計數據)
+        pit_lane_stats_file = self.project_root / "json" / "pit_lane_time_loss_all_tracks.json"
+        if pit_lane_stats_file.exists():
+            try:
+                with open(pit_lane_stats_file, 'r', encoding='utf-8') as f:
+                    pit_lane_data = json.load(f)
+                    tracks_data = pit_lane_data.get('tracks', {})
+                    
+                    # 儲存所有賽道的統計數據
+                    for track_key, track_stats in tracks_data.items():
+                        # Normalize track name (replace underscore with space)
+                        normalized_name = track_key.replace('_', ' ')
+                        self._pit_lane_time_loss_db[normalized_name] = track_stats
+                        
+                    print(f"[CONFIG_LOADER] ✅ 載入 {len(self._pit_lane_time_loss_db)} 個賽道的進站損失統計數據 (F142)")
+            except Exception as e:
+                print(f"[CONFIG_LOADER] ⚠️ 載入 F142 進站損失統計失敗: {e}")
     
     def _calculate_traffic_params(self, overtaking_difficulty: float, overtaking_zones: int) -> dict:
         """
@@ -428,6 +447,34 @@ class ConfigLoader:
         
         return None
     
+    def get_pit_loss_for_team(self, track_name: str, team_name: str) -> Optional[float]:
+        """
+        獲取特定車隊在特定賽道的進站損失統計數據 (F142)
+        
+        Args:
+            track_name: 賽道名稱 (e.g., "Abu Dhabi", "Japan")
+            team_name: 車隊名稱 (e.g., "Red Bull Racing", "Ferrari")
+        
+        Returns:
+            平均進站損失時間 (秒)，若無數據則返回 None
+        """
+        # Normalize track name
+        normalized_track = self._normalize_track_name(track_name)
+        resolved_track = self._resolve_track_name(normalized_track)
+        
+        # 獲取賽道統計數據
+        if resolved_track not in self._pit_lane_time_loss_db:
+            return None
+        
+        pit_stats = self._pit_lane_time_loss_db[resolved_track]
+        by_team = pit_stats.get('by_team', {})
+        
+        if team_name in by_team:
+            team_stats = by_team[team_name]
+            return team_stats.get('avg_pit_loss_s')
+        
+        return None
+    
     def get_track_config(self, track_name: str) -> TrackConfig:
         """
         Get complete configuration for a track.
@@ -456,6 +503,35 @@ class ConfigLoader:
             config.pit_loss_green = pit_times.get('green_flag', 22.0)
             config.pit_loss_sc = pit_times.get('safety_car', 11.0)
             config.pit_loss_vsc = pit_times.get('virtual_safety_car', 8.0)
+        
+        # ✅ 使用 F142 進站損失統計數據 (優先級最高，覆蓋預設值)
+        # 嘗試多種名稱變體 (resolved_name, normalized_name, underscore_name, race_name)
+        pit_stats = None
+        names_to_try_pit = [resolved_name, normalized_name, underscore_name]
+        
+        # 添加 race name 變體 (例如 "Yas Marina" -> "Abu Dhabi" -> "Abu_Dhabi")
+        race_name = self.get_race_name(resolved_name)
+        if race_name != resolved_name:
+            names_to_try_pit.append(race_name)
+            names_to_try_pit.append(race_name.replace(" ", "_"))
+        
+        for name in names_to_try_pit:
+            if name in self._pit_lane_time_loss_db:
+                pit_stats = self._pit_lane_time_loss_db[name]
+                break
+        
+        if pit_stats:
+            avg_pit_loss = pit_stats.get('avg_pit_loss_s')
+            
+            if avg_pit_loss:
+                config.pit_loss_green = avg_pit_loss
+                
+                # 估算 SC 進站損失 (通常是綠旗的 50-55%)
+                config.pit_loss_sc = avg_pit_loss * 0.52
+                config.pit_loss_vsc = avg_pit_loss * 0.38
+                
+                print(f"[CONFIG_LOADER] 📊 {resolved_name}: 使用 F142 統計數據 pit_loss={avg_pit_loss:.1f}s (樣本數: {pit_stats.get('sample_count', 0)})")
+
         
         # Load Fuel
         fuel_circuits = self._fuel_db.get('circuits', {})

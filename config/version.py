@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.13.1"
+APP_VERSION = "V0.14.0"
 
 # 完整版本資訊
 APP_NAME = "PIT WALL"

@@ -22,6 +22,8 @@ from .lap_simulator import (
     Compound, Stint, SimulationParams, 
     LapSimulator, StrategySimulationResult
 )
+from .position_tracker import PositionTracker, create_position_tracker, SimulationResult
+from ..data.track_config import get_track_config
 
 
 @dataclass
@@ -104,6 +106,70 @@ class MonteCarloIteration:
             'results': self.strategy_results,
             'winner': self.winner,
             'sc_events': [str(e) for e in self.sc_events]
+        }
+
+
+@dataclass
+class FullPositionIteration:
+    """Result of a single Monte Carlo iteration with full position tracking."""
+    iteration_id: int
+    final_positions: List[str]  # Ordered list of drivers
+    overtake_count: int
+    successful_overtakes: int
+    sc_events: List[SafetyCarEvent] = field(default_factory=list)
+    
+    def to_dict(self) -> dict:
+        return {
+            'iteration': self.iteration_id,
+            'final_positions': self.final_positions,
+            'overtake_count': self.overtake_count,
+            'successful_overtakes': self.successful_overtakes,
+            'sc_events': [str(e) for e in self.sc_events]
+        }
+
+
+@dataclass
+class FullPositionSummary:
+    """Summary statistics from Monte Carlo simulation with full position tracking."""
+    iterations: int
+    track_name: str
+    total_laps: int
+    
+    # Position statistics per driver
+    # {driver: {position: count}}
+    position_distributions: Dict[str, Dict[int, int]] = field(default_factory=dict)
+    
+    # Average positions
+    mean_positions: Dict[str, float] = field(default_factory=dict)
+    
+    # Overtake statistics
+    mean_overtakes: float = 0.0
+    mean_successful_overtakes: float = 0.0
+    
+    # Position change from start
+    avg_position_changes: Dict[str, float] = field(default_factory=dict)
+    
+    # Best/worst case for each driver
+    best_positions: Dict[str, int] = field(default_factory=dict)
+    worst_positions: Dict[str, int] = field(default_factory=dict)
+    
+    # Win probabilities
+    win_probabilities: Dict[str, float] = field(default_factory=dict)
+    podium_probabilities: Dict[str, float] = field(default_factory=dict)
+    points_probabilities: Dict[str, float] = field(default_factory=dict)
+    
+    def to_dict(self) -> dict:
+        return {
+            'iterations': self.iterations,
+            'track_name': self.track_name,
+            'total_laps': self.total_laps,
+            'mean_positions': {k: round(v, 2) for k, v in self.mean_positions.items()},
+            'mean_overtakes': round(self.mean_overtakes, 1),
+            'mean_successful_overtakes': round(self.mean_successful_overtakes, 1),
+            'avg_position_changes': {k: round(v, 2) for k, v in self.avg_position_changes.items()},
+            'win_probabilities': {k: round(v, 1) for k, v in self.win_probabilities.items()},
+            'podium_probabilities': {k: round(v, 1) for k, v in self.podium_probabilities.items()},
+            'points_probabilities': {k: round(v, 1) for k, v in self.points_probabilities.items()}
         }
 
 
@@ -886,7 +952,131 @@ class MonteCarloSimulator:
                 distribution[pos] = (distribution[pos] / total) * 100
         
         return distribution
+    
+    def run_full_position_simulation(
+        self,
+        grid: List[Dict],
+        track_name: str,
+        total_laps: int = None,
+        time_step: float = 1.0,
+        iterations: int = None
+    ) -> FullPositionSummary:
+        """
+        Run Monte Carlo simulation with full position tracking using PositionTracker.
+        
+        This is the "Complete Mode" that simulates all 20 cars with:
+        - Overtake attempts and success rates
+        - DRS activation
+        - SC/VSC events
+        - Position changes lap by lap
+        
+        Args:
+            grid: Starting grid, format: [{"driver": "VER", "team": "Red Bull Racing", "tyre": "M"}, ...]
+            track_name: Name of the track (e.g., "Japan", "Bahrain")
+            total_laps: Total race laps (defaults to sim_params.race_laps)
+            time_step: Simulation time step in seconds (default 1.0)
+            iterations: Number of Monte Carlo iterations (defaults to mc_params.iterations)
+        
+        Returns:
+            FullPositionSummary with position statistics for all drivers
+        """
+        if iterations is None:
+            iterations = self.mc_params.iterations
+        if total_laps is None:
+            total_laps = self.sim_params.race_laps
+            
+        # Track starting positions
+        starting_positions = {entry['driver']: i + 1 for i, entry in enumerate(grid)}
+        
+        # Results storage
+        all_iterations: List[FullPositionIteration] = []
+        position_counts: Dict[str, Dict[int, int]] = defaultdict(lambda: defaultdict(int))
+        total_overtakes = 0
+        total_successful = 0
+        
+        print(f"[MonteCarlo] Starting full position simulation")
+        print(f"[MonteCarlo] Track: {track_name}, Laps: {total_laps}, Iterations: {iterations}")
+        
+        for iteration in range(iterations):
+            # Generate SC/VSC events for this iteration
+            sc_events = self.generate_sc_events()
+            
+            # Create position tracker
+            tracker = create_position_tracker(track_name, time_step, total_laps)
+            tracker.initialize_grid(grid)
+            
+            # Apply SC/VSC events
+            # Note: In a more complete implementation, we would inject these events
+            # during simulation. For now, we'll set initial SC state if early SC.
+            for event in sc_events:
+                if event.start_lap == 1:
+                    tracker.sc_active = not event.is_vsc
+                    tracker.vsc_active = event.is_vsc
+                    
+            # Run simulation
+            result = tracker.run_simulation()
+            
+            # Record results
+            overtake_count = len(result.overtake_attempts)
+            successful_count = sum(1 for a in result.overtake_attempts if a.success)
+            
+            iteration_result = FullPositionIteration(
+                iteration_id=iteration,
+                final_positions=result.final_positions,
+                overtake_count=overtake_count,
+                successful_overtakes=successful_count,
+                sc_events=sc_events
+            )
+            all_iterations.append(iteration_result)
+            
+            # Update position counts
+            for pos, driver in enumerate(result.final_positions, 1):
+                position_counts[driver][pos] += 1
+                
+            total_overtakes += overtake_count
+            total_successful += successful_count
+            
+            # Progress update every 20%
+            if (iteration + 1) % max(1, iterations // 5) == 0:
+                print(f"[MonteCarlo] Progress: {iteration + 1}/{iterations} ({(iteration + 1) * 100 // iterations}%)")
+        
+        # Calculate summary statistics
+        summary = FullPositionSummary(
+            iterations=iterations,
+            track_name=track_name,
+            total_laps=total_laps,
+            position_distributions=dict(position_counts),
+            mean_overtakes=total_overtakes / iterations,
+            mean_successful_overtakes=total_successful / iterations
+        )
+        
+        # Calculate per-driver statistics
+        for driver in starting_positions:
+            if driver in position_counts:
+                counts = position_counts[driver]
+                total_pos = sum(pos * count for pos, count in counts.items())
+                mean_pos = total_pos / iterations
+                summary.mean_positions[driver] = mean_pos
+                
+                # Position change from start
+                summary.avg_position_changes[driver] = starting_positions[driver] - mean_pos
+                
+                # Best/worst
+                summary.best_positions[driver] = min(counts.keys())
+                summary.worst_positions[driver] = max(counts.keys())
+                
+                # Probabilities
+                summary.win_probabilities[driver] = counts.get(1, 0) / iterations * 100
+                summary.podium_probabilities[driver] = sum(counts.get(p, 0) for p in [1, 2, 3]) / iterations * 100
+                summary.points_probabilities[driver] = sum(counts.get(p, 0) for p in range(1, 11)) / iterations * 100
+        
+        print(f"[MonteCarlo] Full position simulation complete")
+        print(f"[MonteCarlo] Average overtakes per race: {summary.mean_overtakes:.1f}")
+        print(f"[MonteCarlo] Average successful: {summary.mean_successful_overtakes:.1f}")
+        
+        return summary
 
 
 __all__ = ['MonteCarloParams', 'SafetyCarEvent', 'MonteCarloIteration',
-           'MonteCarloSummary', 'MonteCarloSimulator', 'PositionPrediction']
+           'MonteCarloSummary', 'MonteCarloSimulator', 'PositionPrediction',
+           'FullPositionIteration', 'FullPositionSummary']

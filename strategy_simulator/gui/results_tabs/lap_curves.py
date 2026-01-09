@@ -62,12 +62,44 @@ class LapCurvesTab(QWidget):
         self._results: List = []
         self._params = None
         self._strategy_visible: Dict[int, bool] = {}
+        print(f"[LAP_CURVES] ===== INITIALIZING LapCurvesTab =====", flush=True)
         self._setup_ui()
+        print(f"[LAP_CURVES] LapCurvesTab initialized", flush=True)
+        print(f"[LAP_CURVES] Parent: {parent}", flush=True)
+        print(f"[LAP_CURVES] Initial size: {self.size()}", flush=True)
+        print(f"[LAP_CURVES] Initial width: {self.width()}", flush=True)
+        print(f"[LAP_CURVES] SizePolicy: {self.sizePolicy().horizontalPolicy()}, {self.sizePolicy().verticalPolicy()}", flush=True)
+        print(f"[LAP_CURVES] ===== INIT COMPLETE =====", flush=True)
+    
+    def showEvent(self, event):
+        """Track when tab is shown."""
+        super().showEvent(event)
+        print(f"\n[LAP_CURVES] ===== TAB SHOWN =====", flush=True)
+        print(f"[LAP_CURVES] Widget size: {self.size()}", flush=True)
+        print(f"[LAP_CURVES] Widget width: {self.width()}", flush=True)
+        print(f"[LAP_CURVES] Parent size: {self.parent().size() if self.parent() else 'No parent'}", flush=True)
+        if hasattr(self, 'lap_plot'):
+            print(f"[LAP_CURVES] lap_plot size: {self.lap_plot.size()}", flush=True)
+            print(f"[LAP_CURVES] lap_plot width: {self.lap_plot.width()}", flush=True)
+            print(f"[LAP_CURVES] lap_plot sizeHint: {self.lap_plot.sizeHint()}", flush=True)
+            print(f"[LAP_CURVES] lap_plot minimumWidth: {self.lap_plot.minimumWidth()}", flush=True)
+            print(f"[LAP_CURVES] lap_plot maximumWidth: {self.lap_plot.maximumWidth()}", flush=True)
+        print(f"[LAP_CURVES] ========================\n", flush=True)
+    
+    def resizeEvent(self, event):
+        """Track resize events."""
+        super().resizeEvent(event)
+        print(f"[LAP_CURVES] RESIZE: {event.oldSize()} -> {event.size()}")
+        print(f"[LAP_CURVES] New width: {self.width()}")
+        if hasattr(self, 'lap_plot'):
+            print(f"[LAP_CURVES] lap_plot width after resize: {self.lap_plot.width()}")
     
     def _setup_ui(self):
         """Setup the UI."""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(5, 5, 5, 5)
+        
+        print(f"[LAP_CURVES] _setup_ui called")
         
         if not HAS_PYQTGRAPH:
             layout.addWidget(QLabel(
@@ -101,16 +133,31 @@ class LapCurvesTab(QWidget):
         splitter = QSplitter(Qt.Vertical)
         layout.addWidget(splitter)
         
+        print(f"[LAP_CURVES] Creating splitter (Vertical)")
+        print(f"[LAP_CURVES] Splitter size: {splitter.size()}")
+        
         # Top chart: Lap times
         lap_group = QGroupBox("單圈時間走勢")
         lap_layout = QVBoxLayout(lap_group)
+        lap_layout.setContentsMargins(2, 2, 2, 2)
+        
+        print(f"[LAP_CURVES] Creating lap_group")
+        print(f"[LAP_CURVES] lap_group sizePolicy: {lap_group.sizePolicy().horizontalPolicy()}")
         
         self.lap_plot = pg.PlotWidget()
         self.lap_plot.setBackground('w')
         self.lap_plot.setLabel('left', '單圈時間', units='s')
         self.lap_plot.setLabel('bottom', '圈數')
         self.lap_plot.showGrid(x=True, y=True, alpha=0.3)
-        self.lap_plot.addLegend(offset=(10, 10))
+        # Remove legend to test if it's causing width constraint
+        # self.lap_plot.addLegend(offset=(10, 10))
+        # Ensure plot expands to fill available space
+        from PyQt5.QtWidgets import QSizePolicy
+        self.lap_plot.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        print(f"[LAP_CURVES] lap_plot created")
+        print(f"[LAP_CURVES] lap_plot sizeHint: {self.lap_plot.sizeHint()}")
+        print(f"[LAP_CURVES] lap_plot minimumSizeHint: {self.lap_plot.minimumSizeHint()}")
         
         lap_layout.addWidget(self.lap_plot)
         splitter.addWidget(lap_group)
@@ -118,12 +165,22 @@ class LapCurvesTab(QWidget):
         # Bottom chart: Cumulative delta
         delta_group = QGroupBox("累積時間差距 (相對最佳策略)")
         delta_layout = QVBoxLayout(delta_group)
+        delta_layout.setContentsMargins(2, 2, 2, 2)
+        
+        print(f"[LAP_CURVES] Creating delta_group")
+        print(f"[LAP_CURVES] delta_group sizePolicy: {delta_group.sizePolicy().horizontalPolicy()}")
         
         self.delta_plot = pg.PlotWidget()
         self.delta_plot.setBackground('w')
         self.delta_plot.setLabel('left', '差距', units='s')
         self.delta_plot.setLabel('bottom', '圈數')
         self.delta_plot.showGrid(x=True, y=True, alpha=0.3)
+        # Ensure plot expands to fill available space
+        self.delta_plot.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        print(f"[LAP_CURVES] delta_plot created")
+        print(f"[LAP_CURVES] delta_plot sizeHint: {self.delta_plot.sizeHint()}")
+        print(f"[LAP_CURVES] delta_plot minimumSizeHint: {self.delta_plot.minimumSizeHint()}")
         
         # Add zero line
         self.delta_plot.addLine(y=0, pen=pg.mkPen('k', width=1, style=Qt.DashLine))
@@ -134,9 +191,14 @@ class LapCurvesTab(QWidget):
         # Link X axes
         self.delta_plot.setXLink(self.lap_plot)
         
-        # Set splitter stretch factors (ratio instead of fixed pixels)
-        splitter.setStretchFactor(0, 4)  # Lap time chart
-        splitter.setStretchFactor(1, 3)  # Delta chart
+        # Set splitter stretch factors (1:1 ratio for equal chart space)
+        splitter.setStretchFactor(0, 1)  # Lap time chart
+        splitter.setStretchFactor(1, 1)  # Delta chart
+        
+        print(f"[LAP_CURVES] Splitter stretch factors set to 1:1")
+        print(f"[LAP_CURVES] lap_plot created: {self.lap_plot}")
+        print(f"[LAP_CURVES] delta_plot created: {self.delta_plot}")
+        print(f"[LAP_CURVES] _setup_ui complete")
     
     def update_results(self, results: List, params):
         """Update charts with simulation results."""

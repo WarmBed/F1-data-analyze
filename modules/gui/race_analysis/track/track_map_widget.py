@@ -153,6 +153,10 @@ class TrackMapWidget(QWidget):
         self.show_overtake_markers: bool = True  # 預設開啟：顯示超車標記
         self.hovered_overtake_index: Optional[int] = None  # 當前懸停的超車事件索引
         
+        # 🟩 DRS 區域數據（用於 DRS 區域標記）
+        self.drs_zones: List[Dict[str, Any]] = []  # DRS 區域列表
+        self.show_drs_zones: bool = True  # 預設開啟：顯示 DRS 區域
+        
         # ✅ 新版標籤系統：多標籤支援，隨視窗移動
         self.hovered_corner: Optional[str] = None  # 當前懸停的彎道（例如 "T7"）
         self.pinned_tooltips: List[Dict[str, Any]] = []  # 固定的標籤列表
@@ -426,6 +430,39 @@ class TrackMapWidget(QWidget):
         self.show_overtake_markers = show
         self.update()
 
+    def set_drs_zones(self, drs_zones_data: List[Dict[str, Any]]) -> None:
+        """
+        設定 DRS 區域數據用於 DRS 區域標記繪製
+        
+        Args:
+            drs_zones_data: [
+                {
+                    "zone_id": 1,
+                    "detection_distance_m": 5596.0,  # DRS 偵測點距離
+                    "activation_distance_m": 5666.0,  # DRS 啟用點距離  
+                    "end_distance_m": 566.0,  # DRS 結束點距離
+                    "length_m": -1  # 區域長度（跨起終點為-1）
+                },
+                ...
+            ]
+        """
+        self.drs_zones = drs_zones_data or []
+        logger.info("[TRACK_MAP] 已載入 %d 個 DRS 區域", len(self.drs_zones))
+        for zone in self.drs_zones:
+            logger.debug(
+                "[TRACK_MAP] DRS Zone %d: 偵測=%dm, 啟用=%dm, 結束=%dm",
+                zone.get("zone_id", 0),
+                zone.get("detection_distance_m", 0),
+                zone.get("activation_distance_m", 0),
+                zone.get("end_distance_m", 0)
+            )
+        self.update()  # 觸發重繪
+
+    def set_show_drs_zones(self, show: bool) -> None:
+        """設定是否顯示 DRS 區域"""
+        self.show_drs_zones = show
+        self.update()
+
     def set_track_data(self, position_data: List[Dict[str, Any]], track_bounds: Dict[str, float]) -> None:
         """兼容 legacy API。"""
         self.position_data = position_data or []
@@ -609,6 +646,11 @@ class TrackMapWidget(QWidget):
         if self.show_overtake_markers and self.overtake_events:
             logger.debug("[TRACK_MAP] paintEvent: 準備繪製 %d 個超車標記", len(self.overtake_events))
             self._draw_overtake_markers(painter)
+        
+        # 🟩 繪製 DRS 區域標記（偵測點/啟用點/結束點）
+        if self.show_drs_zones and self.drs_zones:
+            logger.debug("[TRACK_MAP] paintEvent: 準備繪製 %d 個 DRS 區域", len(self.drs_zones))
+            self._draw_drs_zones(painter)
 
         # 在路徑繪製後呈現同步標記
         self._draw_markers(painter)
@@ -1141,6 +1183,125 @@ class TrackMapWidget(QWidget):
                 position_x,
                 position_y,
             )
+    
+    def _draw_drs_zones(self, painter: QPainter) -> None:
+        """
+        繪製 DRS 區域標記
+        
+        在 DRS 啟用點和結束點之間繪製整條綠色粗線覆蓋賽道，
+        讓用戶一眼看出 DRS 可用區域
+        """
+        from PyQt5.QtGui import QPainterPath
+        from PyQt5.QtCore import QRect, QPointF
+        
+        logger.debug("[TRACK_MAP] 準備繪製 %d 個 DRS 區域", len(self.drs_zones))
+        
+        if not self.position_data or len(self.position_data) < 10:
+            logger.warning("[TRACK_MAP] 位置數據不足，無法繪製 DRS 區域")
+            return
+        
+        if not self._distance_lookup:
+            logger.warning("[TRACK_MAP] 距離查找表為空，無法繪製 DRS 區域")
+            return
+        
+        for zone in self.drs_zones:
+            zone_id = zone.get('zone_id', 0)
+            activation_m = zone.get('activation_distance_m', 0)
+            end_m = zone.get('end_distance_m', 0)
+            
+            # 🎨 繪製 DRS 區域（從 activation 到 end 的整條綠色粗線）
+            # 收集 activation 到 end 之間的所有座標點
+            drs_points = []
+            track_length = self._distance_values[-1] if self._distance_values else 0
+            
+            if track_length <= 0:
+                continue
+            
+            # 處理跨越起終點的情況
+            if end_m < activation_m:
+                # DRS 區跨越起終點：activation → 賽道末 + 0 → end
+                for dist, x, y in self._distance_lookup:
+                    if dist >= activation_m or dist <= end_m:
+                        screen_pos = self.world_to_screen(x, y)
+                        drs_points.append(QPointF(screen_pos[0], screen_pos[1]))
+            else:
+                # 正常情況：activation → end
+                for dist, x, y in self._distance_lookup:
+                    if activation_m <= dist <= end_m:
+                        screen_pos = self.world_to_screen(x, y)
+                        drs_points.append(QPointF(screen_pos[0], screen_pos[1]))
+            
+            # 繪製綠色粗線
+            if len(drs_points) >= 2:
+                # 使用 QPainterPath 繪製整條區域
+                path = QPainterPath()
+                path.moveTo(drs_points[0])
+                for point in drs_points[1:]:
+                    path.lineTo(point)
+                
+                # 設置綠色粗線樣式（Material Green 500，略透明）
+                pen = QPen(QColor(76, 175, 80, 180), 12, Qt.SolidLine)  # 綠色，粗度 12px
+                pen.setCapStyle(Qt.RoundCap)  # 圓角線端
+                pen.setJoinStyle(Qt.RoundJoin)  # 圓角連接
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawPath(path)
+                
+                logger.debug(
+                    "[TRACK_MAP] 繪製 DRS Zone %d: %dm → %dm (%d 點)",
+                    zone_id, int(activation_m), int(end_m), len(drs_points)
+                )
+            
+            # 🏷️ 繪製 DRS 標籤（在區域中間位置）
+            if drs_points:
+                mid_idx = len(drs_points) // 2
+                mid_point = drs_points[mid_idx]
+                
+                label_text = f"DRS {zone_id}"
+                font = QFont("Arial", 9, QFont.Bold)
+                painter.setFont(font)
+                
+                label_x = int(mid_point.x()) + 15
+                label_y = int(mid_point.y()) - 5
+                
+                # 背景框
+                fm = painter.fontMetrics()
+                text_rect = fm.boundingRect(label_text)
+                bg_rect = QRect(label_x - 3, label_y - text_rect.height() + 3,
+                              text_rect.width() + 6, text_rect.height() + 4)
+                painter.fillRect(bg_rect, QColor(76, 175, 80, 220))
+                painter.setPen(QPen(QColor(255, 255, 255)))
+                painter.drawText(label_x, label_y, label_text)
+    
+    def _get_position_at_distance(self, distance_m: float) -> Optional[Tuple[float, float]]:
+        """
+        根據賽道距離找到對應的世界座標
+        
+        Args:
+            distance_m: 賽道距離（公尺）
+            
+        Returns:
+            (x, y) 世界座標，如果找不到則返回 None
+        """
+        if not self._distance_lookup:
+            return None
+        
+        # 二分搜索最接近的距離
+        idx = bisect_left(self._distance_values, distance_m)
+        
+        if idx == 0:
+            return (self._distance_lookup[0][1], self._distance_lookup[0][2])
+        elif idx >= len(self._distance_lookup):
+            return (self._distance_lookup[-1][1], self._distance_lookup[-1][2])
+        
+        # 取最接近的點
+        before = self._distance_lookup[idx - 1]
+        after = self._distance_lookup[idx]
+        
+        if abs(distance_m - before[0]) < abs(distance_m - after[0]):
+            return (before[1], before[2])
+        else:
+            return (after[1], after[2])
     
     def _draw_overtake_markers(self, painter: QPainter) -> None:
         """
