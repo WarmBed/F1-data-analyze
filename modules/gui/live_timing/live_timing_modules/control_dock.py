@@ -250,8 +250,10 @@ class LiveTimingControlDock(QDockWidget):
         historical_layout.addWidget(QLabel(tr("Year", "Year") + ":"))
         self.cmb_year = QComboBox()
         self.cmb_year.setMinimumWidth(70)
-        # 年份列表將在 _initialize_race_combo() 中填充
-        self.cmb_year.addItems([str(y) for y in range(2025, 2019, -1)])
+        # 年份列表動態生成：從當前年份到 2020
+        from datetime import datetime
+        current_year = datetime.now().year
+        self.cmb_year.addItems([str(y) for y in range(current_year, 2019, -1)])
         self.cmb_year.currentTextChanged.connect(self._on_year_changed)
         historical_layout.addWidget(self.cmb_year)
         
@@ -797,11 +799,31 @@ class LiveTimingControlDock(QDockWidget):
         """獲取指定年份的賽事列表（優先使用主視窗快取）"""
         # 優先從主視窗獲取（確保與主視窗一致）
         if self._main_window and hasattr(self._main_window, '_get_calendar_events'):
-            return self._main_window._get_calendar_events(year)
+            events = self._main_window._get_calendar_events(year)
+            # 驗證返回的賽事是否屬於正確年份
+            if events and len(events) > 0:
+                first_event = events[0]
+                if hasattr(first_event, 'date') and first_event.date:
+                    event_year = first_event.date.year
+                    if event_year != year:
+                        print(f"[CONTROL_DOCK] Year mismatch: requested {year}, got {event_year}. Fetching fresh.")
+                        # 年份不匹配，自行獲取
+                        return self._fetch_calendar_events_direct(year)
+            return events
         
         # 自行獲取
+        return self._fetch_calendar_events_direct(year)
+    
+    def _fetch_calendar_events_direct(self, year: int) -> List[Any]:
+        """直接從 SeasonCalendarProvider 獲取賽事列表"""
         if year in self._season_events_cache and self._season_events_cache[year]:
-            return self._season_events_cache[year]
+            # 驗證快取中的年份是否正確
+            cached = self._season_events_cache[year]
+            if cached and hasattr(cached[0], 'date') and cached[0].date:
+                if cached[0].date.year == year:
+                    return cached
+                # 年份不匹配，清除快取
+                del self._season_events_cache[year]
         
         if not SEASON_CALENDAR_AVAILABLE or not self._season_provider:
             return []
@@ -812,7 +834,8 @@ class LiveTimingControlDock(QDockWidget):
                 self._season_events_cache[year] = events
             return events
         except Exception as e:
-            return self._season_events_cache.get(year, [])
+            print(f"[CONTROL_DOCK] Error fetching calendar for {year}: {e}")
+            return []
     
     def _refresh_race_combo_for_year(self, year: int):
         """刷新賽事選擇器 - 與主視窗邏輯一致"""

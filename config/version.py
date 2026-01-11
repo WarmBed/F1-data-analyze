@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.14.0"
+APP_VERSION = "V0.14.1"
 
 # 完整版本資訊
 APP_NAME = "PIT WALL"
@@ -15,6 +15,17 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.14.1": {
+        "date": "2026-01-11",
+        "features": [
+            "Driver Strategy 模組鋸齒狀預測修復：base_lap_time 鎖定機制重構",
+            "新增 Stint 偵測邏輯：進站後前 2 圈浮動，第 3 圈鎖定 base_lap_time",
+            "增量模擬模式：保持已鎖定的 base_lap_time，防止每圈重新計算",
+            "禁用賽道進化（Track Evolution）演算法：簡化預測模型",
+            "修復增量模式 base_lap_time 狀態保存問題",
+            "預測曲線平滑度改善：消除逐圈播放時的鋸齒狀波動",
+        ],
+    },
     "V0.13.1": {
         "date": "2025-12-23",
         "features": [

@@ -1,0 +1,55 @@
+================================================================================
+速度係數診斷報告 - 2026-01-07 23:32:52
+================================================================================
+
+[1] 車手速度係數 (driver_profiles):
+------------------------------------------------------------
+  NOR  : speed_factor=1.0000, straight=305.0km/h, corner=126.0km/h
+  VER  : speed_factor=0.9956, straight=310.0km/h, corner=126.7km/h
+  RUS  : speed_factor=0.9955, straight=306.0km/h, corner=125.5km/h
+  BEA  : speed_factor=0.9950, straight=304.0km/h, corner=127.3km/h
+  HUL  : speed_factor=0.9944, straight=303.5km/h, corner=126.7km/h
+  BOR  : speed_factor=0.9942, straight=317.0km/h, corner=127.2km/h
+  HAD  : speed_factor=0.9931, straight=307.0km/h, corner=127.3km/h
+  LEC  : speed_factor=0.9931, straight=310.0km/h, corner=125.3km/h
+  ALO  : speed_factor=0.9925, straight=304.0km/h, corner=125.5km/h
+  ANT  : speed_factor=0.9920, straight=307.0km/h, corner=122.0km/h
+  PIA  : speed_factor=0.9919, straight=308.0km/h, corner=125.3km/h
+  STR  : speed_factor=0.9911, straight=303.0km/h, corner=127.7km/h
+  SAI  : speed_factor=0.9906, straight=304.0km/h, corner=127.7km/h
+  HAM  : speed_factor=0.9898, straight=312.5km/h, corner=127.3km/h
+  ALB  : speed_factor=0.9897, straight=304.0km/h, corner=125.7km/h
+  OCO  : speed_factor=0.9896, straight=303.5km/h, corner=128.0km/h
+  TSU  : speed_factor=0.9855, straight=309.0km/h, corner=127.0km/h
+  LAW  : speed_factor=0.9835, straight=305.0km/h, corner=123.7km/h
+  COL  : speed_factor=0.9801, straight=303.5km/h, corner=126.5km/h
+  GAS  : speed_factor=0.9779, straight=299.0km/h, corner=124.5km/h
+
+[2] 車隊速度係數 (team_profiles):
+------------------------------------------------------------
+  Kick Sauber         : straight=1.0050, corner=0.9992
+  Racing Bulls        : straight=1.0006, corner=0.9993
+  Ferrari             : straight=1.0126, corner=0.9996
+  McLaren             : straight=1.0019, corner=0.9945
+  Red Bull Racing     : straight=1.0067, corner=1.0070
+  Alpine              : straight=0.9938, corner=0.9973
+  Mercedes            : straight=0.9975, corner=0.9914
+  Aston Martin        : straight=0.9939, corner=1.0017
+  Williams            : straight=0.9957, corner=1.0053
+  Haas F1 Team        : straight=0.9924, corner=1.0045
+
+[3] Long Run 輪胎衰退數據:
+------------------------------------------------------------
+  (無 Long Run 數據，使用預設衰退率: 0.0005)
+
+[4] 模擬參數:
+------------------------------------------------------------
+  總圈數: 58
+  時間步長: 1.0s
+  賽道: Abu Dhabi (5214.063596284981m)
+  速度波動範圍: ±0.10%
+  超車冒却時間: 30.0s
+  每圈最多超車嘗試: 2
+
+================================================================================
+診斷檔案生成完成

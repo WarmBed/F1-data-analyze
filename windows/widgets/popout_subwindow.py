@@ -616,6 +616,23 @@ class PopoutSubWindow(QMdiSubWindow):
                 background-color: #D0D0D0;
             }
             
+            /* 幫助按鈕 */
+            #HelpButton {
+                background-color: #F0F0F0;
+                color: #4FC3F7;
+                border: 1px solid #CCCCCC;
+                border-radius: 0px;
+                font-size: 9pt;
+                font-weight: bold;
+            }
+            #HelpButton:hover {
+                background-color: #E3F2FD;
+                color: #039BE5;
+            }
+            #HelpButton:pressed {
+                background-color: #BBDEFB;
+            }
+            
             /* 設定按鈕 */
             #SettingsButton {
                 background-color: #F0F0F0;

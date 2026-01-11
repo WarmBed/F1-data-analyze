@@ -97,6 +97,14 @@ class DraggableTitleBar(QWidget):
         
         layout.addStretch()
         
+        # [NEW] 幫助按鈕 - 顯示模組說明
+        help_btn = QPushButton("?")
+        help_btn.setObjectName("HelpButton")
+        help_btn.setFixedSize(16, 16)
+        help_btn.setToolTip(tr('module_help_tooltip', 'Module Help'))
+        help_btn.clicked.connect(self._show_module_help)
+        layout.addWidget(help_btn)
+        
         # [HOT] 恢復按鈕（針對極小視窗）
         restore_btn = QPushButton("⟲")
         restore_btn.setObjectName("RestoreButton")
@@ -143,6 +151,16 @@ class DraggableTitleBar(QWidget):
         close_btn.setToolTip(tr('close_tooltip'))
         close_btn.clicked.connect(self.parent_window.close)
         layout.addWidget(close_btn)
+    
+    def _show_module_help(self):
+        """顯示模組幫助說明對話框"""
+        try:
+            from windows.widgets.module_help_system import show_module_help
+            # 獲取視窗標題
+            window_title = self.title_label.text() if hasattr(self, 'title_label') else ""
+            show_module_help(window_title, self.parent_window)
+        except Exception as e:
+            logger.error(f"[HELP] Failed to show module help: {e}")
         
     def restore_normal_size(self):
         """恢復視窗到正常大小"""

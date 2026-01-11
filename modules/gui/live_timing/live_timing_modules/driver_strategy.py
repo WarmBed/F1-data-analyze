@@ -207,6 +207,14 @@ class DriverLapData:
     tire_saving_adjustment: float = 0.0  # 補償係數 0-0.25
     lap_tire_saving_scores: Dict[int, float] = field(default_factory=dict)  # {圈數: 分數}
     
+    # =========================================================================
+    # Locked Predictions: 鎖定已過去圈數的預測值 (由 MDI 管理)
+    # =========================================================================
+    # 設計原則：已經過去的圈數預測值不應被後續參數變化影響
+    # 存儲在 DriverLapData 中，切換車手時會自動保存/恢復
+    locked_predictions: Dict[int, float] = field(default_factory=dict)  # {lap: predicted_time}
+    locked_prediction_ranges: Dict[int, Tuple[float, float]] = field(default_factory=dict)  # {lap: (min, max)}
+    
     def reset(self):
         """Reset all data for race restart."""
         self.actual_lap_times.clear()
@@ -222,6 +230,9 @@ class DriverLapData:
         self.tire_saving_level = "NONE"
         self.tire_saving_adjustment = 0.0
         self.lap_tire_saving_scores.clear()
+        # 清除鎖定的預測值
+        self.locked_predictions.clear()
+        self.locked_prediction_ranges.clear()
 
 
 # =============================================================================
@@ -445,6 +456,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._lap_throttle_samples: List[int] = []  # 當前圈的 throttle 樣本 (每次 snapshot 更新)
         self._lap_throttle_ratios: Dict[int, float] = {}  # {lap: full_throttle_ratio}
         self._lap_times_for_saving: Dict[int, float] = {}  # {lap: lap_time_seconds}
+        self._lap_tire_saving_scores: Dict[int, float] = {}  # {lap: score} 每圈省胎分數
         self._current_lap_for_throttle: int = 0  # 用於追蹤圈數變化
         
         # 補償係數表 (與 F87 realtime_pit_predictor 一致)
@@ -465,6 +477,39 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         # Prediction error correction
         self._correction_factor: float = 0.0
         self._correction_enabled: bool = True
+        self._correction_factor_locked: bool = False  # 是否已鎖定 correction_factor
+        self._correction_lock_lap: int = 3  # 第幾圈鎖定 correction_factor（前幾圈學習）
+        
+        # =====================================================================
+        # Base Lap Time 鎖定：Stint 開始前 2 圈浮動，之後鎖定
+        # =====================================================================
+        self._base_lap_time_locked: float = 0.0  # 鎖定的基準圈速
+        self._base_lap_time_is_locked: bool = False  # 是否已鎖定
+        self._base_lap_time_lock_lap: int = 3  # 第幾圈鎖定 base_lap_time
+        self._last_pit_lap_for_base_lock: int = 0  # 最後進站圈數（用於偵測新 Stint）
+        
+        # =====================================================================
+        # Track Evolution: 即時賽道演進 (Phase 3 - 20 車手統計)
+        # =====================================================================
+        # 每圈的賽道演進效果: {lap_number: delta_seconds}
+        # 負值 = 賽道變快, 正值 = 賽道變慢
+        self._track_evolution: Dict[int, float] = {}
+        self._track_evolution_enabled: bool = False  # ⚠️ 禁用賽道進化演算法
+        # 平滑處理：每 5 圈更新一次平均值
+        self._track_evo_smoothed: Dict[int, float] = {}  # {lap: smoothed_value}
+        self._track_evo_update_interval: int = 5  # 每幾圈更新一次
+        
+        # =====================================================================
+        # Locked Predictions: 鎖定已過去圈數的預測值
+        # =====================================================================
+        # 設計原則：已經過去的圈數預測值不應被後續參數變化影響
+        # - 輪胎衰退參數更新 → 不影響過去預測
+        # - 燃油效率參數更新 → 不影響過去預測
+        # - 賽道演進更新 → 不影響過去預測
+        # - 修正因子更新 → 不影響過去預測
+        # 只有未來圈數才使用最新參數計算
+        self._locked_predictions: Dict[int, float] = {}  # {lap: predicted_time}
+        self._locked_prediction_ranges: Dict[int, Tuple[float, float]] = {}  # {lap: (min, max)}
         
         # Database references
         self._strategy_database: Dict[str, Any] = {}
@@ -565,6 +610,8 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         lap = max(1, min(lap, self._total_laps))
         
         data_points = []
+        actual_time = None
+        pred_time = None
         
         # Get actual lap time
         if lap in self._actual_lap_times:
@@ -574,7 +621,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             formatted = f"{mins}:{secs:05.2f}"
             
             data_points.append(HoverDataPoint(
-                label="Actual",
+                label=tr("Actual"),
                 value=actual_time,
                 formatted_value=formatted,
                 color=COLOR_ACTUAL
@@ -588,10 +635,29 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             formatted = f"{mins}:{secs:05.2f}"
             
             data_points.append(HoverDataPoint(
-                label="Predicted",
+                label=tr("Predicted"),
                 value=pred_time,
                 formatted_value=formatted,
                 color=COLOR_PREDICTED,
+                is_primary=False
+            ))
+        
+        # Calculate and display Delta (Actual - Predicted)
+        if actual_time is not None and pred_time is not None:
+            delta = actual_time - pred_time
+            # Positive = slower than predicted, Negative = faster than predicted
+            if delta >= 0:
+                delta_formatted = f"+{delta:.3f}"
+                delta_color = "#FF4444"  # Red - slower
+            else:
+                delta_formatted = f"{delta:.3f}"
+                delta_color = "#00FF00"  # Green - faster
+            
+            data_points.append(HoverDataPoint(
+                label=tr("Delta"),
+                value=delta,
+                formatted_value=delta_formatted,
+                color=delta_color,
                 is_primary=False
             ))
         
@@ -599,7 +665,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         if lap in self._lap_compounds:
             compound = self._lap_compounds[lap]
             data_points.append(HoverDataPoint(
-                label="Tyre",
+                label=tr("Tyre"),
                 value=0,
                 formatted_value=compound,
                 color="#AAAAAA",
@@ -611,7 +677,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         
         return HoverInfo(
             x_value=float(lap),
-            x_label=f"Lap: {lap}",
+            x_label=f"{tr('Lap')}: {lap}",
             data_points=data_points,
             is_valid=True
         )
@@ -714,6 +780,24 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._total_laps = laps
         self._update_lap_counter()
         self.update()
+    
+    def set_track_evolution(self, track_evolution: Dict[int, float]):
+        """
+        Set track evolution data from MDI's realtime calculation.
+        
+        Track Evolution = 每圈的賽道演進效果（基於全場 20 車手中位數）
+        
+        Args:
+            track_evolution: {lap_number: delta_seconds}
+                             負值 = 賽道變快, 正值 = 賽道變慢
+        """
+        self._track_evolution = track_evolution
+        logger.debug(
+            "[DRIVER_STRATEGY] Track evolution updated: %d laps, range=[%.4f, %.4f]",
+            len(track_evolution),
+            min(track_evolution.values()) if track_evolution else 0,
+            max(track_evolution.values()) if track_evolution else 0,
+        )
         
     def set_driver_info(self, driver_code: str, driver_name: str = "", team_color: str = ""):
         """Set driver information with team color."""
@@ -753,7 +837,15 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._tyre_label.setStyleSheet(f"color: {color}; font-weight: bold; font-size: 11px;")
         
     def select_driver(self, driver_code: str, driver_name: str = "", team_color: str = ""):
-        """Select a driver and reset data for fresh display."""
+        """
+        Select a driver and reset data for fresh display.
+        
+        ⚠️ 注意：只有在真正切換車手時才調用此方法！
+        這裡會清除 locked_predictions。
+        """
+        # 清除鎖定的預測值（換車手時需要重新計算）
+        self._locked_predictions.clear()
+        self._locked_prediction_ranges.clear()
         self._reset_driver_data()
         self.set_driver_info(driver_code, driver_name, team_color)
         
@@ -776,7 +868,16 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._stint_start_lap = 1
         self._current_lap = 0
         self._correction_factor = 0.0
+        self._correction_factor_locked = False  # 重設鎖定狀態
+        self._base_lap_time_locked = 0.0  # 重設鎖定的基準圈速
+        self._base_lap_time_is_locked = False  # 重設鎖定狀態
+        self._base_lap_time_lock_lap = 3  # 重設鎖定圈數
+        self._last_pit_lap_for_base_lock = 0  # 重設進站追蹤
+        self._track_evo_smoothed.clear()  # 重設平滑後的賽道演進
         self._current_compound = ""
+        # ⚠️ 注意: _locked_predictions 不在這裡清除！
+        # 由 load_driver_history 或 select_driver 根據車手變化來決定是否清除
+        # 注意: _track_evolution 不清除，因為它是全場共用的數據
         self._update_lap_counter()
         self.update()
         
@@ -808,8 +909,50 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             lap_throttle_ratios: {lap_number: full_throttle_ratio} for F87 tire saving
             lap_tire_saving_scores: {lap_number: score} 每圈省胎分數
         """
+        # =====================================================================
+        # ⚠️ 關鍵修復：保存所有需要持久化的狀態（避免每次 load 時被重置）
+        # 如果已有鎖定的預測，說明是增量更新，需要保持狀態
+        # =====================================================================
+        has_locked_predictions = len(self._locked_predictions) > 0
+        
+        # 保存 base_lap_time 狀態
+        saved_base_lap_time_is_locked = self._base_lap_time_is_locked
+        saved_base_lap_time_locked = self._base_lap_time_locked
+        saved_base_lap_time_lock_lap = self._base_lap_time_lock_lap
+        saved_last_pit_lap_for_base_lock = self._last_pit_lap_for_base_lock
+        
+        # ⚠️ 同時保存 correction_factor 狀態
+        saved_correction_factor = self._correction_factor
+        saved_correction_factor_locked = self._correction_factor_locked
+        
+        # ⚠️ DEBUG: 輸出保存前的狀態
+        print(f"[DS] load_driver_history: BEFORE reset - "
+              f"locked_preds={len(self._locked_predictions)}, "
+              f"base_locked={saved_base_lap_time_is_locked}, base={saved_base_lap_time_locked:.3f}, "
+              f"corr_factor={saved_correction_factor:.4f}, corr_locked={saved_correction_factor_locked}")
+        
         # Reset first to clear old data
         self._reset_driver_data()
+        
+        # ⚠️ 如果有鎖定的預測歷史，恢復狀態
+        if has_locked_predictions:
+            # 恢復 base_lap_time 狀態（只有在確實已鎖定時）
+            if saved_base_lap_time_is_locked:
+                self._base_lap_time_is_locked = saved_base_lap_time_is_locked
+                self._base_lap_time_locked = saved_base_lap_time_locked
+                self._base_lap_time_lock_lap = saved_base_lap_time_lock_lap
+                self._last_pit_lap_for_base_lock = saved_last_pit_lap_for_base_lock
+            
+            # ⚠️ 恢復 correction_factor 狀態（只有在確實已鎖定時）
+            if saved_correction_factor_locked:
+                self._correction_factor = saved_correction_factor
+                self._correction_factor_locked = saved_correction_factor_locked
+            
+            print(f"[DS] load_driver_history: RESTORED state - "
+                  f"base_locked={self._base_lap_time_is_locked}, base={self._base_lap_time_locked:.3f}, "
+                  f"corr_factor={self._correction_factor:.4f}, corr_locked={self._correction_factor_locked}")
+        else:
+            print(f"[DS] load_driver_history: NOT restoring (no locked predictions)")
         
         # Load all historical data
         self._actual_lap_times = actual_lap_times
@@ -853,7 +996,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         if self._actual_lap_times and self._correction_enabled:
             self._simulate_realtime_corrections(actual_lap_times, pit_laps)
         elif self._actual_lap_times:
-            self._calculate_all_predictions()
+            self._calculate_all_predictions(lock_predictions=False)
             
         # Backfill historical stint predictions for each stint
         self._backfill_historical_pit_predictions(pit_laps, lap_compounds)
@@ -862,8 +1005,10 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._update_predicted_pit_lap()
         
         # 重新計算預測以包含多配方線（需要在 _update_predicted_pit_lap 之後）
+        # ⚠️ 使用 lock_predictions=False，因為過去圈數已在 _simulate_realtime_corrections 中鎖定
         if self._actual_lap_times:
-            self._calculate_all_predictions()
+            logger.info("[DRIVER_STRATEGY] 最終重算預測，鎖定圈數: %d", len(self._locked_predictions))
+            self._calculate_all_predictions(lock_predictions=False)
         
         self._calculate_y_range()
         
@@ -899,6 +1044,9 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             is_sc_lap: Whether SC was deployed
             is_vsc_lap: Whether VSC was deployed
         """
+        # ⚠️ DEBUG: 無條件輸出
+        print(f"[DS] update_lap_data: lap={lap_number}, time={lap_time}, locked={len(self._locked_predictions)}")
+        
         logger.debug(
             "[DRIVER_STRATEGY] update_lap_data: lap=%s, time=%s, compound=%s, SC=%s, VSC=%s",
             lap_number,
@@ -934,7 +1082,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             self._sc_restart_laps.add(lap_number)
             logger.info("[DRIVER_STRATEGY] SC restart lap %s excluded from display and prediction", lap_number)
             # Don't store SC restart lap time, but still update predictions and UI
-            self._calculate_all_predictions()
+            self._calculate_all_predictions(lock_predictions=False)
             self._calculate_y_range()
             self._update_lap_counter()
             self.update()
@@ -978,16 +1126,22 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
                 lap_number,
                 self._stint_start_lap,
             )
-            
-        # Calculate predictions
-        self._calculate_all_predictions()
+        
+        # =====================================================================
+        # ⚠️ 關鍵修正：鎖定機制
+        # 1. 先計算當前圈的預測值並鎖定
+        # 2. 再用 lock_predictions=False 重新計算（會使用已鎖定的值）
+        # =====================================================================
+        
+        # 先計算預測（會鎖定當前圈）
+        self._calculate_all_predictions(lock_predictions=True)
+        
+        # Apply self-correction if enabled (在鎖定後應用)
+        if self._correction_enabled:
+            self._apply_self_correction()
         
         # Update predicted pit lap based on optimal stint length
         self._update_predicted_pit_lap()
-        
-        # Apply self-correction if enabled
-        if self._correction_enabled:
-            self._apply_self_correction()
             
         # Update Y range
         self._calculate_y_range()
@@ -1342,7 +1496,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
     # Prediction Calculations - Stint-Based Model
     # =========================================================================
     
-    def _calculate_all_predictions(self):
+    def _calculate_all_predictions(self, lock_predictions: bool = True):
         """
         Calculate predicted lap times for ALL laps using stint-based model.
         
@@ -1353,6 +1507,11 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         4. Self-correction factor
         
         This ensures prediction slopes change after each pit stop.
+        
+        Args:
+            lock_predictions: 是否鎖定已過去圈數的預測值。
+                              - True: 正式計算，會鎖定過去的預測
+                              - False: 模擬計算（如 _simulate_realtime_corrections），不鎖定
         """
         if self._total_laps <= 0:
             return
@@ -1366,10 +1525,32 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         if not stints:
             return
         
-        # 計算基準圈速（從實際數據中獲取）
-        base_lap_time = self._calculate_base_lap_time(excluded_laps)
-        if base_lap_time <= 0:
-            base_lap_time = 90.0  # 預設值
+        # =====================================================================
+        # Base Lap Time 鎖定機制：新 Stint 前 3 圈計算後固定
+        # ⚠️ 關鍵：一旦鎖定後，同一 Stint 內不再重新計算
+        # =====================================================================
+        if self._base_lap_time_is_locked and self._base_lap_time_locked > 0:
+            # ✅ 已鎖定：直接使用，不再重新計算
+            base_lap_time = self._base_lap_time_locked
+            # 只在第一次和每 10 圈輸出
+            if self._current_lap == self._base_lap_time_lock_lap or self._current_lap % 10 == 0:
+                print(f"[DS] _calc_predictions: USING LOCKED base_lap_time={base_lap_time:.3f}s (lap {self._current_lap})")
+        else:
+            # 尚未鎖定：計算基準圈速
+            base_lap_time = self._calculate_base_lap_time(excluded_laps)
+            if base_lap_time <= 0:
+                base_lap_time = 90.0  # 預設值
+            
+            # 檢查是否應該鎖定（達到指定圈數且有足夠數據）
+            # ⚠️ 只有在 _base_lap_time_is_locked=False 時才會執行鎖定
+            if self._current_lap >= self._base_lap_time_lock_lap and base_lap_time > 0:
+                self._base_lap_time_locked = base_lap_time
+                self._base_lap_time_is_locked = True
+                logger.info("[DEBUG] base_lap_time LOCKED at lap %d: %.3fs (lock_lap=%d)", 
+                           self._current_lap, base_lap_time, self._base_lap_time_lock_lap)
+            else:
+                logger.info("[DEBUG] base_lap_time 未鎖定, current_lap=%d, lock_lap=%d, base=%.3fs", 
+                           self._current_lap, self._base_lap_time_lock_lap, base_lap_time)
         
         # 獲取賽道數據
         circuit_db_key = self.RACE_TO_CIRCUIT_MAP.get(self._circuit_key, self._circuit_key)
@@ -1383,6 +1564,11 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
                     circuit_data = data
                     break
         
+        # =====================================================================
+        # Track Evolution 平滑處理：已禁用
+        # =====================================================================
+        # self._update_smoothed_track_evolution()  # ⚠️ 禁用賽道進化演算法
+        
         # 預測所有圈數
         self._predicted_lap_times.clear()
         self._prediction_range.clear()
@@ -1390,9 +1576,26 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._multi_compound_predictions['MEDIUM'].clear()
         self._multi_compound_predictions['HARD'].clear()
         
+        # ⚠️ DEBUG: 無條件輸出（每次都輸出）
+        print(f"[DS] _calculate_all_predictions: lap={self._current_lap}, lock={lock_predictions}, locked={len(self._locked_predictions)}")
+        
         for lap in range(1, self._total_laps + 1):
             if lap in excluded_laps:
                 continue
+            
+            # =================================================================
+            # 鎖定機制：已過去的圈數使用鎖定的預測值，不重新計算
+            # =================================================================
+            if lap <= self._current_lap and lap in self._locked_predictions:
+                # 使用鎖定的預測值（不受後續參數變化影響）
+                self._predicted_lap_times[lap] = self._locked_predictions[lap]
+                if lap in self._locked_prediction_ranges:
+                    self._prediction_range[lap] = self._locked_prediction_ranges[lap]
+                continue
+            
+            # ⚠️ DEBUG: 如果過去的圈沒有被鎖定，輸出警告（無條件）
+            if lap <= self._current_lap and lap not in self._locked_predictions:
+                print(f"[WARN] lap {lap} <= current {self._current_lap} 但未鎖定！")
             
             # 找到這一圈所屬的 stint
             stint_info = self._get_stint_for_lap(lap, stints)
@@ -1419,6 +1622,17 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             # 預測範圍 (+-3%)
             margin = predicted * 0.03
             self._prediction_range[lap] = (predicted - margin, predicted + margin)
+            
+            # =================================================================
+            # 鎖定當前圈的預測值（一旦圈數過去就不再改變）
+            # 只有在 lock_predictions=True 時才鎖定（避免模擬計算時錯誤鎖定）
+            # =================================================================
+            if lock_predictions and lap <= self._current_lap and lap not in self._locked_predictions:
+                self._locked_predictions[lap] = predicted
+                self._locked_prediction_ranges[lap] = (predicted - margin, predicted + margin)
+                # ⚠️ DEBUG: 顯示鎖定動作
+                if lap in [5, 10, 15]:
+                    print(f"[LOCK DEBUG] 鎖定 lap {lap}: predicted={predicted:.3f}, base={base_lap_time:.3f}, corr={self._correction_factor:.4f}")
             
             # =====================================================================
             # 計算三種配方的預測曲線 (S/M/H)
@@ -1535,6 +1749,68 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
                 return base_time
         return 0.0
     
+    def _update_smoothed_track_evolution(self):
+        """
+        平滑處理賽道演進值：每 5 圈更新一次平均值。
+        
+        ⚠️ 關鍵修復：
+        1. 對於「過去圈數」：只有尚未設定的圈才計算，已設定的保持不變
+        2. 對於「未來預測圈」：使用最後已知值外推（保持穩定斜率）
+        
+        目的：避免原始 track_evolution 每圈波動造成預測曲線鋸齒。
+        """
+        if not self._track_evolution:
+            return
+        
+        interval = self._track_evo_update_interval  # 預設 5 圈
+        max_lap = max(self._track_evolution.keys()) if self._track_evolution else 0
+        
+        # ⚠️ 不清除舊的平滑值！只更新新的圈數
+        # self._track_evo_smoothed.clear()  # 移除這行
+        
+        # 記錄最後一個 group 的平均值（用於外推未來圈）
+        last_group_avg = 0.0
+        last_group_lap_count = 0
+        
+        # 分組計算平均值
+        for group_start in range(1, max_lap + 1, interval):
+            group_end = min(group_start + interval - 1, max_lap)
+            
+            # ⚠️ 如果這個區間的第一圈已經有平滑值，跳過（避免覆蓋）
+            if group_start in self._track_evo_smoothed:
+                # 但仍需記錄最後一個 group 的值
+                last_group_avg = self._track_evo_smoothed[group_start]
+                continue
+            
+            # 收集這個區間內的 track_evolution 值
+            group_values = [
+                self._track_evolution.get(lap, 0.0)
+                for lap in range(group_start, group_end + 1)
+                if lap in self._track_evolution
+            ]
+            
+            if group_values:
+                avg_value = sum(group_values) / len(group_values)
+                last_group_avg = avg_value
+                last_group_lap_count = len(group_values)
+                
+                # 將平均值應用到這個區間內的所有圈數
+                for lap in range(group_start, group_end + 1):
+                    if lap not in self._track_evo_smoothed:  # ⚠️ 只設定尚未設定的圈
+                        self._track_evo_smoothed[lap] = avg_value
+        
+        # ⚠️ 對於未來預測圈（max_lap 之後），使用最後已知值
+        # 這確保未來預測線使用穩定的 track_evo 值
+        if self._total_laps > max_lap:
+            for future_lap in range(max_lap + 1, self._total_laps + 1):
+                if future_lap not in self._track_evo_smoothed:
+                    self._track_evo_smoothed[future_lap] = last_group_avg
+        
+        logger.debug(
+            "[DRIVER_STRATEGY] Track evolution smoothed: %d laps, last_group_avg=%.4f",
+            len(self._track_evo_smoothed), last_group_avg
+        )
+    
     def _calculate_stint_prediction(self, lap: int, tyre_age: int, compound: str,
                                      base_lap_time: float, circuit_data: Dict) -> float:
         """
@@ -1585,8 +1861,18 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0, 'INTERMEDIATE': -0.3, 'WET': -0.2}
         compound_advantage = grip_advantage.get(compound_key, 0.0)
         
-        # 最終預測 = 基準時間 + 輪胎衰退 + 燃油效果 + 配方優勢
-        predicted = base_lap_time + tyre_degradation + fuel_effect + compound_advantage
+        # =====================================================================
+        # Track Evolution: ⚠️ 已禁用賽道進化演算法
+        # =====================================================================
+        track_evo_effect = 0.0
+        # if self._track_evolution_enabled:
+        #     if self._track_evo_smoothed:
+        #         track_evo_effect = self._track_evo_smoothed.get(lap, 0.0)
+        #     elif self._track_evolution:
+        #         track_evo_effect = self._track_evolution.get(lap, 0.0)
+        
+        # 最終預測 = 基準時間 + 輪胎衰退 + 燃油效果 + 配方優勢 + 賽道演進（已禁用）
+        predicted = base_lap_time + tyre_degradation + fuel_effect + compound_advantage + track_evo_effect
         
         return predicted
                 
@@ -1672,7 +1958,15 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         return -fuel_effect_coef * fuel_consumed_kg
         
     def _apply_self_correction(self):
-        """Apply self-correction based on prediction errors."""
+        """Apply self-correction based on prediction errors.
+        
+        correction_factor 代表車手/車隊的整體性能差異（油門習慣、調校等）。
+        這是穩定的特性，所以前幾圈學習後就固定下來。
+        """
+        # 如果已鎖定，不再更新
+        if self._correction_factor_locked:
+            return
+            
         if len(self._actual_lap_times) < 3:
             return
             
@@ -1687,6 +1981,14 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             avg_error = sum(errors) / len(errors)
             # Smooth correction factor update
             self._correction_factor = self._correction_factor * 0.7 + avg_error * 0.3
+            
+            # 檢查是否應該鎖定（達到指定圈數）
+            if self._current_lap >= self._correction_lock_lap:
+                self._correction_factor_locked = True
+                logger.debug(
+                    "[DRIVER_STRATEGY] correction_factor LOCKED at lap %d: %.4f",
+                    self._current_lap, self._correction_factor
+                )
     
     def _simulate_realtime_corrections(self, full_lap_times: Dict[int, float], pit_laps: List[int]):
         """
@@ -1703,9 +2005,57 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         if not full_lap_times:
             return
         
-        # Reset correction factor to start fresh
-        self._correction_factor = 0.0
+        # =====================================================================
+        # ⚠️ 關鍵修正：增量鎖定模式
+        # 如果已經有鎖定的圈數，不需要重新模擬，直接計算新圈的預測
+        # =====================================================================
         
+        # 找出已經鎖定的最大圈數
+        max_locked_lap = max(self._locked_predictions.keys()) if self._locked_predictions else 0
+        max_data_lap = max(full_lap_times.keys()) if full_lap_times else 0
+        
+        # ⚠️ DEBUG: 輸出進入時的狀態
+        print(f"[DS] _simulate: ENTER - "
+              f"locked_laps={max_locked_lap}, data_laps={max_data_lap}, "
+              f"base_locked={self._base_lap_time_is_locked}, "
+              f"base_value={self._base_lap_time_locked:.3f}, "
+              f"lock_lap={self._base_lap_time_lock_lap}")
+        
+        # 偵測新 Stint：檢查是否有新的進站
+        current_max_pit = max(pit_laps) if pit_laps else 0
+        new_stint_detected = (current_max_pit > self._last_pit_lap_for_base_lock and 
+                              current_max_pit >= max_locked_lap)
+        
+        if new_stint_detected:
+            # 新 Stint 開始：重置 base_lap_time 鎖定，前 2 圈浮動
+            self._base_lap_time_locked = 0.0
+            self._base_lap_time_is_locked = False
+            self._base_lap_time_lock_lap = current_max_pit + 3  # Stint 開始後第 3 圈鎖定（前 2 圈浮動）
+            self._last_pit_lap_for_base_lock = current_max_pit
+            print(f"[DS] _simulate: 新 Stint 偵測 (pit={current_max_pit})，base_lap_time 將在 lap {self._base_lap_time_lock_lap} 鎖定")
+        
+        # 如果所有數據圈都已經鎖定，不需要做任何事
+        if max_data_lap <= max_locked_lap:
+            print(f"[DS] _simulate: 所有圈已鎖定 (data={max_data_lap}, locked={max_locked_lap})，跳過")
+            return
+        
+        # 如果這是第一次調用（沒有鎖定任何圈），才進行完整模擬
+        if max_locked_lap == 0:
+            self._correction_factor = 0.0
+            self._correction_factor_locked = False
+            self._base_lap_time_locked = 0.0
+            self._base_lap_time_is_locked = False
+            self._base_lap_time_lock_lap = 3  # 首次 Stint：第 3 圈鎖定
+            self._track_evo_smoothed.clear()
+            print(f"[DS] _simulate: 首次調用，進行完整模擬 (data={max_data_lap})")
+            self._do_full_simulation(full_lap_times, pit_laps)
+        else:
+            # 增量模式：只計算新增的圈數，使用已鎖定的參數
+            print(f"[DS] _simulate: 增量模式 (locked={max_locked_lap}, data={max_data_lap}, base_locked={self._base_lap_time_is_locked})")
+            self._do_incremental_simulation(full_lap_times, pit_laps, max_locked_lap)
+        
+    def _do_full_simulation(self, full_lap_times: Dict[int, float], pit_laps: List[int]):
+        """首次調用時進行完整模擬"""
         # Get sorted lap numbers
         sorted_laps = sorted(full_lap_times.keys())
         
@@ -1715,36 +2065,85 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         # Temporary storage to simulate incremental data arrival
         simulated_lap_times: Dict[int, float] = {}
         
-        logger.debug("[DRIVER_STRATEGY] Simulating Realtime corrections for %s laps...", len(sorted_laps))
-        
-        # Process each lap sequentially, simulating Realtime behavior
+        # Process each lap sequentially
         for lap_num in sorted_laps:
-            # Skip excluded laps (they don't contribute to prediction)
             if lap_num in excluded_laps:
                 continue
             
-            # Add this lap's data (simulating Realtime data arrival)
             simulated_lap_times[lap_num] = full_lap_times[lap_num]
+            self._current_lap = lap_num
             
-            # Need at least 3 valid laps to start predictions
             if len(simulated_lap_times) < 3:
                 continue
             
-            # Calculate predictions with current data (simulating _calculate_all_predictions)
-            self._calculate_predictions_with_data(simulated_lap_times, excluded_laps)
+            self._calculate_predictions_with_data_and_lock(simulated_lap_times, excluded_laps, lap_num)
+            self._apply_correction_with_data(simulated_lap_times, current_lap=lap_num)
+        
+        print(f"[DS] 完整模擬完成: 鎖定 {len(self._locked_predictions)} 圈")
+        self._calculate_all_predictions(lock_predictions=False)
+    
+    def _do_incremental_simulation(self, full_lap_times: Dict[int, float], 
+                                    pit_laps: List[int], max_locked_lap: int):
+        """增量模式：只鎖定新增的圈數，保持已鎖定的 base_lap_time"""
+        sorted_laps = sorted(full_lap_times.keys())
+        excluded_laps = self._sc_laps | self._sc_restart_laps | set(pit_laps) | self._pit_out_laps
+        
+        # 收集所有數據（包括已鎖定的）
+        simulated_lap_times = {k: v for k, v in full_lap_times.items() if k not in excluded_laps}
+        
+        # =====================================================================
+        # ⚠️ 關鍵修復：保存進入時的 base_lap_time 鎖定狀態
+        # 如果已經鎖定，在整個 loop 中都保持鎖定
+        # =====================================================================
+        base_was_locked_on_entry = self._base_lap_time_is_locked
+        saved_base_lap_time = self._base_lap_time_locked if base_was_locked_on_entry else 0.0
+        
+        # ⚠️ DEBUG: 輸出進入時的狀態
+        print(f"[DS] _do_incremental: entry state - base_locked={base_was_locked_on_entry}, "
+              f"saved_base={saved_base_lap_time:.3f}, lock_lap={self._base_lap_time_lock_lap}")
+        
+        # 只處理新增的圈數
+        for lap_num in sorted_laps:
+            if lap_num in excluded_laps:
+                continue
+            if lap_num <= max_locked_lap:
+                continue  # 跳過已鎖定的圈
             
-            # Apply self-correction (simulating _apply_self_correction)
-            self._apply_correction_with_data(simulated_lap_times)
+            self._current_lap = lap_num
+            
+            if len(simulated_lap_times) < 3:
+                continue
+            
+            # =====================================================================
+            # ⚠️ 關鍵保護：確保 base_lap_time 只鎖定一次
+            # =====================================================================
+            if base_was_locked_on_entry:
+                # 進入時已鎖定：強制保持鎖定（不允許重新計算）
+                self._base_lap_time_is_locked = True
+                self._base_lap_time_locked = saved_base_lap_time
+            elif self._base_lap_time_is_locked and self._base_lap_time_locked > 0:
+                # 在 loop 中被鎖定了：更新 saved 值，後續圈使用這個值
+                # 這確保在 loop 過程中只有第一次滿足條件時會鎖定
+                saved_base_lap_time = self._base_lap_time_locked
+                base_was_locked_on_entry = True  # 標記為已鎖定，後續迭代不重新計算
+                print(f"[DS] _do_incremental: base_lap_time LOCKED in loop at lap {lap_num}: {saved_base_lap_time:.3f}s")
+            
+            # 計算並鎖定新圈的預測
+            self._calculate_predictions_with_data_and_lock(simulated_lap_times, excluded_laps, lap_num)
+            self._apply_correction_with_data(simulated_lap_times, current_lap=lap_num)
         
-        # Final prediction calculation with full data and accumulated correction
-        self._calculate_all_predictions()
+        print(f"[DS] 增量模擬完成: 鎖定 {len(self._locked_predictions)} 圈, base_locked={self._base_lap_time_is_locked}, base={self._base_lap_time_locked:.3f}s")
         
-        logger.debug("[DRIVER_STRATEGY] Simulation complete: correction_factor=%.4f", self._correction_factor)
+        # ⚠️ 關鍵：使用已鎖定的 base_lap_time 計算未來圈數
+        # 不再重新計算 base_lap_time，直接使用鎖定的值
+        self._calculate_all_predictions(lock_predictions=False)
     
     def _calculate_predictions_with_data(self, lap_times: Dict[int, float], excluded_laps: set):
         """
         Calculate predictions using specific lap time data with stint-based model.
         Used by _simulate_realtime_corrections to simulate incremental prediction.
+        
+        IMPORTANT: This is simulation calculation, should NOT lock predictions!
         """
         if not lap_times or self._total_laps <= 0:
             return
@@ -1754,17 +2153,57 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         original_lap_times = self._actual_lap_times.copy()
         self._actual_lap_times = lap_times
         
-        # 使用 stint-based 計算
-        self._calculate_all_predictions()
+        # 使用 stint-based 計算，但不鎖定預測值（因為這是模擬計算）
+        self._calculate_all_predictions(lock_predictions=False)
         
         # 恢復原始數據
         self._actual_lap_times = original_lap_times
     
-    def _apply_correction_with_data(self, lap_times: Dict[int, float]):
+    def _calculate_predictions_with_data_and_lock(self, lap_times: Dict[int, float], 
+                                                   excluded_laps: set, current_lap: int):
+        """
+        Calculate predictions and lock ONLY the current lap's prediction.
+        
+        這是逐圈播放模式的核心：
+        1. 用當前累積的數據計算預測
+        2. 只鎖定「當前圈」的預測值
+        3. 過去已鎖定的圈數不會被重新計算
+        
+        Args:
+            lap_times: Current accumulated lap times up to current_lap
+            excluded_laps: Laps to exclude from prediction
+            current_lap: Current lap number being simulated
+        """
+        if not lap_times or self._total_laps <= 0:
+            return
+        
+        # 臨時儲存實際圈速數據
+        original_lap_times = self._actual_lap_times.copy()
+        self._actual_lap_times = lap_times
+        
+        # 確保 _current_lap 設置正確（觸發鎖定邏輯）
+        self._current_lap = current_lap
+        
+        # 計算預測，會自動鎖定當前圈
+        self._calculate_all_predictions(lock_predictions=True)
+        
+        # 恢復原始數據
+        self._actual_lap_times = original_lap_times
+    
+    def _apply_correction_with_data(self, lap_times: Dict[int, float], current_lap: int = 0):
         """
         Apply self-correction using specific lap time data.
+        
         Used by _simulate_realtime_corrections to simulate incremental correction.
+        
+        Args:
+            lap_times: Current accumulated lap times
+            current_lap: Current simulated lap number (for locking check)
         """
+        # 如果已鎖定，不再更新
+        if self._correction_factor_locked:
+            return
+            
         if len(lap_times) < 3:
             return
         
@@ -1778,6 +2217,14 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             avg_error = sum(errors) / len(errors)
             # Same smoothing as Realtime: 70% old + 30% new
             self._correction_factor = self._correction_factor * 0.7 + avg_error * 0.3
+            
+            # 檢查是否應該鎖定（達到指定圈數）
+            if current_lap >= self._correction_lock_lap:
+                self._correction_factor_locked = True
+                logger.debug(
+                    "[DRIVER_STRATEGY] correction_factor LOCKED at simulated lap %d: %.4f",
+                    current_lap, self._correction_factor
+                )
             
     # =========================================================================
     # Y-Axis Range Calculation
@@ -1819,16 +2266,16 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
     def contextMenuEvent(self, event):
         """Show context menu."""
         menu = QMenu(self)
-        menu.setStyleSheet(f"""
-            QMenu {{
-                background-color: {COLOR_CHART_BG};
-                color: {COLOR_TEXT};
-                border: 1px solid {COLOR_GRID};
-            }}
-            QMenu::item:selected {{
-                background-color: {COLOR_GRID};
-            }}
-        """)
+        menu.setStyleSheet("""
+            QMenu {
+                background-color: %s;
+                color: %s;
+                border: 1px solid %s;
+            }
+            QMenu::item:selected {
+                background-color: %s;
+            }
+        """ % (COLOR_CHART_BG, COLOR_TEXT, COLOR_GRID, COLOR_GRID))
         
         # Toggle correction
         correction_action = QAction(
@@ -1891,7 +2338,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
     def _reset_correction(self):
         """Reset correction factor to zero."""
         self._correction_factor = 0.0
-        self._calculate_all_predictions()
+        self._calculate_all_predictions(lock_predictions=False)
         self.update()
         
     # =========================================================================
@@ -2574,6 +3021,14 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         self._sc_zones: List[Tuple[int, int]] = []
         self._sc_restart_laps: set = set()
         
+        # =====================================================================
+        # Phase 3: 即時賽道演進計算 (基於 20 車手中位數)
+        # =====================================================================
+        self._track_evolution: Dict[int, float] = {}  # {lap_number: delta_seconds}
+        self._track_evolution_baseline_lap: int = 0   # 基準圈
+        self._track_evolution_last_calculated_lap: int = 0  # 上次計算時的最大圈數
+        self._track_evolution_update_interval: int = 3  # 每隔 N 圈才重新計算
+        
         # 性能優化: 追蹤上次的最大圈數
         self._last_max_lap: int = 0
         
@@ -2636,6 +3091,110 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
             lap_num = driver_data.last_lap_recorded
             if score > 0 and lap_num > 0:
                 driver_data.lap_tire_saving_scores[lap_num] = score
+    
+    def _calculate_realtime_track_evolution(self):
+        """
+        Phase 3: 即時計算賽道演進 (基於全場 20 車手中位數)
+        
+        性能優化:
+        - 每隔 N 圈才重新計算一次（預設 3 圈）
+        - 避免每圈都遍歷所有車手的所有圈速
+        
+        算法:
+        1. 收集所有車手的有效圈速（排除 SC/PIT/PIT OUT 等異常圈）
+        2. 計算每圈的中位數
+        3. 以第一個有效圈為基準，計算每圈相對於基準的變化量
+        
+        結果:
+        - 負值 = 賽道變快（橡膠堆積）
+        - 正值 = 賽道變慢（罕見，可能是天氣變化）
+        """
+        import statistics
+        
+        # =====================================================================
+        # 性能優化: 只在需要時才重新計算
+        # =====================================================================
+        current_max_lap = self._last_max_lap
+        laps_since_last_calc = current_max_lap - self._track_evolution_last_calculated_lap
+        
+        # 條件: 
+        # 1. 第一次計算（last_calculated_lap == 0）
+        # 2. 距離上次計算已過 N 圈
+        # 3. 還沒有足夠數據（track_evolution 為空但已有圈速）
+        should_calculate = (
+            self._track_evolution_last_calculated_lap == 0 or
+            laps_since_last_calc >= self._track_evolution_update_interval
+        )
+        
+        if not should_calculate:
+            return
+        
+        # 收集所有車手的圈速，按圈數分組
+        lap_times_by_number: Dict[int, List[float]] = {}
+        
+        # 定義需要排除的圈數集合
+        excluded_laps = self._sc_laps | self._sc_restart_laps
+        
+        for driver_num, driver_data in self._all_drivers_lap_data.items():
+            # 獲取該車手的所有有效圈速
+            for lap_num, lap_time in driver_data.actual_lap_times.items():
+                # 排除異常圈
+                if lap_num in excluded_laps:
+                    continue
+                if lap_num in driver_data.pit_laps:
+                    continue
+                if lap_num in driver_data.pit_out_laps:
+                    continue
+                # 排除異常值（圈速過長或過短）
+                if lap_time < 60 or lap_time > 180:
+                    continue
+                
+                if lap_num not in lap_times_by_number:
+                    lap_times_by_number[lap_num] = []
+                lap_times_by_number[lap_num].append(lap_time)
+        
+        if not lap_times_by_number:
+            return
+        
+        # 計算每圈的中位數（至少需要 5 位車手才有統計意義）
+        lap_medians: Dict[int, float] = {}
+        for lap_num, times in lap_times_by_number.items():
+            if len(times) >= 5:
+                lap_medians[lap_num] = statistics.median(times)
+        
+        if not lap_medians:
+            return
+        
+        # 找到第一個有效圈作為基準
+        sorted_laps = sorted(lap_medians.keys())
+        baseline_lap = sorted_laps[0]
+        baseline_time = lap_medians[baseline_lap]
+        
+        # 計算每圈相對於基準的變化量
+        new_track_evolution: Dict[int, float] = {}
+        for lap_num in sorted_laps:
+            delta = lap_medians[lap_num] - baseline_time
+            new_track_evolution[lap_num] = delta
+        
+        # 更新 track evolution 數據
+        self._track_evolution = new_track_evolution
+        self._track_evolution_baseline_lap = baseline_lap
+        self._track_evolution_last_calculated_lap = current_max_lap  # 記錄計算時的圈數
+        
+        # 計算每圈平均變化量（用於 debug）
+        if len(sorted_laps) > 1:
+            total_change = new_track_evolution.get(sorted_laps[-1], 0)
+            laps_count = sorted_laps[-1] - sorted_laps[0]
+            avg_per_lap = total_change / laps_count if laps_count > 0 else 0
+            logger.info(
+                "[DRIVER_STRATEGY_MDI] Track evolution recalculated at lap %d: %d laps, "
+                "total=%.3fs, avg=%.4fs/lap (next update at lap %d)",
+                current_max_lap,
+                len(new_track_evolution),
+                total_change,
+                avg_per_lap,
+                current_max_lap + self._track_evolution_update_interval,
+            )
         
     def _get_or_create_driver_data(self, driver_num: str, driver_info: Dict[str, Any]) -> DriverLapData:
         """
@@ -2747,6 +3306,15 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         # 解決: 在 snapshot 處理結束後，批量計算所有車手的 SF%
         # =====================================================================
         self._batch_update_all_drivers_tire_saving()
+        
+        # =====================================================================
+        # Phase 3: 即時計算賽道演進 (基於 20 車手中位數統計)
+        # =====================================================================
+        self._calculate_realtime_track_evolution()
+        
+        # 傳遞 track evolution 給 Widget
+        if self._track_evolution:
+            self._strategy_widget.set_track_evolution(self._track_evolution)
         
         # 只更新當前顯示車手的 Widget
         if self._current_driver and self._current_driver in self._all_drivers_lap_data:
@@ -2925,8 +3493,14 @@ class LiveTimingDriverStrategy(BaseLiveTimingMDI):
         self._sc_zones.clear()
         self._sc_restart_laps.clear()
         
+        # 清除賽道演進數據
+        self._track_evolution.clear()
+        self._track_evolution_baseline_lap = 0
+        self._track_evolution_last_calculated_lap = 0
+        
         if hasattr(self, '_strategy_widget'):
             self._strategy_widget._reset_driver_data()
+            self._strategy_widget._track_evolution.clear()
         
     def get_strategy_widget(self) -> DriverStrategyWidget:
         """Get the strategy widget for external access."""

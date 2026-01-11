@@ -879,6 +879,23 @@ class StyleApplier:
             background-color: #BDBDBD;  /* 灰色懸停 */
         }
         
+        /* 幫助按鈕 */
+        #HelpButton {
+            background-color: #F8F8F8;
+            color: #4FC3F7;
+            border: 1px solid #CCCCCC;
+            border-radius: 0px;
+            font-size: 9pt;
+            font-weight: bold;
+        }
+        #HelpButton:hover {
+            background-color: #E3F2FD;
+            color: #039BE5;
+        }
+        #HelpButton:pressed {
+            background-color: #BBDEFB;
+        }
+        
         /* 設定按鈕 */
         #SettingsButton {
             background-color: #F8F8F8;

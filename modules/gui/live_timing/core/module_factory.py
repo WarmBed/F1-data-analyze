@@ -106,21 +106,29 @@ class LiveTimingModuleFactory:
         # Lap History - Lap Time 圈速歷史
         "Lap History - Lap Time": "lap_history_lap_time",
         "圈速歷史": "lap_history_lap_time",
+        "圈速歷史 - 完整圈速": "lap_history_lap_time",
+        "ラップヒストリー - ラップタイム": "lap_history_lap_time",
         "lap_history_lap_time": "lap_history_lap_time",
         
         # Lap History - S1 第一區間歷史
         "Lap History - S1": "lap_history_s1",
         "S1歷史": "lap_history_s1",
+        "圈速歷史 - 第一段": "lap_history_s1",
+        "ラップヒストリー - S1": "lap_history_s1",
         "lap_history_s1": "lap_history_s1",
         
         # Lap History - S2 第二區間歷史
         "Lap History - S2": "lap_history_s2",
         "S2歷史": "lap_history_s2",
+        "圈速歷史 - 第二段": "lap_history_s2",
+        "ラップヒストリー - S2": "lap_history_s2",
         "lap_history_s2": "lap_history_s2",
         
         # Lap History - S3 第三區間歷史
         "Lap History - S3": "lap_history_s3",
         "S3歷史": "lap_history_s3",
+        "圈速歷史 - 第三段": "lap_history_s3",
+        "ラップヒストリー - S3": "lap_history_s3",
         "lap_history_s3": "lap_history_s3",
         
         # Speed Trace 速度追蹤
@@ -169,18 +177,24 @@ class LiveTimingModuleFactory:
         "Sector Comparison - S1": "sector_comparison_s1",
         "S1 Comparison": "sector_comparison_s1",
         "S1比較": "sector_comparison_s1",
+        "第一段比較": "sector_comparison_s1",
+        "S1 比較": "sector_comparison_s1",
         "sector_comparison_s1": "sector_comparison_s1",
         
         # Sector Comparison - S2 第二區段比較
         "Sector Comparison - S2": "sector_comparison_s2",
         "S2 Comparison": "sector_comparison_s2",
         "S2比較": "sector_comparison_s2",
+        "第二段比較": "sector_comparison_s2",
+        "S2 比較": "sector_comparison_s2",
         "sector_comparison_s2": "sector_comparison_s2",
         
         # Sector Comparison - S3 第三區段比較
         "Sector Comparison - S3": "sector_comparison_s3",
         "S3 Comparison": "sector_comparison_s3",
         "S3比較": "sector_comparison_s3",
+        "第三段比較": "sector_comparison_s3",
+        "S3 比較": "sector_comparison_s3",
         "sector_comparison_s3": "sector_comparison_s3",
         
         # Battle Insight 戰鬥分析
@@ -206,7 +220,9 @@ class LiveTimingModuleFactory:
         "Throttle 95%": "throttle_history",
         "Throttle History": "throttle_history",
         "油門歷史": "throttle_history",
+        "油門 95% 歷史": "throttle_history",
         "スロットル履歴": "throttle_history",
+        "スロットル 95%": "throttle_history",
         "throttle_history": "throttle_history",
         
         # SF% History 省油百分比歷史
@@ -214,7 +230,9 @@ class LiveTimingModuleFactory:
         "SF% Chart": "sf_percentage_chart",
         "省油百分比": "sf_percentage_chart",
         "省油歷史": "sf_percentage_chart",
+        "SF% 歷史": "sf_percentage_chart",
         "SF%履歴": "sf_percentage_chart",
+        "SF% ヒストリー": "sf_percentage_chart",
         "sf_percentage_chart": "sf_percentage_chart",
         
         # Traffic Timeline 車流時間線
@@ -227,6 +245,7 @@ class LiveTimingModuleFactory:
         "Top Speed History": "top_speed_history",
         "Top Speed": "top_speed_history",
         "最高速歷史": "top_speed_history",
+        "最高速ヒストリー": "top_speed_history",
         "トップスピード履歴": "top_speed_history",
         "top_speed_history": "top_speed_history",
     }

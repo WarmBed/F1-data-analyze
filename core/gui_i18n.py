@@ -954,6 +954,446 @@ class GuiTranslator:
             'popout_window_tooltip': {'zh': '彈出為獨立視窗', 'en': 'Pop Out as Independent Window', 'ja': '独立ウィンドウとして表示'},
             'close_tooltip': {'zh': '關閉', 'en': 'Close', 'ja': '閉じる'},
             
+            # Module Help System / 模組說明系統
+            'module_help_tooltip': {'zh': '模組說明', 'en': 'Module Help', 'ja': 'モジュールヘルプ'},
+            'module_help_title': {'zh': '模組說明', 'en': 'Module Help', 'ja': 'モジュールヘルプ'},
+            'help_section_description': {'zh': '功能說明', 'en': 'Description', 'ja': '機能説明'},
+            'help_section_features': {'zh': '功能特點', 'en': 'Features', 'ja': '機能'},
+            'help_section_colors': {'zh': '顏色圖例', 'en': 'Color Legend', 'ja': 'カラー凡例'},
+            'close': {'zh': '關閉', 'en': 'Close', 'ja': '閉じる'},
+            
+            # Driver Strategy Help / 車手策略說明
+            'help_driver_strategy_title': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
+            'help_driver_strategy_desc': {
+                'zh': '車手策略模組以視覺化方式顯示每位車手的進站策略和輪胎使用時間軸。\n\n演算法邏輯：\n1. 資料來源：整合 OpenF1 API 的 stints 和 pit 端點資料\n2. Stint 識別：根據進站記錄自動分割輪胎使用區間\n3. 輪胎配對：將每個 stint 與對應的輪胎化合物配對\n4. 時間軸計算：計算每套輪胎的使用圈數和累計時間\n5. 策略比較：自動對齊所有車手的時間軸便於比較',
+                'en': 'Driver Strategy module visualizes pit strategy and tire usage timeline for each driver.\n\nAlgorithm Logic:\n1. Data Source: Integrates OpenF1 API stints and pit endpoints\n2. Stint Identification: Auto-segments tire usage intervals based on pit records\n3. Tire Matching: Pairs each stint with corresponding tire compound\n4. Timeline Calculation: Computes laps and cumulative time for each tire set\n5. Strategy Comparison: Auto-aligns all driver timelines for easy comparison',
+                'ja': 'ドライバー戦略モジュールは各ドライバーのピット戦略とタイヤ使用タイムラインを視覚化します。\n\nアルゴリズムロジック：\n1. データソース：OpenF1 APIのstintsとpitエンドポイントを統合\n2. スティント識別：ピット記録に基づいてタイヤ使用区間を自動分割\n3. タイヤマッチング：各スティントを対応するタイヤコンパウンドとペアリング\n4. タイムライン計算：各タイヤセットのラップ数と累積時間を計算\n5. 戦略比較：比較しやすいようにすべてのドライバーのタイムラインを自動整列'
+            },
+            'help_driver_strategy_features': {
+                'zh': '- 將滑鼠懸停在色塊上查看詳細資訊（輪胎類型、圈數、實際時間、與領先者差距）\n- 顯示每段輪胎的實際圈數和相對差距\n- 支援實時更新（約每 5 秒刷新一次）\n- 點擊車手可高亮該車手的策略線',
+                'en': '- Hover over blocks for detailed info (tire type, laps, actual time, gap to leader)\n- Shows actual laps and delta for each stint\n- Supports real-time updates (~5 second refresh)\n- Click driver to highlight their strategy line',
+                'ja': '- ブロック上にマウスを置くと詳細情報を表示（タイヤタイプ、ラップ数、実際の時間、リーダーとのギャップ）\n- 各スティントの実際のラップとデルタを表示\n- リアルタイム更新に対応（約5秒ごとに更新）\n- ドライバーをクリックすると戦略ラインをハイライト'
+            },
+            'help_driver_strategy_colors': {
+                'zh': '- 紅色 (SOFT): 軟胎 - 最快但磨損最快，適合短 stint 或追趕\n- 黃色 (MEDIUM): 中性胎 - 平衡的選擇，最常見的比賽輪胎\n- 白色 (HARD): 硬胎 - 最耐久但較慢，適合長 stint\n- 綠色 (INTERMEDIATE): 中雨胎 - 適合濕滑但無積水的賽道\n- 藍色 (WET): 全雨胎 - 重度降雨時使用\n- 灰色邊框: 使用過的輪胎（非新胎）',
+                'en': '- Red (SOFT): Soft tire - Fastest but degrades quickly, good for short stints or chasing\n- Yellow (MEDIUM): Medium tire - Balanced choice, most common race tire\n- White (HARD): Hard tire - Most durable but slower, good for long stints\n- Green (INTERMEDIATE): Intermediate wet - For damp tracks without standing water\n- Blue (WET): Full wet - For heavy rain conditions\n- Gray border: Used tires (not new)',
+                'ja': '- 赤 (SOFT): ソフトタイヤ - 最速だが摩耗が早い、短いスティントや追跡に適する\n- 黄 (MEDIUM): ミディアムタイヤ - バランスの取れた選択、最も一般的なレースタイヤ\n- 白 (HARD): ハードタイヤ - 最も耐久性があるが遅い、長いスティントに適する\n- 緑 (INTERMEDIATE): インターミディエイトタイヤ - 水溜まりのない湿ったトラック用\n- 青 (WET): ウェットタイヤ - 激しい雨の条件用\n- グレー枠: 使用済みタイヤ（新品ではない）'
+            },
+            
+            # Top Speed History Help / 最高速歷史說明
+            'help_top_speed_history_title': {'zh': '最高速歷史', 'en': 'Top Speed History', 'ja': '最高速度履歴'},
+            'help_top_speed_history_desc': {
+                'zh': '最高速歷史模組追蹤每位車手每圈的最高速度，用於分析引擎性能、DRS 使用效果和尾流影響。\n\n演算法邏輯：\n1. 資料採集：從 OpenF1 car_data 端點獲取遙測速度資料（約 3.7Hz）\n2. 每圈最大值：對每圈的所有速度樣本取最大值\n3. 速度來源識別：根據賽道位置判斷最高速出現在哪個 DRS 區\n4. 趨勢分析：計算速度變化趨勢識別引擎模式或機械問題\n5. 尾流檢測：異常高的最高速可能表示獲得尾流加成',
+                'en': 'Top Speed History module tracks maximum speed per lap for each driver, analyzing engine performance, DRS effectiveness, and slipstream effects.\n\nAlgorithm Logic:\n1. Data Collection: Gets telemetry speed data from OpenF1 car_data (~3.7Hz)\n2. Per-Lap Maximum: Takes maximum of all speed samples for each lap\n3. Speed Source Identification: Determines which DRS zone top speed occurred based on track position\n4. Trend Analysis: Calculates speed change trends to identify engine modes or mechanical issues\n5. Slipstream Detection: Abnormally high top speed may indicate slipstream benefit',
+                'ja': '最高速度履歴モジュールは各ドライバーの各ラップの最高速度を追跡し、エンジン性能、DRS効果、スリップストリームの影響を分析します。\n\nアルゴリズムロジック：\n1. データ収集：OpenF1 car_dataからテレメトリ速度データを取得（約3.7Hz）\n2. ラップ毎最大値：各ラップのすべての速度サンプルの最大値を取得\n3. 速度ソース識別：トラック位置に基づいてどのDRSゾーンで最高速が発生したかを判定\n4. トレンド分析：速度変化トレンドを計算してエンジンモードや機械的問題を識別\n5. スリップストリーム検出：異常に高い最高速はスリップストリームの恩恵を示す可能性'
+            },
+            'help_top_speed_history_features': {
+                'zh': '- 每圈最高速度的歷史趨勢\n- 可比較多位車手的速度差異\n- 識別 DRS 區域的速度優勢\n- 支援即時更新和歷史回放',
+                'en': '- Historical trend of maximum speed per lap\n- Compare speed differences between drivers\n- Identify DRS zone speed advantages\n- Supports real-time updates and historical replay',
+                'ja': '- ラップごとの最高速度の履歴トレンド\n- ドライバー間の速度差を比較\n- DRSゾーンでの速度優位性を識別\n- リアルタイム更新と履歴再生をサポート'
+            },
+            'help_top_speed_history_colors': {
+                'zh': '【線條顏色 - 車隊官方色】\n• Red Bull (VER/PER)：深藍色線條\n• Ferrari (LEC/SAI)：紅色線條\n• Mercedes (HAM/RUS)：青綠色線條\n• McLaren (NOR/PIA)：橙色線條\n• Aston Martin (ALO/STR)：深綠色線條\n\n【線條粗細】\n• 粗線條 = 您選中的車手\n• 細淡線條 = 其他車手（供參考）\n\n【數值顏色意義】\n• 紫色數字 = 全場最快（當圈最高速）\n• 綠色數字 = 個人最佳\n• 紅色閃爍 = 速度異常下降（可能有機械問題）\n\n【實例解讀】\n• VER 線條最高點 342 km/h (紫) = Verstappen 全場最快\n• LEC 線條最高點 338 km/h (綠) = Leclerc 個人最佳\n• 線條突然下降 = 可能遇到尾流或引擎問題',
+                'en': '【Line Colors - Team Official】\n• Red Bull (VER/PER): Navy blue line\n• Ferrari (LEC/SAI): Red line\n• Mercedes (HAM/RUS): Teal line\n• McLaren (NOR/PIA): Orange line\n• Aston Martin (ALO/STR): Dark green line\n\n【Line Thickness】\n• Thick line = Driver you selected\n• Thin faded line = Other drivers (for reference)\n\n【Number Color Meaning】\n• Purple number = Overall fastest (lap top speed)\n• Green number = Personal best\n• Red flashing = Abnormal speed drop (possible issue)\n\n【Reading Examples】\n• VER line peak 342 km/h (purple) = Verstappen overall fastest\n• LEC line peak 338 km/h (green) = Leclerc personal best\n• Sudden line drop = May indicate traffic or engine issue',
+                'ja': '【ライン色 - チーム公式】\n• Red Bull (VER/PER)：ネイビーブルーライン\n• Ferrari (LEC/SAI)：赤ライン\n• Mercedes (HAM/RUS)：ティールライン\n• McLaren (NOR/PIA)：オレンジライン\n• Aston Martin (ALO/STR)：ダークグリーンライン\n\n【ラインの太さ】\n• 太いライン = 選択したドライバー\n• 細く薄いライン = 他のドライバー（参考用）\n\n【数字の色の意味】\n• 紫の数字 = 全体最速（ラップ最高速）\n• 緑の数字 = 個人ベスト\n• 赤点滅 = 異常な速度低下（問題の可能性）\n\n【読み取り例】\n• VERラインピーク 342 km/h (紫) = Verstappenが全体最速\n• LECラインピーク 338 km/h (緑) = Leclercの個人ベスト\n• 急なライン低下 = トラフィックかエンジン問題の可能性'
+            },
+            
+            # Track Map Help / 賽道地圖說明
+            'help_track_map_title': {'zh': '賽道地圖', 'en': 'Track Map', 'ja': 'トラックマップ'},
+            'help_track_map_desc': {
+                'zh': '顯示賽道佈局和車手即時位置，提供直觀的賽況視圖。',
+                'en': 'Displays track layout and real-time driver positions, providing an intuitive view of the race situation.',
+                'ja': 'トラックレイアウトとドライバーのリアルタイム位置を表示し、レース状況を直感的に把握できます。'
+            },
+            'help_track_map_features': {
+                'zh': '- 即時顯示所有車手位置\n- 顯示 DRS 區域和檢測點\n- 標示彎道編號和重要地標\n- 支援縮放和平移操作',
+                'en': '- Real-time display of all driver positions\n- Shows DRS zones and detection points\n- Marks corner numbers and key landmarks\n- Supports zoom and pan operations',
+                'ja': '- すべてのドライバー位置をリアルタイム表示\n- DRSゾーンと検出ポイントを表示\n- コーナー番号と主要なランドマークを表示\n- ズームとパン操作をサポート'
+            },
+            'help_track_map_colors': {
+                'zh': '【背景說明】\n• 深灰色背景 = 地圖整體底色\n• 白色/淺灰線條 = 賽道路線\n• 綠色半透明區域 = DRS 可啟用區段\n\n【車手標記】\n• 圓形標記顏色 = 車隊官方色\n  範例：Red Bull (VER/PER) = 深藍圓點\n         Ferrari (LEC/SAI) = 紅色圓點\n         Mercedes (HAM/RUS) = 青綠圓點\n• 標記大小：選中車手較大，未選中較小\n• 車手代碼：白色文字顯示 3 字母縮寫\n\n【賽道狀態標示】\n• 綠色區段 = 賽道正常/安全\n• 黃色區段 = 單黃旗（減速）\n• 雙黃區段 = 雙黃旗（大幅減速）\n• 紅色區段 = 紅旗或危險區域\n• 藍色標記 = 接受藍旗警告的車手\n\n【特殊標示範例】\n• 閃爍標記 = 剛完成進站的車手\n• 灰色標記 = 已退賽車手\n• 虛線軌跡 = 車手最近行駛路線',
+                'en': '【Background】\n• Dark gray background = Map overall base color\n• White/light gray lines = Track route\n• Green transparent zone = DRS activation areas\n\n【Driver Markers】\n• Circle marker color = Team official color\n  Example: Red Bull (VER/PER) = Navy blue dot\n           Ferrari (LEC/SAI) = Red dot\n           Mercedes (HAM/RUS) = Teal dot\n• Marker size: Selected drivers larger, unselected smaller\n• Driver code: White text showing 3-letter abbreviation\n\n【Track Status Indicators】\n• Green zone = Track clear/safe\n• Yellow zone = Single yellow (slow down)\n• Double yellow = Double yellow (significant slowdown)\n• Red zone = Red flag or danger area\n• Blue marker = Driver receiving blue flag\n\n【Special Indicator Examples】\n• Flashing marker = Driver just completed pit stop\n• Gray marker = Retired driver\n• Dashed trail = Driver recent path',
+                'ja': '【背景】\n• ダークグレー背景 = マップの基本背景色\n• 白/ライトグレー線 = トラック経路\n• 緑の半透明エリア = DRS有効化ゾーン\n\n【ドライバーマーカー】\n• 円形マーカー色 = チーム公式カラー\n  例：Red Bull (VER/PER) = ネイビーブルードット\n      Ferrari (LEC/SAI) = 赤ドット\n      Mercedes (HAM/RUS) = ティールドット\n• マーカーサイズ：選択ドライバーは大、未選択は小\n• ドライバーコード：3文字略称を白文字で表示\n\n【トラック状態表示】\n• 緑ゾーン = トラッククリア/安全\n• 黄ゾーン = シングルイエロー（減速）\n• ダブルイエロー = ダブルイエロー（大幅減速）\n• 赤ゾーン = レッドフラッグまたは危険エリア\n• 青マーカー = ブルーフラッグを受けているドライバー\n\n【特別表示例】\n• 点滅マーカー = ピットストップを完了したばかりのドライバー\n• グレーマーカー = リタイアしたドライバー\n• 破線軌跡 = ドライバーの最近の経路'
+            },
+            
+            # Ranking Tower Help / 排名塔說明
+            'help_ranking_tower_title': {'zh': '即時排名', 'en': 'Live Ranking', 'ja': 'ライブランキング'},
+            'help_ranking_tower_desc': {
+                'zh': '顯示車手即時排名、差距和圈速資訊，是追蹤比賽進程的核心視圖。',
+                'en': 'Shows real-time driver rankings, gaps, and lap times - the core view for tracking race progress.',
+                'ja': 'ドライバーのリアルタイムランキング、ギャップ、ラップタイムを表示 - レース進行を追跡するための中心的なビュー。'
+            },
+            'help_ranking_tower_features': {
+                'zh': '- 即時更新排名變化\n- 顯示與領先者和前車的差距\n- 標示進站狀態和輪胎類型',
+                'en': '- Real-time ranking updates\n- Shows gap to leader and car ahead\n- Indicates pit status and tire type',
+                'ja': '- リアルタイムのランキング更新\n- リーダーと前車とのギャップを表示\n- ピット状態とタイヤタイプを表示'
+            },
+            'help_ranking_tower_colors': {
+                'zh': '【背景顏色意義】\n• 深灰背景 = 正常狀態\n• 黃色背景 = 車手正在進站\n  範例：VER 整行變黃 = Verstappen 進站中\n• 紅色背景 = 車手已退賽\n  範例：RIC 整行變紅 = Ricciardo 退賽\n\n【圈速數字顏色】\n• 紫色數字 = 全場最快圈或分段\n  範例：「1:28.123」紫色 = 目前全場最快\n• 綠色數字 = 個人最佳圈\n  範例：「1:28.456」綠色 = 該車手本場最快\n• 黃色數字 = 一般圈速\n• 紅色數字 = 慢圈（進站圈或失誤）\n\n【差距變化顏色】\n• 綠色差距 = 正在追近前車\n  範例：「-0.3s」綠色 = 比上圈縮小 0.3 秒\n• 紅色差距 = 正在被拉開\n  範例：「+0.5s」紅色 = 比上圈擴大 0.5 秒\n\n【輪胎圓圈顏色】\n• 紅色圓圈 = 軟胎 (SOFT)\n• 黃色圓圈 = 中性胎 (MEDIUM)\n• 白色圓圈 = 硬胎 (HARD)',
+                'en': '【Background Color Meaning】\n• Dark gray background = Normal status\n• Yellow background = Driver in pit\n  Example: VER row turns yellow = Verstappen pitting\n• Red background = Driver retired\n  Example: RIC row turns red = Ricciardo retired\n\n【Lap Time Number Colors】\n• Purple number = Overall fastest lap or sector\n  Example: "1:28.123" purple = Currently overall fastest\n• Green number = Personal best lap\n  Example: "1:28.456" green = Driver\'s fastest this session\n• Yellow number = Normal lap time\n• Red number = Slow lap (pit or mistake)\n\n【Gap Change Colors】\n• Green gap = Catching the car ahead\n  Example: "-0.3s" green = Gained 0.3s from last lap\n• Red gap = Being pulled away\n  Example: "+0.5s" red = Lost 0.5s from last lap\n\n【Tire Circle Colors】\n• Red circle = Soft tire (SOFT)\n• Yellow circle = Medium tire (MEDIUM)\n• White circle = Hard tire (HARD)',
+                'ja': '【背景色の意味】\n• ダークグレー背景 = 通常状態\n• 黄色背景 = ドライバーがピット中\n  例：VER行が黄色 = Verstappenがピット中\n• 赤背景 = ドライバーがリタイア\n  例：RIC行が赤 = Ricciardoがリタイア\n\n【ラップタイム数字の色】\n• 紫の数字 = 全体最速ラップまたはセクター\n  例：「1:28.123」紫 = 現在の全体最速\n• 緑の数字 = 個人ベストラップ\n  例：「1:28.456」緑 = そのドライバーのセッション最速\n• 黄の数字 = 通常のラップタイム\n• 赤の数字 = スローラップ（ピットまたはミス）\n\n【ギャップ変化の色】\n• 緑のギャップ = 前車に接近中\n  例：「-0.3s」緑 = 前ラップから0.3秒短縮\n• 赤のギャップ = 引き離されている\n  例：「+0.5s」赤 = 前ラップから0.5秒遅れ\n\n【タイヤ丸の色】\n• 赤丸 = ソフトタイヤ (SOFT)\n• 黄丸 = ミディアムタイヤ (MEDIUM)\n• 白丸 = ハードタイヤ (HARD)'
+            },
+            
+            # Lap History Help / 圈速歷史說明
+            'help_lap_history_title': {'zh': '圈速歷史', 'en': 'Lap History', 'ja': 'ラップ履歴'},
+            'help_lap_history_desc': {
+                'zh': '追蹤車手每圈的圈速變化，幫助分析節奏和策略執行。',
+                'en': 'Tracks lap time changes for each driver, helping analyze pace and strategy execution.',
+                'ja': '各ドライバーのラップタイムの変化を追跡し、ペースと戦略実行の分析に役立ちます。'
+            },
+            'help_lap_history_features': {
+                'zh': '- 視覺化圈速趨勢\n- 識別輪胎衰退和進站效果\n- 比較車手之間的節奏差異',
+                'en': '- Visualize lap time trends\n- Identify tire degradation and pit effects\n- Compare pace between drivers',
+                'ja': '- ラップタイムトレンドを視覚化\n- タイヤの劣化とピット効果を識別\n- ドライバー間のペース差を比較'
+            },
+            'help_lap_history_colors': {
+                'zh': '【數據點顏色 - 車隊官方色】\n• Mercedes (HAM/RUS)：青綠色點\n• McLaren (NOR/PIA)：橙色點\n• Alpine (GAS/OCO)：粉藍色點\n• Williams (ALB/SAR)：淺藍色點\n\n【點大小】\n• 大點 = 您選中的車手\n• 小點 = 其他車手\n\n【數字顏色意義】\n• 紫色數字 = 全場最快圈\n• 綠色數字 = 個人最佳圈\n• 黃色數字 = 進站圈\n\n【圖表趨勢解讀】\n• 向上突起 = 慢圈（進站、黃旗、失誤）\n  範例：VER 第 15 圈突起 = 進站圈\n• 向下趨勢 = 輪胎衰退或油量減輕\n  範例：LEC 第 20-30 圈逐漸下降 = 輪胎老化\n• 平穩線條 = 節奏一致，狀態穩定',
+                'en': '【Data Point Colors - Team Official】\n• Mercedes (HAM/RUS): Teal dots\n• McLaren (NOR/PIA): Orange dots\n• Alpine (GAS/OCO): Light blue dots\n• Williams (ALB/SAR): Blue dots\n\n【Point Size】\n• Large dot = Driver you selected\n• Small dot = Other drivers\n\n【Number Color Meaning】\n• Purple number = Overall fastest lap\n• Green number = Personal best lap\n• Yellow number = Pit lap\n\n【Chart Trend Reading】\n• Upward spike = Slow lap (pit, yellow flag, mistake)\n  Example: VER spike at lap 15 = Pit stop lap\n• Downward trend = Tire degradation or fuel reduction\n  Example: LEC laps 20-30 gradual drop = Tire aging\n• Flat line = Consistent pace, stable condition',
+                'ja': '【データポイント色 - チーム公式】\n• Mercedes (HAM/RUS)：ティールドット\n• McLaren (NOR/PIA)：オレンジドット\n• Alpine (GAS/OCO)：ライトブルードット\n• Williams (ALB/SAR)：ブルードット\n\n【ポイントサイズ】\n• 大きいドット = 選択したドライバー\n• 小さいドット = 他のドライバー\n\n【数字の色の意味】\n• 紫の数字 = 全体最速ラップ\n• 緑の数字 = 個人ベストラップ\n• 黄の数字 = ピットラップ\n\n【チャートトレンドの読み取り】\n• 上向きスパイク = スローラップ（ピット、イエローフラッグ、ミス）\n  例：VER 15周目のスパイク = ピットストップ\n• 下降傾向 = タイヤ劣化または燃料減少\n  例：LEC 20-30周目の徐々の低下 = タイヤの老化\n• フラットライン = 一貫したペース、安定した状態'
+            },
+            
+            # SF% History Help / SF% 歷史說明
+            'help_sf_percentage_title': {'zh': 'SF% 歷史', 'en': 'SF% History', 'ja': 'SF%履歴'},
+            'help_sf_percentage_desc': {
+                'zh': 'Speed Fraction (SF%) 顯示車手速度佔理論最大速度的百分比，用於評估車手效率。',
+                'en': 'Speed Fraction (SF%) shows the percentage of theoretical maximum speed achieved, used to evaluate driver efficiency.',
+                'ja': 'Speed Fraction (SF%) は理論上の最大速度に対する達成率を表示し、ドライバーの効率を評価するために使用されます。'
+            },
+            'help_sf_percentage_features': {
+                'zh': '- 追蹤每圈的 SF% 變化\n- 識別效率下降的圈數\n- 評估輪胎衰退對效率的影響',
+                'en': '- Track SF% changes per lap\n- Identify laps with efficiency drops\n- Evaluate tire degradation impact on efficiency',
+                'ja': '- ラップごとのSF%変化を追跡\n- 効率低下のラップを識別\n- タイヤ劣化が効率に与える影響を評価'
+            },
+            'help_sf_percentage_colors': {
+                'zh': '【線條顏色 - 車隊官方色】\n• Alpine (GAS/OCO)：粉藍色線條\n• Aston Martin (ALO/STR)：深綠色線條\n• Haas (MAG/HUL)：白色/紅色線條\n\n【數值解讀】\n• SF% = 98%：接近理論極限，全力推進\n  範例：VER 第 10 圈 SF% = 98.2% = 狀態極佳\n• SF% = 92-95%：可能節油或輪胎問題\n  範例：LEC 後段 SF% 降至 93% = 輪胎衰退\n• SF% 突降 (<90%)：遇到黃旗或賽道問題\n  範例：第 25 圈 SF% = 85% = 可能黃旗\n\n【參考線】\n• 100% 水平線 = 理論最大效率基準',
+                'en': '【Line Colors - Team Official】\n• Alpine (GAS/OCO): Light blue line\n• Aston Martin (ALO/STR): Dark green line\n• Haas (MAG/HUL): White/Red line\n\n【Value Interpretation】\n• SF% = 98%: Near theoretical limit, full push\n  Example: VER lap 10 SF% = 98.2% = Excellent condition\n• SF% = 92-95%: Possibly fuel saving or tire issues\n  Example: LEC late-race SF% drops to 93% = Tire degradation\n• SF% sudden drop (<90%): Yellow flag or track issue\n  Example: Lap 25 SF% = 85% = Likely yellow flag\n\n【Reference Line】\n• 100% horizontal line = Theoretical maximum efficiency baseline',
+                'ja': '【ライン色 - チーム公式】\n• Alpine (GAS/OCO)：ライトブルーライン\n• Aston Martin (ALO/STR)：ダークグリーンライン\n• Haas (MAG/HUL)：白/赤ライン\n\n【値の解釈】\n• SF% = 98%：理論限界に近い、フルプッシュ\n  例：VER 10周目 SF% = 98.2% = 優れた状態\n• SF% = 92-95%：燃費節約またはタイヤ問題の可能性\n  例：LEC レース後半 SF% が93%に低下 = タイヤ劣化\n• SF% 急降下 (<90%)：イエローフラッグまたはトラック問題\n  例：25周目 SF% = 85% = おそらくイエローフラッグ\n\n【参照線】\n• 100% 水平線 = 理論最大効率基準'
+            },
+            
+            # Throttle 95% History Help / 油門 95% 歷史說明
+            'help_throttle_history_title': {'zh': '油門 95% 歷史', 'en': 'Throttle 95% History', 'ja': 'スロットル95%履歴'},
+            'help_throttle_history_desc': {
+                'zh': '顯示每圈油門開度達到 95% 以上的時間百分比，反映全油門比例。',
+                'en': 'Shows the percentage of time throttle is above 95% per lap, reflecting full throttle ratio.',
+                'ja': '各ラップでスロットルが95%以上の時間の割合を表示し、フルスロットル比率を反映します。'
+            },
+            'help_throttle_history_features': {
+                'zh': '- 監控全油門使用率\n- 識別節油或保守駕駛的圈數\n- 評估引擎模式變化',
+                'en': '- Monitor full throttle usage\n- Identify fuel-saving or conservative driving laps\n- Evaluate engine mode changes',
+                'ja': '- フルスロットル使用率を監視\n- 燃費節約または保守的な走行ラップを識別\n- エンジンモードの変化を評価'
+            },
+            'help_throttle_history_colors': {
+                'zh': '【線條顏色 - 車隊官方色】\n• Williams (ALB/SAR)：淺藍色線條\n• Haas (MAG/HUL)：白色/紅色線條\n• Sauber (BOT/ZHO)：綠色線條\n\n【數值顏色意義】\n• 綠色數字 = 高效率圈（>60% 全油門）\n• 橙色數字 = 中等效率\n• 紅色數字 = 低效率或問題圈\n\n【數值解讀範例】\n• 65%：正常全力推進，高攻擊性\n  範例：VER 第 5 圈 = 67% = 全力衝刺\n• 55%：輕微節油或應對車流\n  範例：HAM 第 30 圈 = 54% = 保護引擎\n• 40%：明顯節油或機械問題\n  範例：ALO 第 45 圈 = 42% = 節油模式\n• 突降至 30%：可能引擎問題\n  範例：突然從 60% 降至 28% = 檢查問題\n\n【參考線】\n• 95% 虛線 = 全油門判定基準',
+                'en': '【Line Colors - Team Official】\n• Williams (ALB/SAR): Light blue line\n• Haas (MAG/HUL): White/Red line\n• Sauber (BOT/ZHO): Green line\n\n【Number Color Meaning】\n• Green number = High efficiency lap (>60% full throttle)\n• Orange number = Medium efficiency\n• Red number = Low efficiency or problem lap\n\n【Value Interpretation Examples】\n• 65%: Normal full push, high aggression\n  Example: VER lap 5 = 67% = Full attack\n• 55%: Slight fuel saving or traffic\n  Example: HAM lap 30 = 54% = Protecting engine\n• 40%: Obvious fuel saving or mechanical issue\n  Example: ALO lap 45 = 42% = Fuel save mode\n• Sudden drop to 30%: Possible engine issue\n  Example: Drops from 60% to 28% = Check for problems\n\n【Reference Line】\n• 95% dashed line = Full throttle threshold',
+                'ja': '【ライン色 - チーム公式】\n• Williams (ALB/SAR)：ライトブルーライン\n• Haas (MAG/HUL)：白/赤ライン\n• Sauber (BOT/ZHO)：グリーンライン\n\n【数字の色の意味】\n• 緑の数字 = 高効率ラップ（>60%フルスロットル）\n• オレンジの数字 = 中効率\n• 赤の数字 = 低効率または問題ラップ\n\n【値の解釈例】\n• 65%：通常のフルプッシュ、高い攻撃性\n  例：VER 5周目 = 67% = フルアタック\n• 55%：軽い燃費節約またはトラフィック\n  例：HAM 30周目 = 54% = エンジン保護\n• 40%：明らかな燃費節約または機械的問題\n  例：ALO 45周目 = 42% = 燃費節約モード\n• 30%への急降下：エンジン問題の可能性\n  例：60%から28%に急降下 = 問題をチェック\n\n【参照線】\n• 95% 破線 = フルスロットル閾値'
+            },
+            
+            # Sector Comparison Help / 分段比較說明
+            'help_sector_comparison_title': {'zh': '分段比較', 'en': 'Sector Comparison', 'ja': 'セクター比較'},
+            'help_sector_comparison_desc': {
+                'zh': '比較車手在各分段的表現，識別強項和弱項區域。',
+                'en': 'Compares driver performance across sectors, identifying strengths and weaknesses.',
+                'ja': '各セクターでのドライバーパフォーマンスを比較し、強みと弱みを識別します。'
+            },
+            'help_sector_comparison_features': {
+                'zh': '- 三個分段獨立比較\n- 視覺化差距大小\n- 追蹤分段時間趨勢',
+                'en': '- Three sectors compared independently\n- Visualize gap magnitude\n- Track sector time trends',
+                'ja': '- 3つのセクターを独立して比較\n- ギャップの大きさを視覚化\n- セクタータイムのトレンドを追跡'
+            },
+            'help_sector_comparison_colors': {
+                'zh': '【背景說明】\n• 深灰背景 = 圖表整體底色\n• 分段分割線 = 深色垂直線區分 S1/S2/S3\n\n【時間顯示顏色】\n• 紫色數字 = 該分段全場最快\n  範例：S1 = 28.123 (紫) = 此車手在第一段最快\n• 綠色數字 = 個人該分段最佳\n  範例：S2 = 35.456 (綠) = 個人在 S2 最佳時間\n• 黃色數字 = 一般分段時間\n• 紅色數字 = 慢於平均\n\n【數據條顏色】\n• 數據條顏色 = 車隊官方色\n  範例：Ferrari 紅色條 = Leclerc 的分段時間\n         Mercedes 青綠條 = Hamilton 的分段時間\n         McLaren 橙色條 = Norris 的分段時間\n\n【分析範例】\n• VER: S1(紫) S2(黃) S3(綠)\n  解讀：第一段最強、第三段個人最佳\n• 理論最快圈 = S1 紫 + S2 紫 + S3 紫\n  解讀：各分段最快時間組合',
+                'en': '【Background】\n• Dark gray background = Chart overall base color\n• Sector dividers = Dark vertical lines separating S1/S2/S3\n\n【Time Display Colors】\n• Purple number = Overall fastest in that sector\n  Example: S1 = 28.123 (purple) = Fastest in sector 1\n• Green number = Personal best in that sector\n  Example: S2 = 35.456 (green) = Personal best in S2\n• Yellow number = Normal sector time\n• Red number = Slower than average\n\n【Bar Colors】\n• Bar color = Team official color\n  Example: Ferrari red bar = Leclerc\'s sector time\n           Mercedes teal bar = Hamilton\'s sector time\n           McLaren orange bar = Norris\'s sector time\n\n【Analysis Examples】\n• VER: S1(purple) S2(yellow) S3(green)\n  Reading: Strongest in S1, personal best in S3\n• Theoretical fastest = S1 purple + S2 purple + S3 purple\n  Reading: Best sectors combined',
+                'ja': '【背景】\n• ダークグレー背景 = チャートの基本背景色\n• セクター分割線 = S1/S2/S3を分ける暗い垂直線\n\n【タイム表示色】\n• 紫の数字 = そのセクターで全体最速\n  例：S1 = 28.123 (紫) = セクター1で最速\n• 緑の数字 = そのセクターで個人ベスト\n  例：S2 = 35.456 (緑) = S2での個人ベスト\n• 黄の数字 = 通常のセクタータイム\n• 赤の数字 = 平均より遅い\n\n【バー色】\n• バー色 = チーム公式カラー\n  例：Ferrari赤バー = Leclercのセクタータイム\n      Mercedesティールバー = Hamiltonのセクタータイム\n      McLarenオレンジバー = Norrisのセクタータイム\n\n【分析例】\n• VER: S1(紫) S2(黄) S3(緑)\n  読み取り：S1が最強、S3は個人ベスト\n• 理論最速 = S1紫 + S2紫 + S3紫\n  読み取り：各セクターのベスト組み合わせ'
+            },
+            
+            # Default Help / 預設說明
+            'help_default_title': {'zh': 'F1T 模組', 'en': 'F1T Module', 'ja': 'F1Tモジュール'},
+            'help_default_desc': {
+                'zh': '這是一個 F1 遙測分析模組，提供即時數據視覺化功能。',
+                'en': 'This is an F1 telemetry analysis module providing real-time data visualization.',
+                'ja': 'これはリアルタイムデータ可視化を提供するF1テレメトリ分析モジュールです。'
+            },
+            'help_default_features': {
+                'zh': '- 即時數據更新\n- 可自訂視窗大小\n- 支援多視窗同步',
+                'en': '- Real-time data updates\n- Customizable window size\n- Multi-window synchronization support',
+                'ja': '- リアルタイムデータ更新\n- カスタマイズ可能なウィンドウサイズ\n- マルチウィンドウ同期対応'
+            },
+            'help_default_colors': {
+                'zh': '- 顏色通常基於 F1 車隊官方配色\n- 特殊狀態使用標準顏色標示',
+                'en': '- Colors typically based on official F1 team colors\n- Special states use standard color indicators',
+                'ja': '- カラーは通常F1チームの公式カラーに基づく\n- 特別な状態は標準的な色で表示'
+            },
+            
+            # ========== Speed Trace Help / 速度追蹤說明 ==========
+            'help_speed_trace_title': {'zh': '速度追蹤', 'en': 'Speed Trace', 'ja': '速度トレース'},
+            'help_speed_trace_desc': {
+                'zh': '速度追蹤模組提供車手在單圈中的即時速度曲線，資料來自 OpenF1 API 的 car_data 端點。\n\n演算法邏輯：\n1. 資料採集：以約 3.7Hz 頻率接收車輛遙測資料\n2. 距離插值：將時間序列資料轉換為距離序列（0-100% 賽道位置）\n3. 平滑處理：使用滑動平均濾波器降低感測器雜訊\n4. 比較計算：多車手模式下計算速度差異絕對值',
+                'en': 'Speed Trace module provides real-time speed curves for drivers during a lap, data sourced from OpenF1 API car_data endpoint.\n\nAlgorithm Logic:\n1. Data Collection: Receives vehicle telemetry at ~3.7Hz\n2. Distance Interpolation: Converts time-series to distance-series (0-100% track position)\n3. Smoothing: Applies moving average filter to reduce sensor noise\n4. Comparison: Calculates absolute speed differences in multi-driver mode',
+                'ja': '速度トレースモジュールはOpenF1 APIのcar_dataエンドポイントからドライバーのリアルタイム速度曲線を提供します。\n\nアルゴリズムロジック：\n1. データ収集：約3.7Hzで車両テレメトリを受信\n2. 距離補間：時系列を距離系列（0-100%トラック位置）に変換\n3. スムージング：移動平均フィルタでセンサーノイズを低減\n4. 比較：マルチドライバーモードで速度差を計算'
+            },
+            'help_speed_trace_features': {
+                'zh': '- X 軸：賽道距離（公尺）或位置百分比\n- Y 軸：瞬時速度（km/h）\n- 支援多車手疊加比較\n- 可識別 DRS 啟用區段（速度突增）\n- 標示最高速點和最低速彎角',
+                'en': '- X-axis: Track distance (meters) or position percentage\n- Y-axis: Instantaneous speed (km/h)\n- Supports multi-driver overlay comparison\n- Identifies DRS activation zones (speed spikes)\n- Marks top speed points and slowest corners',
+                'ja': '- X軸：トラック距離（メートル）または位置パーセンテージ\n- Y軸：瞬間速度（km/h）\n- マルチドライバーオーバーレイ比較をサポート\n- DRS有効化ゾーン（速度スパイク）を識別\n- 最高速ポイントと最も遅いコーナーをマーク'
+            },
+            'help_speed_trace_colors': {
+                'zh': '- 各車手使用其車隊官方顏色\n- 選中車手線條較粗（2px vs 1px）\n- 速度差異區域使用半透明填充\n- 灰色虛線：分段邊界（S1/S2/S3）',
+                'en': '- Each driver uses their team official color\n- Selected driver lines are thicker (2px vs 1px)\n- Speed difference areas use semi-transparent fill\n- Gray dashed lines: Sector boundaries (S1/S2/S3)',
+                'ja': '- 各ドライバーはチーム公式カラーを使用\n- 選択されたドライバーの線は太い（2px vs 1px）\n- 速度差領域は半透明フィルを使用\n- グレー破線：セクター境界（S1/S2/S3）'
+            },
+            
+            # ========== Throttle Trace Help / 油門追蹤說明 ==========
+            'help_throttle_trace_title': {'zh': '油門追蹤', 'en': 'Throttle Trace', 'ja': 'スロットルトレース'},
+            'help_throttle_trace_desc': {
+                'zh': '油門追蹤模組顯示車手的油門踏板輸入百分比（0-100%）。\n\n演算法邏輯：\n1. 原始資料：來自車輛 ECU 的油門位置感測器（0-100 整數）\n2. 時間對齊：與其他遙測資料同步（基於 UTC 時間戳）\n3. 全油門判定：95% 以上視為全油門狀態\n4. 節油模式識別：低於預期的油門開度可能表示 Lift & Coast 策略',
+                'en': 'Throttle Trace module displays driver throttle pedal input percentage (0-100%).\n\nAlgorithm Logic:\n1. Raw Data: From vehicle ECU throttle position sensor (0-100 integer)\n2. Time Alignment: Synchronized with other telemetry (based on UTC timestamp)\n3. Full Throttle Detection: Above 95% considered full throttle\n4. Fuel Save Detection: Lower than expected throttle may indicate Lift & Coast strategy',
+                'ja': 'スロットルトレースモジュールはドライバーのスロットルペダル入力パーセンテージ（0-100%）を表示します。\n\nアルゴリズムロジック：\n1. 生データ：車両ECUからのスロットル位置センサー（0-100整数）\n2. 時間同期：他のテレメトリと同期（UTCタイムスタンプ基準）\n3. フルスロットル検出：95%以上をフルスロットルと判定\n4. 燃費節約検出：予想より低いスロットルはリフト&コースト戦略を示す可能性'
+            },
+            'help_throttle_trace_features': {
+                'zh': '- 即時油門位置追蹤\n- 識別節油駕駛模式\n- 與速度曲線對照可分析動力輸出效率\n- 標示急加速和緩加速區段',
+                'en': '- Real-time throttle position tracking\n- Identify fuel-saving driving patterns\n- Compare with speed trace to analyze power output efficiency\n- Mark rapid and gradual acceleration zones',
+                'ja': '- リアルタイムスロットル位置追跡\n- 燃費節約走行パターンを識別\n- 速度トレースと比較してパワー出力効率を分析\n- 急加速とゆるやかな加速ゾーンをマーク'
+            },
+            'help_throttle_trace_colors': {
+                'zh': '- 車隊顏色區分不同車手\n- 高於 95% 區域可特別標示\n- 0% 油門區域表示滑行或煞車中',
+                'en': '- Team colors distinguish drivers\n- Above 95% areas can be specially marked\n- 0% throttle areas indicate coasting or braking',
+                'ja': '- チームカラーでドライバーを区別\n- 95%以上の領域は特別にマーク可能\n- 0%スロットル領域はコースティングまたはブレーキングを示す'
+            },
+            
+            # ========== Brake Trace Help / 煞車追蹤說明 ==========
+            'help_brake_trace_title': {'zh': '煞車追蹤', 'en': 'Brake Trace', 'ja': 'ブレーキトレース'},
+            'help_brake_trace_desc': {
+                'zh': '煞車追蹤模組顯示車手的煞車踏板狀態（開/關二元值或壓力百分比）。\n\n演算法邏輯：\n1. 資料來源：車輛 brake 感測器回報\n2. 二元化處理：部分資料源僅提供 on/off 狀態\n3. 煞車點分析：計算從全油門到煞車啟動的延遲距離\n4. 煞車釋放分析：評估進彎時的煞車線性度',
+                'en': 'Brake Trace module displays driver brake pedal status (on/off binary or pressure percentage).\n\nAlgorithm Logic:\n1. Data Source: Vehicle brake sensor reports\n2. Binarization: Some data sources only provide on/off status\n3. Braking Point Analysis: Calculate delay distance from full throttle to brake activation\n4. Brake Release Analysis: Evaluate braking linearity during corner entry',
+                'ja': 'ブレーキトレースモジュールはドライバーのブレーキペダル状態（オン/オフバイナリまたは圧力パーセンテージ）を表示します。\n\nアルゴリズムロジック：\n1. データソース：車両ブレーキセンサーレポート\n2. 二値化：一部のデータソースはオン/オフ状態のみを提供\n3. ブレーキングポイント分析：フルスロットルからブレーキ作動までの遅延距離を計算\n4. ブレーキリリース分析：コーナー進入時のブレーキ線形性を評価'
+            },
+            'help_brake_trace_features': {
+                'zh': '- 煞車點位置標示\n- 煞車持續時間計算\n- 與速度曲線對照分析減速 G 力\n- 識別過早或過晚煞車',
+                'en': '- Braking point position marking\n- Braking duration calculation\n- Analyze deceleration G-force with speed trace\n- Identify early or late braking',
+                'ja': '- ブレーキングポイント位置のマーキング\n- ブレーキ持続時間の計算\n- 速度トレースで減速G力を分析\n- 早すぎるまたは遅すぎるブレーキングを識別'
+            },
+            'help_brake_trace_colors': {
+                'zh': '- 車隊顏色區分車手\n- 煞車啟動區域通常以填充顯示\n- 紅色強調重煞車區段',
+                'en': '- Team colors distinguish drivers\n- Brake activation areas shown with fill\n- Red highlights heavy braking zones',
+                'ja': '- チームカラーでドライバーを区別\n- ブレーキ作動領域はフィルで表示\n- 赤はヘビーブレーキングゾーンを強調'
+            },
+            
+            # ========== Gear Trace Help / 檔位追蹤說明 ==========
+            'help_gear_trace_title': {'zh': '檔位追蹤', 'en': 'Gear Trace', 'ja': 'ギアトレース'},
+            'help_gear_trace_desc': {
+                'zh': '檔位追蹤模組顯示車手的變速箱檔位選擇（1-8 檔）。\n\n演算法邏輯：\n1. 資料來源：變速箱控制單元回報的當前檔位\n2. 換檔點分析：記錄升降檔的賽道位置\n3. 最佳檔位計算：根據引擎轉速和速度推算理論最佳檔位\n4. 短換檔識別：檢測快速連續換檔（可能為策略性操作）',
+                'en': 'Gear Trace module displays driver gearbox gear selection (1-8 gears).\n\nAlgorithm Logic:\n1. Data Source: Current gear reported by gearbox control unit\n2. Shift Point Analysis: Record track positions for upshifts/downshifts\n3. Optimal Gear Calculation: Compute theoretical optimal gear based on RPM and speed\n4. Short Shift Detection: Detect rapid consecutive shifts (possibly strategic)',
+                'ja': 'ギアトレースモジュールはドライバーのギアボックスギア選択（1-8速）を表示します。\n\nアルゴリズムロジック：\n1. データソース：ギアボックス制御ユニットから報告される現在のギア\n2. シフトポイント分析：アップシフト/ダウンシフトのトラック位置を記録\n3. 最適ギア計算：RPMと速度に基づいて理論的な最適ギアを計算\n4. ショートシフト検出：急速な連続シフト（戦略的である可能性）を検出'
+            },
+            'help_gear_trace_features': {
+                'zh': '- 顯示 1-8 檔位變化\n- 標示換檔點位置\n- 識別非典型檔位選擇（例如 8 檔降至 2 檔的急煞）\n- 與 RPM 曲線對照分析',
+                'en': '- Display gear changes 1-8\n- Mark shift point positions\n- Identify atypical gear selections (e.g., 8th to 2nd hard braking)\n- Analyze with RPM trace',
+                'ja': '- 1-8ギア変化を表示\n- シフトポイント位置をマーク\n- 非典型的なギア選択を識別（例：8速から2速への急ブレーキ）\n- RPMトレースと分析'
+            },
+            'help_gear_trace_colors': {
+                'zh': '- 車隊顏色區分車手\n- 階梯圖形式顯示離散檔位\n- 可選擇填充顯示檔位區間',
+                'en': '- Team colors distinguish drivers\n- Step chart format for discrete gears\n- Optional fill display for gear ranges',
+                'ja': '- チームカラーでドライバーを区別\n- 離散ギアのステップチャート形式\n- ギア範囲のオプションフィル表示'
+            },
+            
+            # ========== DRS Trace Help / DRS 追蹤說明 ==========
+            'help_drs_trace_title': {'zh': 'DRS 追蹤', 'en': 'DRS Trace', 'ja': 'DRSトレース'},
+            'help_drs_trace_desc': {
+                'zh': 'DRS（可調式尾翼系統）追蹤模組顯示 DRS 的啟用狀態。\n\n演算法邏輯：\n1. 二元狀態：DRS 僅有開啟/關閉兩種狀態\n2. 啟用條件檢測：需在 DRS 區內且與前車差距小於 1 秒\n3. 速度增益計算：比較 DRS 開啟前後的加速度差異\n4. 使用效率分析：計算理論可用次數與實際使用次數的比例',
+                'en': 'DRS (Drag Reduction System) Trace module displays DRS activation status.\n\nAlgorithm Logic:\n1. Binary State: DRS only has open/closed states\n2. Activation Condition Detection: Must be in DRS zone and within 1 second of car ahead\n3. Speed Gain Calculation: Compare acceleration difference before/after DRS activation\n4. Usage Efficiency Analysis: Calculate ratio of theoretical available uses vs actual uses',
+                'ja': 'DRS（ドラッグリダクションシステム）トレースモジュールはDRS有効化状態を表示します。\n\nアルゴリズムロジック：\n1. バイナリ状態：DRSは開/閉の2つの状態のみ\n2. 有効化条件検出：DRSゾーン内で前車と1秒以内である必要\n3. 速度ゲイン計算：DRS作動前後の加速度差を比較\n4. 使用効率分析：理論的に使用可能な回数と実際の使用回数の比率を計算'
+            },
+            'help_drs_trace_features': {
+                'zh': '- 顯示 DRS 開/關狀態\n- 標示 DRS 偵測點和啟用區\n- 計算每次 DRS 使用的速度增益\n- 識別錯過的 DRS 機會',
+                'en': '- Display DRS on/off status\n- Mark DRS detection points and activation zones\n- Calculate speed gain per DRS use\n- Identify missed DRS opportunities',
+                'ja': '- DRSオン/オフ状態を表示\n- DRS検出ポイントと有効化ゾーンをマーク\n- DRS使用ごとの速度ゲインを計算\n- 逃したDRS機会を識別'
+            },
+            'help_drs_trace_colors': {
+                'zh': '- 綠色填充：DRS 啟用中\n- 灰色背景：DRS 關閉\n- 車隊顏色用於多車手比較',
+                'en': '- Green fill: DRS active\n- Gray background: DRS closed\n- Team colors for multi-driver comparison',
+                'ja': '- 緑フィル：DRS有効\n- グレー背景：DRS閉\n- マルチドライバー比較用チームカラー'
+            },
+            
+            # ========== RPM Trace Help / 轉速追蹤說明 ==========
+            'help_rpm_trace_title': {'zh': '轉速追蹤', 'en': 'RPM Trace', 'ja': 'RPMトレース'},
+            'help_rpm_trace_desc': {
+                'zh': '引擎轉速追蹤模組顯示引擎每分鐘轉數（RPM）。\n\n演算法邏輯：\n1. 資料範圍：F1 引擎轉速範圍約 8,000-15,000 RPM\n2. 紅線判定：接近最大轉速（~15,000 RPM）時觸發升檔\n3. 換檔分析：結合檔位資料判斷換檔時機的合理性\n4. 引擎模式推測：不同引擎模式會有不同的 RPM 曲線特徵',
+                'en': 'Engine RPM Trace module displays engine revolutions per minute.\n\nAlgorithm Logic:\n1. Data Range: F1 engine RPM range approximately 8,000-15,000\n2. Redline Detection: Triggers upshift when approaching max RPM (~15,000)\n3. Shift Analysis: Combined with gear data to judge shift timing reasonableness\n4. Engine Mode Inference: Different engine modes have different RPM curve characteristics',
+                'ja': 'エンジンRPMトレースモジュールはエンジン回転数（RPM）を表示します。\n\nアルゴリズムロジック：\n1. データ範囲：F1エンジンRPM範囲は約8,000-15,000\n2. レッドライン検出：最大RPM（〜15,000）に近づくとアップシフトをトリガー\n3. シフト分析：ギアデータと組み合わせてシフトタイミングの妥当性を判断\n4. エンジンモード推測：異なるエンジンモードは異なるRPM曲線特性を持つ'
+            },
+            'help_rpm_trace_features': {
+                'zh': '- 引擎轉速即時監控\n- 紅線區域標示\n- 換檔點轉速記錄\n- 與檔位/油門曲線交叉分析',
+                'en': '- Real-time engine RPM monitoring\n- Redline zone marking\n- Shift point RPM recording\n- Cross-analysis with gear/throttle traces',
+                'ja': '- リアルタイムエンジンRPM監視\n- レッドラインゾーンのマーキング\n- シフトポイントRPM記録\n- ギア/スロットルトレースとのクロス分析'
+            },
+            'help_rpm_trace_colors': {
+                'zh': '- 車隊顏色區分車手\n- 紅色區域：接近紅線轉速\n- 下降曲線表示升檔或滑行',
+                'en': '- Team colors distinguish drivers\n- Red zone: Approaching redline RPM\n- Declining curves indicate upshift or coasting',
+                'ja': '- チームカラーでドライバーを区別\n- 赤ゾーン：レッドラインRPMに接近\n- 下降曲線はアップシフトまたはコースティングを示す'
+            },
+            
+            # ========== Circle Map Help / 圓形地圖說明 ==========
+            'help_circle_map_title': {'zh': '圓形地圖', 'en': 'Circle Map', 'ja': 'サークルマップ'},
+            'help_circle_map_desc': {
+                'zh': '圓形地圖以環形視圖顯示所有車手的相對位置。\n\n演算法邏輯：\n1. 位置計算：將車手的賽道位置（0-100%）映射到圓周角度（0-360°）\n2. 間距計算：計算相鄰車手之間的角度差對應的秒數差距\n3. 即時更新：約每秒更新一次所有車手位置\n4. 衝突預測：當兩車手角度差小於閾值時標示為接近戰鬥',
+                'en': 'Circle Map displays all driver relative positions in a circular view.\n\nAlgorithm Logic:\n1. Position Calculation: Maps driver track position (0-100%) to circular angle (0-360 degrees)\n2. Gap Calculation: Computes seconds gap from angle difference between adjacent drivers\n3. Real-time Update: Updates all driver positions approximately once per second\n4. Battle Detection: Marks as close battle when two drivers angle difference below threshold',
+                'ja': 'サークルマップはすべてのドライバーの相対位置を円形ビューで表示します。\n\nアルゴリズムロジック：\n1. 位置計算：ドライバーのトラック位置（0-100%）を円周角度（0-360度）にマッピング\n2. ギャップ計算：隣接ドライバー間の角度差から秒数ギャップを計算\n3. リアルタイム更新：約1秒ごとにすべてのドライバー位置を更新\n4. バトル検出：2ドライバーの角度差が閾値以下の場合、接近バトルとしてマーク'
+            },
+            'help_circle_map_features': {
+                'zh': '- 直觀顯示場上車手分布\n- 識別車群和單獨跑車手\n- 標示 DRS 範圍內的車手\n- 進站車手特殊標示',
+                'en': '- Intuitive display of driver distribution on track\n- Identify groups and isolated drivers\n- Mark drivers within DRS range\n- Special marking for pit lane drivers',
+                'ja': '- トラック上のドライバー分布を直感的に表示\n- グループと孤立したドライバーを識別\n- DRS範囲内のドライバーをマーク\n- ピットレーンのドライバーを特別にマーク'
+            },
+            'help_circle_map_colors': {
+                'zh': '- 車手使用車隊顏色\n- 黃色弧線：黃旗區域\n- 紅色弧線：紅旗或危險區域\n- 綠色弧線：DRS 啟用區',
+                'en': '- Drivers use team colors\n- Yellow arcs: Yellow flag zones\n- Red arcs: Red flag or danger zones\n- Green arcs: DRS activation zones',
+                'ja': '- ドライバーはチームカラーを使用\n- 黄色アーク：イエローフラッグゾーン\n- 赤アーク：レッドフラッグまたは危険ゾーン\n- 緑アーク：DRS有効化ゾーン'
+            },
+            
+            # ========== Pit Window Help / 進站窗口說明 ==========
+            'help_pit_window_title': {'zh': '進站窗口', 'en': 'Pit Window', 'ja': 'ピットウィンドウ'},
+            'help_pit_window_desc': {
+                'zh': '進站窗口模組顯示車手的預測進站時機和策略選項。\n\n演算法邏輯：\n1. 輪胎衰退模型：根據圈數和輪胎類型預測剩餘壽命\n2. Undercut 窗口：計算提前進站可獲得的位置優勢\n3. Overcut 窗口：計算延後進站在新胎上的速度優勢\n4. 最佳策略推薦：綜合輪胎狀態、賽道位置、與對手差距給出建議',
+                'en': 'Pit Window module displays predicted pit timing and strategy options for drivers.\n\nAlgorithm Logic:\n1. Tire Degradation Model: Predicts remaining life based on laps and tire type\n2. Undercut Window: Calculates position advantage from early pit stop\n3. Overcut Window: Calculates speed advantage from delayed pit on fresh tires\n4. Optimal Strategy Recommendation: Combines tire state, track position, gaps to give suggestions',
+                'ja': 'ピットウィンドウモジュールはドライバーの予測ピットタイミングと戦略オプションを表示します。\n\nアルゴリズムロジック：\n1. タイヤ劣化モデル：ラップ数とタイヤタイプに基づいて残り寿命を予測\n2. アンダーカットウィンドウ：早期ピットストップからの位置優位性を計算\n3. オーバーカットウィンドウ：フレッシュタイヤでの遅延ピットからの速度優位性を計算\n4. 最適戦略推奨：タイヤ状態、トラック位置、ギャップを組み合わせて提案'
+            },
+            'help_pit_window_features': {
+                'zh': '- 預測進站圈數範圍\n- Undercut/Overcut 分析\n- 與對手策略比較\n- 考慮安全車可能性',
+                'en': '- Predict pit stop lap range\n- Undercut/Overcut analysis\n- Compare with opponent strategies\n- Consider safety car probability',
+                'ja': '- ピットストップラップ範囲を予測\n- アンダーカット/オーバーカット分析\n- 対戦相手の戦略と比較\n- セーフティカーの可能性を考慮'
+            },
+            'help_pit_window_colors': {
+                'zh': '- 綠色：建議進站窗口\n- 黃色：可選進站窗口\n- 紅色：不建議進站\n- 灰色：已完成進站',
+                'en': '- Green: Recommended pit window\n- Yellow: Optional pit window\n- Red: Not recommended to pit\n- Gray: Pit completed',
+                'ja': '- 緑：推奨ピットウィンドウ\n- 黄：オプションピットウィンドウ\n- 赤：ピット非推奨\n- グレー：ピット完了'
+            },
+            
+            # ========== Tyre Strategy Help / 輪胎策略說明 ==========
+            'help_tyre_strategy_title': {'zh': '輪胎策略', 'en': 'Tyre Strategy', 'ja': 'タイヤ戦略'},
+            'help_tyre_strategy_desc': {
+                'zh': '輪胎策略模組顯示各車手的輪胎使用歷史和預測。\n\n演算法邏輯：\n1. Stint 記錄：追蹤每套輪胎的使用圈數\n2. 衰退曲線：根據歷史數據建立各輪胎的衰退模型\n3. 剩餘圈數預測：基於衰退模型預測輪胎的有效壽命\n4. 策略比較：分析不同策略（1停/2停/3停）的預期完賽時間',
+                'en': 'Tyre Strategy module displays tire usage history and predictions for each driver.\n\nAlgorithm Logic:\n1. Stint Recording: Track laps completed on each tire set\n2. Degradation Curve: Build degradation model for each tire based on historical data\n3. Remaining Lap Prediction: Predict effective tire life based on degradation model\n4. Strategy Comparison: Analyze expected race time for different strategies (1-stop/2-stop/3-stop)',
+                'ja': 'タイヤ戦略モジュールは各ドライバーのタイヤ使用履歴と予測を表示します。\n\nアルゴリズムロジック：\n1. スティント記録：各タイヤセットでの完走ラップを追跡\n2. 劣化曲線：履歴データに基づいて各タイヤの劣化モデルを構築\n3. 残りラップ予測：劣化モデルに基づいてタイヤの有効寿命を予測\n4. 戦略比較：異なる戦略（1ストップ/2ストップ/3ストップ）の予想レースタイムを分析'
+            },
+            'help_tyre_strategy_features': {
+                'zh': '- 可視化輪胎使用時間軸\n- 輪胎衰退監控\n- 最佳策略推薦\n- 歷史數據比較',
+                'en': '- Visualize tire usage timeline\n- Tire degradation monitoring\n- Optimal strategy recommendation\n- Historical data comparison',
+                'ja': '- タイヤ使用タイムラインを可視化\n- タイヤ劣化監視\n- 最適戦略推奨\n- 履歴データ比較'
+            },
+            'help_tyre_strategy_colors': {
+                'zh': '- 紅色：軟胎 (SOFT)\n- 黃色：中性胎 (MEDIUM)\n- 白色：硬胎 (HARD)\n- 綠色：中雨胎 (INTERMEDIATE)\n- 藍色：全雨胎 (WET)',
+                'en': '- Red: Soft tire (SOFT)\n- Yellow: Medium tire (MEDIUM)\n- White: Hard tire (HARD)\n- Green: Intermediate tire (INTERMEDIATE)\n- Blue: Wet tire (WET)',
+                'ja': '- 赤：ソフトタイヤ (SOFT)\n- 黄：ミディアムタイヤ (MEDIUM)\n- 白：ハードタイヤ (HARD)\n- 緑：インターミディエイトタイヤ (INTERMEDIATE)\n- 青：ウェットタイヤ (WET)'
+            },
+            
+            # ========== Battle Insight Help / 戰鬥分析說明 ==========
+            'help_battle_insight_title': {'zh': '戰鬥分析', 'en': 'Battle Insight', 'ja': 'バトル分析'},
+            'help_battle_insight_desc': {
+                'zh': '戰鬥分析模組識別並追蹤賽道上的車手對決。\n\n演算法邏輯：\n1. 戰鬥識別：當兩車手差距小於 1.5 秒時判定為戰鬥\n2. 攻防評分：根據相對速度、DRS 使用、位置變化計算\n3. 超車預測：基於歷史數據和當前條件預測超車可能性\n4. 戰鬥強度：衡量雙方的攻守轉換頻率',
+                'en': 'Battle Insight module identifies and tracks driver duels on track.\n\nAlgorithm Logic:\n1. Battle Identification: Determined as battle when gap less than 1.5 seconds\n2. Attack/Defense Scoring: Calculated based on relative speed, DRS usage, position changes\n3. Overtake Prediction: Predict overtake probability based on historical data and current conditions\n4. Battle Intensity: Measures attack/defense transition frequency',
+                'ja': 'バトル分析モジュールはトラック上のドライバーデュエルを識別し追跡します。\n\nアルゴリズムロジック：\n1. バトル識別：ギャップが1.5秒未満の場合バトルと判定\n2. 攻守スコアリング：相対速度、DRS使用、位置変化に基づいて計算\n3. オーバーテイク予測：履歴データと現在の状況に基づいてオーバーテイク確率を予測\n4. バトル強度：攻守転換頻度を測定'
+            },
+            'help_battle_insight_features': {
+                'zh': '- 即時戰鬥識別\n- 攻防優勢分析\n- 歷史對決記錄\n- 超車熱點標示',
+                'en': '- Real-time battle identification\n- Attack/defense advantage analysis\n- Historical duel records\n- Overtake hotspot marking',
+                'ja': '- リアルタイムバトル識別\n- 攻守優位性分析\n- 過去のデュエル記録\n- オーバーテイクホットスポットのマーキング'
+            },
+            'help_battle_insight_colors': {
+                'zh': '- 紅色：攻擊方（追趕中）\n- 藍色：防守方（被追趕）\n- 黃色：僵持狀態\n- 綠色：成功超車',
+                'en': '- Red: Attacking driver (chasing)\n- Blue: Defending driver (being chased)\n- Yellow: Stalemate state\n- Green: Successful overtake',
+                'ja': '- 赤：攻撃側（追跡中）\n- 青：防御側（追われている）\n- 黄：膠着状態\n- 緑：オーバーテイク成功'
+            },
+            
+            # ========== Chase Strategy Help / 追趕策略說明 ==========
+            'help_chase_strategy_title': {'zh': '追趕策略', 'en': 'Chase Strategy', 'ja': '追跡戦略'},
+            'help_chase_strategy_desc': {
+                'zh': '追趕策略模組分析車手追趕前車所需的條件和預測。\n\n演算法邏輯：\n1. 追趕時間計算：基於單圈速度差異計算追上所需圈數\n2. 輪胎效應：考慮雙方輪胎的相對衰退率\n3. DRS 效應：評估 DRS 對縮小差距的貢獻\n4. 進站影響：預測對手進站後的相對位置變化',
+                'en': 'Chase Strategy module analyzes conditions and predictions for catching the car ahead.\n\nAlgorithm Logic:\n1. Chase Time Calculation: Calculate laps needed based on lap time difference\n2. Tire Effect: Consider relative degradation rates of both drivers tires\n3. DRS Effect: Evaluate DRS contribution to gap reduction\n4. Pit Stop Impact: Predict relative position change after opponent pits',
+                'ja': '追跡戦略モジュールは前車に追いつくための条件と予測を分析します。\n\nアルゴリズムロジック：\n1. 追跡時間計算：ラップタイム差に基づいて必要なラップ数を計算\n2. タイヤ効果：両ドライバーのタイヤの相対劣化率を考慮\n3. DRS効果：ギャップ縮小へのDRSの貢献を評価\n4. ピットストップ影響：対戦相手のピット後の相対位置変化を予測'
+            },
+            'help_chase_strategy_features': {
+                'zh': '- 追趕進度可視化\n- 所需圈數預測\n- 最佳追趕策略建議\n- 風險評估（輪胎過度磨損）',
+                'en': '- Chase progress visualization\n- Required laps prediction\n- Optimal chase strategy suggestion\n- Risk assessment (tire over-degradation)',
+                'ja': '- 追跡進捗の可視化\n- 必要ラップ数予測\n- 最適追跡戦略の提案\n- リスク評価（タイヤ過劣化）'
+            },
+            'help_chase_strategy_colors': {
+                'zh': '- 綠色箭頭：正在縮小差距\n- 紅色箭頭：差距擴大中\n- 黃色：差距穩定\n- 車隊顏色標示目標車手',
+                'en': '- Green arrow: Gap reducing\n- Red arrow: Gap increasing\n- Yellow: Gap stable\n- Team colors mark target drivers',
+                'ja': '- 緑矢印：ギャップ縮小中\n- 赤矢印：ギャップ拡大中\n- 黄：ギャップ安定\n- チームカラーでターゲットドライバーをマーク'
+            },
+            
+            # ========== Track & Weather Help / 賽道與天氣說明 ==========
+            'help_track_weather_title': {'zh': '賽道與天氣', 'en': 'Track & Weather', 'ja': 'トラック＆天気'},
+            'help_track_weather_desc': {
+                'zh': '賽道與天氣模組顯示即時賽道狀態和氣象資訊。\n\n演算法邏輯：\n1. 氣溫追蹤：監控空氣溫度和賽道溫度變化\n2. 降雨預測：整合氣象資料預測降雨時機\n3. 賽道演化：追蹤 Rubber-in 狀態對抓地力的影響\n4. 風向分析：評估風向對不同賽道區段的影響',
+                'en': 'Track & Weather module displays real-time track conditions and meteorological information.\n\nAlgorithm Logic:\n1. Temperature Tracking: Monitor air and track temperature changes\n2. Rain Prediction: Integrate weather data to predict rain timing\n3. Track Evolution: Track rubber-in state effect on grip\n4. Wind Analysis: Evaluate wind direction impact on different track sectors',
+                'ja': 'トラック＆天気モジュールはリアルタイムのトラック状況と気象情報を表示します。\n\nアルゴリズムロジック：\n1. 温度追跡：気温とトラック温度の変化を監視\n2. 雨予測：気象データを統合して雨のタイミングを予測\n3. トラック進化：ラバーイン状態がグリップに与える影響を追跡\n4. 風向分析：風向きが異なるトラックセクターに与える影響を評価'
+            },
+            'help_track_weather_features': {
+                'zh': '- 即時溫度監控\n- 降雨機率和時間預測\n- 賽道抓地力變化\n- 風速風向顯示',
+                'en': '- Real-time temperature monitoring\n- Rain probability and timing prediction\n- Track grip changes\n- Wind speed and direction display',
+                'ja': '- リアルタイム温度監視\n- 雨の確率とタイミング予測\n- トラックグリップ変化\n- 風速と風向表示'
+            },
+            'help_track_weather_colors': {
+                'zh': '- 藍色：濕潤/降雨區域\n- 黃色/橙色：高溫警告\n- 綠色：理想條件\n- 灰色：乾燥賽道',
+                'en': '- Blue: Wet/rain areas\n- Yellow/Orange: High temperature warning\n- Green: Ideal conditions\n- Gray: Dry track',
+                'ja': '- 青：ウェット/雨エリア\n- 黄/オレンジ：高温警告\n- 緑：理想的な条件\n- グレー：ドライトラック'
+            },
+            
+            # ========== Traffic Timeline Help / 車流時間軸說明 ==========
+            'help_traffic_timeline_title': {'zh': '車流時間軸', 'en': 'Traffic Timeline', 'ja': 'トラフィックタイムライン'},
+            'help_traffic_timeline_desc': {
+                'zh': '車流時間軸模組顯示各車手之間的相對間距隨時間的變化。\n\n演算法邏輯：\n1. 時間序列記錄：每圈記錄所有車手的相對位置和差距\n2. 趨勢分析：計算差距變化的斜率判斷追趕/拉開\n3. 交叉檢測：識別差距曲線交叉點（超車時刻）\n4. 群組識別：將相近的車手歸類為同一戰鬥群組',
+                'en': 'Traffic Timeline module displays relative gaps between drivers over time.\n\nAlgorithm Logic:\n1. Time Series Recording: Record relative positions and gaps each lap\n2. Trend Analysis: Calculate gap change slope to determine chase/gap\n3. Crossover Detection: Identify gap curve crossover points (overtake moments)\n4. Group Identification: Classify close drivers into same battle groups',
+                'ja': 'トラフィックタイムラインモジュールは時間経過に伴うドライバー間の相対ギャップを表示します。\n\nアルゴリズムロジック：\n1. 時系列記録：各ラップですべてのドライバーの相対位置とギャップを記録\n2. トレンド分析：ギャップ変化の傾きを計算して追跡/ギャップを判断\n3. クロスオーバー検出：ギャップ曲線の交差点（オーバーテイクの瞬間）を識別\n4. グループ識別：接近したドライバーを同じバトルグループに分類'
+            },
+            'help_traffic_timeline_features': {
+                'zh': '- 差距歷史趨勢圖\n- 超車時刻標記\n- 戰鬥群組可視化\n- 預測交會時間',
+                'en': '- Gap history trend chart\n- Overtake moment marking\n- Battle group visualization\n- Predicted crossover time',
+                'ja': '- ギャップ履歴トレンドチャート\n- オーバーテイク瞬間のマーキング\n- バトルグループの可視化\n- 予測交差時間'
+            },
+            'help_traffic_timeline_colors': {
+                'zh': '- 車隊顏色區分車手\n- 線條斜率表示追趕/拉開趨勢\n- 交叉點用圓圈標示',
+                'en': '- Team colors distinguish drivers\n- Line slope indicates chase/gap trend\n- Crossover points marked with circles',
+                'ja': '- チームカラーでドライバーを区別\n- 線の傾きは追跡/ギャップの傾向を示す\n- 交差点は円でマーク'
+            },
+            
+            # ========== Race Control Help / 比賽控制說明 ==========
+            'help_race_control_title': {'zh': '比賽控制訊息', 'en': 'Race Control Messages', 'ja': 'レースコントロールメッセージ'},
+            'help_race_control_desc': {
+                'zh': '比賽控制訊息模組顯示 FIA 發出的官方比賽通知。\n\n演算法邏輯：\n1. 訊息分類：將訊息分為旗號、處罰、調查、資訊等類別\n2. 嚴重性評估：根據訊息內容評估對比賽的影響程度\n3. 車手關聯：解析訊息內容識別相關車手\n4. 時間排序：按時間順序顯示所有訊息',
+                'en': 'Race Control Messages module displays official FIA race notifications.\n\nAlgorithm Logic:\n1. Message Classification: Categorize into flags, penalties, investigations, info\n2. Severity Assessment: Evaluate race impact based on message content\n3. Driver Association: Parse message content to identify related drivers\n4. Time Ordering: Display all messages in chronological order',
+                'ja': 'レースコントロールメッセージモジュールはFIAの公式レース通知を表示します。\n\nアルゴリズムロジック：\n1. メッセージ分類：フラッグ、ペナルティ、調査、情報にカテゴリ分け\n2. 重大度評価：メッセージ内容に基づいてレースへの影響を評価\n3. ドライバー関連：メッセージ内容を解析して関連ドライバーを識別\n4. 時間順序：すべてのメッセージを時系列順に表示'
+            },
+            'help_race_control_features': {
+                'zh': '- 即時訊息通知\n- 按類別篩選\n- 車手相關訊息高亮\n- 歷史訊息查詢',
+                'en': '- Real-time message notifications\n- Filter by category\n- Highlight driver-related messages\n- Historical message query',
+                'ja': '- リアルタイムメッセージ通知\n- カテゴリでフィルター\n- ドライバー関連メッセージをハイライト\n- 過去のメッセージ検索'
+            },
+            'help_race_control_colors': {
+                'zh': '- 紅色：紅旗/嚴重訊息\n- 黃色：黃旗/警告\n- 藍色：藍旗\n- 白色：一般資訊',
+                'en': '- Red: Red flag/serious messages\n- Yellow: Yellow flag/warnings\n- Blue: Blue flag\n- White: General information',
+                'ja': '- 赤：レッドフラッグ/重大メッセージ\n- 黄：イエローフラッグ/警告\n- 青：ブルーフラッグ\n- 白：一般情報'
+            },
+            
+            # ========== Lap Time Distribution Help / 圈速分布說明 ==========
+            'help_lap_distribution_title': {'zh': '圈速分布', 'en': 'Lap Time Distribution', 'ja': 'ラップタイム分布'},
+            'help_lap_distribution_desc': {
+                'zh': '圈速分布模組以直方圖或小提琴圖顯示車手圈速的統計分布。\n\n演算法邏輯：\n1. 資料清洗：排除進站圈、慢車圈、黃旗圈等異常資料\n2. 分布計算：計算平均值、中位數、標準差\n3. 一致性評分：標準差越小表示越穩定\n4. 尾部分析：識別異常快圈或慢圈',
+                'en': 'Lap Time Distribution module displays statistical distribution of lap times as histogram or violin plot.\n\nAlgorithm Logic:\n1. Data Cleaning: Exclude pit laps, slow laps, yellow flag laps\n2. Distribution Calculation: Calculate mean, median, standard deviation\n3. Consistency Scoring: Lower standard deviation indicates more stable\n4. Tail Analysis: Identify outlier fast or slow laps',
+                'ja': 'ラップタイム分布モジュールはヒストグラムまたはバイオリンプロットでラップタイムの統計分布を表示します。\n\nアルゴリズムロジック：\n1. データクリーニング：ピットラップ、スローラップ、イエローフラッグラップを除外\n2. 分布計算：平均値、中央値、標準偏差を計算\n3. 一貫性スコアリング：標準偏差が低いほど安定\n4. テール分析：外れ値の速いまたは遅いラップを識別'
+            },
+            'help_lap_distribution_features': {
+                'zh': '- 直方圖/箱線圖/小提琴圖視圖\n- 多車手比較\n- 一致性排名\n- 最佳/最差圈標示',
+                'en': '- Histogram/Box plot/Violin plot views\n- Multi-driver comparison\n- Consistency ranking\n- Best/worst lap marking',
+                'ja': '- ヒストグラム/ボックスプロット/バイオリンプロットビュー\n- マルチドライバー比較\n- 一貫性ランキング\n- ベスト/ワーストラップのマーキング'
+            },
+            'help_lap_distribution_colors': {
+                'zh': '- 車隊顏色區分車手\n- 紫色標示最快圈\n- 紅色標示異常慢圈\n- 透明度表示資料密度',
+                'en': '- Team colors distinguish drivers\n- Purple marks fastest laps\n- Red marks abnormally slow laps\n- Transparency indicates data density',
+                'ja': '- チームカラーでドライバーを区別\n- 紫は最速ラップをマーク\n- 赤は異常に遅いラップをマーク\n- 透明度はデータ密度を示す'
+            },
+            
             # DraggableTitleBar 右鍵選單
             'context_menu_restore': {'zh': '恢復正常大小', 'en': 'Restore Normal Size', 'ja': '通常サイズに戻す'},
             'context_menu_maximize': {'zh': ' 最大化', 'en': ' Maximize', 'ja': ' 最大化'},
@@ -1236,6 +1676,10 @@ class GuiTranslator:
             'driver_strategy_title': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
             'right_click_select_driver': {'zh': '右鍵點擊選擇車手', 'en': 'Right-click to select driver', 'ja': '右クリックでドライバーを選択'},
             'Predicted': {'zh': '預測', 'en': 'Predicted', 'ja': '予測'},
+            'Actual': {'zh': '實際', 'en': 'Actual', 'ja': '実際'},
+            'Delta': {'zh': '差距', 'en': 'Delta', 'ja': 'デルタ'},
+            'Tyre': {'zh': '輪胎', 'en': 'Tyre', 'ja': 'タイヤ'},
+            'Lap': {'zh': '圈', 'en': 'Lap', 'ja': 'ラップ'},
             'SC/VSC': {'zh': 'SC/VSC', 'en': 'SC/VSC', 'ja': 'SC/VSC'},
             'PIT Est.': {'zh': 'PIT 預估', 'en': 'PIT Est.', 'ja': 'PIT 予測'},
             'Soft Strategy': {'zh': '軟胎策略', 'en': 'Soft Strategy', 'ja': 'ソフト戦略'},
@@ -2241,6 +2685,369 @@ Acceleration (100 → {max_speed_full} km/h):
             'POSITION_DISTRIBUTION': {'zh': '位置分佈', 'en': 'Position Distribution', 'ja': 'ポジション分布'},
             'AVG_POSITION': {'zh': '平均位置', 'en': 'Average Position', 'ja': '平均ポジション'},
             'PODIUM_POINTS': {'zh': '頒獎台/積分', 'en': 'Podium/Points', 'ja': '表彰台/ポイント'},
+            
+            # =================================================================
+            # Module Help System - Live Timing Modules (Phase 1)
+            # =================================================================
+            
+            # --- 通用 ---
+            'module_help_title': {'zh': '模組說明', 'en': 'Module Help', 'ja': 'モジュールヘルプ'},
+            'help_section_description': {'zh': '功能說明', 'en': 'Description', 'ja': '機能説明'},
+            'help_section_features': {'zh': '功能特點', 'en': 'Features', 'ja': '機能'},
+            'help_section_colors': {'zh': '顏色圖例', 'en': 'Color Legend', 'ja': 'カラー凡例'},
+            
+            # --- Default ---
+            'help_default_title': {'zh': '模組說明', 'en': 'Module Help', 'ja': 'モジュールヘルプ'},
+            'help_default_desc': {'zh': '此模組的說明尚未建立。', 'en': 'Help content for this module is not yet available.', 'ja': 'このモジュールのヘルプは準備中です。'},
+            'help_default_features': {'zh': '', 'en': '', 'ja': ''},
+            'help_default_colors': {'zh': '', 'en': '', 'ja': ''},
+            
+            # --- Chase Strategy ⭐ 含演算法 ---
+            'help_chase_strategy_title': {'zh': '追趕策略', 'en': 'Chase Strategy', 'ja': '追跡戦略'},
+            'help_chase_strategy_desc': {'zh': 'P2 追趕 P1 策略分析。顯示 5 種策略的追上機率和預計圈數。', 'en': 'P2 chasing P1 strategy analysis with 5 strategy scenarios.', 'ja': 'P2がP1を追跡する戦略分析（5つの戦略シナリオ）。'},
+            'help_chase_strategy_features': {'zh': '• 策略 1: 繼續當前輪胎\n• 策略 2: P2 Undercut\n• 策略 3: P2 Overcut\n• 策略 4: SC 進站\n• 策略 5: P1 先進站', 'en': '• Strategy 1: Continue tyres\n• Strategy 2: P2 Undercut\n• Strategy 3: P2 Overcut\n• Strategy 4: SC pit\n• Strategy 5: P1 pits first', 'ja': '• 戦略1: タイヤ継続\n• 戦略2: P2 アンダーカット\n• 戦略3: P2 オーバーカット\n• 戦略4: SC ピット\n• 戦略5: P1先行ピット'},
+            'help_chase_strategy_colors': {'zh': '【演算法】\nweighted_advantage = W_trend × Trend + W_theory × Theory\n\n【權重】\n• |Trend| ≥ 0.5 → 90% (>>>)\n• |Trend| ≥ 0.3 → 70% (>>)\n• |Trend| ≥ 0.1 → 50% (>)\n• |Trend| < 0.1 → 20% (-)\n\n追趕圈數 = Gap ÷ weighted_advantage + 1', 'en': '【Algorithm】\nweighted_advantage = W_trend × Trend + W_theory × Theory\n\n【Weights】\n• |Trend| ≥ 0.5 → 90% (>>>)\n• |Trend| ≥ 0.3 → 70% (>>)\n• |Trend| ≥ 0.1 → 50% (>)\n• |Trend| < 0.1 → 20% (-)\n\nLaps to catch = Gap ÷ weighted_advantage + 1', 'ja': '【アルゴリズム】\nweighted_advantage = W_trend × Trend + W_theory × Theory\n\n【重み】\n• |Trend| ≥ 0.5 → 90%（>>>）\n• |Trend| ≥ 0.3 → 70%（>>）\n• |Trend| ≥ 0.1 → 50%（>）\n• |Trend| < 0.1 → 20%（-）\n\n追い付きラップ = Gap ÷ weighted_advantage + 1'},
+            
+            # --- SF% History ⭐ 含演算法 ---
+            'help_sf_percentage_title': {'zh': 'SF% 歷史', 'en': 'SF% History', 'ja': 'SF%履歴'},
+            'help_sf_percentage_desc': {'zh': '顯示車手 SF% (Stint Fuel Saving) 歷史曲線。', 'en': 'Displays driver SF% history curve.', 'ja': 'ドライバーSF%履歴曲線を表示。'},
+            'help_sf_percentage_features': {'zh': '• SF% 曲線\n• 閾值區域 (-3% 黃, -5% 紅)\n• SC 區域標記\n• 進站標記', 'en': '• SF% curve\n• Threshold zones (-3% yellow, -5% red)\n• SC zone marking\n• PIT markers', 'ja': '• SF%曲線\n• 閾値ゾーン（-3%黄、-5%赤）\n• SCゾーンマーキング\n• PITマーカー'},
+            'help_sf_percentage_colors': {'zh': '【演算法】\nSF% = ((Throttle - Baseline) / Baseline) × 100\n\n【解讀】\n• SF% > 0 → 推進模式\n• SF% < 0 → 省油模式\n• SF% < -3% → 黃色警告\n• SF% < -5% → 紅色警告', 'en': '【Algorithm】\nSF% = ((Throttle - Baseline) / Baseline) × 100\n\n【Interpretation】\n• SF% > 0 → Pushing mode\n• SF% < 0 → Fuel saving\n• SF% < -3% → Yellow warning\n• SF% < -5% → Red warning', 'ja': '【アルゴリズム】\nSF% = ((Throttle - Baseline) / Baseline) × 100\n\n【解釈】\n• SF% > 0 → プッシュモード\n• SF% < 0 → 燃料節約\n• SF% < -3% → 黄色警告\n• SF% < -5% → 赤色警告'},
+            
+            # --- Battle Insight ⭐ 含演算法 ---
+            'help_battle_insight_title': {'zh': '戰鬥分析', 'en': 'Battle Insight', 'ja': 'バトル分析'},
+            'help_battle_insight_desc': {
+                'zh': '即時顯示可能發生超車的車手配對。使用 F83 超車預測 + F84 規則引擎解說。\n\n【核心功能】\n• OT% 超車機率預測 (F83 模型)\n• 連續追近計數器 (容錯機制)\n• DRS 狀態判斷 (gap < 1s)\n• 輪胎差異分析',
+                'en': 'Real-time display of driver pairs likely to battle. Uses F83 overtake prediction + F84 rule engine.\n\n【Core Functions】\n• OT% overtake probability (F83 model)\n• Consecutive catching counter (with tolerance)\n• DRS status detection (gap < 1s)\n• Tyre difference analysis',
+                'ja': 'バトル可能性のあるドライバーペアをリアルタイム表示。F83オーバーテイク予測 + F84ルールエンジンを使用。\n\n【コア機能】\n• OT%オーバーテイク確率（F83モデル）\n• 連続追跡カウンター（容錯付き）\n• DRSステータス検出（gap < 1s）\n• タイヤ差分析'
+            },
+            'help_battle_insight_features': {
+                'zh': '【閾值設定】\n• BATTLE_THRESHOLD: 40% (OT% >= 40%才顯示)\n• CATCHING_THRESHOLD: -0.04 s/圈 (追近判斷)\n• CATCHING_RESET_TOLERANCE: 3 (連續3次未追近才重置)\n• HISTORY_RETENTION: 10s (超車後保留顯示)\n\n【表格欄位】\n• Battle: P{x} TLA vs P{y} TLA\n• OT%: 超車機率 (≥ 80% 黃色警示)\n• Status: DRS/Closing/Hunting\n• Insight: 間距 + 輪胎 + 追近計數',
+                'en': '【Thresholds】\n• BATTLE_THRESHOLD: 40% (show if OT% >= 40%)\n• CATCHING_THRESHOLD: -0.04 s/lap\n• CATCHING_RESET_TOLERANCE: 3 (reset after 3 non-catching)\n• HISTORY_RETENTION: 10s\n\n【Table Columns】\n• Battle: P{x} TLA vs P{y} TLA\n• OT%: Overtake probability (≥ 80% yellow)\n• Status: DRS/Closing/Hunting\n• Insight: Gap + Tyre + Catching count',
+                'ja': '【閾値設定】\n• BATTLE_THRESHOLD: 40%（OT% >= 40%で表示）\n• CATCHING_THRESHOLD: -0.04 s/ラップ\n• CATCHING_RESET_TOLERANCE: 3（3回連続非追跡でリセット）\n• HISTORY_RETENTION: 10s\n\n【テーブルカラム】\n• Battle: P{x} TLA vs P{y} TLA\n• OT%: オーバーテイク確率（≥ 80%黃色）\n• Status: DRS/Closing/Hunting\n• Insight: ギャップ + タイヤ + 追跡カウント'
+            },
+            'help_battle_insight_colors': {
+                'zh': '【連續追近演算法】\nif gap_trend < CATCHING_THRESHOLD:\n    consecutive_catching += 1\n    not_catching_count = 0\nelse:\n    not_catching_count += 1\n    if not_catching_count >= 3:\n        consecutive_catching = 0  # 重置\n\n【追近標記】\n• >>> x3: 連續 3-4 次追近 (深綠)\n• >>>>> x5+: 連續 5+ 次追近 (亮綠)\n\n【狀態顏色】\n• 綠色 DRS: gap < 1.0s\n• 黃色 Closing: gap < 1.5s\n• 白色 Hunting: 其他',
+                'en': '【Consecutive Catching Algorithm】\nif gap_trend < CATCHING_THRESHOLD:\n    consecutive_catching += 1\n    not_catching_count = 0\nelse:\n    not_catching_count += 1\n    if not_catching_count >= 3:\n        consecutive_catching = 0  # reset\n\n【Catching Markers】\n• >>> x3: 3-4 consecutive catching (dark green)\n• >>>>> x5+: 5+ consecutive catching (bright green)\n\n【Status Colors】\n• Green DRS: gap < 1.0s\n• Yellow Closing: gap < 1.5s\n• White Hunting: other',
+                'ja': '【連続追跡アルゴリズム】\nif gap_trend < CATCHING_THRESHOLD:\n    consecutive_catching += 1\n    not_catching_count = 0\nelse:\n    not_catching_count += 1\n    if not_catching_count >= 3:\n        consecutive_catching = 0  # リセット\n\n【追跡マーカー】\n• >>> x3: 3-4回連続追跡（濃緑）\n• >>>>> x5+: 5+回連続追跡（鮮緑）\n\n【ステータスカラー】\n• 緑 DRS: gap < 1.0s\n• 黄 Closing: gap < 1.5s\n• 白 Hunting: その他'
+            },
+            
+            # --- Driver Strategy ---
+            'help_driver_strategy_title': {'zh': '車手策略', 'en': 'Driver Strategy', 'ja': 'ドライバー戦略'},
+            'help_driver_strategy_desc': {
+                'zh': '即時車手策略分析圖表。顯示實際圈速/預測圈速曲線、輪胎衰退模型、進站預測、省胎評估(F87)、賽道演進等功能。支援同時追蹤全場 20 位車手，可即時切換無延遲。',
+                'en': 'Real-time driver strategy analysis chart. Shows actual vs predicted lap times, tyre degradation model, pit prediction, fuel saving assessment (F87), track evolution. Tracks all 20 drivers simultaneously with instant switching.',
+                'ja': 'リアルタイムドライバー戦略分析チャート。実際のラップタイム対予測、タイヤ劣化モデル、ピット予測、燃料節約評価（F87）、トラック進化を表示。20ドライバー同時追跡、即時切替対応。'
+            },
+            'help_driver_strategy_features': {
+                'zh': '【核心功能】\n• 實際圈速曲線 (青色實線+圓點)\n• 預測圈速曲線 (紫色虛線)\n• 預測範圍區域 (半透明紫色填充)\n• 三配方預測線 (S/M/H)\n\n【進階功能】\n• SC/VSC 區域標記 (金色)\n• 進站標記 + PIT Est 預估\n• 省胎評估 (F87 演算法)\n• 賽道演進效應 (20車統計)\n• 燃油效率修正\n\n【操作】\n• 右鍵選單切換車手\n• 懸停顯示 Tooltip',
+                'en': '【Core Features】\n• Actual lap curve (cyan solid + circles)\n• Predicted lap curve (purple dashed)\n• Prediction range fill (semi-transparent)\n• 3-compound prediction lines (S/M/H)\n\n【Advanced】\n• SC/VSC zone marking (gold)\n• Pit markers + PIT Est prediction\n• Fuel saving assessment (F87)\n• Track evolution effect (20-car stats)\n• Fuel efficiency correction\n\n【Controls】\n• Right-click to switch driver\n• Hover for tooltip',
+                'ja': '【コア機能】\n• 実際のラップ曲線（シアン実線+円）\n• 予測ラップ曲線（紫破線）\n• 予測範囲塗り（半透明）\n• 3コンパウンド予測線（S/M/H）\n\n【高度な機能】\n• SC/VSCゾーンマーキング（金）\n• ピットマーカー + PIT Est予測\n• 燃料節約評価（F87）\n• トラック進化効果（20車統計）\n• 燃料効率補正\n\n【操作】\n• 右クリックでドライバー切替\n• ホバーでツールチップ'
+            },
+            'help_driver_strategy_colors': {
+                'zh': '【演算法】\n預測圈速 = Base + 衰退 + 燃油 + 演進 – 修正\n\n• Base: 前3圈鎖定的基準圈速\n• 衰退: 二次方程式模型 (a·n² + b·n + c)\n• 燃油: 每圈減重約 0.035s\n• 演進: 全場中位數賽道演進\n• 修正: 自適應校正因子\n\n【省胎 F87】\nSF% = (Baseline - Current) / Baseline × 100\n• NONE: SF < 5%\n• LIGHT: 5-15% (+8%)\n• MODERATE: 15-30% (+15%)\n• HEAVY: > 30% (+25%)\n\n【顏色】\n• 青線 = 實際圈速\n• 紫線 = 預測圈速\n• 金區 = SC/VSC\n• 紅/黃/白 = S/M/H 預測線',
+                'en': '【Algorithm】\nPredicted = Base + Degradation + Fuel + Evolution – Correction\n\n• Base: Locked base lap time from laps 2-3\n• Degradation: Quadratic model (a·n² + b·n + c)\n• Fuel: ~0.035s per lap weight reduction\n• Evolution: Median track evolution\n• Correction: Adaptive correction factor\n\n【F87 Fuel Saving】\nSF% = (Baseline - Current) / Baseline × 100\n• NONE: SF < 5%\n• LIGHT: 5-15% (+8%)\n• MODERATE: 15-30% (+15%)\n• HEAVY: > 30% (+25%)\n\n【Colors】\n• Cyan = Actual lap times\n• Purple = Predicted lap times\n• Gold = SC/VSC zones\n• Red/Yellow/White = S/M/H predictions',
+                'ja': '【アルゴリズム】\n予測 = Base + 劣化 + 燃料 + 進化 – 補正\n\n• Base: ラップ2-3からロックされたベースタイム\n• 劣化: 二次方程式モデル（a·n² + b·n + c）\n• 燃料: ラップ毎約0.035s軽量化\n• 進化: 中央値トラック進化\n• 補正: 適応補正係数\n\n【F87燃料節約】\nSF% = (Baseline - Current) / Baseline × 100\n• NONE: SF < 5%\n• LIGHT: 5-15%（+8%）\n• MODERATE: 15-30%（+15%）\n• HEAVY: > 30%（+25%）\n\n【カラー】\n• シアン = 実際のラップタイム\n• 紫 = 予測ラップタイム\n• 金 = SC/VSCゾーン\n• 赤/黃/白 = S/M/H予測線'
+            },
+            
+            # --- Throttle 95% History ---
+            'help_throttle_history_title': {'zh': '油門 95% 歷史', 'en': 'Throttle 95% History', 'ja': 'スロットル95%履歴'},
+            'help_throttle_history_desc': {'zh': '顯示所有車手每圈油門 95%+ 使用率。', 'en': 'Shows throttle 95%+ usage per lap for all drivers.', 'ja': '全ドライバーの各ラップのスロットル95%+使用率を表示。'},
+            'help_throttle_history_features': {'zh': '• 每圈油門使用率\n• 歷史趨勢曲線', 'en': '• Per-lap throttle usage\n• Historical trend curve', 'ja': '• ラップ毎スロットル使用率\n• 履歴トレンド曲線'},
+            'help_throttle_history_colors': {'zh': '• 綠 = 高使用率\n• 紅 = 低使用率', 'en': '• Green = High usage\n• Red = Low usage', 'ja': '• 緑 = 高使用率\n• 赤 = 低使用率'},
+            
+            # --- Top Speed History ---
+            'help_top_speed_history_title': {'zh': '最高速歷史', 'en': 'Top Speed History', 'ja': '最高速度履歴'},
+            'help_top_speed_history_desc': {'zh': '顯示所有車手每圈最高速度。', 'en': 'Shows top speed per lap for all drivers.', 'ja': '全ドライバーの各ラップの最高速度を表示。'},
+            'help_top_speed_history_features': {'zh': '• 每圈最高速\n• 個人最佳標記', 'en': '• Per-lap top speed\n• Personal best marking', 'ja': '• ラップ毎最高速度\n• パーソナルベストマーキング'},
+            'help_top_speed_history_colors': {'zh': '• 紫色背景 = 個人最佳', 'en': '• Purple background = Personal best', 'ja': '• 紫背景 = パーソナルベスト'},
+            
+            # --- Track Map ---
+            'help_track_map_title': {'zh': '賽道地圖', 'en': 'Track Map', 'ja': 'トラックマップ'},
+            'help_track_map_desc': {'zh': '即時顯示車手在賽道上的位置。', 'en': 'Real-time driver positions on track.', 'ja': 'トラック上のドライバー位置をリアルタイム表示。'},
+            'help_track_map_features': {'zh': '• 即時位置追蹤\n• 車隊顏色標記', 'en': '• Real-time position tracking\n• Team color markers', 'ja': '• リアルタイムポジション追跡\n• チームカラーマーカー'},
+            'help_track_map_colors': {'zh': '車隊顏色圓點 = 車手位置', 'en': 'Team color dot = Driver position', 'ja': 'チームカラードット = ドライバー位置'},
+            
+            # --- Ranking Tower ---
+            # --- Ranking Tower ⭐ 含演算法 ---
+            'help_ranking_tower_title': {'zh': '即時排名', 'en': 'Live Ranking', 'ja': 'ライブランキング'},
+            'help_ranking_tower_desc': {
+                'zh': '即時車手排名塔。顯示位置、差距變化趨勢、輪胎狀態和進站次數。\n\n【差距趨勢分析】\n使用 gap_trend 判斷車手間的距離變化，顯示 >>, >, <, << 等箭頭指示。',
+                'en': 'Real-time driver ranking tower. Shows position, gap trends, tyre status and pit counts.\n\n【Gap Trend Analysis】\nUses gap_trend to determine distance changes between drivers, showing >>, >, <, << arrows.',
+                'ja': 'リアルタイムドライバーランキングタワー。ポジション、ギャップトレンド、タイヤステータス、ピット回数を表示。\n\n【ギャップトレンド分析】\ngap_trendでドライバー間の距離変化を判断、>>, >, <, << 矢印を表示。'
+            },
+            'help_ranking_tower_features': {
+                'zh': '【欄位說明】\n• P: 位置 (帶車隊色條)\n• Driver: 車手代號 (TLA)\n• Tyres: 輪胎配方 + 圈數 (S12/M8/H5)\n• Gap: 與前車差距 + 趨勢箭頭\n• Int: 與領先車差距\n• Last: 最後一圈圈速\n• PIT: 進站次數',
+                'en': '【Column Description】\n• P: Position (with team color bar)\n• Driver: Driver code (TLA)\n• Tyres: Compound + Age (S12/M8/H5)\n• Gap: Gap to ahead + trend arrow\n• Int: Gap to leader\n• Last: Last lap time\n• PIT: Pit stop count',
+                'ja': '【カラム説明】\n• P: ポジション（チームカラーバー付き）\n• Driver: ドライバーコード（TLA）\n• Tyres: コンパウンド + 周回数（S12/M8/H5）\n• Gap: 前車とのギャップ + トレンド矢印\n• Int: リーダーとのギャップ\n• Last: 最後のラップタイム\n• PIT: ピットストップ回数'
+            },
+            'help_ranking_tower_colors': {
+                'zh': '【差距趨勢演算法】\nif gap_trend < -0.3: "綠>>> "  # 強勢追近\nif gap_trend < -0.1: "綠>> "   # 追近\nif gap_trend < -0.03: "綠> "  # 輕微追近\nif gap_trend > 0.03: " <紅"   # 輕微拉開\nif gap_trend > 0.1: " <<紅"  # 拉開\nif gap_trend > 0.3: " <<<紅" # 強勢拉開\n\n【輪胎顏色】\n• 紅圓 = SOFT\n• 黃圓 = MEDIUM\n• 白圓 = HARD\n• 綠圓 = INTER\n• 藍圓 = WET\n\n【特殊狀態】\n• 紅底線 = OUT車\n• 紫紅底 = 全場最快圈\n• 黃底 = PIT 狀態',
+                'en': '【Gap Trend Algorithm】\nif gap_trend < -0.3: "green>>> "  # Strong closing\nif gap_trend < -0.1: "green>> "   # Closing\nif gap_trend < -0.03: "green> "  # Slight closing\nif gap_trend > 0.03: " <red"   # Slight increasing\nif gap_trend > 0.1: " <<red"  # Increasing\nif gap_trend > 0.3: " <<<red" # Strong increasing\n\n【Tyre Colors】\n• Red circle = SOFT\n• Yellow circle = MEDIUM\n• White circle = HARD\n• Green circle = INTER\n• Blue circle = WET\n\n【Special Status】\n• Red underline = OUT\n• Purple bg = Session fastest\n• Yellow bg = PIT status',
+                'ja': '【ギャップトレンドアルゴリズム】\nif gap_trend < -0.3: "緑>>> "  # 強い接近\nif gap_trend < -0.1: "緑>> "   # 接近\nif gap_trend < -0.03: "緑> "  # 微小接近\nif gap_trend > 0.03: " <赤"   # 微小拡大\nif gap_trend > 0.1: " <<赤"  # 拡大\nif gap_trend > 0.3: " <<<赤" # 強い拡大\n\n【タイヤカラー】\n• 赤円 = SOFT\n• 黄円 = MEDIUM\n• 白円 = HARD\n• 緑円 = INTER\n• 青円 = WET\n\n【特殊ステータス】\n• 赤下線 = OUT\n• 紫背景 = セッション最速\n• 黄背景 = PITステータス'
+            },
+            
+            # --- Lap History ---
+            'help_lap_history_title': {'zh': '圈速歷史', 'en': 'Lap History', 'ja': 'ラップ履歴'},
+            'help_lap_history_desc': {'zh': '顯示所有車手圈速歷史。', 'en': 'Shows lap time history for all drivers.', 'ja': '全ドライバーのラップタイム履歴を表示。'},
+            'help_lap_history_features': {'zh': '• 圈速表格\n• 最快圈標記\n• 個人最佳標記', 'en': '• Lap time table\n• Fastest lap marking\n• Personal best marking', 'ja': '• ラップタイムテーブル\n• 最速ラップマーキング\n• パーソナルベストマーキング'},
+            'help_lap_history_colors': {'zh': '• 紫色 = 全場最快\n• 綠色 = 個人最佳', 'en': '• Purple = Session fastest\n• Green = Personal best', 'ja': '• 紫 = セッション最速\n• 緑 = パーソナルベスト'},
+            
+            # --- Sector Comparison ---
+            'help_sector_comparison_title': {'zh': '扇區比較', 'en': 'Sector Comparison', 'ja': 'セクター比較'},
+            'help_sector_comparison_desc': {'zh': '比較兩位車手扇區時間。', 'en': 'Compares sector times between drivers.', 'ja': '2人のドライバーのセクタータイムを比較。'},
+            'help_sector_comparison_features': {'zh': '• 雙車手比較\n• 扇區時間差', 'en': '• Two-driver comparison\n• Sector time difference', 'ja': '• 2ドライバー比較\n• セクタータイム差'},
+            'help_sector_comparison_colors': {'zh': '• 綠色 = 領先\n• 紅色 = 落後', 'en': '• Green = Ahead\n• Red = Behind', 'ja': '• 緑 = 先行\n• 赤 = 遅れ'},
+            
+            # --- Speed/Telemetry Traces ---
+            'help_speed_trace_title': {'zh': '速度追蹤', 'en': 'Speed Trace', 'ja': '速度トレース'},
+            'help_speed_trace_desc': {'zh': '速度 vs 距離曲線。', 'en': 'Speed vs distance trace.', 'ja': '速度対距離トレース。'},
+            'help_speed_trace_features': {'zh': '• 速度曲線\n• 雙車手比較', 'en': '• Speed curve\n• Dual driver comparison', 'ja': '• 速度曲線\n• 2ドライバー比較'},
+            'help_speed_trace_colors': {'zh': '車隊顏色 = 速度曲線', 'en': 'Team color = Speed curve', 'ja': 'チームカラー = 速度曲線'},
+            
+            'help_throttle_trace_title': {'zh': '油門追蹤', 'en': 'Throttle Trace', 'ja': 'スロットルトレース'},
+            'help_throttle_trace_desc': {'zh': '油門 vs 距離曲線。', 'en': 'Throttle vs distance trace.', 'ja': 'スロットル対距離トレース。'},
+            'help_throttle_trace_features': {'zh': '• 油門百分比曲線', 'en': '• Throttle percentage curve', 'ja': '• スロットル%曲線'},
+            'help_throttle_trace_colors': {'zh': '綠色 = 全油門', 'en': 'Green = Full throttle', 'ja': '緑 = フルスロットル'},
+            
+            'help_brake_trace_title': {'zh': '煞車追蹤', 'en': 'Brake Trace', 'ja': 'ブレーキトレース'},
+            'help_brake_trace_desc': {'zh': '煞車 vs 距離曲線。', 'en': 'Brake vs distance trace.', 'ja': 'ブレーキ対距離トレース。'},
+            'help_brake_trace_features': {'zh': '• 煞車區域標記', 'en': '• Brake zone marking', 'ja': '• ブレーキゾーンマーキング'},
+            'help_brake_trace_colors': {'zh': '紅色 = 煞車中', 'en': 'Red = Braking', 'ja': '赤 = ブレーキ中'},
+            
+            'help_gear_trace_title': {'zh': '檔位追蹤', 'en': 'Gear Trace', 'ja': 'ギアトレース'},
+            'help_gear_trace_desc': {'zh': '檔位 vs 距離曲線 (1-8)。', 'en': 'Gear vs distance trace (1-8).', 'ja': 'ギア対距離トレース（1-8）。'},
+            'help_gear_trace_features': {'zh': '• 檔位變化曲線', 'en': '• Gear change curve', 'ja': '• ギア変更曲線'},
+            'help_gear_trace_colors': {'zh': '漸層色 = 檔位 1-8', 'en': 'Gradient = Gear 1-8', 'ja': 'グラデーション = ギア1-8'},
+            
+            'help_drs_trace_title': {'zh': 'DRS 追蹤', 'en': 'DRS Trace', 'ja': 'DRSトレース'},
+            'help_drs_trace_desc': {'zh': 'DRS 狀態 vs 距離。', 'en': 'DRS status vs distance.', 'ja': 'DRSステータス対距離。'},
+            'help_drs_trace_features': {'zh': '• DRS 開啟區域', 'en': '• DRS open zones', 'ja': '• DRSオープンゾーン'},
+            'help_drs_trace_colors': {'zh': '綠色 = DRS 開啟', 'en': 'Green = DRS open', 'ja': '緑 = DRSオープン'},
+            
+            'help_rpm_trace_title': {'zh': '轉速追蹤', 'en': 'RPM Trace', 'ja': 'RPMトレース'},
+            'help_rpm_trace_desc': {'zh': 'RPM vs 距離曲線。', 'en': 'RPM vs distance trace.', 'ja': 'RPM対距離トレース。'},
+            'help_rpm_trace_features': {'zh': '• RPM 曲線', 'en': '• RPM curve', 'ja': '• RPM曲線'},
+            'help_rpm_trace_colors': {'zh': '紅色 = 高轉速', 'en': 'Red = High RPM', 'ja': '赤 = 高回転'},
+            
+            # --- Other Live Timing Modules ---
+            'help_circle_map_title': {'zh': '圓形地圖', 'en': 'Circle Map', 'ja': 'サークルマップ'},
+            'help_circle_map_desc': {'zh': '圓形賽道位置可視化。', 'en': 'Circular track position visualization.', 'ja': '円形トラックポジション可視化。'},
+            'help_circle_map_features': {'zh': '• 圓形賽道顯示', 'en': '• Circular track display', 'ja': '• 円形トラック表示'},
+            'help_circle_map_colors': {'zh': '車隊顏色 = 位置', 'en': 'Team color = Position', 'ja': 'チームカラー = 位置'},
+            
+            'help_pit_window_title': {'zh': '進站窗口', 'en': 'Pit Window', 'ja': 'ピットウィンドウ'},
+            'help_pit_window_desc': {'zh': '進站窗口分析。', 'en': 'Pit stop window analysis.', 'ja': 'ピットストップウィンドウ分析。'},
+            'help_pit_window_features': {'zh': '• Undercut/Overcut 窗口', 'en': '• Undercut/Overcut window', 'ja': '• アンダー/オーバーカットウィンドウ'},
+            'help_pit_window_colors': {'zh': '綠色 = Undercut\n藍色 = Overcut', 'en': 'Green = Undercut\nBlue = Overcut', 'ja': '緑 = アンダーカット\n青 = オーバーカット'},
+            
+            'help_tyre_strategy_title': {'zh': '輪胎策略', 'en': 'Tyre Strategy', 'ja': 'タイヤ戦略'},
+            'help_tyre_strategy_desc': {'zh': '即時輪胎策略。', 'en': 'Real-time tyre strategy.', 'ja': 'リアルタイムタイヤ戦略。'},
+            'help_tyre_strategy_features': {'zh': '• 輪胎 Stint 顯示', 'en': '• Tyre stint display', 'ja': '• タイヤスティント表示'},
+            'help_tyre_strategy_colors': {'zh': '紅=SOFT 黃=MEDIUM 白=HARD', 'en': 'Red=SOFT Yellow=MEDIUM White=HARD', 'ja': '赤=SOFT 黃=MEDIUM 白=HARD'},
+            
+            'help_track_weather_title': {'zh': '賽道與天氣', 'en': 'Track & Weather', 'ja': 'トラック＆天気'},
+            'help_track_weather_desc': {'zh': '即時賽道和天氣狀態。', 'en': 'Real-time track and weather status.', 'ja': 'リアルタイムトラック・天候ステータス。'},
+            'help_track_weather_features': {'zh': '• 賽道溫度\n• 天氣條件', 'en': '• Track temperature\n• Weather conditions', 'ja': '• トラック温度\n• 天候条件'},
+            'help_track_weather_colors': {'zh': '藍=低溫 紅=高溫', 'en': 'Blue=Low temp Red=High temp', 'ja': '青=低温 赤=高温'},
+            
+            'help_traffic_timeline_title': {'zh': '車流時間線', 'en': 'Traffic Timeline', 'ja': 'トラフィックタイムライン'},
+            'help_traffic_timeline_desc': {'zh': '車流熱力圖。', 'en': 'Traffic heatmap.', 'ja': 'トラフィックヒートマップ。'},
+            'help_traffic_timeline_features': {'zh': '• 乾淨/髒空氣顯示', 'en': '• Clean/Dirty air display', 'ja': '• クリーン/ダーティエア表示'},
+            'help_traffic_timeline_colors': {'zh': '綠=乾淨 紅=髒空氣', 'en': 'Green=Clean Red=Dirty', 'ja': '緑=クリーン 赤=ダーティ'},
+            
+            'help_race_control_title': {'zh': '比賽控制訊息', 'en': 'Race Control', 'ja': 'レースコントロール'},
+            'help_race_control_desc': {'zh': '比賽控制訊息。', 'en': 'Race control messages.', 'ja': 'レースコントロールメッセージ。'},
+            'help_race_control_features': {'zh': '• 旗幟、處罰、調查', 'en': '• Flags, penalties, investigations', 'ja': '• フラグ、ペナルティ、調査'},
+            'help_race_control_colors': {'zh': '黃=黃旗 紅=紅旗 綠=綠旗', 'en': 'Yellow=Yellow Red=Red Green=Green', 'ja': '黃=黃旗 赤=赤旗 緑=緑旗'},
+            
+            'help_lap_distribution_title': {'zh': '圈速分布', 'en': 'Lap Distribution', 'ja': 'ラップ分布'},
+            'help_lap_distribution_desc': {'zh': '圈速分布可視化。', 'en': 'Lap time distribution visualization.', 'ja': 'ラップタイム分布可視化。'},
+            'help_lap_distribution_features': {'zh': '• 分布圖表', 'en': '• Distribution chart', 'ja': '• 分布チャート'},
+            'help_lap_distribution_colors': {'zh': '車隊顏色 = 各車手', 'en': 'Team color = Each driver', 'ja': 'チームカラー = 各ドライバー'},
+            
+            'help_control_panel_title': {'zh': '控制面板', 'en': 'Control Panel', 'ja': 'コントロールパネル'},
+            'help_control_panel_desc': {'zh': 'Live Timing 控制。', 'en': 'Live Timing control.', 'ja': 'ライブタイミングコントロール。'},
+            'help_control_panel_features': {'zh': '• 模式切換\n• 回放控制', 'en': '• Mode switch\n• Playback control', 'ja': '• モード切替\n• 再生コントロール'},
+            'help_control_panel_colors': {'zh': '綠=已連接 紅=未連接', 'en': 'Green=Connected Red=Disconnected', 'ja': '緑=接続済 赤=未接続'},
+            
+            # =================================================================
+            # Module Help System - Phase 2: Telemetry Analysis Modules
+            # =================================================================
+            
+            'help_speed_analysis_title': {'zh': '速度分析', 'en': 'Speed Analysis', 'ja': '速度分析'},
+            'help_speed_analysis_desc': {'zh': 'F1 賽車速度分析，支援雙車手圈速對比。', 'en': 'F1 speed analysis with dual driver comparison.', 'ja': 'F1速度分析、2ドライバー比較対応。'},
+            'help_speed_analysis_features': {'zh': '• 速度曲線對比\n• 距離/時間軸切換\n• 最高速標記', 'en': '• Speed curve comparison\n• Distance/Time axis toggle\n• Top speed marking', 'ja': '• 速度曲線比較\n• 距離/時間軸切替\n• 最高速度マーキング'},
+            'help_speed_analysis_colors': {'zh': '車隊顏色 = 各車手', 'en': 'Team color = Each driver', 'ja': 'チームカラー = 各ドライバー'},
+            
+            'help_throttle_analysis_title': {'zh': '油門分析', 'en': 'Throttle Analysis', 'ja': 'スロットル分析'},
+            'help_throttle_analysis_desc': {'zh': 'F1 賽車油門分析，對比駕駛風格。', 'en': 'F1 throttle analysis comparing driving styles.', 'ja': 'F1スロットル分析、ドライビングスタイル比較。'},
+            'help_throttle_analysis_features': {'zh': '• 油門曲線對比\n• 全油門時間統計', 'en': '• Throttle curve comparison\n• Full throttle time stats', 'ja': '• スロットル曲線比較\n• フルスロットル時間統計'},
+            'help_throttle_analysis_colors': {'zh': '綠=高油門 灰=低油門', 'en': 'Green=High throttle Gray=Low throttle', 'ja': '緑=高スロットル グレー=低スロットル'},
+            
+            'help_brake_analysis_title': {'zh': '煞車分析', 'en': 'Brake Analysis', 'ja': 'ブレーキ分析'},
+            'help_brake_analysis_desc': {'zh': 'F1 賽車煞車分析，識別煞車點和煞車強度。', 'en': 'F1 brake analysis identifying brake points and intensity.', 'ja': 'F1ブレーキ分析、ブレーキポイントと強度を識別。'},
+            'help_brake_analysis_features': {'zh': '• 煞車曲線對比\n• 煞車點識別\n• 煞車距離比較', 'en': '• Brake curve comparison\n• Brake point identification\n• Braking distance comparison', 'ja': '• ブレーキ曲線比較\n• ブレーキポイント識別\n• ブレーキ距離比較'},
+            'help_brake_analysis_colors': {'zh': '紅=煞車中 白=釋放', 'en': 'Red=Braking White=Released', 'ja': '赤=ブレーキ中 白=リリース'},
+            
+            'help_gear_analysis_title': {'zh': '檔位分析', 'en': 'Gear Analysis', 'ja': 'ギア分析'},
+            'help_gear_analysis_desc': {'zh': 'F1 賽車檔位分析，對比換檔時機。', 'en': 'F1 gear analysis comparing shift timing.', 'ja': 'F1ギア分析、シフトタイミングを比較。'},
+            'help_gear_analysis_features': {'zh': '• 檔位曲線 (1-8)\n• 換檔點比較', 'en': '• Gear curve (1-8)\n• Shift point comparison', 'ja': '• ギア曲線（1-8）\n• シフトポイント比較'},
+            'help_gear_analysis_colors': {'zh': '漸層色 = 檔位 1-8', 'en': 'Gradient = Gear 1-8', 'ja': 'グラデーション = ギア1-8'},
+            
+            'help_rpm_analysis_title': {'zh': 'RPM 分析', 'en': 'RPM Analysis', 'ja': 'RPM分析'},
+            'help_rpm_analysis_desc': {'zh': 'F1 賽車 RPM 轉速對比分析。', 'en': 'F1 RPM comparison analysis.', 'ja': 'F1 RPM比較分析。'},
+            'help_rpm_analysis_features': {'zh': '• RPM 曲線對比\n• 紅線區域標記', 'en': '• RPM curve comparison\n• Redline zone marking', 'ja': '• RPM曲線比較\n• レッドラインゾーンマーキング'},
+            'help_rpm_analysis_colors': {'zh': '紅=高轉速 藍=低轉速', 'en': 'Red=High RPM Blue=Low RPM', 'ja': '赤=高回転 青=低回転'},
+            
+            'help_telemetry_comparison_title': {'zh': '遙測比較', 'en': 'Telemetry Comparison', 'ja': 'テレメトリー比較'},
+            'help_telemetry_comparison_desc': {'zh': '多車手遙測疊加對比分析。', 'en': 'Multi-driver telemetry overlay comparison.', 'ja': 'マルチドライバーテレメトリーオーバーレイ比較。'},
+            'help_telemetry_comparison_features': {'zh': '• 多遙測通道對比\n• 跨賽段比較\n• Delta 時間計算', 'en': '• Multi-channel comparison\n• Cross-session comparison\n• Delta time calculation', 'ja': '• マルチチャンネル比較\n• クロスセッション比較\n• デルタタイム計算'},
+            'help_telemetry_comparison_colors': {'zh': '車隊顏色 = 各車手曲線', 'en': 'Team color = Each driver curve', 'ja': 'チームカラー = 各ドライバー曲線'},
+            
+            # =================================================================
+            # Module Help System - Phase 3: Advanced Analysis Modules
+            # =================================================================
+            
+            'help_long_run_title': {'zh': 'Long Run 分析', 'en': 'Long Run Analysis', 'ja': 'ロングラン分析'},
+            'help_long_run_desc': {
+                'zh': '長距離配速分析和輪胎衰退預測。支援自動識別 Long Run stint、燃油修正、賽道演進、真實衰退率計算。\n\n【自動識別條件】\n• 連續 8+ 圈有效圈速\n• 排除 PIT IN/OUT 圈\n• 可選擇 stint 進行分析',
+                'en': 'Long distance pace analysis and tyre degradation prediction. Supports auto-detection of Long Run stints, fuel correction, track evolution, true degradation calculation.\n\n【Auto Detection Criteria】\n• 8+ consecutive valid laps\n• Excludes PIT IN/OUT laps\n• Selectable stints for analysis',
+                'ja': 'ロングランペース分析とタイヤ劣化予測。ロングランスティント自動検出、燃料補正、トラックエボリューション、真の劣化率計算対応。\n\n【自動検出条件】\n• 8+連続有効ラップ\n• PIT IN/OUTラップ除外\n• 分析用スティント選択可能'
+            },
+            'help_long_run_features': {
+                'zh': '【計算項目】\n• Raw Degradation: 原始衰退率\n• Fuel Adjustment: 燃油修正量\n• Track Evolution: 賽道演進量\n• True Degradation: 真實衰退率\n\n【燃油參數】\n• start_fuel_kg: 85 kg (預設)\n• fuel_kg_per_lap: 1.70 kg/圈\n• fuel_effect: 0.030 s/kg',
+                'en': '【Calculations】\n• Raw Degradation: original degradation rate\n• Fuel Adjustment: fuel correction amount\n• Track Evolution: track evolution amount\n• True Degradation: actual degradation rate\n\n【Fuel Parameters】\n• start_fuel_kg: 85 kg (default)\n• fuel_kg_per_lap: 1.70 kg/lap\n• fuel_effect: 0.030 s/kg',
+                'ja': '【計算項目】\n• Raw Degradation: 元の劣化率\n• Fuel Adjustment: 燃料補正量\n• Track Evolution: トラックエボリューション量\n• True Degradation: 実際の劣化率\n\n【燃料パラメータ】\n• start_fuel_kg: 85 kg（デフォルト）\n• fuel_kg_per_lap: 1.70 kg/ラップ\n• fuel_effect: 0.030 s/kg'
+            },
+            'help_long_run_colors': {
+                'zh': '【衰退計算演算法】\n1. Fuel Corrected Time:\n   corrected = lap_time - (remaining_fuel x fuel_effect)\n\n2. Track Evolution:\n   統計方法: 全場中位數趨勢\n   參考方法: 指定車手基準\n   混合方法: 兩者加權\n\n3. True Degradation:\n   true_deg = raw - track_evo + fuel_adj\n\n【曲線擬合】\n• 線性迴歸: y = ax + b\n• 二次迴歸: y = ax2 + bx + c',
+                'en': '【Degradation Algorithm】\n1. Fuel Corrected Time:\n   corrected = lap_time - (remaining_fuel x fuel_effect)\n\n2. Track Evolution:\n   Statistical: Full field median trend\n   Reference: Specified driver baseline\n   Hybrid: Weighted combination\n\n3. True Degradation:\n   true_deg = raw - track_evo + fuel_adj\n\n【Curve Fitting】\n• Linear: y = ax + b\n• Quadratic: y = ax2 + bx + c',
+                'ja': '【劣化アルゴリズム】\n1. 燃料補正タイム:\n   corrected = lap_time - (remaining_fuel x fuel_effect)\n\n2. トラックエボリューション:\n   統計: 全場中央値トレンド\n   参照: 指定ドライバー基準\n   ハイブリッド: 加重組み合わせ\n\n3. 真の劣化:\n   true_deg = raw - track_evo + fuel_adj\n\n【曲線フィッティング】\n• 線形: y = ax + b\n• 二次: y = ax2 + bx + c'
+            },
+            
+            'help_ideal_lap_title': {'zh': '理想圈速', 'en': 'Ideal Lap', 'ja': '理想ラップ'},
+            'help_ideal_lap_desc': {'zh': '計算理想圈速（最佳扇區組合）。', 'en': 'Calculates ideal lap time (best sector combination).', 'ja': '理想ラップタイム（最適セクター組み合わせ）を計算。'},
+            'help_ideal_lap_features': {'zh': '• 最佳扇區組合\n• 理論最快圈\n• 扇區熱力圖', 'en': '• Best sector combination\n• Theoretical fastest lap\n• Sector heatmap', 'ja': '• 最適セクター組み合わせ\n• 理論最速ラップ\n• セクターヒートマップ'},
+            'help_ideal_lap_colors': {'zh': '【演算法】\nIdeal Lap = min(S1) + min(S2) + min(S3)\n\n各車手取各扇區最佳時間組合', 'en': '【Algorithm】\nIdeal Lap = min(S1) + min(S2) + min(S3)\n\nCombines best sector times for each driver', 'ja': '【アルゴリズム】\nIdeal Lap = min(S1) + min(S2) + min(S3)\n\n各ドライバーの各セクター最適タイムを組み合わせ'},
+            
+            'help_pitstop_analysis_title': {'zh': '進站分析', 'en': 'Pitstop Analysis', 'ja': 'ピットストップ分析'},
+            'help_pitstop_analysis_desc': {'zh': '進站時間分析和策略評估。', 'en': 'Pit stop time analysis and strategy evaluation.', 'ja': 'ピットストップ時間分析と戦略評価。'},
+            'help_pitstop_analysis_features': {'zh': '• 靜止時間分析\n• 進站損失計算\n• 策略比較', 'en': '• Stationary time analysis\n• Pit loss calculation\n• Strategy comparison', 'ja': '• 静止時間分析\n• ピットロス計算\n• 戦略比較'},
+            'help_pitstop_analysis_colors': {'zh': '【演算法】\n進站損失 = 靜止時間 + 進出站時間損失\n\nUndercut = 新胎優勢 - 進站損失', 'en': '【Algorithm】\nPit loss = Stationary time + In/Out lap time loss\n\nUndercut = Fresh tyre advantage - Pit loss', 'ja': '【アルゴリズム】\nピットロス = 静止時間 + イン/アウトラップタイムロス\n\nアンダーカット = 新タイヤアドバンテージ - ピットロス'},
+            
+            'help_lap_box_plot_title': {'zh': '圈速箱型圖', 'en': 'Lap Box Plot', 'ja': 'ラップ箱ひげ図'},
+            'help_lap_box_plot_desc': {'zh': '圈速分布統計可視化。', 'en': 'Lap time distribution statistics visualization.', 'ja': 'ラップタイム分布統計可視化。'},
+            'help_lap_box_plot_features': {'zh': '• 箱型圖統計\n• 中位數/四分位\n• 異常值標記', 'en': '• Box plot statistics\n• Median/Quartiles\n• Outlier marking', 'ja': '• 箱ひげ図統計\n• 中央値/四分位\n• 外れ値マーキング'},
+            'help_lap_box_plot_colors': {'zh': '車隊顏色 = 各車手分布', 'en': 'Team color = Each driver distribution', 'ja': 'チームカラー = 各ドライバー分布'},
+            
+            # =================================================================
+            # Module Help System - Phase 4: Prediction Modules
+            # =================================================================
+            
+            'help_fp2_prediction_title': {'zh': 'FP2 排位預測', 'en': 'FP2 Qualifying Prediction', 'ja': 'FP2予選予測'},
+            'help_fp2_prediction_desc': {
+                'zh': 'Function 76 集成學習排位賽預測模組。使用 FP2/FP3 階段數據，透過 XGBoost 機器學習模型預測排位賽結果。\n\n【模型性能】\n• MAE: 0.766s (平均絕對誤差)\n• R²: 0.939 (決定係數)\n• 訓練數據: 2018-2024 共 1,433 樣本',
+                'en': 'Function 76 ensemble learning qualifying prediction module. Uses FP2/FP3 session data with XGBoost ML model to predict qualifying results.\n\n【Model Performance】\n• MAE: 0.766s (mean absolute error)\n• R²: 0.939 (coefficient of determination)\n• Training data: 2018-2024, 1,433 samples',
+                'ja': 'Function 76 アンサンブル学習予選予測モジュール。FP2/FP3セッションデータとXGBoost MLモデルを使用して予選結果を予測。\n\n【モデル性能】\n• MAE: 0.766s（平均絶対誤差）\n• R²: 0.939（決定係数）\n• 訓練データ: 2018-2024、1,433サンプル'
+            },
+            'help_fp2_prediction_features': {
+                'zh': '【15 個核心特徵】\n\n📊 FP3 基礎特徵 (8 個):\n• fp3_best_lap: FP3 最佳圈速\n• fp3_avg_lap: FP3 平均圈速\n• fp3_lap_std: 圈速標準差\n• fp3_sector1/2/3: 扇區時間\n• fp3_speed_trap: 速度陷阱\n• fp3_valid_laps: 有效圈數\n\n📊 參考特徵 (2 個):\n• fp1_best_lap, fp2_best_lap\n\n📊 進步幅度 (2 個):\n• improvement_fp3_fp1/fp2\n\n📊 車手表現 (2 個):\n• fp3_consistency, sector_balance\n\n📊 賽道分類 (1 個):\n• track_cluster (0=高速街道, 1=標準高速, 2=技術型)',
+                'en': '【15 Core Features】\n\n📊 FP3 Base Features (8):\n• fp3_best_lap: FP3 best lap time\n• fp3_avg_lap: FP3 average lap time\n• fp3_lap_std: Lap time std dev\n• fp3_sector1/2/3: Sector times\n• fp3_speed_trap: Speed trap\n• fp3_valid_laps: Valid laps count\n\n📊 Reference Features (2):\n• fp1_best_lap, fp2_best_lap\n\n📊 Improvement Features (2):\n• improvement_fp3_fp1/fp2\n\n📊 Driver Performance (2):\n• fp3_consistency, sector_balance\n\n📊 Track Classification (1):\n• track_cluster (0=street, 1=high-speed, 2=technical)',
+                'ja': '【15コア特徴量】\n\n📊 FP3基本特徴（8個）:\n• fp3_best_lap: FP3ベストラップ\n• fp3_avg_lap: FP3平均ラップ\n• fp3_lap_std: ラップ標準偏差\n• fp3_sector1/2/3: セクタータイム\n• fp3_speed_trap: スピードトラップ\n• fp3_valid_laps: 有効ラップ数\n\n📊 参照特徴（2個）:\n• fp1_best_lap, fp2_best_lap\n\n📊 改善特徴（2個）:\n• improvement_fp3_fp1/fp2\n\n📊 ドライバー性能（2個）:\n• fp3_consistency, sector_balance\n\n📊 トラック分類（1個）:\n• track_cluster（0=ストリート, 1=高速, 2=テクニカル）'
+            },
+            'help_fp2_prediction_colors': {
+                'zh': '【XGBoost 演算法】\n\n• 模型類型: Gradient Boosting (GBDT)\n• n_estimators: 200 棵樹\n• max_depth: 7 層\n• learning_rate: 0.05\n• subsample: 0.8\n• colsample_bytree: 0.8\n\n【集成策略】\n• 加權平均: w_i = (1/MAE_i) / Σ(1/MAE_j)\n• Stacking: Ridge 元模型組合\n\n【預測流程】\nFP3 數據 → 特徵提取 → XGBoost → Q3 預測時間\n\n【誤差分佈】\n• 0-0.5s: ~40% 車手\n• 0.5-1.0s: ~30% 車手\n• 1.0-2.0s: ~20% 車手\n• >2.0s: ~10% 車手 (異常場景)',
+                'en': '【XGBoost Algorithm】\n\n• Model type: Gradient Boosting (GBDT)\n• n_estimators: 200 trees\n• max_depth: 7 layers\n• learning_rate: 0.05\n• subsample: 0.8\n• colsample_bytree: 0.8\n\n【Ensemble Strategy】\n• Weighted avg: w_i = (1/MAE_i) / Σ(1/MAE_j)\n• Stacking: Ridge meta-model\n\n【Prediction Flow】\nFP3 data → Feature extraction → XGBoost → Q3 predicted time\n\n【Error Distribution】\n• 0-0.5s: ~40% drivers\n• 0.5-1.0s: ~30% drivers\n• 1.0-2.0s: ~20% drivers\n• >2.0s: ~10% drivers (anomaly)',
+                'ja': '【XGBoostアルゴリズム】\n\n• モデルタイプ: 勾配ブースティング（GBDT）\n• n_estimators: 200ツリー\n• max_depth: 7レイヤー\n• learning_rate: 0.05\n• subsample: 0.8\n• colsample_bytree: 0.8\n\n【アンサンブル戦略】\n• 加重平均: w_i = (1/MAE_i) / Σ(1/MAE_j)\n• スタッキング: Ridgeメタモデル\n\n【予測フロー】\nFP3データ → 特徴抽出 → XGBoost → Q3予測タイム\n\n【誤差分布】\n• 0-0.5s: ~40%ドライバー\n• 0.5-1.0s: ~30%ドライバー\n• 1.0-2.0s: ~20%ドライバー\n• >2.0s: ~10%ドライバー（異常）'
+            },
+            
+            'help_qualifying_prediction_title': {'zh': '排位預測', 'en': 'Qualifying Prediction', 'ja': '予選予測'},
+            'help_qualifying_prediction_desc': {'zh': '排位賽結果預測。', 'en': 'Qualifying result prediction.', 'ja': '予選結果予測。'},
+            'help_qualifying_prediction_features': {'zh': '• 排位時間預測\n• Q1/Q2/Q3 分析', 'en': '• Qualifying time prediction\n• Q1/Q2/Q3 analysis', 'ja': '• 予選タイム予測\n• Q1/Q2/Q3分析'},
+            'help_qualifying_prediction_colors': {'zh': '綠=可能晉級 紅=可能淘汰', 'en': 'Green=Likely advance Red=Likely eliminated', 'ja': '緑=進出可能 赤=敗退可能'},
+            
+            'help_race_prediction_title': {'zh': '正賽預測', 'en': 'Race Prediction', 'ja': 'レース予測'},
+            'help_race_prediction_desc': {
+                'zh': '正賽結果預測模組。使用 Monte Carlo 模擬預測各車手完賽位置分布。\n\n【模擬參數】\n• 模擬次數: 10,000+ 次\n• 考慮因素: 起跑、策略、事故、天氣',
+                'en': 'Race result prediction module. Uses Monte Carlo simulation to predict position distribution.\n\n【Simulation Parameters】\n• Iterations: 10,000+\n• Factors: Start, Strategy, Incidents, Weather',
+                'ja': 'レース結果予測モジュール。モンテカルロシミュレーションでポジション分布を予測。\n\n【シミュレーションパラメータ】\n• 反復回数: 10,000+\n• 考慮要素: スタート、戦略、インシデント、天候'
+            },
+            'help_race_prediction_features': {
+                'zh': '【Monte Carlo 流程】\n1. 初始化排位賽結果\n2. 迴圈模擬各圈位置變化:\n   - 圈速差異 (車輛性能 + 車手技術)\n   - 超車機率 (DRS, 輪胎差)\n   - 進站策略 (Undercut/Overcut)\n   - 隨機事件 (SC, DNF)\n3. 統計位置分布',
+                'en': '【Monte Carlo Flow】\n1. Initialize from quali results\n2. Simulate each lap position changes:\n   - Pace difference (car + driver skill)\n   - Overtake probability (DRS, tyre diff)\n   - Pit strategy (Undercut/Overcut)\n   - Random events (SC, DNF)\n3. Statistical position distribution',
+                'ja': '【モンテカルロフロー】\n1. 予選結果から初期化\n2. 各ラップポジション変化シミュレーション:\n   - ペース差（マシン + ドライバースキル）\n   - オーバーテイク確率（DRS、タイヤ差）\n   - ピット戦略（アンダーカット/オーバーカット）\n   - ランダムイベント（SC、DNF）\n3. 統計的ポジション分布'
+            },
+            'help_race_prediction_colors': {
+                'zh': '【位置機率計算】\nP_position(i) = count(sim_position == i) / total_simulations\n\n【預期位置】\nE[position] = Sum(i x P_position(i))\n\n【顏色指示】\n• 金色 P1: 第1名\n• 銀色 P2: 第2名\n• 銅色 P3: 第3名\n• 綠色 P4-10: 積分區',
+                'en': '【Position Probability】\nP_position(i) = count(sim_position == i) / total_simulations\n\n【Expected Position】\nE[position] = Sum(i x P_position(i))\n\n【Color Indicators】\n• Gold P1: 1st place\n• Silver P2: 2nd place\n• Bronze P3: 3rd place\n• Green P4-10: Points zone',
+                'ja': '【ポジション確率】\nP_position(i) = count(sim_position == i) / total_simulations\n\n【期待ポジション】\nE[position] = Sum(i x P_position(i))\n\n【カラーインジケーター】\n• 金 P1: 1位\n• 銀 P2: 2位\n• 銅 P3: 3位\n• 緑 P4-10: ポイント圏'
+            },
+            
+            # =================================================================
+            # Module Help System - Phase 5: Multi-Season/Historical Modules
+            # =================================================================
+            
+            'help_pole_defense_title': {'zh': '桿位防守', 'en': 'Pole Defense', 'ja': 'ポールポジション防御'},
+            'help_pole_defense_desc': {'zh': '桿位車手第一圈防守率統計。', 'en': 'Pole position first lap defense rate statistics.', 'ja': 'ポールポジションドライバーの第1ラップ防御率統計。'},
+            'help_pole_defense_features': {'zh': '• 桿位防守率\n• 歷年趨勢\n• 賽道比較', 'en': '• Pole defense rate\n• Historical trend\n• Track comparison', 'ja': '• ポール防御率\n• 履歴トレンド\n• トラック比較'},
+            'help_pole_defense_colors': {'zh': '綠=成功防守 紅=失去領先', 'en': 'Green=Defended Red=Lost lead', 'ja': '緑=防御成功 赤=リード喪失'},
+            
+            'help_start_reaction_title': {'zh': '起跑反應', 'en': 'Start Reaction', 'ja': 'スタート反応'},
+            'help_start_reaction_desc': {
+                'zh': '起跑反應時間分析。分析車手從燈滅到首次移動的反應時間，以及 0-50 km/h 加速表現。',
+                'en': 'Start reaction time analysis. Analyzes reaction time from lights out to first movement, and 0-50 km/h acceleration.',
+                'ja': 'スタート反応時間分析。ライトアウトから最初の動きまでの反応時間、0-50 km/h加速を分析。'
+            },
+            'help_start_reaction_features': {
+                'zh': '【分析指標】\n• Reaction Time: 燈滅到動作時間\n• 0-50 km/h: 加速時間\n• 0-100 km/h: 加速時間\n• 位置變化: T1 進入前後差異',
+                'en': '【Analysis Metrics】\n• Reaction Time: Lights out to movement\n• 0-50 km/h: Acceleration time\n• 0-100 km/h: Acceleration time\n• Position Change: Before/after T1',
+                'ja': '【分析指標】\n• 反応時間: ライトアウトから動作まで\n• 0-50 km/h: 加速時間\n• 0-100 km/h: 加速時間\n• ポジション変化: T1前後の差'
+            },
+            'help_start_reaction_colors': {
+                'zh': '【計算演算法】\nReaction = T_first_move - T_lights_out\n\n【參考值】\n• 優秀: < 0.25s\n• 良好: 0.25-0.35s\n• 平均: 0.35-0.45s\n• 較慢: > 0.45s\n\n【顏色】\n• 綠 = 快速反應 (< 0.30s)\n• 黃 = 一般 (0.30-0.40s)\n• 紅 = 慢反應 (> 0.40s)',
+                'en': '【Algorithm】\nReaction = T_first_move - T_lights_out\n\n【Reference Values】\n• Excellent: < 0.25s\n• Good: 0.25-0.35s\n• Average: 0.35-0.45s\n• Slow: > 0.45s\n\n【Colors】\n• Green = Fast (< 0.30s)\n• Yellow = Average (0.30-0.40s)\n• Red = Slow (> 0.40s)',
+                'ja': '【アルゴリズム】\nReaction = T_first_move - T_lights_out\n\n【参考値】\n• 優秀: < 0.25s\n• 良好: 0.25-0.35s\n• 平均: 0.35-0.45s\n• 遅い: > 0.45s\n\n【カラー】\n• 緑 = 高速（< 0.30s）\n• 黄 = 平均（0.30-0.40s）\n• 赤 = 遅い（> 0.40s）'
+            },
+            
+            'help_season_progress_title': {'zh': '賽季進度', 'en': 'Season Progress', 'ja': 'シーズン進捗'},
+            'help_season_progress_desc': {'zh': '賽季積分進度可視化。', 'en': 'Season points progress visualization.', 'ja': 'シーズンポイント進捗可視化。'},
+            'help_season_progress_features': {'zh': '• 積分趨勢圖\n• 排名變化\n• 冠軍爭奪分析', 'en': '• Points trend chart\n• Ranking changes\n• Championship battle analysis', 'ja': '• ポイントトレンドチャート\n• ランキング変化\n• チャンピオンシップバトル分析'},
+            'help_season_progress_colors': {'zh': '車隊顏色 = 各車手/車隊', 'en': 'Team color = Each driver/team', 'ja': 'チームカラー = 各ドライバー/チーム'},
+            
+            'help_driver_standings_title': {'zh': '車手積分榜', 'en': 'Driver Standings', 'ja': 'ドライバースタンディング'},
+            'help_driver_standings_desc': {'zh': '車手積分排名。', 'en': 'Driver points standings.', 'ja': 'ドライバーポイントスタンディング。'},
+            'help_driver_standings_features': {'zh': '• 積分排名\n• 賽事積分\n• 差距計算', 'en': '• Points ranking\n• Race points\n• Gap calculation', 'ja': '• ポイントランキング\n• レースポイント\n• ギャップ計算'},
+            'help_driver_standings_colors': {'zh': '車隊顏色 = 各車手', 'en': 'Team color = Each driver', 'ja': 'チームカラー = 各ドライバー'},
+            
+            'help_constructor_standings_title': {'zh': '車隊積分榜', 'en': 'Constructor Standings', 'ja': 'コンストラクタースタンディング'},
+            'help_constructor_standings_desc': {'zh': '車隊積分排名。', 'en': 'Constructor points standings.', 'ja': 'コンストラクターポイントスタンディング。'},
+            'help_constructor_standings_features': {'zh': '• 車隊積分\n• 賽事統計\n• 趨勢分析', 'en': '• Team points\n• Race statistics\n• Trend analysis', 'ja': '• チームポイント\n• レース統計\n• トレンド分析'},
+            'help_constructor_standings_colors': {'zh': '車隊顏色 = 各車隊', 'en': 'Team color = Each team', 'ja': 'チームカラー = 各チーム'},
+            
+            # =================================================================
+            # Module Help System - Additional Analysis Modules
+            # =================================================================
+            
+            'help_tire_analysis_title': {'zh': '輪胎分析', 'en': 'Tire Analysis', 'ja': 'タイヤ分析'},
+            'help_tire_analysis_desc': {'zh': '輪胎策略和衰退分析。', 'en': 'Tyre strategy and degradation analysis.', 'ja': 'タイヤ戦略と劣化分析。'},
+            'help_tire_analysis_features': {'zh': '• 輪胎配方比較\n• 衰退曲線\n• 最佳進站圈', 'en': '• Compound comparison\n• Degradation curve\n• Optimal pit lap', 'ja': '• コンパウンド比較\n• 劣化曲線\n• 最適ピットラップ'},
+            'help_tire_analysis_colors': {'zh': '紅=SOFT 黃=MEDIUM 白=HARD', 'en': 'Red=SOFT Yellow=MEDIUM White=HARD', 'ja': '赤=SOFT 黃=MEDIUM 白=HARD'},
+            
+            'help_accident_analysis_title': {'zh': '事故分析', 'en': 'Accident Analysis', 'ja': '事故分析'},
+            'help_accident_analysis_desc': {'zh': 'F1 事故統計和分析。', 'en': 'F1 accident statistics and analysis.', 'ja': 'F1事故統計と分析。'},
+            'help_accident_analysis_features': {'zh': '• 事故類型統計\n• 旗幟分佈\n• 車手涉入', 'en': '• Incident type statistics\n• Flag distribution\n• Driver involvement', 'ja': '• インシデントタイプ統計\n• フラグ分布\n• ドライバー関与'},
+            'help_accident_analysis_colors': {'zh': '黃=黃旗 紅=紅旗 橙=SC', 'en': 'Yellow=Yellow flag Red=Red flag Orange=SC', 'ja': '黃=黃旗 赤=赤旗 オレンジ=SC'},
+            
+            'help_weather_timeline_title': {'zh': '天氣時間線', 'en': 'Weather Timeline', 'ja': '天気タイムライン'},
+            'help_weather_timeline_desc': {'zh': '賽事天氣變化時間線。', 'en': 'Race weather change timeline.', 'ja': 'レース天候変化タイムライン。'},
+            'help_weather_timeline_features': {'zh': '• 溫度變化\n• 降雨機率\n• 賽道狀態', 'en': '• Temperature changes\n• Rain probability\n• Track status', 'ja': '• 温度変化\n• 降雨確率\n• トラック状態'},
+            'help_weather_timeline_colors': {'zh': '藍=雨 綠=乾', 'en': 'Blue=Rain Green=Dry', 'ja': '青=雨 緑=ドライ'},
+            
+            'help_position_analysis_title': {'zh': '位置變化分析', 'en': 'Position Analysis', 'ja': 'ポジション分析'},
+            'help_position_analysis_desc': {'zh': '車手位置變化追蹤。', 'en': 'Driver position change tracking.', 'ja': 'ドライバーポジション変化追跡。'},
+            'help_position_analysis_features': {'zh': '• 位置變化圖\n• 超車統計\n• 關鍵時刻', 'en': '• Position change chart\n• Overtake statistics\n• Key moments', 'ja': '• ポジション変化チャート\n• オーバーテイク統計\n• キーモーメント'},
+            'help_position_analysis_colors': {'zh': '綠=超車 紅=被超', 'en': 'Green=Overtake Red=Overtaken', 'ja': '緑=オーバーテイク 赤=オーバーテイクされた'},
         }
     
     def t(self, key, default=None):
