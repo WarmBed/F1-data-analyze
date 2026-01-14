@@ -342,3 +342,110 @@ class AnalysisWindowCreator:
         
         # 計算新視窗位置（避免重疊）
         self.main_window._position_subwindow(mdi_area, analysis_window)
+
+    def create_analysis_window_with_params(
+        self, 
+        module_type: str, 
+        title: str, 
+        parameters: dict, 
+        geometry=None, 
+        sync_enabled: bool = True
+    ):
+        """
+        根據參數恢復視窗（用於 Ctrl+Z 撤銷功能）
+        
+        Args:
+            module_type: 模組類型名稱
+            title: 視窗標題
+            parameters: 模組參數（year, race, session 等）
+            geometry: QRect 視窗幾何形狀
+            sync_enabled: X 軸同步狀態
+            
+        Returns:
+            創建的視窗或 None
+        """
+        logger.info(f"[UNDO-RESTORE] 恢復視窗: {title} ({module_type})")
+        
+        # 查找當前活動的 MDI 區域
+        current_tab = self.main_window.tab_widget.currentWidget()
+        if current_tab is None:
+            logger.warning("[UNDO-RESTORE] 無法取得當前分頁")
+            return None
+            
+        mdi_area = None
+        if isinstance(current_tab, CustomMdiArea):
+            mdi_area = current_tab
+        else:
+            for child in current_tab.findChildren(CustomMdiArea):
+                mdi_area = child
+                break
+                
+        if mdi_area is None:
+            logger.warning("[UNDO-RESTORE] 無法找到 MDI 區域")
+            return None
+        
+        try:
+            # 嘗試使用模組工廠創建模組
+            from windows.managers.analysis_module_creator import AnalysisModuleCreator
+            module_creator = AnalysisModuleCreator(self.main_window)
+            analysis_module = module_creator._create_analysis_module(module_type, module_type_hint=module_type)
+            
+            if analysis_module:
+                # 使用模組創建視窗
+                window_title = title or analysis_module.get_title()
+                analysis_window = PopoutSubWindow(window_title, mdi_area, analysis_module)
+                
+                content_widget = analysis_module.get_widget()
+                analysis_window.setWidget(content_widget)
+                
+                # 設置模組的父視窗引用
+                if hasattr(analysis_module, 'set_parent_window'):
+                    analysis_module.set_parent_window(analysis_window)
+                
+                # 設置同步狀態
+                analysis_window.sync_enabled = sync_enabled
+                
+                # 設置參數
+                if parameters and hasattr(analysis_module, 'load_data'):
+                    year = parameters.get('year')
+                    race = parameters.get('race')
+                    session = parameters.get('session')
+                    if year and race and session:
+                        analysis_module.load_data(year, race, session)
+                
+            else:
+                # 無法創建模組，使用基本視窗
+                logger.warning(f"[UNDO-RESTORE] 無法創建模組 {module_type}，使用基本視窗")
+                analysis_window = PopoutSubWindow(title, mdi_area)
+                analysis_window.sync_enabled = sync_enabled
+            
+            # 通用視窗設定
+            mdi_area.addSubWindow(analysis_window)
+            
+            # 設置幾何形狀
+            if geometry:
+                analysis_window.setGeometry(geometry)
+            else:
+                # 使用預設大小
+                if analysis_module:
+                    width, height = analysis_module.get_default_size()
+                    analysis_window.resize(width, height)
+                else:
+                    analysis_window.resize(450, 280)
+            
+            # 連接關閉信號
+            if hasattr(analysis_window, 'window_closed'):
+                analysis_window.window_closed.connect(
+                    lambda: self.main_window.on_subwindow_closed(analysis_window)
+                )
+            
+            analysis_window.show()
+            
+            logger.info(f"[UNDO-RESTORE] ✅ 視窗恢復成功: {analysis_window.windowTitle()}")
+            return analysis_window
+            
+        except Exception as e:
+            logger.error(f"[UNDO-RESTORE] ❌ 恢復視窗失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return None

@@ -504,6 +504,12 @@ class StyleHMainWindow(QMainWindow):
         
         # 延遲檢查遙測分析控件狀態 (2秒後執行，確保所有視窗都已初始化)
         QTimer.singleShot(2000, self.check_and_show_lap_controls_if_needed)
+        
+        # 🆕 延遲顯示歡迎教學 (2.5秒後執行，確保主視窗完全載入)
+        QTimer.singleShot(2500, self._show_welcome_tutorial_if_needed)
+        
+        # 🆕 初始化視窗狀態管理器（用於 Ctrl+Z 撤銷功能）
+        self._init_window_state_manager()
 
     def _initialize_color_palette(self, *args, **kwargs):
         """代理方法 - 委派給 ColorPaletteInitializer"""
@@ -511,6 +517,54 @@ class StyleHMainWindow(QMainWindow):
         if not hasattr(self, '_color_palette_initializer'):
             self._color_palette_initializer = ColorPaletteInitializer(self)
         return self._color_palette_initializer._initialize_color_palette(*args, **kwargs)
+
+    def _init_window_state_manager(self):
+        """
+        初始化視窗狀態管理器和快捷鍵
+        
+        實現 Ctrl+Z 撤銷和 Ctrl+Y 重做功能
+        """
+        from PyQt5.QtWidgets import QShortcut
+        from PyQt5.QtGui import QKeySequence
+        from windows.managers.window_state_manager import WindowStateManager
+        
+        # 創建視窗狀態管理器
+        self._window_state_manager = WindowStateManager(main_window=self, parent=self)
+        
+        # 註冊 Ctrl+Z 快捷鍵 (撤銷)
+        self._undo_shortcut = QShortcut(QKeySequence.Undo, self)  # Ctrl+Z
+        self._undo_shortcut.activated.connect(self._on_undo)
+        
+        # 註冊 Ctrl+Y 快捷鍵 (重做)
+        self._redo_shortcut = QShortcut(QKeySequence.Redo, self)  # Ctrl+Y
+        self._redo_shortcut.activated.connect(self._on_redo)
+        
+        logger.info("[UNDO] ✅ 視窗狀態管理器初始化完成")
+        logger.info("[UNDO] ⌨️ 快捷鍵已註冊: Ctrl+Z (撤銷), Ctrl+Y (重做)")
+    
+    def _on_undo(self):
+        """處理 Ctrl+Z 撤銷"""
+        if hasattr(self, '_window_state_manager'):
+            state = self._window_state_manager.undo()
+            if state:
+                from windows.managers.window_state_manager import StateType
+                logger.info(f"[UNDO] ↩️ 撤銷: {state.state_type.name} - {state.window_title}")
+            else:
+                logger.debug("[UNDO] 沒有可撤銷的操作")
+    
+    def _on_redo(self):
+        """處理 Ctrl+Y 重做"""
+        if hasattr(self, '_window_state_manager'):
+            state = self._window_state_manager.redo()
+            if state:
+                from windows.managers.window_state_manager import StateType
+                logger.info(f"[UNDO] ↪️ 重做: {state.state_type.name} - {state.window_title}")
+            else:
+                logger.debug("[UNDO] 沒有可重做的操作")
+    
+    def get_window_state_manager(self):
+        """獲取視窗狀態管理器實例"""
+        return getattr(self, '_window_state_manager', None)
 
     def _load_driver_team_mapping_from_standings(self, *args, **kwargs):
         """代理方法 - 委派給 DriverMappingLoader"""
@@ -525,6 +579,26 @@ class StyleHMainWindow(QMainWindow):
         if not hasattr(self, '_palette_error_shower'):
             self._palette_error_shower = PaletteErrorShower(self)
         return self._palette_error_shower._show_palette_error_message(*args, **kwargs)
+
+    def _show_welcome_tutorial_if_needed(self):
+        """顯示首次啟動教學對話框 (如果需要)"""
+        try:
+            from windows.dialogs.welcome_tutorial_dialog import WelcomeTutorialDialog
+            if WelcomeTutorialDialog.should_show_tutorial():
+                dialog = WelcomeTutorialDialog(self)
+                dialog.exec_()
+                logger.info("[TUTORIAL] Welcome tutorial displayed")
+        except Exception as e:
+            logger.warning(f"[TUTORIAL] Failed to show welcome tutorial: {e}")
+
+    def show_welcome_tutorial(self):
+        """手動顯示歡迎教學對話框 (從選單觸發)"""
+        try:
+            from windows.dialogs.welcome_tutorial_dialog import WelcomeTutorialDialog
+            dialog = WelcomeTutorialDialog(self)
+            dialog.exec_()
+        except Exception as e:
+            logger.error(f"[TUTORIAL] Failed to show welcome tutorial: {e}")
 
     def init_ui(self, *args, **kwargs):
         """代理方法 - 委派給 UiInitializer"""
@@ -651,7 +725,9 @@ class StyleHMainWindow(QMainWindow):
 
         # 說明菜單
         help_menu = menubar.addMenu(tr('help_menu', '說明'))
-        help_menu.addAction(tr('about_action', '關於 F1T'), self.open_help_link)
+        help_menu.addAction(tr('welcome_tutorial_action', 'Welcome Tutorial'), self.show_welcome_tutorial)
+        help_menu.addSeparator()
+        help_menu.addAction(tr('about_action', '關於 PITWALL'), self.open_help_link)
 
 
     # ========== _setup_live_timing_menu 已移除，使用 LiveTimingManager.setup_menu() ==========

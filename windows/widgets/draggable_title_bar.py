@@ -215,6 +215,11 @@ class DraggableTitleBar(QWidget):
                 
             self.dragging = True
             self.drag_position = event.globalPos() - self.parent_window.frameGeometry().topLeft()
+            
+            # [UNDO] 通知父視窗拖動開始 (記錄初始位置)
+            if hasattr(self.parent_window, 'notify_drag_start'):
+                self.parent_window.notify_drag_start()
+                
             event.accept()
             
     def mouseMoveEvent(self, event):
@@ -263,6 +268,11 @@ class DraggableTitleBar(QWidget):
                     # 如果有有效的 Snap 區域，執行 Snap
                     if snap_zone != SnapZone.NONE:
                         mdi_area.snap_window_to_zone(self.parent_window, snap_zone)
+            
+            if self.dragging:  # 只有真正拖動過才通知結束
+                # [UNDO] 通知父視窗拖動結束 (記錄位置變更)
+                if hasattr(self.parent_window, 'notify_drag_end'):
+                    self.parent_window.notify_drag_end()
             
             self.dragging = False
             event.accept()

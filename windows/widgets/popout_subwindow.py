@@ -134,7 +134,7 @@ class PopoutSubWindow(QMdiSubWindow):
         self.resizing = False
         self.resize_direction = None
         
-        # [TOOL] [FIX] 強制啟用滑鼠追蹤
+        # 強制啟用滑鼠追蹤
         self.setMouseTracking(True)
         self.setAttribute(Qt.WA_Hover, True)
         self.setAttribute(Qt.WA_MouseTracking, True)
@@ -150,6 +150,57 @@ class PopoutSubWindow(QMdiSubWindow):
         self._resize_handler = PopoutResizeHandler(self, self.resize_detection_margin)
         
         logger.debug(f"[OK] [INIT] PopoutSubWindow '{title}' 初始化完成 - 包含調整大小支援")
+
+    def closeEvent(self, event):
+        """視窗關閉事件 - 記錄狀態並發射信號"""
+        # 1. 記錄狀態 (用於 Ctrl+Z)
+        try:
+            if self.main_window and hasattr(self.main_window, 'get_window_state_manager'):
+                manager = self.main_window.get_window_state_manager()
+                if manager:
+                    from windows.managers.window_state_manager import capture_window_state, StateType
+                    # 捕獲狀態
+                    state = capture_window_state(self, StateType.WINDOW_CLOSE)
+                    manager.push_state(state)
+                    logger.info(f"[UNDO] 已記錄關閉狀態: {self.windowTitle()} (module_type={state.module_type})")
+        except Exception as e:
+            logger.warning(f"[UNDO] 記錄關閉狀態失敗: {e}")
+
+        # 2. 發射自定義信號
+        self.window_closed.emit()
+        
+        # 3. 調用父類方法
+        super().closeEvent(event)
+
+    def _record_geometry_change(self, old_geometry):
+        """記錄幾何形狀變更 (移動或調整大小)"""
+        try:
+            if not self.main_window or not hasattr(self.main_window, 'get_window_state_manager'):
+                return
+                
+            manager = self.main_window.get_window_state_manager()
+            if not manager:
+                return
+
+            from windows.managers.window_state_manager import capture_window_state, StateType
+            
+            # 判斷是移動還是調整大小
+            current_geo = self.geometry()
+            is_resize = (current_geo.width() != old_geometry.width() or 
+                         current_geo.height() != old_geometry.height())
+            
+            state_type = StateType.WINDOW_RESIZE if is_resize else StateType.WINDOW_MOVE
+            
+            # 轉換 old_geometry 為 tuple (x, y, w, h)
+            old_geo_tuple = (old_geometry.x(), old_geometry.y(), 
+                             old_geometry.width(), old_geometry.height())
+            
+            state = capture_window_state(self, state_type, old_geometry=old_geo_tuple)
+            manager.push_state(state)
+            logger.debug(f"[UNDO] 已記錄{'調整大小' if is_resize else '移動'}狀態")
+            
+        except Exception as e:
+            logger.warning(f"[UNDO] 記錄幾何變更失敗: {e}")
     
     def _extract_module_name_from_title(self, title):
         """從標題中提取模組名稱"""
@@ -674,6 +725,16 @@ class PopoutSubWindow(QMdiSubWindow):
         self.setAttribute(Qt.WA_Hover, True)
         self.setAttribute(Qt.WA_MouseTracking, True)
         
+    def notify_drag_start(self):
+        """拖動開始通知 (供 DraggableTitleBar 調用)"""
+        self._drag_start_geometry = self.geometry()
+        
+    def notify_drag_end(self):
+        """拖動結束通知 (供 DraggableTitleBar 調用)"""
+        if hasattr(self, '_drag_start_geometry'):
+            self._record_geometry_change(self._drag_start_geometry)
+            del self._drag_start_geometry
+
     def mousePressEvent(self, event):
         """滑鼠按下事件 - 處理調整大小"""
         if event.button() == Qt.LeftButton:
@@ -744,6 +805,12 @@ class PopoutSubWindow(QMdiSubWindow):
     def mouseReleaseEvent(self, event):
         """滑鼠釋放事件 - 結束調整大小"""
         if event.button() == Qt.LeftButton:
+            # 檢查是否有調整大小記錄
+            if self.resizing and hasattr(self, 'resize_start_geometry'):
+                self._record_geometry_change(self.resize_start_geometry)
+                if hasattr(self, 'resize_start_geometry'):
+                    del self.resize_start_geometry
+            
             self.resizing = False
             self.resize_direction = None
             # 🔧 修復洩漏: 只在需要時設置游標（防禦性檢查）

@@ -19,6 +19,19 @@ class TabCloser:
 
     def close_tab(self, index):
         """關閉指定索引的分頁 - 最後分頁關閉時顯示歡迎頁"""
+        
+        # [UNDO] 記錄 Tab 狀態 (用於 Ctrl+Z)
+        try:
+            if hasattr(self.main_window, 'get_window_state_manager'):
+                manager = self.main_window.get_window_state_manager()
+                if manager:
+                    from windows.managers.window_state_manager import capture_tab_state
+                    state = capture_tab_state(self.main_window.tab_widget, index)
+                    manager.push_state(state)
+                    logger.debug(f"[UNDO] 已記錄 Tab 關閉狀態: {state.tab_name}")
+        except Exception as e:
+            logger.warning(f"[UNDO] 記錄 Tab 關閉狀態失敗: {e}")
+            
         # ✅ 最後一個分頁時，創建歡迎頁而不是退出
         if self.main_window.tab_widget.count() <= 1:
             logger.debug("[TAB] 💡 關閉最後一個分頁，創建新的歡迎頁")
