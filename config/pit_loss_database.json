@@ -1,23 +1,35 @@
 {
   "_metadata": {
-    "version": "1.0.0",
-    "description": "F1 賽道進站時間損失資料庫 (Pit Lane Time Loss)",
-    "last_updated": "2025-12-31",
+    "version": "2.0.0",
+    "description": "F1 賽道進站時間損失資料庫 (Pit Lane Time Loss) - 含車隊效率 Offset",
+    "last_updated": "2026-01-12",
     "sources": [
       "F1 Official Technical Documents",
-      "FastF1 2023-2024 Season Data Analysis",
+      "FastF1 2023-2024-2025 Season Data Analysis",
       "AWS F1 Insights",
       "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
-      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
-      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
-      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)",
-      "LiveF1 PitLaneTimeCollection 訓練 (21 賽道)"
+      "DHL Fastest Pit Stop Award Statistics 2024",
+      "LiveF1 PitLaneTimeCollection 訓練 (24 賽道)"
     ],
     "notes": {
       "green_flag": "正常比賽時的進站時間損失",
       "safety_car": "安全車期間的進站時間損失 (約 50-55% of green)",
-      "virtual_safety_car": "VSC 期間的進站時間損失 (約 35-40% of green)"
+      "virtual_safety_car": "VSC 期間的進站時間損失 (約 35-40% of green)",
+      "team_offsets": "各車隊相對於平均進站速度的差異 (負值=更快,正值=更慢)"
     }
+  },
+  "team_offsets_global": {
+    "_description": "全球預設車隊 offset (基於 2024 賽季 DHL 統計)",
+    "Red Bull Racing": -0.5,
+    "McLaren": -0.4,
+    "Ferrari": -0.3,
+    "Mercedes": -0.2,
+    "Aston Martin": 0.0,
+    "Alpine": 0.1,
+    "Racing Bulls": 0.2,
+    "Haas F1 Team": 0.3,
+    "Williams": 0.4,
+    "Kick Sauber": 0.5
   },
   "circuits": {
     "Bahrain": {
@@ -167,10 +179,14 @@
     "Hungaroring": {
       "official_name": "Hungaroring",
       "pit_loss_times": {
-        "green_flag": 22.5,
-        "safety_car": 12.0,
-        "virtual_safety_car": 8.5
-      }
+        "green_flag": 22.0,
+        "safety_car": 11.4,
+        "virtual_safety_car": 8.4
+      },
+      "trained_from_data": true,
+      "training_samples": 104,
+      "training_mean": 22.08,
+      "training_median": 21.75
     },
     "Spa": {
       "official_name": "Circuit de Spa-Francorchamps",
@@ -271,10 +287,14 @@
     "Las Vegas": {
       "official_name": "Las Vegas Strip Circuit",
       "pit_loss_times": {
-        "green_flag": 24.0,
-        "safety_car": 12.5,
-        "virtual_safety_car": 9.0
-      }
+        "green_flag": 22.2,
+        "safety_car": 11.5,
+        "virtual_safety_car": 8.4
+      },
+      "trained_from_data": true,
+      "training_samples": 87,
+      "training_mean": 22.07,
+      "training_median": 21.5
     },
     "Lusail": {
       "official_name": "Lusail International Circuit",
@@ -291,10 +311,14 @@
     "Yas Marina": {
       "official_name": "Yas Marina Circuit",
       "pit_loss_times": {
-        "green_flag": 22.0,
-        "safety_car": 11.5,
-        "virtual_safety_car": 8.0
-      }
+        "green_flag": 21.9,
+        "safety_car": 11.4,
+        "virtual_safety_car": 8.3
+      },
+      "trained_from_data": true,
+      "training_samples": 88,
+      "training_mean": 22.26,
+      "training_median": 21.9
     }
   },
   "aliases": {

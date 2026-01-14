@@ -89,6 +89,7 @@ class FunctionTreeBuilder:
         QTreeWidgetItem(lap_performance_group, ["    (D) " + tr("lap_time_box_plot_sub", "Lap Time Box Plot")])
         QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("throttle_box_plot", "Throttle Box Plot")])
         QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("throttle_line_chart", "Throttle Line Chart")])
+        QTreeWidgetItem(lap_performance_group, ["    (T) " + tr("pedal_behavior_analysis", "Pedal Behavior Analysis")])
         QTreeWidgetItem(lap_performance_group, ["    " + tr("long_run_analysis", "Long Run & Degradation")])
         
         # Ideal Lap & Sectors (理想圈速與分段)
@@ -124,6 +125,7 @@ class FunctionTreeBuilder:
         QTreeWidgetItem(multi_season_group, [tr("historical_track_map", "Historical Track Map")])
         QTreeWidgetItem(multi_season_group, [tr("season_start_reaction", "Season Start Reaction")])
         QTreeWidgetItem(multi_season_group, [tr("pole_defense_statistics", "Pole Defense Statistics")])
+        QTreeWidgetItem(multi_season_group, [tr("pit_loss_table.title", "Pit Loss Table")])
         
         # ========== Live Timing ==========
         live_timing_group = QTreeWidgetItem(tree, [tr("live_timing_tree", "Live Timing")])
@@ -170,6 +172,7 @@ class FunctionTreeBuilder:
             ("throttle_history", tr("throttle_95_history", "Throttle 95%")),
             ("sf_percentage_chart", tr("sf_percentage_history", "SF% History")),
             ("top_speed_history", tr("top_speed_history", "Top Speed History")),
+            ("pedal_behavior_live", tr("pedal_behavior_live", "Pedal Behavior")),
         ]
         for key, default in lap_history_items:
             QTreeWidgetItem(lap_history_group, [default])

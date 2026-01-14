@@ -1,0 +1,742 @@
+{
+  "version": "2.0-xgboost",
+  "description": "XGBoost 訓練的策略係數 (Circuit + Compound)",
+  "training_info": {
+    "model": "XGBoost",
+    "total_stints": 3663,
+    "total_samples": 78255,
+    "total_coefficients": 70
+  },
+  "circuits": {
+    "Abu_Dhabi_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5443,
+          "mae": 0.3225,
+          "cv_mae": 0.357,
+          "sample_count": 2561
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.003608,
+          "fuel_effect": -0.01,
+          "r2_score": 0.385,
+          "mae": 0.3217,
+          "cv_mae": 0.3716,
+          "sample_count": 1277
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.01,
+          "fuel_effect": -0.01,
+          "r2_score": 0.9645,
+          "mae": 0.1543,
+          "cv_mae": 0.4972,
+          "sample_count": 84
+        }
+      }
+    },
+    "Australian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.659,
+          "mae": 0.4841,
+          "cv_mae": 0.548,
+          "sample_count": 1930
+        },
+        "MEDIUM": {
+          "base_rate": 0.06551,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01103,
+          "r2_score": 0.6825,
+          "mae": 0.308,
+          "cv_mae": 0.4134,
+          "sample_count": 462
+        }
+      }
+    },
+    "Austrian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.05365,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5267,
+          "mae": 0.338,
+          "cv_mae": 0.3806,
+          "sample_count": 2269
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.007807,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5054,
+          "mae": 0.303,
+          "cv_mae": 0.346,
+          "sample_count": 1943
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.004152,
+          "fuel_effect": -0.01,
+          "r2_score": 0.8657,
+          "mae": 0.1331,
+          "cv_mae": 0.3376,
+          "sample_count": 55
+        }
+      }
+    },
+    "Azerbaijan_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.005893,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5893,
+          "mae": 0.4028,
+          "cv_mae": 0.4496,
+          "sample_count": 2425
+        },
+        "MEDIUM": {
+          "base_rate": 0.08583,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5446,
+          "mae": 0.2906,
+          "cv_mae": 0.3635,
+          "sample_count": 792
+        }
+      }
+    },
+    "Bahrain_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.15,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6817,
+          "mae": 0.363,
+          "cv_mae": 0.42,
+          "sample_count": 1564
+        },
+        "MEDIUM": {
+          "base_rate": 0.15,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6987,
+          "mae": 0.3639,
+          "cv_mae": 0.4829,
+          "sample_count": 747
+        },
+        "SOFT": {
+          "base_rate": 0.13965,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.573,
+          "mae": 0.3694,
+          "cv_mae": 0.4325,
+          "sample_count": 1426
+        }
+      }
+    },
+    "Belgian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.13818,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01048,
+          "r2_score": 0.6257,
+          "mae": 0.3887,
+          "cv_mae": 0.5238,
+          "sample_count": 667
+        },
+        "MEDIUM": {
+          "base_rate": 0.12615,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6409,
+          "mae": 0.5017,
+          "cv_mae": 0.6007,
+          "sample_count": 1464
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.006494,
+          "fuel_effect": -0.01134,
+          "r2_score": 0.5608,
+          "mae": 0.4259,
+          "cv_mae": 0.5932,
+          "sample_count": 466
+        }
+      }
+    },
+    "British_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.7339,
+          "mae": 0.1783,
+          "cv_mae": 0.3229,
+          "sample_count": 299
+        },
+        "MEDIUM": {
+          "base_rate": 0.03724,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5362,
+          "mae": 0.3139,
+          "cv_mae": 0.3645,
+          "sample_count": 1145
+        },
+        "SOFT": {
+          "base_rate": 0.07137,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5321,
+          "mae": 0.3047,
+          "cv_mae": 0.4092,
+          "sample_count": 573
+        }
+      }
+    },
+    "Canadian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.000992,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5669,
+          "mae": 0.3719,
+          "cv_mae": 0.418,
+          "sample_count": 2470
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.01,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5725,
+          "mae": 0.3368,
+          "cv_mae": 0.4348,
+          "sample_count": 935
+        }
+      }
+    },
+    "Chinese_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.08757,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6657,
+          "mae": 0.3253,
+          "cv_mae": 0.4051,
+          "sample_count": 1148
+        },
+        "MEDIUM": {
+          "base_rate": 0.06171,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6234,
+          "mae": 0.251,
+          "cv_mae": 0.3367,
+          "sample_count": 519
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.003009,
+          "fuel_effect": -0.01,
+          "r2_score": 0.9591,
+          "mae": 0.0907,
+          "cv_mae": 0.2698,
+          "sample_count": 56
+        }
+      }
+    },
+    "Dutch_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.09652,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.3186,
+          "mae": 0.3688,
+          "cv_mae": 0.4403,
+          "sample_count": 1482
+        },
+        "MEDIUM": {
+          "base_rate": 0.03165,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.3765,
+          "mae": 0.266,
+          "cv_mae": 0.3091,
+          "sample_count": 1322
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.002824,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6606,
+          "mae": 0.3077,
+          "cv_mae": 0.3902,
+          "sample_count": 1136
+        }
+      }
+    },
+    "Emilia_Romagna_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.08719,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5761,
+          "mae": 0.3523,
+          "cv_mae": 0.4283,
+          "sample_count": 1284
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.01,
+          "fuel_effect": -0.01,
+          "r2_score": 0.8457,
+          "mae": 0.4057,
+          "cv_mae": 0.4833,
+          "sample_count": 1473
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.002205,
+          "fuel_effect": -0.01,
+          "r2_score": 0.9463,
+          "mae": 0.1084,
+          "cv_mae": 0.4818,
+          "sample_count": 52
+        }
+      }
+    },
+    "French_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.000879,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5546,
+          "mae": 0.2464,
+          "cv_mae": 0.3179,
+          "sample_count": 508
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.00452,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4711,
+          "mae": 0.2444,
+          "cv_mae": 0.3163,
+          "sample_count": 295
+        }
+      }
+    },
+    "Hungarian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.12874,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4871,
+          "mae": 0.4566,
+          "cv_mae": 0.5171,
+          "sample_count": 2450
+        },
+        "MEDIUM": {
+          "base_rate": 0.04575,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4599,
+          "mae": 0.3979,
+          "cv_mae": 0.4503,
+          "sample_count": 1930
+        },
+        "SOFT": {
+          "base_rate": 0.06129,
+          "acceleration": 0.00225,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6962,
+          "mae": 0.3817,
+          "cv_mae": 0.6025,
+          "sample_count": 384
+        }
+      }
+    },
+    "Italian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.002488,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4628,
+          "mae": 0.3332,
+          "cv_mae": 0.3922,
+          "sample_count": 1749
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.3952,
+          "mae": 0.3465,
+          "cv_mae": 0.3851,
+          "sample_count": 1361
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.004904,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6071,
+          "mae": 0.1514,
+          "cv_mae": 0.26,
+          "sample_count": 172
+        }
+      }
+    },
+    "Japanese_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.15,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5667,
+          "mae": 0.4774,
+          "cv_mae": 0.5786,
+          "sample_count": 1399
+        },
+        "MEDIUM": {
+          "base_rate": 0.15,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6227,
+          "mae": 0.2902,
+          "cv_mae": 0.3573,
+          "sample_count": 862
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6774,
+          "mae": 0.2288,
+          "cv_mae": 0.435,
+          "sample_count": 165
+        }
+      }
+    },
+    "Las_Vegas_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6509,
+          "mae": 0.4707,
+          "cv_mae": 0.5613,
+          "sample_count": 1668
+        },
+        "MEDIUM": {
+          "base_rate": 0.06704,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4897,
+          "mae": 0.5052,
+          "cv_mae": 0.6305,
+          "sample_count": 578
+        }
+      }
+    },
+    "Mexico_City_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.09964,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.3556,
+          "mae": 0.3544,
+          "cv_mae": 0.4199,
+          "sample_count": 1361
+        },
+        "MEDIUM": {
+          "base_rate": 0.04138,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.2292,
+          "mae": 0.393,
+          "cv_mae": 0.4329,
+          "sample_count": 2090
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.001551,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5032,
+          "mae": 0.3262,
+          "cv_mae": 0.4056,
+          "sample_count": 1011
+        }
+      }
+    },
+    "Miami_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02978,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4787,
+          "mae": 0.3266,
+          "cv_mae": 0.3732,
+          "sample_count": 1937
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.004854,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4051,
+          "mae": 0.3415,
+          "cv_mae": 0.4044,
+          "sample_count": 1207
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.002989,
+          "fuel_effect": -0.01,
+          "r2_score": 0.875,
+          "mae": 0.1775,
+          "cv_mae": 0.5265,
+          "sample_count": 74
+        }
+      }
+    },
+    "Monaco_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.532,
+          "mae": 1.1069,
+          "cv_mae": 1.2417,
+          "sample_count": 2281
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.01,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6679,
+          "mae": 0.8752,
+          "cv_mae": 1.0807,
+          "sample_count": 1409
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.01,
+          "fuel_effect": -0.03422,
+          "r2_score": 0.9463,
+          "mae": 0.3019,
+          "cv_mae": 1.1691,
+          "sample_count": 111
+        }
+      }
+    },
+    "Qatar_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02261,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.7025,
+          "mae": 0.3431,
+          "cv_mae": 0.4445,
+          "sample_count": 835
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.8363,
+          "mae": 0.3066,
+          "cv_mae": 0.3578,
+          "sample_count": 1479
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.8925,
+          "mae": 0.1481,
+          "cv_mae": 0.4219,
+          "sample_count": 86
+        }
+      }
+    },
+    "Saudi_Arabian_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.000946,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6278,
+          "mae": 0.426,
+          "cv_mae": 0.4907,
+          "sample_count": 1985
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.001318,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4662,
+          "mae": 0.3277,
+          "cv_mae": 0.3842,
+          "sample_count": 910
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.008732,
+          "fuel_effect": -0.01,
+          "r2_score": 0.7166,
+          "mae": 0.1627,
+          "cv_mae": 0.4301,
+          "sample_count": 74
+        }
+      }
+    },
+    "Singapore_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.003196,
+          "fuel_effect": -0.01,
+          "r2_score": 0.3758,
+          "mae": 0.5252,
+          "cv_mae": 0.607,
+          "sample_count": 1443
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.006581,
+          "fuel_effect": -0.01,
+          "r2_score": 0.49,
+          "mae": 0.4094,
+          "cv_mae": 0.4799,
+          "sample_count": 1381
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.01,
+          "fuel_effect": -0.01,
+          "r2_score": 0.7267,
+          "mae": 0.3922,
+          "cv_mae": 0.6876,
+          "sample_count": 380
+        }
+      }
+    },
+    "Spanish_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.14668,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5722,
+          "mae": 0.3507,
+          "cv_mae": 0.4763,
+          "sample_count": 850
+        },
+        "MEDIUM": {
+          "base_rate": 0.15,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.3702,
+          "mae": 0.409,
+          "cv_mae": 0.4731,
+          "sample_count": 1652
+        },
+        "SOFT": {
+          "base_rate": 0.11224,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.442,
+          "mae": 0.451,
+          "cv_mae": 0.5207,
+          "sample_count": 1877
+        }
+      }
+    },
+    "São_Paulo_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02365,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01942,
+          "r2_score": 0.8922,
+          "mae": 0.2888,
+          "cv_mae": 1.4594,
+          "sample_count": 41
+        },
+        "MEDIUM": {
+          "base_rate": 0.15,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.587,
+          "mae": 0.3595,
+          "cv_mae": 0.4408,
+          "sample_count": 1497
+        },
+        "SOFT": {
+          "base_rate": 0.06719,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.6026,
+          "mae": 0.2839,
+          "cv_mae": 0.3535,
+          "sample_count": 1180
+        }
+      }
+    },
+    "United_States_Grand_Prix": {
+      "compounds": {
+        "HARD": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.557,
+          "mae": 0.3908,
+          "cv_mae": 0.4728,
+          "sample_count": 1398
+        },
+        "MEDIUM": {
+          "base_rate": 0.02,
+          "acceleration": 0.0005,
+          "fuel_effect": -0.01,
+          "r2_score": 0.4473,
+          "mae": 0.4353,
+          "cv_mae": 0.4933,
+          "sample_count": 1687
+        },
+        "SOFT": {
+          "base_rate": 0.02,
+          "acceleration": 0.00932,
+          "fuel_effect": -0.01,
+          "r2_score": 0.5601,
+          "mae": 0.3421,
+          "cv_mae": 0.5121,
+          "sample_count": 429
+        }
+      }
+    }
+  }
+}

@@ -56,6 +56,15 @@ COLOR_PIT_MARKER = '#FFD700'   # 黃色 - Pit 標記 (與 Driver Strategy 一致
 from ..core.base_live_mdi import BaseLiveTimingMDI
 from core.gui_i18n import tr
 
+# Import unified strategy prediction core (Phase 3)
+from ..core.strategy_prediction_core import (
+    calculate_degradation_rate,
+    calculate_new_tyre_advantage,
+    get_strategy_coefficients,
+    get_pit_loss,
+    COMPOUND_GRIP_ADVANTAGE
+)
+
 from core.logger import get_logger
 logger = get_logger(__name__)
 
@@ -146,55 +155,20 @@ def get_pit_loss_for_circuit(circuit_name: str = None) -> Dict[str, float]:
     """
     獲取特定賽道的進站損失時間
     
+    [DEPRECATED] 此函數已被 strategy_prediction_core.get_pit_loss() 取代
+    保留此函數以確保向後兼容
+    
     Args:
         circuit_name: 賽道名稱（例如 "Suzuka", "Monaco"）
     
     Returns:
         包含 green_flag, safety_car, virtual_safety_car 的字典
     """
-    database = load_pit_loss_database()
-    
-    if not database or 'circuits' not in database:
-        # 資料庫載入失敗，使用預設值
-        return {
-            'green_flag': 22.0,
-            'safety_car': 11.0,
-            'virtual_safety_car': 8.0
-        }
-    
-    circuits = database['circuits']
-    
-    # 如果沒有指定賽道，使用預設值
-    if not circuit_name:
-        return {
-            'green_flag': 22.0,
-            'safety_car': 11.0,
-            'virtual_safety_car': 8.0
-        }
-    
-    # 嘗試各種賽道名稱變體
-    circuit_variants = [
-        circuit_name,
-        circuit_name.title(),
-        circuit_name.upper(),
-        circuit_name.lower()
-    ]
-    
-    for variant in circuit_variants:
-        if variant in circuits:
-            pit_times = circuits[variant].get('pit_loss_times', {})
-            return {
-                'green_flag': pit_times.get('green_flag', 22.0),
-                'safety_car': pit_times.get('safety_car', 11.0),
-                'virtual_safety_car': pit_times.get('virtual_safety_car', 8.0)
-            }
-    
-    # 找不到賽道，使用預設值
-    logger.warning("Pit loss data missing for circuit '%s', using defaults", circuit_name)
+    # [Phase 3] 使用統一核心模組
     return {
-        'green_flag': 22.0,
-        'safety_car': 11.0,
-        'virtual_safety_car': 8.0
+        'green_flag': get_pit_loss(circuit_name, 'green_flag'),
+        'safety_car': get_pit_loss(circuit_name, 'safety_car'),
+        'virtual_safety_car': get_pit_loss(circuit_name, 'virtual_safety_car')
     }
 
 
@@ -225,37 +199,29 @@ class StrategyResult:
 # =============================================================================
 
 class StrategyCalculator:
-    """策略計算引擎"""
+    """
+    策略計算引擎
+    
+    Phase 3 重構：現在使用統一的 strategy_prediction_core 模組，
+    與 Driver Strategy 共用相同的預測邏輯。
+    """
     
     def __init__(self, circuit_name: str = None):
         self._total_laps = 58  # 預設總圈數
         self._circuit_name = circuit_name
         
-        #  從資料庫載入賽道專屬的 pit_loss
-        pit_loss_data = get_pit_loss_for_circuit(circuit_name)
-        self._pit_loss_green = pit_loss_data['green_flag']
-        self._pit_loss_sc = pit_loss_data['safety_car']
-        self._pit_loss_vsc = pit_loss_data['virtual_safety_car']
+        # 從統一核心載入賽道專屬的 pit_loss (Phase 3)
+        self._pit_loss_green = get_pit_loss(circuit_name, 'green_flag')
+        self._pit_loss_sc = get_pit_loss(circuit_name, 'safety_car')
+        self._pit_loss_vsc = get_pit_loss(circuit_name, 'virtual_safety_car')
         
-        #  載入輪胎衰退資料庫（與 Driver Strategy 完全一致）
-        self._tyre_deg_database = self._load_tyre_degradation_database()
+        logger.debug("[PHASE3] Circuit: %s", circuit_name or 'default')
+        logger.debug("[PHASE3] Pit loss (green/SC/VSC): %.1fs / %.1fs / %.1fs", 
+                     self._pit_loss_green, self._pit_loss_sc, self._pit_loss_vsc)
         
-        logger.debug("Circuit: %s", circuit_name or 'default')
-        logger.debug("Pit loss (green/SC/VSC): %.1fs / %.1fs / %.1fs", self._pit_loss_green, self._pit_loss_sc, self._pit_loss_vsc)
-        
-        # 調試輪胎衰退資料庫載入
-        circuits_count = len(self._tyre_deg_database.get('circuits', {}))
-        logger.debug("Tyre degradation DB circuits: %s", circuits_count)
-    
-    def _load_tyre_degradation_database(self) -> Dict[str, Any]:
-        """載入輪胎衰退資料庫（與 Driver Strategy 完全一致）"""
-        try:
-            db_path = Path(__file__).parent.parent.parent.parent.parent / "config" / "tire_degradation_database.json"
-            with open(db_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logger.warning("Unable to load tire_degradation_database.json: %s", e)
-            return {}
+        # 驗證係數載入
+        coeffs = get_strategy_coefficients(circuit_name or 'default', 'MEDIUM')
+        logger.debug("[PHASE3] Using unified prediction core, is_default=%s", coeffs.get('is_default', True))
     
     def set_total_laps(self, total_laps: int):
         """設定總圈數"""
@@ -264,7 +230,7 @@ class StrategyCalculator:
     def _get_compound_degradation_rate(self, compound: str, tyre_age: int) -> float:
         """
         計算輪胎的即時衰退速度（秒/圈）
-        使用與 Driver Strategy 完全一致的二次方程式模型
+        使用統一的 strategy_prediction_core 模組（Phase 3 重構）
         
         Args:
             compound: 輪胎配方 (SOFT/MEDIUM/HARD)
@@ -273,42 +239,17 @@ class StrategyCalculator:
         Returns:
             當前圈的衰退速度（秒/圈）
         """
-        if not self._circuit_name:
-            # 預設值（無賽道資訊時）
-            default_base = {'SOFT': 0.08, 'MEDIUM': 0.06, 'HARD': 0.05}
-            default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-            base_rate = default_base.get(compound, 0.06)
-            acceleration = default_accel.get(compound, 0.002)
-        else:
-            # 從資料庫獲取賽道專屬係數
-            circuit_db_key = RACE_TO_CIRCUIT_MAP.get(self._circuit_name, self._circuit_name)
-            circuits = self._tyre_deg_database.get('circuits', {})
-            circuit_data = circuits.get(circuit_db_key, {})
-            
-            if circuit_data:
-                base_degradation = circuit_data.get('base_degradation', {})
-                degradation_acceleration = circuit_data.get('degradation_acceleration', {})
-                
-                compound_key = compound.upper() if compound else 'MEDIUM'
-                base_rate = base_degradation.get(compound_key, 0.06)
-                acceleration = degradation_acceleration.get(compound_key, 0.002)
-            else:
-                # 預設值
-                default_base = {'SOFT': 0.08, 'MEDIUM': 0.06, 'HARD': 0.05}
-                default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                base_rate = default_base.get(compound, 0.06)
-                acceleration = default_accel.get(compound, 0.002)
-        
-        # 計算即時衰退速度（導數）
-        # degradation(t) = base_rate * t + 0.5 * acceleration * t²
-        # d(degradation)/dt = base_rate + acceleration * t
-        instantaneous_degradation_rate = base_rate + acceleration * tyre_age
-        
-        return instantaneous_degradation_rate
+        # Use unified prediction core
+        return calculate_degradation_rate(
+            compound=compound,
+            tyre_age=tyre_age,
+            circuit=self._circuit_name or 'default'
+        )
     
     def _calculate_new_tyre_advantage(self, new_compound: str, old_compound: str, old_tyre_age: int) -> float:
         """
         計算新胎相對於舊胎的速度優勢（秒/圈）
+        使用統一的 strategy_prediction_core 模組（Phase 3 重構）
         
         Args:
             new_compound: 新輪胎配方
@@ -318,42 +259,52 @@ class StrategyCalculator:
         Returns:
             新胎每圈優勢（正值 = 新胎更快）
         """
-        # 新胎從 age=1 開始（剛換上）
-        new_tyre_rate = self._get_compound_degradation_rate(new_compound, 1)
-        old_tyre_rate = self._get_compound_degradation_rate(old_compound, old_tyre_age)
+        # Use unified prediction core
+        return calculate_new_tyre_advantage(
+            new_compound=new_compound,
+            old_compound=old_compound,
+            old_tyre_age=old_tyre_age,
+            circuit=self._circuit_name or 'default'
+        )
+    
+    def get_degradation_coefficients(self, compound: str) -> Dict[str, float]:
+        """
+        獲取指定配方的衰退係數（供 widget 層使用）
+        使用統一的 strategy_prediction_core 模組（Phase 3）
         
-        # 配方抓地力優勢（與 Driver Strategy 一致）
-        # 負值 = 更快（相對於 HARD 基準）
-        grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-        new_grip = grip_advantage.get(new_compound.upper(), -0.25)
-        old_grip = grip_advantage.get(old_compound.upper(), -0.25)
-        
-        # 計算兩個分量
-        degradation_diff = old_tyre_rate - new_tyre_rate  # 衰退差異（正值 = 舊胎衰退更嚴重）
-        grip_diff = old_grip - new_grip  # 配方差異（正值 = 新配方更快）
-        
-        # 總優勢 = (舊胎衰退速度 - 新胎衰退速度) + (舊胎抓地力 - 新胎抓地力)
-        # 注意：grip_advantage 負值 = 更快，所以用 old_grip - new_grip
-        # 例如：SOFT(-0.5) vs MEDIUM(-0.25) → (-0.25) - (-0.5) = +0.25 s/lap（SOFT 更快）
-        advantage = degradation_diff + grip_diff
-        
-        return advantage
+        Args:
+            compound: 輪胎配方 (SOFT/MEDIUM/HARD)
+            
+        Returns:
+            Dict with keys: base_rate, acceleration, grip_advantage
+        """
+        coeffs = get_strategy_coefficients(
+            circuit=self._circuit_name or 'default',
+            compound=compound
+        )
+        grip = COMPOUND_GRIP_ADVANTAGE.get(compound.upper(), 0.0)
+        return {
+            'base_rate': coeffs['base_rate'],
+            'acceleration': coeffs['acceleration'],
+            'grip_advantage': grip,
+            'is_default': coeffs['is_default']
+        }
     
     def set_circuit(self, circuit_name: str):
         """
-        設定賽道名稱並重新載入 pit_loss
+        設定賽道名稱並重新載入 pit_loss（使用統一核心模組）
         
         Args:
             circuit_name: 賽道名稱（例如 "Suzuka", "Monaco"）
         """
         self._circuit_name = circuit_name
-        pit_loss_data = get_pit_loss_for_circuit(circuit_name)
-        self._pit_loss_green = pit_loss_data['green_flag']
-        self._pit_loss_sc = pit_loss_data['safety_car']
-        self._pit_loss_vsc = pit_loss_data['virtual_safety_car']
+        # Use unified prediction core (Phase 3)
+        self._pit_loss_green = get_pit_loss(circuit_name, 'green_flag')
+        self._pit_loss_sc = get_pit_loss(circuit_name, 'safety_car')
+        self._pit_loss_vsc = get_pit_loss(circuit_name, 'virtual_safety_car')
         
         if logger.isEnabledFor(logging.DEBUG):
-            logger.debug("[UPDATE_CIRCUIT] 更新賽道: %s", circuit_name)
+            logger.debug("[PHASE3][UPDATE_CIRCUIT] 更新賽道: %s", circuit_name)
             logger.debug(
                 "[PIT_LOSS] Green: %.1fs, SC: %.1fs, VSC: %.1fs",
                 self._pit_loss_green,
@@ -2850,28 +2801,17 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
             p1_compound = self.p1_compound if hasattr(self, 'p1_compound') else 'MEDIUM'
             p2_compound = self.p2_compound if hasattr(self, 'p2_compound') else 'MEDIUM'
             
-            # 獲取賽道輪胎衰退數據
-            circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-            circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-            circuit_data = circuits.get(circuit_db_key, {})
+            # [Phase 3] 使用統一核心模組獲取衰退係數
+            p1_coeffs = strategy_calc.get_degradation_coefficients(p1_compound)
+            p2_coeffs = strategy_calc.get_degradation_coefficients(p2_compound)
             
-            if circuit_data:
-                base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-            else:
-                default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+            base_deg_p1 = p1_coeffs['base_rate']
+            accel_p1 = p1_coeffs['acceleration']
+            p1_grip = p1_coeffs['grip_advantage']
             
-            # 配方抓地力優勢
-            grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-            p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-            p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+            base_deg_p2 = p2_coeffs['base_rate']
+            accel_p2 = p2_coeffs['acceleration']
+            p2_grip = p2_coeffs['grip_advantage']
             
             for lap in future_laps:
                 laps_ahead = lap - self.current_lap
@@ -2913,50 +2853,40 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                 p2_compound,
             )
         
+        # [Phase 3] 預先獲取兩個配方的衰退係數（移到迴圈外以提高效率）
+        p1_coeffs = strategy_calc.get_degradation_coefficients(p1_compound)
+        p2_coeffs = strategy_calc.get_degradation_coefficients(p2_compound)
+        
         for lap in future_laps:
             laps_ahead = lap - self.current_lap
             
             if self.strategy.strategy_id == 2:
-                #  策略 1: 繼續當前輪胎 - 使用與 Driver Strategy 完全一致的二次方程式
+                #  策略 1: 繼續當前輪胎 - 使用統一預測核心
                 # 計算未來輪胎齡
                 p1_future_age = p1_current_tyre_age + laps_ahead
                 p2_future_age = p2_current_tyre_age + laps_ahead
                 
-                # 獲取賽道數據（與 Driver Strategy 一致）
-                circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-                circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-                circuit_data = circuits.get(circuit_db_key, {})
-                
-                if circuit_data:
-                    base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                    accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                    base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                    accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-                else:
-                    # 預設值
-                    default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                    default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                    base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                    accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                    base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                    accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+                # [Phase 3] 使用預先獲取的係數
+                base_deg_p1 = p1_coeffs['base_rate']
+                accel_p1 = p1_coeffs['acceleration']
+                base_deg_p2 = p2_coeffs['base_rate']
+                accel_p2 = p2_coeffs['acceleration']
                 
                 # 與 Driver Strategy 完全一致的二次方程式：
                 # tyre_degradation = base_rate * tyre_age + 0.5 * acceleration * (tyre_age ** 2)
                 p1_degradation = base_deg_p1 * p1_future_age + 0.5 * accel_p1 * (p1_future_age ** 2)
                 p2_degradation = base_deg_p2 * p2_future_age + 0.5 * accel_p2 * (p2_future_age ** 2)
                 
-                # 配方抓地力優勢（與 Driver Strategy 一致）
-                grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-                p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-                p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+                # [Phase 3] 使用預先獲取的抓地力優勢
+                p1_grip = p1_coeffs['grip_advantage']
+                p2_grip = p2_coeffs['grip_advantage']
                 
                 # 最終圈速 = 基準時間 + 輪胎衰退 + 配方優勢
                 p1_time = p1_base_time + p1_degradation + p1_grip
                 p2_time = p2_base_time + p2_degradation + p2_grip
             
             elif self.strategy.strategy_id == 2:
-                #  策略 2: 立即進站 - P2 換新胎（使用與策略 1 一致的二次方程式）
+                #  策略 2: 立即進站 - P2 換新胎（使用統一預測核心）
                 # 計算未來輪胎齡
                 p1_future_age = p1_current_tyre_age + laps_ahead  # P1 輪胎繼續老化
                 
@@ -2967,33 +2897,19 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                 else:
                     p2_future_age = laps_ahead - 1  # 新胎齡（進站後重置）
                 
-                # 獲取賽道數據（與策略 1 完全一致）
-                circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-                circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-                circuit_data = circuits.get(circuit_db_key, {})
-                
-                if circuit_data:
-                    base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                    accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                    base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                    accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-                else:
-                    # 預設值
-                    default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                    default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                    base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                    accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                    base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                    accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+                # [Phase 3] 使用預先獲取的係數
+                base_deg_p1 = p1_coeffs['base_rate']
+                accel_p1 = p1_coeffs['acceleration']
+                base_deg_p2 = p2_coeffs['base_rate']
+                accel_p2 = p2_coeffs['acceleration']
                 
                 # 與 Driver Strategy 完全一致的二次方程式
                 p1_degradation = base_deg_p1 * p1_future_age + 0.5 * accel_p1 * (p1_future_age ** 2)
                 p2_degradation = base_deg_p2 * p2_future_age + 0.5 * accel_p2 * (p2_future_age ** 2)
                 
-                # 配方抓地力優勢
-                grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-                p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-                p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+                # [Phase 3] 使用預先獲取的抓地力優勢
+                p1_grip = p1_coeffs['grip_advantage']
+                p2_grip = p2_coeffs['grip_advantage']
                 
                 # 計算圈速
                 p1_time = p1_base_time + p1_degradation + p1_grip
@@ -3006,7 +2922,7 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                     p2_time = p2_base_time + p2_degradation + p2_grip
             
             elif self.strategy.strategy_id == 3:
-                #  策略 3: 安全車 - 使用與策略 1 一致的二次方程式
+                #  策略 3: 安全車 - 使用統一預測核心
                 sc_lap_offset = self.strategy.sc_lap_offset
                 
                 # 計算未來輪胎齡
@@ -3019,31 +2935,19 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                     p1_future_age = p1_current_tyre_age + laps_ahead
                     p2_future_age = p2_current_tyre_age + laps_ahead
                 
-                # 獲取賽道數據
-                circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-                circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-                circuit_data = circuits.get(circuit_db_key, {})
-                
-                if circuit_data:
-                    base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                    accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                    base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                    accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-                else:
-                    default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                    default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                    base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                    accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                    base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                    accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+                # [Phase 3] 使用預先獲取的係數
+                base_deg_p1 = p1_coeffs['base_rate']
+                accel_p1 = p1_coeffs['acceleration']
+                base_deg_p2 = p2_coeffs['base_rate']
+                accel_p2 = p2_coeffs['acceleration']
+                p1_grip = p1_coeffs['grip_advantage']
                 
                 # 二次方程式計算輪胎衰退
                 p1_degradation = base_deg_p1 * p1_future_age + 0.5 * accel_p1 * (p1_future_age ** 2)
                 p2_degradation = base_deg_p2 * p2_future_age + 0.5 * accel_p2 * (p2_future_age ** 2)
                 
-                grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-                p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-                p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+                # [Phase 3] 使用預先獲取的抓地力優勢
+                p2_grip = p2_coeffs['grip_advantage']
                 
                 if laps_ahead < sc_lap_offset:
                     # SC 前速度變慢（+2秒罰時）
@@ -3055,7 +2959,7 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                     p2_time = p2_base_time + p2_degradation + p2_grip
             
             elif self.strategy.strategy_id == 4:
-                #  策略 4: 主動模擬進站 - 使用與策略 1 一致的二次方程式
+                #  策略 4: 主動模擬進站 - 使用統一預測核心
                 # 計算未來輪胎齡
                 p1_future_age = p1_current_tyre_age + laps_ahead  # P1 輪胎持續老化
                 
@@ -3072,31 +2976,19 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                     # 還沒進站：繼續使用舊胎
                     p2_future_age = p2_current_tyre_age + laps_ahead
                 
-                # 獲取賽道數據
-                circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-                circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-                circuit_data = circuits.get(circuit_db_key, {})
-                
-                if circuit_data:
-                    base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                    accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                    base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                    accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-                else:
-                    default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                    default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                    base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                    accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                    base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                    accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+                # [Phase 3] 使用預先獲取的係數
+                base_deg_p1 = p1_coeffs['base_rate']
+                accel_p1 = p1_coeffs['acceleration']
+                base_deg_p2 = p2_coeffs['base_rate']
+                accel_p2 = p2_coeffs['acceleration']
                 
                 # 二次方程式計算輪胎衰退
                 p1_degradation = base_deg_p1 * p1_future_age + 0.5 * accel_p1 * (p1_future_age ** 2)
                 p2_degradation = base_deg_p2 * p2_future_age + 0.5 * accel_p2 * (p2_future_age ** 2)
                 
-                grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-                p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-                p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+                # [Phase 3] 使用預先獲取的抓地力優勢
+                p1_grip = p1_coeffs['grip_advantage']
+                p2_grip = p2_coeffs['grip_advantage']
                 
                 # 計算圈速
                 p1_time = p1_base_time + p1_degradation + p1_grip
@@ -3114,7 +3006,7 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                     p2_time = p2_base_time + p2_degradation + p2_grip
             
             elif self.strategy.strategy_id == 5:
-                #  策略 5: P1 先進站 - 使用與策略 1 一致的二次方程式
+                #  策略 5: P1 先進站 - 使用統一預測核心
                 p1_pit_lap_offset = 3
                 
                 if strategy_calc:
@@ -3133,31 +3025,19 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                         # P2 繼續使用舊胎
                         p2_future_age = p2_current_tyre_age + laps_ahead
                     
-                    # 獲取賽道數據
-                    circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-                    circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-                    circuit_data = circuits.get(circuit_db_key, {})
-                    
-                    if circuit_data:
-                        base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                        accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                        base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                        accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-                    else:
-                        default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                        default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                        base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                        accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                        base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                        accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+                    # [Phase 3] 使用預先獲取的係數
+                    base_deg_p1 = p1_coeffs['base_rate']
+                    accel_p1 = p1_coeffs['acceleration']
+                    base_deg_p2 = p2_coeffs['base_rate']
+                    accel_p2 = p2_coeffs['acceleration']
                     
                     # 二次方程式計算輪胎衰退
                     p1_degradation = base_deg_p1 * p1_future_age + 0.5 * accel_p1 * (p1_future_age ** 2)
                     p2_degradation = base_deg_p2 * p2_future_age + 0.5 * accel_p2 * (p2_future_age ** 2)
                     
-                    grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-                    p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-                    p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+                    # [Phase 3] 使用預先獲取的抓地力優勢
+                    p1_grip = p1_coeffs['grip_advantage']
+                    p2_grip = p2_coeffs['grip_advantage']
                     
                 # 計算圈速
                 if laps_ahead == p1_pit_lap_offset:
@@ -3170,33 +3050,22 @@ class GapEvolutionChartWidget(HoverTooltipMixin, QWidget):
                     p2_time = p2_base_time + p2_degradation + p2_grip
             
             else:
-                # 預設：兩者都正常衰減（使用二次方程式）
+                # 預設：兩者都正常衰減（使用統一預測核心）
                 p1_future_age = p1_current_tyre_age + laps_ahead
                 p2_future_age = p2_current_tyre_age + laps_ahead
                 
-                circuit_db_key = RACE_TO_CIRCUIT_MAP.get(strategy_calc._circuit_name, strategy_calc._circuit_name)
-                circuits = strategy_calc._tyre_deg_database.get('circuits', {})
-                circuit_data = circuits.get(circuit_db_key, {})
-                
-                if circuit_data:
-                    base_deg_p1 = circuit_data.get('base_degradation', {}).get(p1_compound.upper(), 0.08)
-                    accel_p1 = circuit_data.get('degradation_acceleration', {}).get(p1_compound.upper(), 0.003)
-                    base_deg_p2 = circuit_data.get('base_degradation', {}).get(p2_compound.upper(), 0.05)
-                    accel_p2 = circuit_data.get('degradation_acceleration', {}).get(p2_compound.upper(), 0.002)
-                else:
-                    default_base = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03}
-                    default_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001}
-                    base_deg_p1 = default_base.get(p1_compound.upper(), 0.05)
-                    accel_p1 = default_accel.get(p1_compound.upper(), 0.002)
-                    base_deg_p2 = default_base.get(p2_compound.upper(), 0.05)
-                    accel_p2 = default_accel.get(p2_compound.upper(), 0.002)
+                # [Phase 3] 使用預先獲取的係數
+                base_deg_p1 = p1_coeffs['base_rate']
+                accel_p1 = p1_coeffs['acceleration']
+                base_deg_p2 = p2_coeffs['base_rate']
+                accel_p2 = p2_coeffs['acceleration']
                 
                 p1_degradation = base_deg_p1 * p1_future_age + 0.5 * accel_p1 * (p1_future_age ** 2)
                 p2_degradation = base_deg_p2 * p2_future_age + 0.5 * accel_p2 * (p2_future_age ** 2)
                 
-                grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0}
-                p1_grip = grip_advantage.get(p1_compound.upper(), 0.0)
-                p2_grip = grip_advantage.get(p2_compound.upper(), 0.0)
+                # [Phase 3] 使用預先獲取的抓地力優勢
+                p1_grip = p1_coeffs['grip_advantage']
+                p2_grip = p2_coeffs['grip_advantage']
                 
                 p1_time = p1_base_time + p1_degradation + p1_grip
                 p2_time = p2_base_time + p2_degradation + p2_grip

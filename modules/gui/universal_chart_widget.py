@@ -1411,7 +1411,7 @@ class UniversalChartWidget(QWidget):
     
     def _check_hover_data_point(self, mouse_pos):
         """檢查滑鼠是否懸停在數據點上（參考 Detailed Lap Analysis）"""
-        print(f"[DEBUG] _check_hover_data_point called, data_series count: {len(self.data_series) if self.data_series else 0}")
+        # 🚀 移除 print 調用提升性能
         if not self.data_series:
             self.hover_data_point = None
             return
@@ -1451,19 +1451,14 @@ class UniversalChartWidget(QWidget):
                     if series_name:
                         # 嘗試從系列名稱獲取車手代碼（例如 "VER - Throttle"）
                         driver_code = series_name.split(' - ')[0].split(' ')[0].upper() if ' - ' in series_name or ' ' in series_name else series_name.upper()[:3]
-                        print(f"[DEBUG] Series name: '{series_name}' -> driver_code: '{driver_code}'")
                         if len(driver_code) == 3:
                             try:
                                 from modules.gui.themes.color_palette_provider import color_palette_provider
                                 # 確保顏色數據已載入
                                 color_palette_provider.ensure_loaded()
                                 driver_color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
-                                if driver_color:
-                                    print(f"[DEBUG] Got driver_color for {driver_code}: RGB({driver_color.red()}, {driver_color.green()}, {driver_color.blue()})")
-                                else:
-                                    print(f"[DEBUG] driver_color is None for {driver_code}")
-                            except Exception as e:
-                                print(f"[DEBUG] Exception getting driver color for {driver_code}: {e}")
+                            except Exception:
+                                pass  # 忽略顏色獲取錯誤
                     
                     closest_point = {
                         'series_idx': series_idx,

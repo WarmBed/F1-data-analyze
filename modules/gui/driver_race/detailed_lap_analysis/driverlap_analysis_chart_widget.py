@@ -184,6 +184,11 @@ class LaptimeChartWidget(QWidget):
         self.dragging_tooltip_index = -1  # 正在拖動的 tooltip 索引
         self.tooltip_drag_offset = QPoint(0, 0)  # tooltip 拖動偏移量
         
+        # 🚀 性能優化：防抖機制
+        self._last_hover_point = None  # 記錄上次懸停點，避免重複重繪
+        self._hover_check_counter = 0  # 計數器：每N次mouseMoveEvent才檢查懸停
+        self._hover_check_interval = 3  # 間隔設定（每3次滑鼠移動才檢查一次）
+        
         logger.debug("[LAPTIME_CHART_WIDGET] 專用圖表組件初始化完成")
     
     def update_series_data(self, series_list: List[ChartSeries]):
@@ -488,10 +493,8 @@ class LaptimeChartWidget(QWidget):
         """繪製智能標記 - 使用垂直虛線顯示"""
         # 防護檢查：確保 series_list 已初始化且不為空
         if not hasattr(self, 'series_list') or not self.series_list:
-            logger.warning(f"[LAPTIME_CHART_WIDGET] series_list 未初始化或為空，跳過智能標記繪製")
             return
             
-        marker_count = 0
         for series in self.series_list:
             # 繪製普通數據點的標記
             for data_point in series.data:
@@ -499,8 +502,6 @@ class LaptimeChartWidget(QWidget):
                 
                 if not markers:
                     continue
-                
-                marker_count += len(markers)
                 
                 # 座標轉換 - 只需要 X 座標
                 screen_x = rect.left() + (data_point.x - x_range[0]) * rect.width() / (x_range[1] - x_range[0])
@@ -518,8 +519,6 @@ class LaptimeChartWidget(QWidget):
                     if not markers:
                         continue
                     
-                    marker_count += len(markers)
-                    
                     # 座標轉換 - 只需要 X 座標
                     screen_x = rect.left() + (data_point.x - x_range[0]) * rect.width() / (x_range[1] - x_range[0])
                     
@@ -527,10 +526,6 @@ class LaptimeChartWidget(QWidget):
                     for i, marker_type in enumerate(markers):
                         color = self.marker_colors.get(marker_type, QColor(128, 128, 128))
                         self._draw_vertical_marker_line(painter, rect, int(screen_x), marker_type, color, i)
-        
-        # 調試信息
-        if marker_count > 0:
-            logger.debug(f"[LAPTIME_CHART_WIDGET] 繪製了 {marker_count} 個智能標記（垂直虛線）")
     
     def _draw_vertical_marker_line(self, painter: QPainter, rect: QRect, screen_x: int, marker_type: str, color: QColor, offset_index: int = 0):
         """繪製垂直虛線標記 - PIT STOP, FASTEST LAP 等"""
@@ -554,8 +549,6 @@ class LaptimeChartWidget(QWidget):
     
     def _draw_marker(self, painter: QPainter, position: QPoint, marker_type: str, color: QColor):
         """繪製單個標記 - 純文字版本，支援組合標記"""
-        logger.debug(f"[MARKER_TEXT] 繪製文字標記 {marker_type} (純文字版本)")
-        
         # 統一的文字設置 - 響應式字體大小
         painter.setPen(QPen(color, 2))  # 使用傳入的顏色
         marker_font_size = max(8, min(14, int(min(self.width(), self.height()) * 0.03)))
@@ -612,58 +605,41 @@ class LaptimeChartWidget(QWidget):
         painter.drawPolygon(points)
     
     def _draw_legend(self, painter: QPainter):
-        """繪製圖例 - 重疊模式，右上角覆蓋，強制白色背景 [VERSION 3.1 - 支援顯示/隱藏]"""
+        """繪製圖例 - 重疊模式，右上角覆蓋，強制白色背景 [VERSION 3.2 - 性能優化]"""
         if not self.series_list:
-            logger.warning(f"[LEGEND_DEBUG] ⚠️ 沒有數據系列，跳過圖例繪製")
             return
-        
-        logger.debug(f"[LEGEND_DEBUG] 🎨 使用圖例版本 3.1 - 支援顯示/隱藏標記")
-        logger.debug(f"[LEGEND_DEBUG] 數據系列數量: {len(self.series_list)}")
-        logger.debug(f"[LEGEND_DEBUG] 標記顯示狀態: {self.legend_show_markers}")
         
         # 計算圖例尺寸和位置
         driver_count = len(self.series_list)
         marker_count = 5 if self.legend_show_markers else 0  # 隱藏時不計算標記
         
         # 內容尺寸計算 - 根據顯示模式調整
-        content_width = 140  # 減少寬度，不再需要適應 "進站+換胎"
-        header_height = 22 if self.legend_show_markers else 22  # 僅 Drivers 標題
-        driver_height = driver_count * 20   # 每個車手20px
-        marker_height = marker_count * 22 if self.legend_show_markers else 0   # 隱藏時不顯示標記
-        padding = 20 if self.legend_show_markers else 10  # 隱藏時減少內邊距
-        separator_height = 12 if self.legend_show_markers else 0  # 分隔線高度
+        content_width = 140
+        header_height = 22
+        driver_height = driver_count * 20
+        marker_height = marker_count * 22 if self.legend_show_markers else 0
+        padding = 20 if self.legend_show_markers else 10
+        separator_height = 12 if self.legend_show_markers else 0
         content_height = header_height + driver_height + separator_height + marker_height + padding
         
         # 位置：右上角，小幅偏移 + 用戶拖移的偏移量
         legend_x = self.width() - content_width - 15 + self.legend_offset.x()
         legend_y = 15 + self.legend_offset.y()
         
-        # 🆕 保存圖例矩形區域供滑鼠事件使用
+        # 保存圖例矩形區域供滑鼠事件使用
         self.legend_rect = QRect(legend_x, legend_y, content_width, content_height)
         
-        logger.debug(f"[LEGEND_DEBUG] 圖例位置: ({legend_x}, {legend_y})")
-        logger.debug(f"[LEGEND_DEBUG] 圖例尺寸: {content_width} x {content_height}")
-        
-        # 🔥 強制白色背景 - 版本 3.0 加強版
-        white_color = QColor(255, 255, 255, 255)  # 完全不透明的白色
-        logger.debug(f"[LEGEND_DEBUG] 🎨 設定背景色為: R{white_color.red()}, G{white_color.green()}, B{white_color.blue()}, A{white_color.alpha()}")
-        
-        # 多重白色填充確保效果
-        for i in range(3):  # 重複填充3次
-            painter.fillRect(legend_x - 5, legend_y - 5, content_width + 10, content_height + 10, white_color)
-        logger.info(f"[LEGEND_DEBUG] ✅ 白色背景填充完成 (重複3次)")
+        # 白色背景 - 優化：只填充一次
+        white_color = QColor(255, 255, 255, 255)
+        painter.fillRect(legend_x - 5, legend_y - 5, content_width + 10, content_height + 10, white_color)
         
         # 黑色邊框
-        border_color = QColor(60, 60, 60)
-        painter.setPen(QPen(border_color, 2))
+        painter.setPen(QPen(QColor(60, 60, 60), 2))
         painter.drawRect(legend_x, legend_y, content_width, content_height)
-        logger.info(f"[LEGEND_DEBUG] ✅ 邊框繪製完成")
         
         # 內容繪製區域
         content_x = legend_x + 10
         current_y = legend_y + 15
-        
-        logger.debug(f"[LEGEND] 圖例重疊模式: 位置=({legend_x}, {legend_y}), 尺寸={content_width}x{content_height}")
         
         # 車手圖例標題
         painter.setPen(QPen(QColor(50, 50, 50), 1))
@@ -675,9 +651,8 @@ class LaptimeChartWidget(QWidget):
         
         # 響應式字體和尺寸設定
         widget_size = min(self.width(), self.height())
-        font_size = max(8, min(12, int(widget_size * 0.025)))  # 基於視窗大小的字體
-        square_size = max(10, min(16, int(widget_size * 0.035)))  # 響應式方塊大小
-        line_spacing = max(16, min(24, int(square_size * 1.4)))  # 行距隨方塊大小調整
+        square_size = max(10, min(16, int(widget_size * 0.035)))
+        line_spacing = max(16, min(24, int(square_size * 1.4)))
         
         # 車手圖例內容
         content_font = QFont()
@@ -698,10 +673,10 @@ class LaptimeChartWidget(QWidget):
         # 🆕 僅在顯示標記模式下繪製分隔線和標記
         if self.legend_show_markers:
             # 分隔線
-            current_y += max(4, font_size//2)
+            current_y += 4
             painter.setPen(QPen(QColor(160, 160, 160), 1))
             painter.drawLine(content_x, current_y, content_x + content_width - 20, current_y)
-            current_y += max(8, font_size)
+            current_y += 8
             
             # 移除智能標記圖例標題，直接顯示標記內容
             # current_y += max(18, font_size * 2)  # 移除標題的垂直空間
@@ -725,7 +700,7 @@ class LaptimeChartWidget(QWidget):
             for marker_type, description, color in markers_info:
                 # 標記示例 - 改進版本，解決文字超出問題
                 marker_pos = QPoint(content_x + square_size//2, current_y - 1)
-                self._draw_legend_marker_improved(painter, marker_pos, marker_type, color, font_size)
+                self._draw_legend_marker_improved(painter, marker_pos, marker_type, color)
                 
                 # 標記說明文字 - 只顯示描述，不重複字母
                 painter.setPen(QPen(QColor(40, 40, 40), 1))
@@ -960,8 +935,11 @@ class LaptimeChartWidget(QWidget):
             
             if not hovering_tooltip:
                 self.setCursor(Qt.ArrowCursor)
-                # 🆕 檢查是否懸停在數據點上
-                self._check_hover_point(event.pos())
+                # 🆕 檢查是否懸停在數據點上（使用防抖）
+                self._hover_check_counter += 1
+                if self._hover_check_counter >= self._hover_check_interval:
+                    self._hover_check_counter = 0
+                    self._check_hover_point(event.pos())
         
         super().mouseMoveEvent(event)
     
@@ -1517,23 +1495,33 @@ class LaptimeChartWidget(QWidget):
                 return QColor(255, 255, 200, 230), QColor(0, 0, 0)
     
     def _check_hover_point(self, mouse_pos: QPoint):
-        """檢查滑鼠是否懸停在數據點上並顯示 Tooltip"""
+        """檢查滑鼠是否懸停在數據點上並顯示 Tooltip（優化版）"""
+        import time
+        start_time = time.perf_counter()  # 性能追蹤開始
+        
         if not self.series_list or not self.chart_rect.isValid():
-            self.setToolTip("")
-            self.hover_point = None
-            self.hover_screen_pos = None
+            if self.hover_point:  # 只有當有懸停點時才更新
+                self.setToolTip("")
+                self.hover_point = None
+                self.hover_screen_pos = None
+                self._last_hover_point = None
+                self.update()
             return
         
-        # 搜索半徑（像素）- 增大到 20px 使更容易觸發
+        # 搜索半徑（像素）- 20px
         search_radius = 20
         closest_point = None
         closest_distance = search_radius
         closest_series_name = ""
         closest_screen_pos = None
         
+        points_checked = 0  # 性能統計：檢查的點數
+        
         # 遍歷所有數據系列和數據點
         for series in self.series_list:
             for data_point in series.data:
+                points_checked += 1
+                
                 # 座標轉換：數據座標 → 螢幕座標
                 screen_x = self.chart_rect.left() + (data_point.x - self.x_range[0]) * self.chart_rect.width() / (self.x_range[1] - self.x_range[0])
                 screen_y = self.chart_rect.bottom() - (data_point.y - self.y_range[0]) * self.chart_rect.height() / (self.y_range[1] - self.y_range[0])
@@ -1552,8 +1540,16 @@ class LaptimeChartWidget(QWidget):
                     closest_series_name = series.name
                     closest_screen_pos = screen_point
         
+        # 性能追蹤結束
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        
         # 如果找到懸停的點，顯示 Tooltip
         if closest_point:
+            # 🚀 優化：檢查是否與上次懸停點相同，避免重複重繪
+            if self._last_hover_point is closest_point:
+                # logger.debug(f"[TOOLTIP_PERF] 懸停點未變，跳過重繪 ({elapsed_ms:.2f}ms, {points_checked}點)")
+                return  # 懸停點未改變，不重繪
+            
             lap_number = int(closest_point.x)
             lap_time = closest_point.y
             
@@ -1573,14 +1569,21 @@ class LaptimeChartWidget(QWidget):
             tooltip_text = f"{closest_series_name} - Lap {lap_number}\nLap Time: {time_str}\nTire: {tire_compound}"
             self.setToolTip(tooltip_text)  # Qt 原生 Tooltip（備用）
             self.hover_point = closest_point
+            self._last_hover_point = closest_point  # 🚀 記錄當前懸停點
             self.hover_screen_pos = closest_screen_pos
             self.hover_tooltip_text = tooltip_text  # 自繪 Tooltip 文字
-            logger.debug(f"[TOOLTIP] 顯示: {tooltip_text.replace(chr(10), ' | ')} | 距離: {closest_distance:.1f}px")
+            
+            # 性能日誌（僅在耗時較長時記錄）
+            if elapsed_ms > 50:  # 超過50ms記錄警告（提高門檻）
+                logger.warning(f"[TOOLTIP_PERF] ⚠️ 懸停檢查耗時過長: {elapsed_ms:.2f}ms ({points_checked}點檢查)")
+            
             self.update()  # 重繪以顯示高亮圓圈和 Tooltip
         else:
-            self.setToolTip("")  # 清除 Tooltip
-            if self.hover_point:  # 只有當之前有懸停點時才重繪
+            # 🚀 優化：僅在之前有懸停點時才清除並重繪
+            if self.hover_point:
+                self.setToolTip("")  # 清除 Tooltip
                 self.hover_point = None
+                self._last_hover_point = None
                 self.hover_screen_pos = None
                 self.hover_tooltip_text = ""
                 self.update()  # 重繪以清除高亮圓圈和 Tooltip
@@ -1750,10 +1753,12 @@ class DriverSelectionWidget(QWidget):
     # ------------------------------------------------------------------
     def _register_global_sync(self) -> None:
         """註冊到全局同步信號"""
-        sync = GlobalChartSyncSignal.get_instance()
-        sync.register_module(MODULE_DETAILED_LAP)
-        sync.drivers_changed.connect(self._on_global_drivers_changed)
-        logger.debug("[DRIVER_SELECTION] Registered to GlobalChartSyncSignal")
+        # 🚀 暫時停用 GlobalChartSyncSignal 以排查性能問題
+        return
+        # sync = GlobalChartSyncSignal.get_instance()
+        # sync.register_module(MODULE_DETAILED_LAP)
+        # sync.drivers_changed.connect(self._on_global_drivers_changed)
+        # logger.debug("[DRIVER_SELECTION] Registered to GlobalChartSyncSignal")
 
     def _unregister_global_sync(self) -> None:
         """取消註冊全局同步信號"""
@@ -1770,7 +1775,13 @@ class DriverSelectionWidget(QWidget):
         if source == MODULE_DETAILED_LAP:
             return  # 忽略自己發出的
         
-        logger.info(f"[DRIVER_SELECTION] Sync drivers from {source}: {drivers}")
+        # 🚀 優化：如果車手列表相同，跳過處理避免無效更新
+        new_drivers = [d.upper() for d in drivers if d]
+        if new_drivers == self.selected_drivers:
+            return
+        
+        # 🚀 移除 logger.info 減少 I/O
+        # logger.debug(f"[DRIVER_SELECTION] Sync drivers from {source}: {drivers}")
         
         self._is_syncing = True
         
@@ -1791,7 +1802,7 @@ class DriverSelectionWidget(QWidget):
                     combo.setCurrentIndex(index)
                 combo.blockSignals(False)
         
-        self.selected_drivers = [d.upper() for d in drivers if d]
+        self.selected_drivers = new_drivers
         self.drivers_selected.emit(self.selected_drivers)
         
         self._is_syncing = False

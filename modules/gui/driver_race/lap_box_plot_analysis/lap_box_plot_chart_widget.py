@@ -7,14 +7,7 @@ LapTimeBoxPlotChartWidget - 圈速箱型圖圖表組件 (純 PyQt5 實現)
 - 應用車隊配色方案
 - 顯示統計資訊（中位數、Q1、Q3、鬚線、異常值）
 - 支援圖表匯出（PNG, JPG）
-- 支        else:
-            self._draw_no_data_message(painter)
-            
-        # 繪製標題 (已隱藏)
-        # self._draw_title(painter)
-        
-        # 繪製圖例 (已隱藏)
-        # self._draw_legend(painter)示
+- 支援滑鼠懸停互動
 - 支援多國語言（i18n）
 
 作者: F1T Team
@@ -155,8 +148,15 @@ class LapTimeBoxPlotChartWidget(QWidget):
             pass
 
     def _driver_color(self, driver: str) -> QColor:
-        """Return the colour for the specified driver code."""
-        color = color_palette_provider.get_driver_color(driver, format="qcolor")
+        """
+        Return the colour for the specified driver code.
+        
+        支援 stint 標籤格式 (如 "VER_S1") - 會提取真正的車手代碼
+        """
+        # 處理 stint 標籤格式: "VER_S1" -> "VER"
+        driver_code = driver.split("_")[0] if "_" in driver else driver
+        
+        color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
         if isinstance(color, QColor):
             return QColor(color)
         return QColor(self.DEFAULT_COLOR)

@@ -19,9 +19,10 @@ from pathlib import Path
 # 導入版本資訊
 try:
     from config.version import APP_VERSION, APP_NAME
+    import webbrowser
 except ImportError:
-    APP_VERSION = "V0.12.1"
-    APP_NAME = "F1 TelemetryStation Pro"
+    APP_VERSION = "V0.15.0"
+    APP_NAME = "PIT WALL"
 
 
 class EXEBuilderGUI:
@@ -160,9 +161,17 @@ class EXEBuilderGUI:
         bottom_frame = tk.Frame(self.root)
         bottom_frame.pack(fill="x", padx=10, pady=5)
         
+        tk.Button(
+            bottom_frame,
+            text="Help",
+            command=self.open_help_link,
+            fg="#1a73e8",
+            cursor="hand2"
+        ).pack(side="right", padx=5)
+
         self.open_dist_btn = tk.Button(
             bottom_frame,
-            text="📂 打開 dist 資料夾",
+            text="Open dist folder",
             command=self.open_dist_folder,
             state="disabled"
         )
@@ -170,15 +179,19 @@ class EXEBuilderGUI:
         
         tk.Button(
             bottom_frame,
-            text="🧹 清除日誌",
+            text="Clear log",
             command=lambda: self.log_text.delete(1.0, tk.END)
         ).pack(side="left", padx=5)
         
         tk.Button(
             bottom_frame,
-            text="❌ 關閉",
+            text="Close",
             command=self.root.quit
         ).pack(side="right", padx=5)
+    
+    def open_help_link(self):
+        """開啟官方說明連結"""
+        webbrowser.open("https://www.pitwall.info/")
         
     def on_venv_toggle(self):
         """虛擬環境選項切換時更新狀態"""
@@ -244,9 +257,9 @@ class EXEBuilderGUI:
             packages = {
                 'PyInstaller': 'pyinstaller' in installed,
                 'PyQt5': 'pyqt5' in installed,
-                'FastF1': 'fastf1' in installed,
                 'Pandas': 'pandas' in installed,
                 'Matplotlib': 'matplotlib' in installed,
+                'ReportLab': 'reportlab' in installed,
             }
             
             for name, exists in packages.items():
@@ -460,7 +473,8 @@ coll = COLLECT(
                         "tabulate",
                         "openpyxl",
                         "seaborn",
-                        "scikit-learn"
+                        "scikit-learn",
+                        "reportlab",  # PDF 報告生成
                     ])
                 
                 for pkg in packages:
@@ -554,9 +568,6 @@ coll = COLLECT(
             # 如果有修改，寫回檔案
             if modified:
                 spec_file.write_text(content, encoding='utf-8')
-                content = content.replace('console=False', 'console=True')
-                spec_file.write_text(content, encoding='utf-8')
-                self.append_log("✅ 已啟用控制台模式")
             
             cmd = [python_exe, "-m", "PyInstaller", str(spec_file), "--noconfirm"]
             

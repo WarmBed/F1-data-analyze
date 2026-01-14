@@ -51,7 +51,9 @@ class TelemetryWindowsGetter:
             'throttle_boxplot',  # 油門箱型圖
             'throttle_line_chart_single_driver',  # 油門折線圖（單車手）
             # 賽事級分析類型
-            'rain_weather',   # 天氣分析
+            'rain_weather',   # 天氣分析 (舊名稱，向後相容)
+            'temp_weather',   # 溫度分析 (Temperature Analysis)
+            'long_run',       # 長距離與輪胎衰退分析 (Long Run Analysis)
             'pitstop',        # 進站分析
             'accident',       # 事故分析
             'tire',           # 輪胎分析
@@ -72,6 +74,7 @@ class TelemetryWindowsGetter:
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
             'historical_track_map',  # ✅ 歷年賽道旗幟統計 (F100) - 修復參數更新問題
             'traffic_timeline',  # ✅ 車流時間線分析 (F127) - Traffic Analysis
+            'pedal_behavior',  # ✅ 油門/煞車行為分析 (F54) - Pedal Behavior Analysis
         }
         
         analysis_windows = []

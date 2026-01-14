@@ -3,7 +3,6 @@
 NewTabAdder - 從 f1t_gui_main.py 提取
 """
 
-from core.gui_i18n import get_gui_language, tr
 from core.logger import get_logger
 from windows.widgets.custom_mdi_area import CustomMdiArea
 
@@ -21,13 +20,8 @@ class NewTabAdder:
         # 計算分頁編號（排除歡迎頁）
         tab_count = self.main_window.tab_widget.count()
         
-        # 生成標籤名稱：根據語言選擇數字格式
-        current_lang = get_gui_language()
-        if current_lang == "zh":
-            number_str = self.main_window._convert_to_chinese_number(tab_count)
-        else:
-            number_str = str(tab_count)
-        tab_name = tr("tab_page", "Tab {number}").format(number=number_str)
+        # 生成標籤名稱：統一使用英文 "Tab X"
+        tab_name = f"Tab {tab_count}"
         
         # 創建空白 MDI 工作區
         new_mdi_area = CustomMdiArea()

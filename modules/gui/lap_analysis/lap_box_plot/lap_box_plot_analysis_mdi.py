@@ -29,7 +29,8 @@ import numpy as np
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, 
     QGroupBox, QGridLayout, QPushButton, QComboBox,
-    QCheckBox, QDoubleSpinBox, QFileDialog, QMessageBox
+    QCheckBox, QDoubleSpinBox, QFileDialog, QMessageBox,
+    QTabWidget, QSplitter, QFrame, QSizePolicy
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
@@ -55,9 +56,11 @@ from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
 try:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    from modules.gui.base.universal_stint_selector import UniversalStintSelector, StintInfo
 except ImportError:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    from modules.gui.base.universal_stint_selector import UniversalStintSelector, StintInfo
 
 
 class LapTimeBoxPlotApiWorker(QThread):
@@ -783,6 +786,10 @@ class LapTimeBoxPlotDataManager(UniversalDataLoader):
             'statistics': self.statistics,
             'metadata': {}
         }
+    
+    def get_raw_data(self) -> Optional[Dict[str, Any]]:
+        """獲取原始快取數據（供 Stint Selector 使用）"""
+        return self._raw_data_cache
 
 
 # 導入專用圖表組件
@@ -917,6 +924,11 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
     
     基於通用 MDI 架構實現的完整圈速箱型圖分析功能，
     支援所有車手的圈速分佈視覺化和統計分析。
+    
+    新增功能（2026-01-12）：
+    - Tab 1: 圖表顯示
+    - Tab 2: Stint Selection（使用 UniversalStintSelector）
+    - 合併/分組模式切換
     """
     
     def __init__(self, parent=None):
@@ -942,6 +954,10 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         # 控制面板與全域設定暫存
         self.control_widget: Optional[QWidget] = None
         self._pending_boxplot_settings: Optional[Dict[str, Any]] = None
+        
+        # Stint Selector 組件
+        self.stint_selector: Optional[UniversalStintSelector] = None
+        self.tab_widget: Optional[QTabWidget] = None
 
         # 初始化模組組件
         logger.debug(f"[BOXPLOT_MDI] 開始初始化模組組件...")
@@ -1005,6 +1021,189 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         control_widget.export_requested.connect(self._on_export_requested)
         
         return control_widget
+    
+    def _setup_ui(self):
+        """
+        覆寫 UI 設置 - 添加 Tab 架構
+        
+        Tab 1: 圖表顯示（圈速箱型圖）
+        Tab 2: Stint Selection（使用 UniversalStintSelector）
+        """
+        self.main_widget = QWidget()
+        main_layout = QVBoxLayout(self.main_widget)
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(5)
+        
+        # 創建 Tab Widget
+        self.tab_widget = QTabWidget()
+        
+        # ============ Tab 1: 圖表顯示 ============
+        chart_tab = QWidget()
+        chart_tab_layout = QVBoxLayout(chart_tab)
+        chart_tab_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 圖表區域
+        if self.chart_widget and not self._is_widget_valid(self.chart_widget):
+            self._debug("檢測到已失效的圖表組件，重新建立")
+            self._disconnect_chart_widget_signals()
+            try:
+                self.chart_widget = self.create_chart_widget()
+            except Exception as create_exc:
+                self._error(f"重新建立圖表組件失敗: {create_exc}")
+                self.chart_widget = None
+            else:
+                self._connect_chart_widget_signals()
+        
+        if self.chart_widget:
+            chart_frame = QFrame()
+            chart_frame.setFrameStyle(QFrame.StyledPanel)
+            chart_frame.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+            chart_frame.setFocusPolicy(Qt.NoFocus)
+            
+            chart_frame_layout = QVBoxLayout(chart_frame)
+            chart_frame_layout.setContentsMargins(5, 5, 5, 5)
+            chart_frame_layout.addWidget(self.chart_widget)
+            chart_tab_layout.addWidget(chart_frame)
+        
+        self.tab_widget.addTab(chart_tab, tr("boxplot.tab.chart", "Chart"))
+        
+        # ============ Tab 2: Stint Selection ============
+        stint_tab = QWidget()
+        stint_tab_layout = QVBoxLayout(stint_tab)
+        stint_tab_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 創建 Stint Selector
+        self.stint_selector = UniversalStintSelector()
+        self.stint_selector.selection_changed.connect(self._on_stint_selection_changed)
+        self.stint_selector.merge_mode_changed.connect(self._on_merge_mode_changed)
+        stint_tab_layout.addWidget(self.stint_selector)
+        
+        self.tab_widget.addTab(stint_tab, tr("boxplot.tab.stint_selection", "Stint Selection"))
+        
+        # 添加 Tab Widget 到主佈局
+        main_layout.addWidget(self.tab_widget)
+        
+        # 控制面板（隱藏，通過 create_additional_widgets 創建）
+        additional_widgets = self.create_additional_widgets()
+        for widget in additional_widgets:
+            if widget:
+                widget.setVisible(False)
+        
+        # 狀態列（可選）
+        self.status_bar = None
+        
+        logger.debug("[BOXPLOT_MDI] Tab UI 設置完成")
+    
+    def _on_stint_selection_changed(self, selected_stints: List[StintInfo]) -> None:
+        """處理 Stint 選擇變更"""
+        logger.debug(f"[BOXPLOT_MDI] Stint 選擇變更: {len(selected_stints)} stints")
+        
+        if not self.stint_selector or not self.chart_widget:
+            return
+        
+        # 根據合併模式獲取圈速數據
+        if self.stint_selector.is_merge_mode():
+            # 合併模式：一個車手一個 Box
+            driver_laptimes = self.stint_selector.get_selected_lap_times_by_driver()
+        else:
+            # 分組模式：每個 Stint 一個 Box（暫不支援，未來擴展）
+            driver_laptimes = self.stint_selector.get_selected_lap_times_by_driver()
+        
+        if not driver_laptimes:
+            logger.debug("[BOXPLOT_MDI] 沒有選中的圈速數據")
+            return
+        
+        # 計算統計數據
+        statistics = self._calculate_statistics_from_laptimes(driver_laptimes)
+        
+        # 更新圖表
+        processed_data = {
+            'driver_laptimes': driver_laptimes,
+            'statistics': statistics,
+            'metadata': {}
+        }
+        
+        self.chart_widget.update_data(processed_data)
+        
+        # 更新控制面板統計
+        if self.control_widget:
+            total_drivers = len(driver_laptimes)
+            total_laps = sum(len(laps) for laps in driver_laptimes.values())
+            self.control_widget.update_statistics(
+                f"Drivers: {total_drivers} | Laps: {total_laps} (Stint filtered)"
+            )
+    
+    def _on_merge_mode_changed(self, is_merge_mode: bool) -> None:
+        """處理合併模式變更"""
+        logger.debug(f"[BOXPLOT_MDI] 合併模式變更: {is_merge_mode}")
+        # 重新觸發選擇變更以更新圖表
+        if self.stint_selector:
+            selected = self.stint_selector.get_selected_stints()
+            self._on_stint_selection_changed(selected)
+    
+    def _calculate_statistics_from_laptimes(self, driver_laptimes: Dict[str, List[float]]) -> Dict[str, Dict[str, float]]:
+        """從圈速數據計算統計指標"""
+        statistics = {}
+        
+        for driver, lap_times in driver_laptimes.items():
+            if not lap_times:
+                continue
+            
+            statistics[driver] = {
+                'mean': float(np.mean(lap_times)),
+                'median': float(np.median(lap_times)),
+                'q1': float(np.percentile(lap_times, 25)),
+                'q3': float(np.percentile(lap_times, 75)),
+                'iqr': float(np.percentile(lap_times, 75) - np.percentile(lap_times, 25)),
+                'count': len(lap_times)
+            }
+        
+        return statistics
+    
+    def _update_chart(self, data: dict):
+        """
+        覆寫圖表更新 - 同時更新 Stint Selector
+        
+        當數據載入完成時：
+        1. 更新 Stint Selector（使用原始數據）
+        2. 更新圖表（使用處理後的數據）
+        """
+        try:
+            logger.debug("[BOXPLOT_MDI] _update_chart 被調用")
+            
+            # 1. 更新 Stint Selector（使用原始數據）
+            if self.stint_selector and self.data_manager:
+                raw_data = self.data_manager.get_raw_data()
+                if raw_data:
+                    logger.debug("[BOXPLOT_MDI] 更新 Stint Selector...")
+                    self.stint_selector.set_data(raw_data)
+                    # Stint Selector 會自動觸發 selection_changed 信號
+                    # 這會調用 _on_stint_selection_changed 來更新圖表
+                    return  # 讓 Stint Selector 負責更新圖表
+            
+            # 2. 如果沒有 Stint Selector，直接更新圖表（回退到原始行為）
+            if not self._is_widget_valid(self.chart_widget):
+                logger.debug("[BOXPLOT_MDI] 圖表組件無效，跳過更新")
+                return
+            
+            if hasattr(self.chart_widget, 'update_data'):
+                self.chart_widget.update_data(data)
+            elif hasattr(self.chart_widget, 'set_data'):
+                self.chart_widget.set_data(data)
+            
+            # 更新控制面板統計
+            if self.control_widget and data:
+                driver_laptimes = data.get('driver_laptimes', {})
+                total_drivers = len(driver_laptimes)
+                total_laps = sum(len(laps) for laps in driver_laptimes.values())
+                self.control_widget.update_statistics(
+                    f"Drivers: {total_drivers} | Laps: {total_laps}"
+                )
+                
+        except Exception as e:
+            logger.error(f"[BOXPLOT_MDI] 圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
         
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         """更新圈速箱型圖分析參數"""

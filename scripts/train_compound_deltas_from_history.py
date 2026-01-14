@@ -63,13 +63,13 @@ class CompoundDeltaTrainer:
         
         self.debug = debug
         
-        # 賽事名稱到賽道代碼的映射
+        # 賽事名稱到賽道代碼的映射 (必須與 pit_loss_database.json 中的 key 完全一致)
         self.race_to_circuit = {
             "Italian": "Monza", "Japanese": "Suzuka", "Austrian": "Spielberg",
             "Belgian": "Spa", "Monaco": "Monaco", "British": "Silverstone",
-            "Australian": "Melbourne", "Dutch": "Zandvoort", "Hungarian": "Budapest",
-            "Singapore": "Singapore", "United_States": "Austin", "Mexico_City": "Mexico",
-            "São_Paulo": "Interlagos", "Las_Vegas": "Las_Vegas", "Abu_Dhabi": "Yas_Marina",
+            "Australian": "Melbourne", "Dutch": "Zandvoort", "Hungarian": "Hungaroring",
+            "Singapore": "Singapore", "United_States": "Austin", "Mexico_City": "Mexico City",
+            "São_Paulo": "Interlagos", "Las_Vegas": "Las Vegas", "Abu_Dhabi": "Yas Marina",
             "Qatar": "Lusail", "Spanish": "Barcelona", "Canadian": "Montreal",
             "Miami": "Miami", "Bahrain": "Bahrain", "Saudi_Arabian": "Jeddah",
             "Chinese": "Shanghai", "Emilia_Romagna": "Imola", "Azerbaijan": "Baku"

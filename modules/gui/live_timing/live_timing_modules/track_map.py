@@ -78,6 +78,10 @@ class TrackMapWidget(QWidget):
         # 彎道資料
         self.official_corners: List[Dict[str, Any]] = []
         
+        # DRS 區域資料 (2025-12 新增)
+        self.drs_zones: List[Dict[str, Any]] = []
+        self.show_drs_zones: bool = True
+        
         # 超車事件標記 (2025-12 新增)
         self.overtake_events: List[Dict[str, Any]] = []
         self._show_overtakes: bool = True
@@ -164,6 +168,29 @@ class TrackMapWidget(QWidget):
         self.official_corners = corners or []
         if self.official_corners:
             logger.info("[TRACK_MAP] Set %d corner markers", len(self.official_corners))
+        self.update()
+    
+    def set_drs_zones(self, drs_zones: List[Dict[str, Any]]):
+        """
+        設置 DRS 區域資料
+        
+        Args:
+            drs_zones: DRS 區域列表, 每個區域包含:
+                - zone_id: DRS 區域編號
+                - detection_distance_m: 偵測點距離
+                - activation_distance_m: 啟用點距離
+                - end_distance_m: 結束點距離
+        """
+        self.drs_zones = drs_zones or []
+        if self.drs_zones:
+            logger.info("[TRACK_MAP] Set %d DRS zones", len(self.drs_zones))
+            for zone in self.drs_zones:
+                logger.debug(
+                    "[TRACK_MAP] DRS Zone %d: activation=%dm, end=%dm",
+                    zone.get('zone_id', 0),
+                    int(zone.get('activation_distance_m', 0)),
+                    int(zone.get('end_distance_m', 0))
+                )
         self.update()
     
     def update_driver_positions(
@@ -311,6 +338,7 @@ class TrackMapWidget(QWidget):
         transform = self._compute_transform()
         if transform and self.track_outline:
             self._draw_track_outline(painter, transform)
+            self._draw_drs_zones(painter, transform)  # DRS 區域 (在賽道上方)
             self._draw_corner_markers(painter, transform)
             self._draw_sector_markers(painter, transform)
             self._draw_overtake_markers(painter, transform)  # 超車標記
@@ -614,6 +642,91 @@ class TrackMapWidget(QWidget):
             label_y = screen_y - ny * (line_length + 12) + text_rect.height() / 4
             painter.drawText(int(label_x), int(label_y), label)
 
+    def _draw_drs_zones(self, painter: QPainter, transform: Dict[str, float]):
+        """
+        繪製 DRS 區域標記
+        
+        在 DRS 啟用點和結束點之間繪製綠色粗線覆蓋賽道，
+        讓用戶一眼看出 DRS 可用區域
+        """
+        if not self.show_drs_zones or not self.drs_zones:
+            return
+        
+        if not self.track_points or len(self.track_points) < 10:
+            return
+        
+        for zone in self.drs_zones:
+            zone_id = zone.get('zone_id', 0)
+            activation_m = zone.get('activation_distance_m', 0)
+            end_m = zone.get('end_distance_m', 0)
+            
+            if activation_m <= 0 or end_m <= 0:
+                continue
+            
+            # 收集 activation 到 end 之間的賽道點
+            drs_screen_points: List[QPointF] = []
+            
+            # 處理跨越起終點的情況
+            if end_m < activation_m:
+                # DRS 區跨越起終點：activation → 賽道末 + 0 → end
+                for pt in self.track_points:
+                    dist = pt['distance']
+                    if dist >= activation_m or dist <= end_m:
+                        screen_x, screen_y = self._world_to_screen((pt['x'], pt['y']), transform)
+                        drs_screen_points.append(QPointF(screen_x, screen_y))
+            else:
+                # 正常情況：activation → end
+                for pt in self.track_points:
+                    dist = pt['distance']
+                    if activation_m <= dist <= end_m:
+                        screen_x, screen_y = self._world_to_screen((pt['x'], pt['y']), transform)
+                        drs_screen_points.append(QPointF(screen_x, screen_y))
+            
+            # 繪製綠色粗線
+            if len(drs_screen_points) >= 2:
+                # 使用 QPainterPath 繪製整條區域
+                from PyQt5.QtGui import QPainterPath
+                path = QPainterPath()
+                path.moveTo(drs_screen_points[0])
+                for point in drs_screen_points[1:]:
+                    path.lineTo(point)
+                
+                # 設置綠色粗線樣式 (Material Green 500, 略透明)
+                pen = QPen(QColor(76, 175, 80, 180), 10, Qt.SolidLine)  # 綠色，粗度 10px
+                pen.setCapStyle(Qt.RoundCap)
+                pen.setJoinStyle(Qt.RoundJoin)
+                painter.setPen(pen)
+                painter.setBrush(Qt.NoBrush)
+                painter.drawPath(path)
+                
+                # 繪製 DRS 標籤（在區域中間位置）
+                mid_idx = len(drs_screen_points) // 2
+                mid_point = drs_screen_points[mid_idx]
+                
+                label_text = f"DRS {zone_id}"
+                font = QFont()
+                font.setPointSize(9)
+                font.setBold(True)
+                painter.setFont(font)
+                
+                label_x = int(mid_point.x()) + 15
+                label_y = int(mid_point.y()) - 5
+                
+                # 背景框
+                from PyQt5.QtCore import QRect
+                fm = painter.fontMetrics()
+                text_rect = fm.boundingRect(label_text)
+                bg_rect = QRect(label_x - 3, label_y - text_rect.height() + 3,
+                              text_rect.width() + 6, text_rect.height() + 4)
+                painter.fillRect(bg_rect, QColor(76, 175, 80, 220))
+                painter.setPen(QPen(QColor(255, 255, 255)))
+                painter.drawText(label_x, label_y, label_text)
+                
+                logger.debug(
+                    "[TRACK_MAP] Drew DRS Zone %d: %dm -> %dm (%d points)",
+                    zone_id, int(activation_m), int(end_m), len(drs_screen_points)
+                )
+
     def _draw_overtake_markers(self, painter: QPainter, transform: Dict[str, float]):
         """繪製超車位置標記 - 綠色圓點標示超車發生地點"""
         if not self.overtake_events or not self._show_overtakes:
@@ -813,6 +926,12 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
                     if corners:
                         self.track_widget.set_official_corners(corners)
                     
+                    # 載入 DRS zones 資料 (從 track_circuit_data JSON)
+                    drs_zones = self._load_drs_zones_from_json(track_name)
+                    if drs_zones:
+                        self.track_widget.set_drs_zones(drs_zones)
+                        logger.info("[TRACK_MAP_MDI] 已載入 %d 個 DRS 區域", len(drs_zones))
+                    
                     if try_year != year:
                         logger.info("[TRACK_MAP_MDI] 使用 %s 賽道數據 (API, 原始年份 %s 不可用)", try_year, year)
                     logger.info(
@@ -827,6 +946,45 @@ class LiveTimingTrackMap(BaseLiveTimingMDI):
         except Exception as e:
             logger.exception("[TRACK_MAP_MDI] API 獲取賽道數據失敗: %s", e)
             return False
+    
+    def _load_drs_zones_from_json(self, track_name: str) -> List[Dict[str, Any]]:
+        """
+        從 track_circuit_data JSON 檔案載入 DRS zones 數據
+        
+        Args:
+            track_name: 賽道名稱 (e.g. "Abu Dhabi", "Japan")
+            
+        Returns:
+            DRS zones 列表
+        """
+        try:
+            # 構建 JSON 檔案路徑
+            json_dir = Path(__file__).parent.parent.parent.parent.parent / "json"
+            
+            # 嘗試不同的檔案名稱格式
+            possible_names = [
+                track_name.replace(" ", "_"),  # "Abu Dhabi" -> "Abu_Dhabi"
+                track_name.replace(" ", ""),   # "Abu Dhabi" -> "AbuDhabi"
+                track_name,                    # 原始名稱
+            ]
+            
+            for name in possible_names:
+                json_path = json_dir / f"track_circuit_data_{name}.json"
+                if json_path.exists():
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        circuit_data = json.load(f)
+                    
+                    drs_zones = circuit_data.get('drs_zones', [])
+                    if drs_zones:
+                        logger.info("[TRACK_MAP_MDI] 從 %s 載入 DRS zones", json_path.name)
+                        return drs_zones
+            
+            logger.warning("[TRACK_MAP_MDI] 找不到 %s 的 DRS zones 數據", track_name)
+            return []
+            
+        except Exception as e:
+            logger.exception("[TRACK_MAP_MDI] 載入 DRS zones 失敗: %s", e)
+            return []
     
     # ===========================================
     # DataManager 信號處理

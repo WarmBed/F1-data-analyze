@@ -2,7 +2,7 @@
   "_metadata": {
     "version": "1.0.0",
     "description": "輪胎配方速度差異資料庫 - 從真實賽事數據訓練",
-    "last_updated": "2025-12-31T00:33:50.595696",
+    "last_updated": "2026-01-12T02:01:38.105326",
     "training_method": "Pair-wise compound comparison with fuel correction",
     "notes": {
       "SOFT_vs_MEDIUM": "SOFT - MEDIUM (負值 = SOFT 更快)",
@@ -37,7 +37,7 @@
     }
   },
   "circuits": {
-    "Yas_Marina": {
+    "Yas Marina": {
       "compound_deltas": {
         "SOFT": 0.205,
         "MEDIUM": 0.0,
@@ -155,7 +155,7 @@
         }
       }
     },
-    "Budapest": {
+    "Hungaroring": {
       "compound_deltas": {
         "SOFT": 0.577,
         "MEDIUM": 0.0,
@@ -207,7 +207,7 @@
         }
       }
     },
-    "Las_Vegas": {
+    "Las Vegas": {
       "compound_deltas": {
         "SOFT": -0.202,
         "MEDIUM": 0.0,
@@ -221,7 +221,7 @@
         }
       }
     },
-    "Mexico": {
+    "Mexico City": {
       "compound_deltas": {
         "SOFT": -0.329,
         "MEDIUM": 0.0,

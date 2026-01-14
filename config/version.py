@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.14.1"
+APP_VERSION = "V0.15.0"
 
 # 完整版本資訊
 APP_NAME = "PIT WALL"
@@ -15,6 +15,16 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.15.0": {
+        "date": "2026-01-12",
+        "features": [
+            "新增 Pit Loss Table 模組：24 賽道進站時間損失總覽",
+            "進站時間訓練數據修正：Hungaroring/Las Vegas/Yas Marina 映射問題修復",
+            "全部 24 賽道皆有真實訓練數據（無估算值）",
+            "新增進站時間色彩編碼：綠色（快）/黃色（中）/紅色（慢）",
+            "支援 3 種語言（中/英/日）幫助文檔",
+        ],
+    },
     "V0.14.1": {
         "date": "2026-01-11",
         "features": [

@@ -101,7 +101,7 @@ class ThrottleHistoryTableWidget(QWidget):
         # 表頭設置
         header = self.table.horizontalHeader()
         header.setStretchLastSection(True)
-        header.setDefaultSectionSize(55)
+        header.setDefaultSectionSize(70)
         
         # 行高
         self.table.verticalHeader().setDefaultSectionSize(22)
@@ -119,6 +119,61 @@ class ThrottleHistoryTableWidget(QWidget):
             if driver_num not in self._driver_info:
                 self._driver_info[driver_num] = {}
             self._driver_info[driver_num].update(info)
+    
+    def load_history_data(self, history_data: Dict[str, Dict[str, Any]]):
+        """
+        載入歷史數據 (用於模組打開時回補已播放的數據)
+        
+        Args:
+            history_data: 來自 DataManager.get_throttle_history() 的數據
+                {driver_num: {
+                    'lap_ratios': {lap_num: ratio},
+                    'pit_laps': set of lap numbers,
+                    'current_lamp': str,
+                    'dynamic_baseline': float or None
+                }}
+        """
+        if not history_data:
+            return
+        
+        for driver_num, data in history_data.items():
+            lap_ratios = data.get('lap_ratios', {})
+            pit_laps = data.get('pit_laps', set())
+            current_lamp = data.get('current_lamp', '')
+            
+            # 初始化存儲結構
+            if driver_num not in self._lap_data:
+                self._lap_data[driver_num] = {}
+            if driver_num not in self._pit_laps:
+                self._pit_laps[driver_num] = set()
+            
+            # 載入歷史圈數據
+            for lap_num, throttle_pct in lap_ratios.items():
+                try:
+                    lap_int = int(lap_num)
+                except (ValueError, TypeError):
+                    continue
+                
+                # 判斷是否為進站圈
+                is_pit = lap_int in pit_laps
+                
+                # 儲存到 lap_data
+                self._lap_data[driver_num][lap_int] = {
+                    'throttle_pct': throttle_pct,
+                    'is_pit': is_pit,
+                    'lamp': current_lamp if lap_int == max(lap_ratios.keys(), default=0) else '',
+                }
+                
+                # 更新 last_lap_recorded
+                if lap_int > self._last_lap_recorded.get(driver_num, 0):
+                    self._last_lap_recorded[driver_num] = lap_int
+            
+            # 同步進站圈
+            self._pit_laps[driver_num].update(pit_laps)
+        
+        # 刷新表格
+        self._refresh_table()
+        logger.info("[THROTTLE_HISTORY] Loaded history data for %d drivers", len(history_data))
     
     def update_from_snapshot(self, snapshot: Dict[str, Any]):
         """從 snapshot 更新資料"""
@@ -238,6 +293,17 @@ class ThrottleHistoryTableWidget(QWidget):
         # 設置表頭 (車手代碼)
         self.table.setHorizontalHeaderLabels(driver_tlas)
         
+        # 設置表頭車隊顏色和欄寬
+        for col, driver_num in enumerate(driver_nums):
+            header_item = self.table.horizontalHeaderItem(col)
+            if header_item:
+                team_color = self._driver_info.get(driver_num, {}).get('team_color', 'CCCCCC')
+                # 確保顏色格式正確 (加上 # 前綴)
+                if not team_color.startswith('#'):
+                    team_color = f'#{team_color}'
+                header_item.setForeground(QColor(team_color))  # 車隊顏色文字
+            self.table.setColumnWidth(col, 70)
+        
         # 設置行標籤 (圈數)
         self.table.setVerticalHeaderLabels([str(lap) for lap in sorted_laps])
         
@@ -343,6 +409,14 @@ class LiveTimingThrottleHistory(BaseLiveTimingMDI):
         """Race loaded"""
         driver_info = race_info.get('driver_info', {})
         self.history_widget.update_driver_info(driver_info)
+        
+        # 載入歷史數據 (用於模組晚於數據播放時回補)
+        if self._data_manager:
+            history_data = self._data_manager.get_throttle_history()
+            if history_data:
+                self.history_widget.load_history_data(history_data)
+                logger.info("[THROTTLE_HISTORY_MDI] Loaded history data for %d drivers", len(history_data))
+        
         logger.info("[THROTTLE_HISTORY_MDI] Race loaded: %s %s", race_info.get('year'), race_info.get('race'))
     
     def _on_race_unloaded(self):

@@ -110,6 +110,12 @@ class ColorPaletteProvider:
         self._allow_defaults: bool = self._resolve_fallback_policy()
         # 車手車隊映射緩存 (從 Driver Standings 或 CLI JSON 更新)
         self._driver_team_map: Dict[str, str] = {}
+        # 🚀 失敗緩存：避免 API 失敗後頻繁重試
+        self._api_fail_time: Optional[float] = None
+        self._api_fail_cooldown: float = 60.0  # API 失敗後等待 60 秒再重試
+        # 🐛 調試計數器
+        self._ensure_loaded_call_count: int = 0
+        self._cache_hit_count: int = 0
 
     # ------------------------------------------------------------------
     # Public API
@@ -122,10 +128,14 @@ class ColorPaletteProvider:
         force: bool = False,
     ) -> None:
         """Ensure colour data is available for the requested season."""
+        import time
+
+        self._ensure_loaded_call_count += 1
 
         target_year = int(year or datetime.now(timezone.utc).year)
         colormap = (colormap or self._loaded_colormap or "fastf1").lower()
 
+        # 🚀 檢查是否已有有效的顏色數據
         if (
             not force
             and self._driver_palette
@@ -133,6 +143,29 @@ class ColorPaletteProvider:
             and self._loaded_year == target_year
             and self._loaded_colormap == colormap
         ):
+            self._cache_hit_count += 1
+            # 每 1000 次緩存命中輸出一次日誌
+            if self._cache_hit_count % 1000 == 0:
+                logger.debug(
+                    "[COLOR] 📊 ensure_loaded() 統計: 總調用=%d, 緩存命中=%d (%.1f%%)",
+                    self._ensure_loaded_call_count,
+                    self._cache_hit_count,
+                    (self._cache_hit_count / self._ensure_loaded_call_count * 100)
+                )
+            return
+
+        # 🚀 失敗緩存：如果 API 最近失敗過，跳過重試（使用預設顏色）
+        if (
+            not force
+            and self._api_fail_time is not None
+            and (time.time() - self._api_fail_time) < self._api_fail_cooldown
+        ):
+            # 如果已有預設顏色，直接返回不重試
+            if self._driver_palette or self._team_palette:
+                return
+            # 否則應用預設顏色
+            if self._allow_defaults and not self._defaults_applied:
+                self._apply_defaults(season_year=target_year, colormap=colormap)
             return
 
         try:
@@ -141,8 +174,10 @@ class ColorPaletteProvider:
                 raise ColorPaletteError("API response is empty")
             self._apply_payload(payload, season_year=target_year, colormap=colormap)
             self._last_error = None
+            self._api_fail_time = None  # 🚀 成功後清除失敗時間
         except Exception as exc:  # pragma: no cover - defensive path
             self._last_error = str(exc)
+            self._api_fail_time = time.time()  # 🚀 記錄失敗時間
             logger.exception("[COLOR] 顏色配置載入失敗: %s", exc)
             if not self._driver_palette or not self._team_palette:
                 if self._allow_defaults:

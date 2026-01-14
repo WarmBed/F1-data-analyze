@@ -74,6 +74,12 @@ class LapComputationResult:
     telemetry_sample_count: int
     data_status: str
     notes: Optional[str] = None
+    
+    # 新增：互斥踏板狀態（加總 = 100%）
+    throttle_only_ratio: Optional[float] = None   # 純油門（油門 > 0，剎車 = 0）
+    brake_only_ratio: Optional[float] = None      # 純剎車（油門 = 0，剎車 = 1）
+    trail_braking_ratio: Optional[float] = None   # 左腳剎車（油門 > 0，剎車 = 1）
+    coasting_ratio: Optional[float] = None        # 滑行（油門 = 0，剎車 = 0）
 
     def as_payload(self, extra_fields: Dict[str, Any]) -> Dict[str, Any]:
         payload = {
@@ -90,6 +96,13 @@ class LapComputationResult:
             "top_speed_kmh": self.top_speed_kmh,
             "telemetry_sample_count": self.telemetry_sample_count,
             "data_status": self.data_status,
+            # 新增：互斥踏板狀態
+            "pedal_states": {
+                "throttle_only_ratio": self.throttle_only_ratio,
+                "brake_only_ratio": self.brake_only_ratio,
+                "trail_braking_ratio": self.trail_braking_ratio,
+                "coasting_ratio": self.coasting_ratio,
+            },
         }
         if self.notes:
             payload["notes"] = self.notes
@@ -403,6 +416,38 @@ def _calculate_lap_metrics_from_telemetry(
         speed_avg = float(np.sum(speed_left * delta_t) / np.sum(delta_t)) if np.sum(delta_t) > 0 else None
         top_speed = float(np.nanmax(speed)) if len(speed) > 0 else None
 
+    # ===== 新增：互斥踏板狀態計算 =====
+    # 剎車數據：0 或 1（二進制）
+    throttle_only_ratio = None
+    brake_only_ratio = None
+    trail_braking_ratio = None
+    coasting_ratio = None
+    
+    if "Brake" in telemetry.columns and total_duration and total_duration > 0:
+        brake = telemetry["Brake"].astype(float).to_numpy()
+        brake_left = brake[:-1]
+        
+        # 將油門轉換為 numpy array
+        throttle_arr = throttle.to_numpy() if hasattr(throttle, 'to_numpy') else np.array(throttle)
+        throttle_left_arr = throttle_arr[:-1]
+        
+        # 定義互斥狀態
+        # 油門 > 0 視為「有油門」
+        has_throttle = throttle_left_arr > 0
+        has_brake = brake_left == 1  # 剎車是二進制的
+        
+        # 四種互斥狀態
+        throttle_only_mask = has_throttle & ~has_brake    # 純油門
+        brake_only_mask = ~has_throttle & has_brake       # 純剎車
+        trail_braking_mask = has_throttle & has_brake     # 左腳剎車（同時踩）
+        coasting_mask = ~has_throttle & ~has_brake        # 滑行
+        
+        # 計算每種狀態的時間佔比
+        throttle_only_ratio = float(np.sum(delta_t[throttle_only_mask]) / total_duration)
+        brake_only_ratio = float(np.sum(delta_t[brake_only_mask]) / total_duration)
+        trail_braking_ratio = float(np.sum(delta_t[trail_braking_mask]) / total_duration)
+        coasting_ratio = float(np.sum(delta_t[coasting_mask]) / total_duration)
+
     return LapComputationResult(
         lap_number=resolved_lap_number,
         lap_time_seconds=lap_time_seconds,
@@ -417,6 +462,11 @@ def _calculate_lap_metrics_from_telemetry(
         top_speed_kmh=top_speed,
         telemetry_sample_count=int(len(telemetry)),
         data_status="ok",
+        # 新增：互斥踏板狀態
+        throttle_only_ratio=throttle_only_ratio,
+        brake_only_ratio=brake_only_ratio,
+        trail_braking_ratio=trail_braking_ratio,
+        coasting_ratio=coasting_ratio,
     )
 
 
@@ -439,19 +489,32 @@ def _resolve_lap_number_from_telemetry(telemetry: pd.DataFrame, fallback: Option
 
 
 def _collect_extra_lap_fields(lap: pd.Series) -> Dict[str, Any]:
+    # 判斷是否為進站圈（有 pit_in_time 表示該圈進站）
+    pit_in_time = _timedelta_to_seconds(lap.get("PitInTime"))
+    pit_out_time = _timedelta_to_seconds(lap.get("PitOutTime"))
+    is_pit_lap = pit_in_time is not None  # 有進站時間 = 進站圈
+    
     fields = {
         "compound": _safe_get(lap, "Compound"),
+        "tire_compound": _safe_get(lap, "Compound"),  # 別名，供 Stint Selector 使用
         "tyre_life": _safe_int(lap, "TyreLife"),
         "stint": _safe_int(lap, "Stint"),
         "sector1_time": _timedelta_to_seconds(lap.get("Sector1Time")),
         "sector2_time": _timedelta_to_seconds(lap.get("Sector2Time")),
         "sector3_time": _timedelta_to_seconds(lap.get("Sector3Time")),
         "is_accurate": bool(lap.get("IsAccurate", False)),
-        "pit_out_time": _timedelta_to_seconds(lap.get("PitOutTime")),
-        "pit_in_time": _timedelta_to_seconds(lap.get("PitInTime")),
+        "pit_out_time": pit_out_time,
+        "pit_in_time": pit_in_time,
         "pit_status": _safe_get(lap, "PitOut"),
         "track_status": _safe_get(lap, "TrackStatus"),
         "lap_time_formatted": _format_lap_time(lap.get("LapTime")),
+        # 新增：進站標記（供 Stint Selection 使用）
+        "is_pit_lap": is_pit_lap,
+        "smart_markers": {
+            "pit_stop_detection": {
+                "is_pit_lap": is_pit_lap,
+            }
+        },
     }
     if "DriverNumber" in lap:
         fields["driver_number"] = _safe_get(lap, "DriverNumber")

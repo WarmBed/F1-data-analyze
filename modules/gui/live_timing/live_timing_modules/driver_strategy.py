@@ -88,6 +88,117 @@ def _load_throttle_baseline_database() -> Dict:
     }
 
 
+# =============================================================================
+# Strategy Coefficients Database Loader (API-ONLY Mode, XGBoost v2.0)
+# =============================================================================
+_STRATEGY_COEFFICIENTS_DATABASE: Optional[Dict] = None
+
+
+def set_strategy_coefficients_database(db: Dict):
+    """
+    設定 Strategy Coefficients Database (由 API 載入後調用)
+    
+    用於 XGBoost 訓練的策略係數，格式為:
+    {
+        "version": "2.0-xgboost",
+        "circuits": {
+            "<circuit_name>": {
+                "compounds": {
+                    "HARD": {"base_rate": float, "acceleration": float, "fuel_effect": float, ...},
+                    "MEDIUM": {...},
+                    "SOFT": {...}
+                }
+            }
+        }
+    }
+    
+    Args:
+        db: 從 API 獲取的 strategy_coefficients 數據
+    """
+    global _STRATEGY_COEFFICIENTS_DATABASE
+    _STRATEGY_COEFFICIENTS_DATABASE = db
+    if db:
+        circuits_count = len(db.get('circuits', {}))
+        version = db.get('version', 'unknown')
+        logger.info(
+            "[driver_strategy] Strategy coefficients database set: version=%s, circuits=%d",
+            version, circuits_count
+        )
+
+
+def _load_strategy_coefficients_database() -> Dict:
+    """
+    獲取 Strategy Coefficients Database
+    
+    優先使用 API 設定的數據，若未設定則返回空字典。
+    注意：此函數不再直接讀取本地檔案，符合 API-ONLY 模式。
+    
+    Returns:
+        策略係數數據庫字典
+    """
+    global _STRATEGY_COEFFICIENTS_DATABASE
+    
+    if _STRATEGY_COEFFICIENTS_DATABASE is not None:
+        return _STRATEGY_COEFFICIENTS_DATABASE
+    
+    # API 未設定時返回空字典
+    logger.warning("[driver_strategy] Strategy coefficients not loaded from API, using fallback")
+    return {}
+
+
+def get_strategy_coefficients_for_circuit(circuit_name: str, compound: str) -> Dict:
+    """
+    獲取特定賽道和配方的策略係數 (XGBoost v2.0 格式)
+    
+    Args:
+        circuit_name: 賽道名稱 (例如 "Suzuka", "Monza")
+        compound: 輪胎配方 ("SOFT", "MEDIUM", "HARD")
+        
+    Returns:
+        {
+            "base_rate": float,      # 基礎衰退率
+            "acceleration": float,   # 衰退加速度
+            "fuel_effect": float,    # 燃油效應係數
+            "r2_score": float,       # 訓練 R² 分數
+            "mae": float,            # 訓練 MAE
+            "is_default": bool       # 是否為預設值
+        }
+    """
+    db = _load_strategy_coefficients_database()
+    circuits = db.get('circuits', {})
+    
+    # 標準化配方名稱
+    compound_key = compound.upper()
+    if compound_key in ['S']:
+        compound_key = 'SOFT'
+    elif compound_key in ['M']:
+        compound_key = 'MEDIUM'
+    elif compound_key in ['H']:
+        compound_key = 'HARD'
+    
+    # 預設值
+    default_coefficients = {
+        'SOFT': {'base_rate': 0.08, 'acceleration': 0.003, 'fuel_effect': -0.01, 'is_default': True},
+        'MEDIUM': {'base_rate': 0.05, 'acceleration': 0.002, 'fuel_effect': -0.01, 'is_default': True},
+        'HARD': {'base_rate': 0.03, 'acceleration': 0.001, 'fuel_effect': -0.01, 'is_default': True},
+        'INTERMEDIATE': {'base_rate': 0.06, 'acceleration': 0.002, 'fuel_effect': -0.01, 'is_default': True},
+        'WET': {'base_rate': 0.04, 'acceleration': 0.0015, 'fuel_effect': -0.01, 'is_default': True},
+    }
+    
+    # 嘗試直接匹配
+    for circuit_key in circuits:
+        if circuit_name.lower() in circuit_key.lower() or circuit_key.lower() in circuit_name.lower():
+            compounds_data = circuits[circuit_key].get('compounds', {})
+            if compound_key in compounds_data:
+                result = compounds_data[compound_key].copy()
+                result['is_default'] = False
+                result['matched_circuit'] = circuit_key
+                return result
+    
+    # 使用預設值
+    return default_coefficients.get(compound_key, default_coefficients['MEDIUM'])
+
+
 def get_throttle_baseline_for_circuit(circuit_name: str) -> Dict:
     """
     獲取特定賽道的 Throttle Baseline
@@ -153,7 +264,7 @@ COLOR_FUEL_SAVING = '#00CC00' # Green - fuel saving zones
 # Tyre compound colors
 COLOR_TYRE_SOFT = '#FF3333'      # Red
 COLOR_TYRE_MEDIUM = '#FFCC00'    # Yellow
-COLOR_TYRE_HARD = '#FFFFFF'      # White
+COLOR_TYRE_HARD = '#CCCCCC'      # Light gray (dimmed white)
 COLOR_TYRE_INTERMEDIATE = '#00CC00'  # Green
 COLOR_TYRE_WET = '#0066FF'       # Blue
 
@@ -437,6 +548,9 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         
         # Tyre compound per lap: {lap_number: compound_str}
         self._lap_compounds: Dict[int, str] = {}
+        
+        # Tyre age tracking
+        self._tyre_age: int = 0  # 當前輪胎使用圈數
         
         # Stint tracking for pit prediction
         self._stint_start_lap: int = 1  # 當前 stint 開始圈數
@@ -752,16 +866,30 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
                 throttle_baseline = all_configs.get('throttle_baseline', {})
                 if throttle_baseline:
                     set_throttle_baseline_database(throttle_baseline)
-                    circuits_count = len(throttle_baseline.get('circuits', {}))
+                    throttle_circuits_count = len(throttle_baseline.get('circuits', {}))
                 else:
-                    circuits_count = 0
+                    throttle_circuits_count = 0
+                
+                # 載入 Strategy Coefficients Database (XGBoost v2.0)
+                strategy_coefficients = all_configs.get('strategy_coefficients', {})
+                if strategy_coefficients:
+                    set_strategy_coefficients_database(strategy_coefficients)
+                    strategy_version = strategy_coefficients.get('version', 'unknown')
+                    strategy_circuits_count = len(strategy_coefficients.get('circuits', {}))
+                else:
+                    strategy_version = 'N/A'
+                    strategy_circuits_count = 0
                 
                 logger.info(
-                    "[DRIVER_STRATEGY] 配置載入成功 (API): track_features=%d, tire_deg=%d, fuel_coeff=%d, throttle_baseline=%d circuits",
+                    "[DRIVER_STRATEGY] 配置載入成功 (API): "
+                    "track_features=%d, tire_deg=%d, fuel_coeff=%d, "
+                    "throttle_baseline=%d circuits, strategy_coefficients=%s (%d circuits)",
                     len(self._strategy_database),
                     len(self._tyre_deg_database),
                     len(self._fuel_coeff_database),
-                    circuits_count,
+                    throttle_circuits_count,
+                    strategy_version,
+                    strategy_circuits_count,
                 )
                 return True
             
@@ -814,26 +942,39 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         """Set circuit key for database lookups."""
         self._circuit_key = circuit_key
         
-    def set_compound(self, compound: str):
-        """Set current tyre compound with color coding."""
-        self._current_compound = compound
+    def set_compound(self, compound: str, tyre_age: int = 0):
+        """Set current tyre compound with color coding and age.
         
-        # 輪胎顏色: M=黃色, S=紅色, H=白色, I=綠色
+        Args:
+            compound: Tyre compound name (SOFT, MEDIUM, HARD, etc.)
+            tyre_age: Number of laps on current tyres (0 = unknown/new)
+        """
+        self._current_compound = compound
+        self._tyre_age = tyre_age
+        
+        # 輪胎顏色: M=黃色, S=紅色, H=較暗白色, I=綠色
         compound_colors = {
             'SOFT': '#FF3333',      # 紅色
             'S': '#FF3333',
             'MEDIUM': '#FFCC00',    # 黃色
             'M': '#FFCC00',
-            'HARD': '#FFFFFF',      # 白色
-            'H': '#FFFFFF',
+            'HARD': '#CCCCCC',      # 較暗灰白色
+            'H': '#CCCCCC',
             'INTERMEDIATE': '#00CC00',  # 綠色
             'I': '#00CC00',
             'WET': '#0066FF',       # 藍色
             'W': '#0066FF',
         }
         
-        color = compound_colors.get(compound.upper(), '#CCCCCC')
-        self._tyre_label.setText(f"{tr('Tyre')}: {compound}")
+        color = compound_colors.get(compound.upper(), '#AAAAAA')
+        
+        # 顯示輪胎種類和使用圈數
+        if tyre_age > 0:
+            tyre_text = f"{tr('Tyre')}: {compound} (L{tyre_age})"
+        else:
+            tyre_text = f"{tr('Tyre')}: {compound}"
+        
+        self._tyre_label.setText(tyre_text)
         self._tyre_label.setStyleSheet(f"color: {color}; font-weight: bold; font-size: 11px;")
         
     def select_driver(self, driver_code: str, driver_name: str = "", team_color: str = ""):
@@ -867,6 +1008,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         self._current_predicted_pit = 0
         self._stint_start_lap = 1
         self._current_lap = 0
+        self._tyre_age = 0  # 重設輪胎使用圈數
         self._correction_factor = 0.0
         self._correction_factor_locked = False  # 重設鎖定狀態
         self._base_lap_time_locked = 0.0  # 重設鎖定的基準圈速
@@ -987,9 +1129,10 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         if sc_restart_laps is not None:
             self._sc_restart_laps = sc_restart_laps
         
-        # Update compound display
+        # Update compound display with tyre age
         if current_compound:
-            self.set_compound(current_compound)
+            tyre_age = current_lap - self._stint_start_lap + 1 if current_lap >= self._stint_start_lap else 0
+            self.set_compound(current_compound, tyre_age)
         
         # Recalculate predictions based on loaded history
         # Use lap-by-lap simulation to match Realtime correction behavior
@@ -1060,7 +1203,8 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         
         # Update compound and store for this lap
         if compound:
-            self.set_compound(compound)
+            tyre_age = lap_number - self._stint_start_lap + 1 if lap_number >= self._stint_start_lap else 0
+            self.set_compound(compound, tyre_age)
             self._lap_compounds[lap_number] = compound
         elif self._current_compound:
             # Use current compound if not specified
@@ -1816,6 +1960,9 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         """
         Calculate predicted lap time for a specific lap within a stint.
         
+        優先使用 XGBoost v2.0 策略係數 (strategy_coefficients)，
+        若無對應賽道/配方則回退到舊版 circuit_data。
+        
         Uses time-varying linear degradation model:
         degradation(t) = base_rate + acceleration * tyre_age
         
@@ -1824,7 +1971,7 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             tyre_age: Laps on current tyres (1-based)
             compound: Tyre compound (SOFT, MEDIUM, HARD, etc.)
             base_lap_time: Base lap time (fastest clean lap)
-            circuit_data: Circuit-specific data from database
+            circuit_data: Circuit-specific data from database (fallback)
         """
         # 標準化配方名稱
         compound_key = compound.upper()
@@ -1839,30 +1986,52 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
         elif compound_key in ['W', 'WET']:
             compound_key = 'WET'
         
-        # 獲取衰退參數
-        base_deg = circuit_data.get('base_degradation', {})
-        deg_accel = circuit_data.get('degradation_acceleration', {})
+        # =====================================================================
+        # 優先使用 XGBoost v2.0 策略係數
+        # =====================================================================
+        xgb_coeffs = get_strategy_coefficients_for_circuit(self._circuit_key, compound_key)
         
-        # 預設衰退值（如果資料庫沒有）
-        default_base_deg = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03, 'INTERMEDIATE': 0.06, 'WET': 0.04}
-        default_deg_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001, 'INTERMEDIATE': 0.002, 'WET': 0.0015}
-        
-        base_rate = base_deg.get(compound_key, default_base_deg.get(compound_key, 0.05))
-        acceleration = deg_accel.get(compound_key, default_deg_accel.get(compound_key, 0.002))
-        
-        # 計算輪胎衰退效果（時變線性模型）
-        # degradation(t) = base_rate * t + 0.5 * acceleration * t^2
-        tyre_degradation = base_rate * tyre_age + 0.5 * acceleration * (tyre_age ** 2)
-        
-        # 計算燃油效果（油量減少 = 車更輕 = 更快）
-        fuel_effect = self._get_fuel_effect(lap)
+        if not xgb_coeffs.get('is_default', True):
+            # 使用 XGBoost 訓練的係數
+            base_rate = xgb_coeffs.get('base_rate', 0.05)
+            acceleration = xgb_coeffs.get('acceleration', 0.002)
+            fuel_coeff = xgb_coeffs.get('fuel_effect', -0.01)
+            
+            # 計算輪胎衰退效果（時變線性模型）
+            # degradation(t) = base_rate * t + 0.5 * acceleration * t^2
+            tyre_degradation = base_rate * tyre_age + 0.5 * acceleration * (tyre_age ** 2)
+            
+            # 計算燃油效果 (使用 XGBoost 訓練的燃油係數)
+            # fuel_effect = fuel_coeff * laps_completed (負值表示變輕變快)
+            fuel_effect = fuel_coeff * lap
+            
+        else:
+            # =====================================================================
+            # 回退到舊版 circuit_data 格式
+            # =====================================================================
+            base_deg = circuit_data.get('base_degradation', {})
+            deg_accel = circuit_data.get('degradation_acceleration', {})
+            
+            # 預設衰退值（如果資料庫沒有）
+            default_base_deg = {'SOFT': 0.08, 'MEDIUM': 0.05, 'HARD': 0.03, 'INTERMEDIATE': 0.06, 'WET': 0.04}
+            default_deg_accel = {'SOFT': 0.003, 'MEDIUM': 0.002, 'HARD': 0.001, 'INTERMEDIATE': 0.002, 'WET': 0.0015}
+            
+            base_rate = base_deg.get(compound_key, default_base_deg.get(compound_key, 0.05))
+            acceleration = deg_accel.get(compound_key, default_deg_accel.get(compound_key, 0.002))
+            
+            # 計算輪胎衰退效果（時變線性模型）
+            # degradation(t) = base_rate * t + 0.5 * acceleration * t^2
+            tyre_degradation = base_rate * tyre_age + 0.5 * acceleration * (tyre_age ** 2)
+            
+            # 計算燃油效果（油量減少 = 車更輕 = 更快）
+            fuel_effect = self._get_fuel_effect(lap)
         
         # 配方抓地力優勢
         grip_advantage = {'SOFT': -0.5, 'MEDIUM': -0.25, 'HARD': 0.0, 'INTERMEDIATE': -0.3, 'WET': -0.2}
         compound_advantage = grip_advantage.get(compound_key, 0.0)
         
         # =====================================================================
-        # Track Evolution: ⚠️ 已禁用賽道進化演算法
+        # Track Evolution: 已禁用賽道進化演算法
         # =====================================================================
         track_evo_effect = 0.0
         # if self._track_evolution_enabled:
@@ -2032,7 +2201,38 @@ class DriverStrategyWidget(HoverTooltipMixin, QWidget):
             self._base_lap_time_is_locked = False
             self._base_lap_time_lock_lap = current_max_pit + 3  # Stint 開始後第 3 圈鎖定（前 2 圈浮動）
             self._last_pit_lap_for_base_lock = current_max_pit
-            print(f"[DS] _simulate: 新 Stint 偵測 (pit={current_max_pit})，base_lap_time 將在 lap {self._base_lap_time_lock_lap} 鎖定")
+            
+            # =====================================================================
+            # 關鍵修復：清除進站圈之後的已鎖定預測
+            # 這樣新 Stint 的預測才會重新計算
+            # 注意：保留進站圈及之前的鎖定，只清除之後的
+            # =====================================================================
+            laps_to_remove = [lap for lap in self._locked_predictions.keys() if lap > current_max_pit]
+            for lap in laps_to_remove:
+                del self._locked_predictions[lap]
+                if lap in self._locked_prediction_ranges:
+                    del self._locked_prediction_ranges[lap]
+            
+            # 同時清除預測值，強制重新計算
+            for lap in list(self._predicted_lap_times.keys()):
+                if lap > current_max_pit:
+                    del self._predicted_lap_times[lap]
+            for lap in list(self._prediction_range.keys()):
+                if lap > current_max_pit:
+                    del self._prediction_range[lap]
+            
+            print(f"[DS] _simulate: 新 Stint 偵測 (pit={current_max_pit})，清除 {len(laps_to_remove)} 圈鎖定預測，base_lap_time 將在 lap {self._base_lap_time_lock_lap} 鎖定")
+            
+            # 重新計算 max_locked_lap（因為我們剛才清除了一些）
+            # 注意：這裡 max_locked_lap 可能會變成進站圈本身（不是 0）
+            max_locked_lap = max(self._locked_predictions.keys()) if self._locked_predictions else 0
+            
+            # ⚠️ 新 Stint 後直接進入增量模式（不觸發完整模擬）
+            # 這避免了潛在的遞迴問題
+            if max_locked_lap > 0:
+                print(f"[DS] _simulate: 新 Stint 後進入增量模式 (locked={max_locked_lap})")
+                self._do_incremental_simulation(full_lap_times, pit_laps, max_locked_lap)
+                return
         
         # 如果所有數據圈都已經鎖定，不需要做任何事
         if max_data_lap <= max_locked_lap:

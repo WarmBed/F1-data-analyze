@@ -205,6 +205,7 @@ class AnalysisModuleCreator:
                 "fp2_qualifying_prediction_table": [  # ✅ F76 FP2→Q 排位賽預測
                     ("fp2_qualifying_prediction", "FP2 to Qualifying Prediction"),
                     ("fp2_qualifying_prediction_table", "FP2 → Q Prediction Table"),
+                    "fp2_qualifying_prediction",  # ✅ Workspace 使用的原始 key（模組的 analysis_type）
                     "FP2→Q排位賽預測",
                     "FP2 → Q Prediction Table",
                 ],
@@ -322,11 +323,37 @@ class AnalysisModuleCreator:
                 "traffic_analysis": [  # ⭐ Traffic Analysis (超車難度分析)
                     ("traffic_analysis", "Traffic Analysis"),
                     "traffic",  # ✅ Workspace 使用的原始 key
+                    "traffic_analysis",  # ✅ Workspace analysis_type
                     "Traffic Analysis",
                     "車流分析",
                     "流量分析",
                     "超車難度分析",
                     "トラフィック分析",
+                ],
+                "traffic_timeline": [  # ⭐ Traffic Timeline (車流時間線分析)
+                    ("traffic_timeline", "Traffic Timeline"),
+                    "traffic_timeline",  # ✅ Workspace 使用的原始 key
+                    "Traffic Timeline",
+                    "車流時間線",
+                    "車流時間軸",
+                    "トラフィックタイムライン",
+                ],
+                "pedal_behavior_analysis": [  # ⭐ Pedal Behavior Analysis (油門/煞車行為分析)
+                    ("pedal_behavior_analysis", "Pedal Behavior Analysis"),
+                    "pedal_behavior",  # ✅ Workspace 使用的原始 key
+                    "pedal_behavior_analysis",  # ✅ Workspace analysis_type (factory key)
+                    "Pedal Behavior Analysis",
+                    "油門/煞車行為分析",
+                    "ペダル動作分析",
+                ],
+                "pit_loss_table": [  # ⭐ Pit Loss Table (進站時間損失表格)
+                    ("pit_loss_table", "Pit Loss Table"),
+                    "pit_loss_table",  # ✅ Workspace 使用的原始 key
+                    "Pit Loss Table",
+                    "Pit Loss Database",
+                    "進站時間損失表",
+                    "進站損失表格",
+                    "ピットロステーブル",
                 ],
             }
 
@@ -1933,6 +1960,102 @@ class AnalysisModuleCreator:
                             return None
                     except Exception as e:
                         logger.error(f"[ERROR] Traffic Analysis 分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理 Traffic Timeline 分析模組 (車流時間線)
+                elif module_type == "traffic_timeline":
+                    try:
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建 Traffic Timeline 分析模組...")
+                        from modules.gui.lap_analysis.traffic_timeline_analysis.traffic_timeline_analysis_mdi import TrafficTimelineAnalysis
+                        logger.debug(f"[OK] [MODULE_FACTORY] Traffic Timeline 分析模組導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] Traffic Timeline 分析模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            module = TrafficTimelineAnalysis(
+                                year=current_year,
+                                race=current_race,
+                                session=current_session
+                            )
+                            logger.debug(f"[OK] [MODULE_FACTORY] Traffic Timeline 分析模組初始化成功")
+                            return self.main_window._mark_module_factory_type(module, module_type)
+                        else:
+                            logger.error(f"[ERROR] Traffic Timeline 分析模組創建失敗：無參數")
+                            return None
+                    except Exception as e:
+                        logger.error(f"[ERROR] Traffic Timeline 分析模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+                
+                # 處理 Pedal Behavior Analysis 模組 (油門/煞車行為分析)
+                elif module_type == "pedal_behavior_analysis":
+                    try:
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建 Pedal Behavior Analysis 模組...")
+                        from modules.gui.lap_analysis.pedal_behavior_analysis.pedal_behavior_analysis_mdi import PedalBehaviorAnalysisMDI
+                        logger.debug(f"[OK] [MODULE_FACTORY] Pedal Behavior Analysis 模組導入成功")
+                        
+                        # 獲取當前參數
+                        if parameter_provider:
+                            current_year = int(parameter_provider.get_current_year())
+                            current_race = parameter_provider.get_current_race() 
+                            current_session = parameter_provider.get_current_session()
+                            
+                            logger.debug(f"[INIT] [MODULE_FACTORY] Pedal Behavior Analysis 模組參數: {current_year} {current_race} {current_session}")
+                            
+                            # 創建模組實例
+                            module = PedalBehaviorAnalysisMDI(
+                                year=current_year,
+                                race=current_race,
+                                session=current_session
+                            )
+                            logger.debug(f"[OK] [MODULE_FACTORY] Pedal Behavior Analysis 模組實例創建成功")
+                            
+                            # ✅ 設置參數提供者（關鍵！用於接收主程式參數更新）
+                            module.parameter_provider = parameter_provider
+                            
+                            logger.debug(f"[OK] [MODULE_FACTORY] Pedal Behavior Analysis 模組初始化成功")
+                            return self.main_window._mark_module_factory_type(module, module_type)
+                        else:
+                            logger.error(f"[ERROR] Pedal Behavior Analysis 模組創建失敗：無參數")
+                            return None
+                    except Exception as e:
+                        logger.error(f"[ERROR] Pedal Behavior Analysis 模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        
+                        # DEBUG: 顯示錯誤視窗 (方便在 EXE 環境除錯)
+                        try:
+                            import ctypes
+                            error_msg = f"Pedal Behavior Module Load Error:\n{str(e)}\n\n{traceback.format_exc()}"
+                            ctypes.windll.user32.MessageBoxW(0, error_msg, "F1T Debug Error", 0x10)
+                        except:
+                            pass
+                            
+                        return None
+                
+                # 處理 Pit Loss Table 模組 (進站時間損失表格)
+                elif module_type == "pit_loss_table":
+                    try:
+                        logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建 Pit Loss Table 模組...")
+                        from modules.gui.multi_season.pit_loss_table import PitLossTableMDI
+                        logger.debug(f"[OK] [MODULE_FACTORY] Pit Loss Table 模組導入成功")
+                        
+                        # 創建模組實例 (此模組不需要賽事參數)
+                        module = PitLossTableMDI()
+                        logger.debug(f"[OK] [MODULE_FACTORY] Pit Loss Table 模組實例創建成功")
+                        
+                        return self.main_window._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] Pit Loss Table 模組創建失敗: {e}")
                         import traceback
                         traceback.print_exc()
                         return None

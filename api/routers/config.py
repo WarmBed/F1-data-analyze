@@ -255,6 +255,89 @@ async def get_throttle_baseline_for_circuit(circuit: str) -> Dict[str, Any]:
         }
 
 
+@router.get("/strategy-coefficients")
+async def get_strategy_coefficients() -> Dict[str, Any]:
+    """
+    獲取策略係數數據庫 (XGBoost 訓練)
+    
+    返回各賽道、各輪胎類型的衰退係數
+    - base_rate: 基礎衰退率 (秒/圈)
+    - acceleration: 加速衰退係數
+    - fuel_effect: 燃油效應係數
+    
+    用途:
+    - Driver Strategy 模組的圈速預測
+    - 輪胎衰退曲線繪製
+    - 進站視窗計算
+    
+    數據來源:
+    - XGBoost 訓練 (2022-2025 FastF1 數據)
+    - 訓練腳本: CLI_modules/cli/prediction/train_strategy_xgboost.py
+    """
+    data = _load_json_config("strategy_coefficients_xgboost.json")
+    
+    return {
+        "success": True,
+        "message": "策略係數數據庫獲取成功",
+        "config_type": "strategy_coefficients",
+        "data": data,
+        "timestamp": time.time()
+    }
+
+
+@router.get("/strategy-coefficients/{circuit}")
+async def get_strategy_coefficients_for_circuit(circuit: str) -> Dict[str, Any]:
+    """
+    獲取特定賽道的策略係數
+    
+    Args:
+        circuit: 賽道名稱 (例如 "Monza", "Suzuka", "Abu_Dhabi")
+    
+    返回:
+    - 各輪胎類型的衰退係數
+    - base_rate, acceleration, fuel_effect
+    - 訓練品質指標 (r2_score, mae, cv_mae)
+    """
+    data = _load_json_config("strategy_coefficients_xgboost.json")
+    
+    circuits = data.get("circuits", {})
+    
+    # 嘗試直接匹配
+    circuit_data = circuits.get(circuit)
+    
+    if not circuit_data:
+        # 嘗試模糊匹配
+        circuit_lower = circuit.lower().replace(" ", "_").replace("-", "_")
+        for key in circuits:
+            key_lower = key.lower().replace(" ", "_").replace("-", "_")
+            if circuit_lower in key_lower or key_lower in circuit_lower:
+                circuit_data = circuits[key]
+                circuit = key
+                break
+    
+    if circuit_data:
+        return {
+            "success": True,
+            "message": f"Strategy coefficients for {circuit}",
+            "circuit": circuit,
+            "data": circuit_data,
+            "version": data.get("version", "unknown"),
+            "timestamp": time.time()
+        }
+    else:
+        # 列出可用的賽道
+        available_circuits = list(circuits.keys())
+        raise HTTPException(
+            status_code=404,
+            detail={
+                "error": "circuit_not_found",
+                "message": f"Circuit '{circuit}' not found",
+                "available_circuits": available_circuits,
+                "timestamp": time.time()
+            }
+        )
+
+
 @router.get("/all")
 async def get_all_configs() -> Dict[str, Any]:
     """
@@ -273,7 +356,8 @@ async def get_all_configs() -> Dict[str, Any]:
         "fuel_coefficients": "fuel_coefficients_database.json",
         "track_features": "track_features_database.json",
         "pit_loss": "pit_loss_database.json",
-        "throttle_baseline": "throttle_baseline_database.json"
+        "throttle_baseline": "throttle_baseline_database.json",
+        "strategy_coefficients": "strategy_coefficients_xgboost.json"
     }
     
     for key, filename in config_files.items():
@@ -342,6 +426,8 @@ async def list_available_configs() -> Dict[str, Any]:
                 "pit_loss": "/api/v2/config/pit-loss",
                 "throttle_baseline": "/api/v2/config/throttle-baseline",
                 "throttle_baseline_circuit": "/api/v2/config/throttle-baseline/{circuit}",
+                "strategy_coefficients": "/api/v2/config/strategy-coefficients",
+                "strategy_coefficients_circuit": "/api/v2/config/strategy-coefficients/{circuit}",
                 "all": "/api/v2/config/all"
             },
             "timestamp": time.time()

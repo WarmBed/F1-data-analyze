@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(SPECPATH)))
 try:
     from config.version import APP_VERSION
 except ImportError:
-    APP_VERSION = "V0.12.1"
+    APP_VERSION = "V0.15.0"
 
 # 直接使用版本號（保留 "V" 前綴）
 version_str = APP_VERSION
@@ -48,8 +48,10 @@ added_files = [
     # Windows 模組（整個資料夾）- 新增
     (str(project_root / 'windows'), 'windows'),
     
-    # CLI 模組（API 調用需要）
-    (str(project_root / 'CLI_modules'), 'CLI_modules'),
+    
+    # ⚠️ CLI_modules 已移除 - GUI EXE 不需要 CLI 功能
+    # 如需 CLI 功能，請使用獨立的 CLI 執行檔
+    # (str(project_root / 'CLI_modules'), 'CLI_modules'),
     
     # API 模組 - 新增
     (str(project_root / 'api'), 'api'),
@@ -73,6 +75,11 @@ weather_dir = project_root / 'json' / 'weather'
 if weather_dir.exists():
     added_files.append((str(weather_dir), 'json/weather'))
 
+# 添加 track_circuit_data JSON 檔案（DRS 區域、彎道資料等）
+track_circuit_files = glob.glob(str(project_root / 'json' / 'track_circuit_data_*.json'))
+for track_file in track_circuit_files:
+    added_files.append((track_file, 'json'))
+
 
 # 隱藏導入 - 必須明確列出的模組
 hidden_imports = [
@@ -80,17 +87,8 @@ hidden_imports = [
     'PyQt5.QtCore',
     'PyQt5.QtGui',
     'PyQt5.QtWidgets',
-    'PyQt5.sip',
     'PyQt5.QtNetwork',
     'PyQt5.QtPrintSupport',
-    
-    # ========== FastF1 相關 ==========
-    'fastf1',
-    'fastf1.core',
-    'fastf1.api',
-    'fastf1.plotting',
-    'fastf1.events',
-    'fastf1.ergast',
     
     # ========== 數據處理 ==========
     'pandas',
@@ -111,7 +109,6 @@ hidden_imports = [
     'matplotlib.figure',
     'matplotlib.colors',
     'matplotlib.cm',
-    'seaborn',
     'PIL',
     'PIL.Image',
     
@@ -138,8 +135,17 @@ hidden_imports = [
     
     # ========== 表格輸出 ==========
     'prettytable',
-    'tabulate',
     'openpyxl',
+    
+    # ========== PDF 生成 ==========
+    'reportlab',
+    'reportlab.lib',
+    'reportlab.lib.pagesizes',
+    'reportlab.lib.units',
+    'reportlab.lib.utils',
+    'reportlab.lib.colors',
+    'reportlab.pdfgen',
+    'reportlab.pdfgen.canvas',
     
     # ========== 專案核心模組 ==========
     'core.logger',
@@ -176,6 +182,10 @@ hidden_imports = [
     'modules.gui.base.universal_analysis_mdi_base',
     'modules.gui.base.universal_data_loader_base',
     'modules.gui.base.universal_chart_widget_base',
+    'modules.gui.base.universal_stint_selector',
+    'modules.gui.base.async_loading_progress',
+    'modules.gui.base.global_chart_sync_signal',
+    'modules.gui.base.loading_indicator',
     'modules.gui.interfaces',
     'modules.gui.themes',
     'modules.gui.shared',
@@ -223,10 +233,10 @@ hidden_imports = [
     
     # ========== Race Analysis 模組（新結構）==========
     'modules.gui.race_analysis',
-    'modules.gui.race_analysis.rain',
-    'modules.gui.race_analysis.rain.rain_analysis_mdi',
-    'modules.gui.race_analysis.rain.rain_analysis_module',
-    'modules.gui.race_analysis.rain.rain_analysis_chart_widget',
+    'modules.gui.race_analysis.weather_timeline',
+    'modules.gui.race_analysis.weather_timeline.weather_timeline_mdi',
+    'modules.gui.race_analysis.weather_timeline.weather_timeline_widget',
+    'modules.gui.race_analysis.weather_timeline.weather_timeline_data_loader',
     
     'modules.gui.race_analysis.pitstop',
     'modules.gui.race_analysis.pitstop.pitstop_analysis_mdi',
@@ -243,6 +253,12 @@ hidden_imports = [
     'modules.gui.race_analysis.weather_timeline',
     'modules.gui.race_analysis.track_elevation',
     'modules.gui.race_analysis.track_map',
+    'modules.gui.race_analysis.track_map.historical_track_map_mdi',
+    'modules.gui.race_analysis.track_map.historical_track_map_data_loader',
+    'modules.gui.race_analysis.track_map.speed_distribution_widget',
+    
+    'modules.gui.race_analysis.start_reaction',
+    'modules.gui.race_analysis.traffic_analysis',
     
     # ========== Driver Race 模組 ==========
     'modules.gui.driver_race',
@@ -283,6 +299,12 @@ hidden_imports = [
     'modules.gui.telemetry',
     'modules.gui.driver_analysis',
     'modules.gui.classification_analysis',
+    
+    # ========== Long Run Analysis 模組（新增）==========
+    'modules.gui.long_run_analysis',
+    'modules.gui.long_run_analysis.long_run_mdi',
+    'modules.gui.long_run_analysis.long_run_data_loader',
+    'modules.gui.long_run_analysis.long_run_calculator',
     
     'modules.gui.laptime_prediction_compare',
     'modules.gui.qualifying_prediction',
@@ -364,6 +386,24 @@ hidden_imports = [
     'modules.gui.lap_analysis.traffic_timeline_analysis.traffic_timeline_analysis_mdi',
     'modules.gui.lap_analysis.traffic_timeline_analysis.traffic_timeline_chart_widget',
     
+    # ========== Pedal Behavior Analysis 模組（新增）==========
+    'modules.gui.lap_analysis.pedal_behavior_analysis',
+    'modules.gui.lap_analysis.pedal_behavior_analysis.pedal_behavior_analysis_mdi',
+    'modules.gui.lap_analysis.pedal_behavior_analysis.pedal_behavior_chart_widget',
+    'modules.gui.lap_analysis.pedal_behavior_analysis.pedal_behavior_data_manager',
+    
+    # ========== Lap Analysis 其他子模組 ==========
+    'modules.gui.lap_analysis.acceleration_analysis',
+    'modules.gui.lap_analysis.brake_analysis',
+    'modules.gui.lap_analysis.distancediff_analysis',
+    'modules.gui.lap_analysis.gear_analysis',
+    'modules.gui.lap_analysis.rpm_analysis',
+    'modules.gui.lap_analysis.speeddiff_analysis',
+    'modules.gui.lap_analysis.speed_analysis',
+    'modules.gui.lap_analysis.Throttle_analysis',
+    'modules.gui.lap_analysis.timediff_analysis',
+    'modules.gui.lap_analysis.lap_box_plot',
+    
     # ========== Splash Screen ==========
     'modules.gui.splash_screen',
     
@@ -373,32 +413,34 @@ hidden_imports = [
     'strategy_simulator.gui.main_window',
     'strategy_simulator.gui.input_panel',
     'strategy_simulator.gui.results_tabs',
-    'strategy_simulator.gui.results_tabs.chart_tab',
     'strategy_simulator.gui.results_tabs.full_race_tab',
     'strategy_simulator.gui.results_tabs.safety_car_tab',
-    'strategy_simulator.gui.results_tabs.strategy_comparison_tab',
-    'strategy_simulator.gui.results_tabs.tire_analysis_tab',
+    'strategy_simulator.gui.results_tabs.strategy_comparison',
     'strategy_simulator.gui.results_tabs.simulation_tab',
     'strategy_simulator.gui.results_tabs.position_analysis_tab',
     'strategy_simulator.gui.results_tabs.opponent_tab',
-    'strategy_simulator.gui.results_tabs.fp2_tab',
+    'strategy_simulator.gui.results_tabs.fp2_prediction_tab',
+    'strategy_simulator.gui.results_tabs.lap_curves',
+    'strategy_simulator.gui.results_tabs.detailed_data',
+    'strategy_simulator.gui.results_tabs.race_result_analysis_tab',
     'strategy_simulator.gui.i18n_helper',
     'strategy_simulator.core',
     'strategy_simulator.core.lap_simulator',
     'strategy_simulator.core.race_simulator',
     'strategy_simulator.core.monte_carlo',
     'strategy_simulator.core.competitive_monte_carlo',
+    'strategy_simulator.core.competitive_optimizer',
     'strategy_simulator.core.opponent_strategy_predictor',
     'strategy_simulator.core.position_tracker',
     'strategy_simulator.core.overtake_calculator',
-    'strategy_simulator.core.track_config',
+    'strategy_simulator.core.strategy_optimizer',
+    'strategy_simulator.core.blocking_analyzer',
+    'strategy_simulator.core.config_loader',
     'strategy_simulator.data',
-    'strategy_simulator.data.sc_probability_by_track',
-    'strategy_simulator.data.pit_lane_time_loss_all_tracks',
-    'strategy_simulator.data.track_overtake_difficulty',
-    'strategy_simulator.data.team_performance_matrix',
-    'strategy_simulator.data.driver_coefficients_complete',
-    'strategy_simulator.data.overtake_success_model',
+    'strategy_simulator.data.track_config',
+    'strategy_simulator.data.longrun_loader',
+    'strategy_simulator.data.team_performance_loader',
+    'strategy_simulator.data.track_circuit_analyzer',
     
     # ========== Windows 管理模組 ==========
     'windows',
@@ -414,6 +456,7 @@ hidden_imports = [
     'windows.managers.workspace_saver',
     'windows.managers.season_start_reaction_opener',
     'windows.managers.pole_defense_opener',
+    'windows.managers.pdf_report_exporter',
     
     'windows.dialogs',
     'windows.dialogs.window_settings_dialog',
@@ -437,10 +480,7 @@ hidden_imports = [
     'websocket',
     
     # ========== 機器學習 (Race Prediction) ==========
-    'sklearn',
-    'sklearn.ensemble',
-    'sklearn.linear_model',
-    'sklearn.preprocessing',
+    # sklearn 模組已移至可選依賴，GUI 不需要
 ]
 
 # 排除的模組 - 減少 EXE 體積
@@ -526,6 +566,18 @@ a = Analysis(
     noarchive=False,
 )
 
+# ✅ 過濾掉備份檔案和問題檔案（避免 CArchive 錯誤）
+import re
+backup_pattern = re.compile(r'-XM0152|龜山|\.bak$|\.backup$|~$')
+
+# 過濾 datas
+a.datas = [(dest, src, typ) for dest, src, typ in a.datas 
+           if not backup_pattern.search(src) and not backup_pattern.search(dest)]
+
+# 過濾 binaries
+a.binaries = [(dest, src, typ) for dest, src, typ in a.binaries 
+              if not backup_pattern.search(src) and not backup_pattern.search(dest)]
+
 # 純 Python 模組打包
 pyz = PYZ(
     a.pure,
@@ -533,19 +585,20 @@ pyz = PYZ(
     cipher=block_cipher
 )
 
-# 執行檔建構 - 目錄模式 (--onedir)
+# 執行檔建構 - 單檔案模式 (--onefile)
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
     a.zipfiles,
     a.datas,
-    [],
     name=f'PitWall_{version_str}',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,

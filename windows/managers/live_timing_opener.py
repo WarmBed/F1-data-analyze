@@ -61,10 +61,11 @@ class LiveTimingOpener:
         
         # 使用 PopoutSubWindow 包裝模組（與標準分析模組一致）
         # 注意：Live Timing 模組不需要同步功能（sync_enabled=False）
+        # ✅ 2025-01-13: 修復 workspace save/load - 必須傳入 analysis_module 才能被收集
         sub_window = PopoutSubWindow(
             window_title, 
             current_mdi_area, 
-            analysis_module=None,  # Live Timing 模組不是標準分析模組
+            analysis_module=module_instance,  # ✅ 傳入模組實例以支援 workspace
             sync_enabled=False
         )
         
@@ -85,10 +86,21 @@ class LiveTimingOpener:
         current_mdi_area.addSubWindow(sub_window)
         sub_window.show()
         
+        # ✅ 2025-01-13: 添加到 active_subwindows 以支援 workspace save
+        if hasattr(self.main_window, 'active_subwindows'):
+            self.main_window.active_subwindows.append(sub_window)
+            logger.debug(f"[LIVE_TIMING] Added to active_subwindows: {window_title}")
+        
         # 自動顯示 Live Timing Control Dock
         self.main_window._on_live_timing_module_opened()
         
-        # 連接子視窗關閉信號
+        # ✅ 2025-01-13: 連接子視窗關閉信號（與標準分析模組一致）
+        # 使用 window_closed 信號確保正確從 active_subwindows 移除
+        from functools import partial
+        sub_window.window_closed.connect(
+            partial(self.main_window.on_subwindow_closed, sub_window)
+        )
+        # 額外連接 destroyed 信號以處理 Live Timing Control Dock 顯示
         sub_window.destroyed.connect(self.main_window._on_live_timing_module_closed)
         
         logger.debug(f"[LIVE_TIMING] Module opened via factory with PopoutSubWindow: {module_name}")

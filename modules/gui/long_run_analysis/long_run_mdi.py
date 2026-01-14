@@ -122,6 +122,9 @@ class LongRunAnalysis(QWidget):
         self.race = race
         self.session = session
         
+        # Analysis type for parameter change detection
+        self.analysis_type = 'long_run'
+        
         # State
         self._data: Optional[Dict[str, Any]] = None
         self._is_loading: bool = False

@@ -319,6 +319,16 @@ class LapHistoryTableWidget(QWidget):
         # 設置表頭 (車手代碼)
         self.table.setHorizontalHeaderLabels(driver_tlas)
         
+        # 設置表頭車隊顏色 (文字顏色)
+        for col, driver_num in enumerate(driver_nums):
+            header_item = self.table.horizontalHeaderItem(col)
+            if header_item:
+                team_color = self._driver_info.get(driver_num, {}).get('team_color', 'CCCCCC')
+                # 確保顏色格式正確 (加上 # 前綴)
+                if not team_color.startswith('#'):
+                    team_color = f'#{team_color}'
+                header_item.setForeground(QColor(team_color))  # 車隊顏色文字
+        
         # 設置行標籤 (圈數)
         self.table.setVerticalHeaderLabels([str(lap) for lap in sorted_laps])
         

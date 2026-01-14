@@ -573,8 +573,13 @@ class UniversalAnalysisMDI(IAnalysisModule):
             self.data_manager.error_occurred.connect(self._handle_error)
         if hasattr(self.data_manager, 'loading_progress'):
             self.data_manager.loading_progress.connect(self._update_progress)
+        if hasattr(self.data_manager, 'load_progress'):
+            self.data_manager.load_progress.connect(self._update_progress)
         if hasattr(self.data_manager, 'status_changed'):
             self.data_manager.status_changed.connect(self._update_status)
+        # 連接 load_error 信號以處理 API 失敗等錯誤
+        if hasattr(self.data_manager, 'load_error'):
+            self.data_manager.load_error.connect(self._handle_load_error)
     
     def _connect_chart_widget_signals(self):
         """連接圖表組件信號"""
@@ -595,7 +600,9 @@ class UniversalAnalysisMDI(IAnalysisModule):
             'data_loaded': self._update_chart,
             'error_occurred': self._handle_error,
             'loading_progress': self._update_progress,
+            'load_progress': self._update_progress,
             'status_changed': self._update_status,
+            'load_error': self._handle_load_error,
         }
 
         for signal_name, slot in signal_mapping.items():
@@ -853,6 +860,23 @@ class UniversalAnalysisMDI(IAnalysisModule):
         self._error(f"數據載入錯誤: {error_message}")
         self.module_error.emit(error_message)
         self._update_status(f"錯誤: {error_message}")
+    
+    def _handle_load_error(self, error_message: str):
+        """
+        處理 load_error 信號（API 請求失敗、數據載入失敗等）
+        
+        此方法確保錯誤被正確記錄和處理，避免未處理的錯誤導致應用當機。
+        """
+        if getattr(self, '_cleanup_performed', False):
+            return
+        try:
+            self._error(f"數據載入失敗: {error_message}")
+            self._update_status(f"載入失敗: {error_message[:50]}...")
+            # 發送模組錯誤信號（如有訂閱者）
+            self.module_error.emit(f"載入失敗: {error_message}")
+        except Exception as e:
+            # 確保錯誤處理本身不會拋出異常
+            logger.exception(f"[{self._debug_prefix}] 處理 load_error 時發生異常: {e}")
     
     def _update_progress(self, progress: int):
         """更新進度（狀態列已隱藏）"""

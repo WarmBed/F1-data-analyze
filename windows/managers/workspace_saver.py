@@ -28,7 +28,7 @@ class WorkspaceSaver:
             dialog = SaveWorkspaceDialog(
                 workspace_serializer=self.main_window.workspace_serializer,
                 workspace_database=self.main_window.workspace_db,
-                parent=self
+                parent=self.main_window  # 使用 main_window 作為 parent
             )
             
             # 連接信號（如果需要額外處理）
@@ -40,7 +40,7 @@ class WorkspaceSaver:
         except Exception as e:
             logger.exception("Failed to open save workspace dialog", exc_info=e)
             QMessageBox.critical(
-                self,
+                self.main_window,  # 使用 main_window 作為 parent
                 tr('save_workspace_error', '儲存工作區失敗'),
                 f"{tr('error_details', '詳細資訊')}: {e}"
             )

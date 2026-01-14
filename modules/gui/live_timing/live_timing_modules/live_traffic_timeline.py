@@ -562,6 +562,11 @@ class LiveTrafficTimelineMDI(BaseLiveTimingMDI):
     繼承 BaseLiveTimingMDI，自動訂閱 DataManager 信號
     """
     
+    # ✅ Workspace 保存/載入所需屬性 (2025-01-13)
+    analysis_type = 'live_traffic_timeline'
+    module_name = 'live_traffic_timeline'
+    display_name = 'Traffic Timeline (Live)'
+    
     def __init__(self, parent=None, data_manager=None):
         # 追蹤狀態
         self._last_max_lap: int = 0

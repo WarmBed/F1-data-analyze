@@ -273,7 +273,7 @@ class TrackWeatherWidget(QWidget):
             self.update_track_status(track_status)
             
             # 獲取天氣數據
-            weather = self._data_manager.get_weather_at_time(race_time)
+            weather = self._data_manager.get_weather_at_time(race_time_for_query)
             self.update_weather(weather)
     
     def update_track_status(self, status: str):

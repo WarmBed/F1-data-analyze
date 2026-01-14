@@ -30,6 +30,7 @@ class BaseLiveTimingMDI(QWidget):
     - 自動訂閱 LiveTimingDataManager 的信號
     - 提供標準化的生命週期管理
     - 統一的錯誤處理機制
+    - ✅ 支援 Workspace save/load
     
     子類需要實現：
     - _setup_ui(): 設置 UI 組件
@@ -37,6 +38,12 @@ class BaseLiveTimingMDI(QWidget):
     - _on_race_loaded(race_info): 處理賽事載入
     - _on_race_unloaded(): 處理賽事卸載
     """
+    
+    # ✅ Workspace 保存/載入所需屬性 (2025-01-13)
+    # 子類應覆寫這些屬性以提供具體值
+    analysis_type: str = 'live_timing_base'  # 子類應覆寫
+    module_name: str = 'live_timing_base'    # 子類應覆寫
+    display_name: str = 'Live Timing'        # 子類應覆寫
     
     def __init__(self, parent=None, data_manager=None):
         """

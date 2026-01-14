@@ -72,6 +72,11 @@ class ThrottleBoxPlotChartWidget(QWidget):
 
         # 🆕 數據過濾管理
         self.hidden_drivers = set()  # 儲存被隱藏的車手代碼集合
+        
+        # 🚀 性能優化：防抖機制
+        self._hover_check_counter = 0  # 計數器
+        self._hover_check_interval = 2  # 每2次滑鼠移動才檢查一次
+        self._last_hover_driver = None  # 記錄上次懸停車手
 
         self.setMouseTracking(True)
         self.setMinimumSize(200, 100)
@@ -128,8 +133,18 @@ class ThrottleBoxPlotChartWidget(QWidget):
             pass
 
     def _driver_color(self, driver: str) -> QColor:
-        """Return the colour for the given driver code."""
-        color = color_palette_provider.get_driver_color(driver, format="qcolor")
+        """
+        Return the colour for the given driver code.
+        
+        支援 stint 標籤格式: "VER_S1" -> 提取 "VER" 查詢顏色
+        """
+        # 提取實際的車手代碼（處理 "VER_S1" 這類 stint 標籤）
+        driver_code = driver
+        if "_S" in driver and len(driver) > 3:
+            # 格式: "VER_S1" -> 提取 "VER"
+            driver_code = driver.split("_S")[0]
+        
+        color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
         if isinstance(color, QColor):
             return QColor(color)
         return QColor(self.DEFAULT_COLOR)
@@ -501,16 +516,29 @@ class ThrottleBoxPlotChartWidget(QWidget):
         painter.restore()
 
     def mouseMoveEvent(self, event: QMouseEvent):
+        """滑鼠移動事件 - 帶防抖優化"""
+        # 🚀 防抖機制：每N次滑鼠移動才檢查一次
+        self._hover_check_counter += 1
+        if self._hover_check_counter < self._hover_check_interval:
+            # 僅更新位置，不重新檢測車手
+            if self.hover_driver:
+                self.hover_position = event.pos()
+            return
+        
+        self._hover_check_counter = 0
         position = event.pos()
-        previous_driver = self.hover_driver
-
+        
         hovered_driver = self._detect_hovered_driver(position)
-        if hovered_driver != previous_driver:
+        
+        # 🚀 優化：僅在懸停車手改變時才重繪
+        if hovered_driver != self._last_hover_driver:
+            self._last_hover_driver = hovered_driver
             self.hover_driver = hovered_driver
             self.hover_position = position if hovered_driver else None
-            self.update()
-        else:
-            self.hover_position = position if hovered_driver else None
+            self.update()  # 狀態改變，需要重繪
+        elif hovered_driver:
+            # 同一車手，僅更新位置（用於 tooltip 跟隨）
+            self.hover_position = position
 
     def leaveEvent(self, event):
         self.hover_driver = None

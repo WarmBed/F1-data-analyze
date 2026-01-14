@@ -342,8 +342,12 @@ def _summarise_event(row: pd.Series, *, reference: datetime, cache_enabled: bool
 
     race_dt_local = _to_datetime(row.get("Session5Date"))
     race_dt_utc = _to_datetime(row.get("Session5DateUtc"))
-
-    is_completed = bool(race_dt_utc and race_dt_utc <= reference)
+    
+    # 🆕 修改判斷邏輯：使用 FP1 (Session1) 而非 Race (Session5)
+    # 這樣當 FP1 發生後，賽事就會標記為「已開賽」，可以顯示數據
+    # 而不需要等到 Race 結束才移除「[未開賽]」標籤
+    fp1_dt_utc = _to_datetime(row.get("Session1DateUtc"))
+    is_completed = bool(fp1_dt_utc and fp1_dt_utc <= reference)
 
     return {
         "round": round_number,

@@ -1145,6 +1145,13 @@ class LiveTimingSFPercentageChart(BaseLiveTimingMDI):
         
         self._chart_widget.set_available_drivers(self._drivers_data)
         
+        # Load history data (for modules opened after data started playing)
+        if self._data_manager:
+            history_data = self._data_manager.get_throttle_history()
+            if history_data:
+                self._load_history_data(history_data, driver_info)
+                logger.info("[SF_CHART_MDI] Loaded history data for %d drivers", len(history_data))
+        
         # Auto-select P1 driver if not already selected
         if not self._current_driver and self._drivers_data:
             # Find P1 driver
@@ -1263,6 +1270,101 @@ class LiveTimingSFPercentageChart(BaseLiveTimingMDI):
             position = driver_info.get('position', 0)
             if position:
                 sf_data.position = position
+    
+    def _load_history_data(self, history_data: Dict[str, Dict[str, Any]], driver_info: Dict[str, Dict[str, Any]]):
+        """
+        Load history data for all drivers (for modules opened after data started playing).
+        
+        Args:
+            history_data: From DataManager.get_throttle_history()
+                {driver_num: {
+                    'lap_ratios': {lap_num: ratio},
+                    'pit_laps': set of lap numbers,
+                    'dynamic_baseline': float or None,
+                    'lap_lamps': {lap_num: lamp_status}
+                }}
+            driver_info: Driver info from race_info
+        """
+        for driver_num, data in history_data.items():
+            lap_ratios = data.get('lap_ratios', {})
+            pit_laps = data.get('pit_laps', set())
+            baseline = data.get('dynamic_baseline')
+            lap_lamps = data.get('lap_lamps', {})
+            
+            if not lap_ratios or not baseline or baseline <= 0:
+                continue
+            
+            # Get or create driver SF data
+            if driver_num not in self._all_drivers_sf_data:
+                info = driver_info.get(driver_num, {})
+                tla = info.get('tla', driver_num)
+                name = info.get('name', '')
+                team_color = info.get('team_color', 'FFFFFF')
+                position = info.get('position', 0)
+                
+                self._all_drivers_sf_data[driver_num] = SFPercentageData(
+                    driver_num=driver_num,
+                    driver_tla=tla,
+                    driver_name=name,
+                    team_color=team_color,
+                    position=position,
+                    sc_laps=self._sc_laps.copy()
+                )
+            
+            sf_data = self._all_drivers_sf_data[driver_num]
+            
+            # Load history lap data
+            for lap_num, throttle_pct in lap_ratios.items():
+                try:
+                    lap_int = int(lap_num)
+                except (ValueError, TypeError):
+                    continue
+                
+                # Skip if already recorded
+                if lap_int in sf_data.lap_sf_data:
+                    continue
+                
+                # Check if PIT lap
+                is_pit = lap_int in pit_laps
+                if is_pit:
+                    if lap_int not in sf_data.pit_laps:
+                        sf_data.pit_laps.append(lap_int)
+                    sf_data.pit_out_laps.add(lap_int)
+                    if lap_int > 1:
+                        sf_data.pit_out_laps.add(lap_int - 1)
+                    sf_data.pit_out_laps.add(lap_int + 1)
+                    continue
+                
+                # Skip PIT out laps
+                if lap_int in sf_data.pit_out_laps:
+                    continue
+                
+                # Calculate SF%
+                sf_pct = ((throttle_pct - baseline) / baseline) * 100
+                lamp = lap_lamps.get(lap_num, '') if isinstance(lap_num, str) else lap_lamps.get(str(lap_num), lap_lamps.get(lap_num, ''))
+                
+                # Store data
+                sf_data.lap_sf_data[lap_int] = sf_pct
+                sf_data.lap_throttle_data[lap_int] = throttle_pct
+                sf_data.lap_baseline_data[lap_int] = baseline
+                if lamp:
+                    sf_data.lap_lamp_data[lap_int] = lamp
+                
+                sf_data.current_lap = max(sf_data.current_lap, lap_int)
+        
+        # Refresh chart if current driver has data
+        if self._current_driver and self._current_driver in self._all_drivers_sf_data:
+            saved = self._all_drivers_sf_data[self._current_driver]
+            self._chart_widget.load_driver_history(
+                saved.lap_sf_data,
+                saved.lap_throttle_data,
+                saved.lap_baseline_data,
+                saved.lap_lamp_data,
+                saved.pit_laps,
+                saved.pit_out_laps,
+                saved.sc_laps,
+                saved.current_lap
+            )
     
     def set_sc_laps(self, sc_laps: Set[int]):
         """Set global SC laps."""

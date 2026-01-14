@@ -37,7 +37,6 @@ from datetime import datetime
 import threading
 import requests
 import certifi
-import fastf1
 import pandas as pd
 import subprocess
 from typing import Dict, List, Any, Optional, Tuple

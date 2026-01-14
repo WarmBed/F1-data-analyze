@@ -447,6 +447,11 @@ class ContextMenuTreeWidget(QTreeWidget):
             logger.debug(f"[TREE_CLICK] 開啟油門折線圖（模組工廠模式）")
             self.main_window.create_analysis_window(clean_name)
         
+        # Pedal Behavior Analysis 油門/煞車行為分析
+        elif clean_name in ["Pedal Behavior Analysis", "油門/煞車行為分析", "ペダル動作分析"]:
+            logger.debug(f"[TREE_CLICK] 開啟油門/煞車行為分析（模組工廠模式）")
+            self.main_window.create_analysis_window(clean_name)
+        
         # Long Run & Degradation Analysis
         elif clean_name in ["Long Run & Degradation", "Long Run Analysis", "長跑分析", "衰退分析", "ロングラン分析"]:
             logger.debug(f"[TREE_CLICK] 開啟 Long Run & Degradation 模組（模組工廠模式）")
@@ -507,6 +512,11 @@ class ContextMenuTreeWidget(QTreeWidget):
         elif clean_name in ["Pole Defense Statistics", "桿位防守統計", "ポールディフェンス統計"]:
             logger.debug(f"[TREE_CLICK] 開啟 Pole Defense Statistics 模組")
             self.main_window._open_pole_defense_module()
+        
+        # Pit Loss Table 進站時間損失表
+        elif clean_name in ["Pit Loss Table", "進站時間損失表", "ピットタイムロス表"]:
+            logger.debug(f"[TREE_CLICK] 開啟 Pit Loss Table 模組")
+            self.main_window._open_pit_loss_table_module()
         
         # Traffic Analysis 車流分析 (Historical 版本，位於 Race Overview)
         elif clean_name in ["Traffic Analysis", "車流分析", "トラフィック分析"]:

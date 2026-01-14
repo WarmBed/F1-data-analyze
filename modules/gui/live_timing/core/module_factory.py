@@ -248,6 +248,14 @@ class LiveTimingModuleFactory:
         "最高速ヒストリー": "top_speed_history",
         "トップスピード履歴": "top_speed_history",
         "top_speed_history": "top_speed_history",
+        
+        # Pedal Behavior 踏板行為分析
+        "Pedal Behavior": "pedal_behavior_live",
+        "Pedal State": "pedal_behavior_live",
+        "踏板行為": "pedal_behavior_live",
+        "踏板狀態": "pedal_behavior_live",
+        "ペダルビヘイビア": "pedal_behavior_live",
+        "pedal_behavior_live": "pedal_behavior_live",
     }
     
     # 模組鍵值 → 模組元數據
@@ -436,6 +444,12 @@ class LiveTimingModuleFactory:
             "display_name": "Top Speed History",
             "description": "Top speed history for all drivers per lap with personal best highlighting",
             "icon": "top_speed_history.png",
+            "implemented": True,
+        },
+        "pedal_behavior_live": {
+            "display_name": "Pedal Behavior",
+            "description": "Real-time pedal behavior distribution (throttle/brake states)",
+            "icon": "pedal_behavior.png",
             "implemented": True,
         },
     }
@@ -679,6 +693,10 @@ class LiveTimingModuleFactory:
             elif module_key == "top_speed_history":
                 from ..live_timing_modules.top_speed_history import LiveTimingTopSpeedHistory
                 module_class = LiveTimingTopSpeedHistory
+                
+            elif module_key == "pedal_behavior_live":
+                from ..live_timing_modules.pedal_behavior_live import LiveTimingPedalBehavior
+                module_class = LiveTimingPedalBehavior
                 
             else:
                 self._logger.warning("Unknown module key: %s", module_key)

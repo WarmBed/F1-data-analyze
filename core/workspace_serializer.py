@@ -89,6 +89,24 @@ class WorkspaceSerializer:
         "distancediffAnalysisModule": "distancediff",
         "timediffAnalysisModule": "timediff",
         
+        # Traffic Timeline Analysis (車流時間線分析)
+        "TrafficTimelineAnalysis": "traffic_timeline",
+        
+        # Pedal Behavior Analysis (油門/煞車行為分析)
+        "PedalBehaviorAnalysisMDI": "pedal_behavior",
+        
+        # Historical Track Map (歷年賽道旗幟統計)
+        "HistoricalTrackMapMDI": "historical_track_map",
+        
+        # Traffic Analysis (超車難度分析)
+        "TrafficAnalysisMDI": "traffic_analysis",
+        
+        # Start Reaction Analysis (起跑反應分析)
+        "StartReactionAnalysisMDI": "start_reaction",
+        
+        # Long Run Analysis (長跑與衰退分析)
+        "LongRunAnalysis": "long_run_analysis",
+        
         # ============================================================
         # Live Timing 模組 (BaseLiveTimingMDI 子類)
         # ============================================================
@@ -112,6 +130,15 @@ class WorkspaceSerializer:
         "BattleInsightMDI": "live_battle_insight",
         "TrackWeatherMDI": "live_track_weather",
         "ChaseStrategyMDI": "live_chase_strategy",
+        
+        # ✅ 新增：Throttle 95% History / Top Speed History
+        "LiveTimingThrottleHistory": "live_throttle_history",
+        "LiveTimingTopSpeedHistory": "live_top_speed_history",
+        
+        # ✅ 新增：SF% History / Pedal Behavior / Traffic Timeline
+        "LiveTimingSFPercentageChart": "sf_percentage_chart",
+        "LiveTimingPedalBehavior": "pedal_behavior_live",
+        "LiveTrafficTimelineMDI": "live_traffic_timeline",
         
         # Gap Evolution Chart (從 Chase Strategy 創建的子視窗)
         "GapEvolutionChartWidget": "gap_evolution_chart",
@@ -830,6 +857,21 @@ class WorkspaceSerializer:
                     "Battle Insight": "live_battle_insight",
                     "Track & Weather": "live_track_weather",
                     "Chase Strategy": "live_chase_strategy",
+                    # ✅ 新增：Throttle 95% History / Top Speed History
+                    "Throttle 95% History": "live_throttle_history",
+                    "Throttle History": "live_throttle_history",
+                    "油門歷史": "live_throttle_history",
+                    "油門 95% 歷史": "live_throttle_history",
+                    "Top Speed History": "live_top_speed_history",
+                    "最高速歷史": "live_top_speed_history",
+                    # ✅ 新增：SF% / Pedal Behavior / Traffic Timeline
+                    "SF% History": "sf_percentage_chart",
+                    "SF%": "sf_percentage_chart",
+                    "SF% 歷史": "sf_percentage_chart",
+                    "Pedal Behavior": "pedal_behavior_live",
+                    "踏板行為": "pedal_behavior_live",
+                    "Traffic Timeline": "live_traffic_timeline",
+                    "車流時間線": "live_traffic_timeline",
                 }
                 
                 inferred_type = title_to_type_map.get(window_title)
@@ -852,7 +894,12 @@ class WorkspaceSerializer:
             # ========================================================
             # 步驟 1.6: 檢查是否為 Live Timing 模組
             # ========================================================
-            if window_type.startswith('live_'):
+            # 包含以 live_ 開頭的模組，以及其他 Live Timing 模組
+            live_timing_types = {
+                'pedal_behavior_live',
+                'sf_percentage_chart',
+            }
+            if window_type.startswith('live_') or window_type in live_timing_types:
                 logger.debug(f"[WORKSPACE] 🎬 檢測到 Live Timing 模組，使用專用工廠...")
                 return self._rebuild_live_timing_window(mdi_area, window_config)
             
@@ -1302,6 +1349,13 @@ class WorkspaceSerializer:
                 "live_battle_insight": "Battle Insight",
                 "live_track_weather": "Track & Weather",
                 "live_chase_strategy": "Chase Strategy",
+                # ✅ 新增：Throttle 95% History / Top Speed History
+                "live_throttle_history": "Throttle 95% History",
+                "live_top_speed_history": "Top Speed History",
+                # ✅ 新增：SF% / Pedal Behavior / Traffic Timeline
+                "sf_percentage_chart": "SF% History",
+                "pedal_behavior_live": "Pedal Behavior",
+                "live_traffic_timeline": "Traffic Timeline",
             }
             
             module_name = live_timing_name_map.get(window_type)

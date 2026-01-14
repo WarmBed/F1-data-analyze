@@ -229,7 +229,7 @@ class ModuleHelpRegistry:
         
         # ========== Phase 5: Multi-Season ==========
         for module in ["pole_defense", "start_reaction", "season_progress",
-                       "driver_standings", "constructor_standings"]:
+                       "driver_standings", "constructor_standings", "pit_loss_table"]:
             cls._registry[module] = {
                 "title": f"help_{module}_title",
                 "description": f"help_{module}_desc",
@@ -384,6 +384,9 @@ class ModuleHelpRegistry:
             "車手積分": "driver_standings",
             "constructor": "constructor_standings",
             "車隊積分": "constructor_standings",
+            "pit loss": "pit_loss_table",
+            "進站時間損失": "pit_loss_table",
+            "ピットタイムロス": "pit_loss_table",
             
             # Additional
             "tire": "tire_analysis",

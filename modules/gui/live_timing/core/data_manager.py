@@ -1181,6 +1181,73 @@ class LiveTimingDataManager(QObject):
         """
         return self._tire_saving_scores.copy()
     
+    def get_throttle_history(self) -> Dict[str, Dict[str, Any]]:
+        """
+        獲取所有車手的油門 95% 歷史數據
+        
+        用於 Throttle 95% History 和 SF% Chart 模組在打開時回補歷史數據
+        
+        Returns:
+            {driver_num: {
+                'lap_ratios': {lap_num: ratio},
+                'pit_laps': set of lap numbers,
+                'current_lamp': str,
+                'dynamic_baseline': float or None,
+                'lap_lamps': {lap_num: lamp_status} (用於 SF% Chart)
+            }}
+        """
+        result = {}
+        for driver_num, tracker in self._driver_throttle_samples.items():
+            # 為每圈計算 lamp 狀態 (基於當前 baseline)
+            lap_lamps = {}
+            baseline = tracker.get('dynamic_baseline')
+            lap_ratios = tracker.get('lap_ratios', {})
+            pit_laps = tracker.get('pit_laps', set())
+            
+            if baseline and baseline > 0:
+                THRESHOLD_HIGH = -5.0
+                THRESHOLD_MEDIUM = -3.0
+                for lap_num, ratio in lap_ratios.items():
+                    if lap_num in pit_laps:
+                        lap_lamps[lap_num] = ''
+                        continue
+                    deviation_pct = ((ratio - baseline) / baseline) * 100
+                    if deviation_pct <= THRESHOLD_HIGH:
+                        lap_lamps[lap_num] = 'R'
+                    elif deviation_pct <= THRESHOLD_MEDIUM:
+                        lap_lamps[lap_num] = 'Y'
+                    else:
+                        lap_lamps[lap_num] = ''
+            
+            result[driver_num] = {
+                'lap_ratios': lap_ratios.copy(),
+                'pit_laps': pit_laps.copy(),
+                'current_lamp': tracker.get('current_lamp', ''),
+                'dynamic_baseline': baseline,
+                'lap_lamps': lap_lamps,
+            }
+        return result
+    
+    def get_top_speed_history(self) -> Dict[str, Dict[str, Any]]:
+        """
+        獲取所有車手的最高速歷史數據
+        
+        用於 Top Speed History 模組在打開時回補歷史數據
+        
+        Returns:
+            {driver_num: {
+                'lap_top_speeds': {lap_num: speed},
+                'personal_best': float
+            }}
+        """
+        result = {}
+        for driver_num, tracker in self._driver_speed_samples.items():
+            result[driver_num] = {
+                'lap_top_speeds': tracker.get('lap_top_speeds', {}).copy(),
+                'personal_best': tracker.get('personal_best', 0.0),
+            }
+        return result
+    
     def get_track_status_at_time(self, timestamp: str) -> str:
         """獲取指定時間的賽道狀態"""
         # 優先使用 processor（完整載入模式）

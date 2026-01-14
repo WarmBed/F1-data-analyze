@@ -34,6 +34,11 @@ class LinkedUniversalChartWidget(UniversalChartWidget):
         # 讓預設圖例顯示更佳
         self.show_grid = True
         self.show_legend = True
+        
+        # 🚀 性能優化：防抖機制
+        self._hover_check_counter = 0
+        self._hover_check_interval = 3  # 每3次滑鼠移動才檢查一次
+        self._last_hovered_lap = None  # 記錄上次懸停圈數
 
     # ------------------------------------------------------------------
     # 公開 API
@@ -101,12 +106,22 @@ class LinkedUniversalChartWidget(UniversalChartWidget):
     # ------------------------------------------------------------------
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
+        
+        # 🚀 防抖機制：每N次滑鼠移動才檢查一次
+        self._hover_check_counter += 1
+        if self._hover_check_counter < self._hover_check_interval:
+            return
+        self._hover_check_counter = 0
 
         lap_number = self._resolve_lap_from_pos(event.pos())
         if lap_number is None:
             return
-        record = self._lap_index.get(lap_number, {})
-        self.lapHover.emit(lap_number, record)
+        
+        # 🚀 優化：僅在圈數改變時發射信號
+        if lap_number != self._last_hovered_lap:
+            self._last_hovered_lap = lap_number
+            record = self._lap_index.get(lap_number, {})
+            self.lapHover.emit(lap_number, record)
 
         if self.dragging:
             self._emit_view_transform_if_needed()

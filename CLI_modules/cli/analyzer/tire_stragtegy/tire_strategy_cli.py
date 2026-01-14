@@ -45,20 +45,25 @@ except ImportError as e:
         from base import F1AnalysisBase
         print("✅ 成功導入 core 模組 (直接導入)")
     except ImportError as e2:
-        print(f"❌ 再次導入失敗: {e2}")
-        print(f"核心目錄: {cli_core_dir}")
-        print(f"當前路徑: {sys.path[:3]}")
-        sys.exit(1)
+        # 不使用 sys.exit(1)，避免終止 PyInstaller 分析進程
+        # print(f"❌ 再次導入失敗: {e2}")
+        # 設定虛擬類別以便模組可被導入（但不可用）
+        F1AnalysisJSONGenerator = None
+        F1SessionInfoExtractor = None
+        CompatibleF1DataLoader = None
+        F1AnalysisBase = object
 
 # 導入 FastF1
+FASTF1_AVAILABLE = False
 try:
     import fastf1
     # 啟用快取
     fastf1.Cache.enable_cache('f1_analysis_cache')
+    FASTF1_AVAILABLE = True
     print("✅ FastF1 已啟用快取")
 except ImportError:
-    print("❌ FastF1 未安裝")
-    sys.exit(1)
+    print("⚠️ FastF1 未安裝，輪胎策略分析功能將不可用")
+    fastf1 = None  # 設置為 None 以防止後續調用
 
 
 class TireStrategyAnalyzer(F1AnalysisBase):

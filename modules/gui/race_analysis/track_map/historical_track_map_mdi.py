@@ -31,6 +31,35 @@ from core.gui_i18n import tr
 from core.logger import get_logger
 logger = get_logger(__name__)
 
+# 🗺️ 賽道名稱映射表：將 FastF1 的 Location (賽道位置) 映射到 JSON 檔案使用的賽事名稱
+CIRCUIT_NAME_TO_RACE_MAPPING = {
+    # 賽道位置 (FastF1 Location) → JSON 檔案中的賽事名稱
+    "Yas Island": "Abu_Dhabi",           # Abu Dhabi GP
+    "Melbourne": "Australia",            # Australian GP
+    "Spielberg": "Austria",              # Austrian GP
+    "Baku": "Azerbaijan",                # Azerbaijan GP
+    "Sakhir": "Bahrain",                 # Bahrain GP
+    "Spa-Francorchamps": "Belgium",      # Belgian GP
+    "São Paulo": "Brazil",               # Brazilian GP
+    "Montréal": "Canada",                # Canadian GP
+    "Shanghai": "China",                 # Chinese GP
+    "Imola": "Emilia_Romagna",           # Emilia Romagna GP
+    "Silverstone": "Great_Britain",      # British GP
+    "Budapest": "Hungary",               # Hungarian GP
+    "Monza": "Italy",                    # Italian GP
+    "Suzuka": "Japan",                   # Japanese GP
+    "Las Vegas": "Las_Vegas",            # Las Vegas GP
+    "Mexico City": "Mexico",             # Mexico City GP
+    "Miami Gardens": "Miami",            # Miami GP
+    "Monaco": "Monaco",                  # Monaco GP
+    "Zandvoort": "Netherlands",          # Dutch GP
+    "Lusail": "Qatar",                   # Qatar GP
+    "Jeddah": "Saudi_Arabia",            # Saudi Arabian GP
+    "Marina Bay": "Singapore",           # Singapore GP
+    "Barcelona": "Spain",                # Spanish GP
+    "Austin": "United_States",           # United States GP
+}
+
 # 導入基類
 try:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
@@ -1729,13 +1758,33 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                         activation_distance_m, end_distance_m
         """
         try:
-            # 從 metadata 取得賽事名稱
-            metadata = data.get("metadata", {})
-            circuit_name = metadata.get("circuit_name", "")
+            # 🔧 修復：優先從 chart_data 取得賽道名稱，再從 metadata
+            chart_data = data.get("chart_data", {})
+            track_info = chart_data.get("track_info", {})
+            circuit_name = track_info.get("circuit_name", "")
+            
+            # 如果 chart_data 中沒有，嘗試從 metadata 取得
+            if not circuit_name:
+                metadata = data.get("metadata", {})
+                circuit_name = metadata.get("circuit_name", "")
+            
+            # 如果都沒有，嘗試從當前參數取得賽事名稱
+            if not circuit_name:
+                circuit_name = self.race  # 使用當前賽事名稱作為備選
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 使用當前賽事名稱作為 circuit_name: {circuit_name}")
             
             if not circuit_name:
                 logger.warning("[HISTORICAL_TRACK_MAP_MDI] 無法取得賽道名稱，跳過 DRS 載入")
                 return []
+            
+            # 🗺️ 使用映射表將賽道位置轉換為檔案名稱
+            # 例如: "Yas Island" → "Abu_Dhabi"
+            original_name = circuit_name
+            mapped_name = CIRCUIT_NAME_TO_RACE_MAPPING.get(circuit_name, circuit_name)
+            
+            if mapped_name != original_name:
+                logger.debug(f"[HISTORICAL_TRACK_MAP_MDI] 🗺️  賽道映射: '{original_name}' → '{mapped_name}'")
+                circuit_name = mapped_name
             
             # 建構 JSON 檔案路徑
             # 檔案格式: track_circuit_data_{race}.json (空格替換為底線)

@@ -39,9 +39,12 @@ if project_root not in sys.path:
 try:
     import fastf1
     from fastf1 import plotting
+    FASTF1_AVAILABLE = True
 except ImportError:
-    print("❌ 錯誤: 無法導入 fastf1，請執行 'pip install fastf1'")
-    sys.exit(1)
+    FASTF1_AVAILABLE = False
+    fastf1 = None
+    plotting = None
+    print("⚠️ 警告: fastf1 未安裝，FPQDataCollector 功能將無法使用")
 
 
 class FPQDataCollector:
@@ -65,6 +68,9 @@ class FPQDataCollector:
         Args:
             cache_dir: FastF1 緩存目錄
         """
+        if not FASTF1_AVAILABLE:
+            raise ImportError("fastf1 未安裝，請執行 'pip install fastf1'")
+        
         self.cache_dir = cache_dir
         fastf1.Cache.enable_cache(cache_dir)
         

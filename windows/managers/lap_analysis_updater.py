@@ -61,6 +61,7 @@ class LapAnalysisUpdater:
             'throttle_line_chart_single_driver',  # 油門折線圖（單車手）
             # 賽事級分析類型
             'rain_weather',   # 天氣分析
+            'temp_weather',   # 溫度分析 (Temperature Analysis)
             'pitstop',        # 進站分析
             'accident',       # 事故分析
             'tire',           # 輪胎分析
@@ -81,6 +82,8 @@ class LapAnalysisUpdater:
             'corner_performance',  # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
             'historical_track_map',  # ✅ 歷年賽道旗幟統計 (F100)
             'traffic_timeline',  # ✅ 車流時間線分析 (F127) - Traffic Analysis
+            'pedal_behavior',  # 踏板行為分析 (F54) - Pedal Behavior Analysis
+            'pit_loss_table',  # ✅ 進站時間損失表格 - Multi-Season Module
         }
         
         # 獲取當前設置
@@ -180,7 +183,8 @@ class LapAnalysisUpdater:
             'throttle_line_chart_single_driver'
         }
         session_only_types = {
-            'rain_weather', 'pitstop', 'accident', 'tire', 'ideal_lap',
+            'rain_weather', 'temp_weather', 'long_run',  # 溫度分析 & 長距離分析
+            'pitstop', 'accident', 'tire', 'ideal_lap',
             'ideal_lap_ranking', 'ideal_lap_sector_comparison', 'ideal_lap_sector_heatmap',
             'qualifying_prediction',           # 排位賽預測 (F74 v3.8)
             'qualifying_prediction_table',      # 排位賽預測表格 (F74 v3.8) - 別名
@@ -198,6 +202,7 @@ class LapAnalysisUpdater:
             'corner_performance',               # 彎道性能分析 (F47) - Low/Mid/High Speed Corners
             'historical_track_map',             # ✅ 歷年賽道旗幟統計 (F100)
             'traffic_timeline',                 # ✅ 車流時間線分析 (F127) - Traffic Analysis
+            'pedal_behavior',                   # 踏板行為分析 (F54) - Pedal Behavior Analysis
         }
 
         def _attempt_module_update(module, attempts):

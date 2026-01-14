@@ -25,7 +25,7 @@ from typing import Dict, List, Any, Optional, Tuple, Set
 import numpy as np
 import certifi
 import requests
-from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
+from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker, QTimer
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (
     QWidget,
@@ -39,6 +39,8 @@ from PyQt5.QtWidgets import (
     QGroupBox,
     QFileDialog,
     QMessageBox,
+    QTabWidget,
+    QFrame,
 )
 
 from core.gui_i18n import tr
@@ -59,9 +61,11 @@ from modules.gui.driver_race.detailed_lap_analysis.lap_filter_utils import (
 try:
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    from modules.gui.base.universal_stint_selector import UniversalStintSelector, StintInfo
 except ImportError:  # pragma: no cover
     from modules.gui.base.universal_analysis_mdi_base import UniversalAnalysisMDI, AnalysisMDIConfig
     from modules.gui.base.universal_data_loader_base import UniversalDataLoader, AnalysisConfig
+    from modules.gui.base.universal_stint_selector import UniversalStintSelector, StintInfo
 
 from .throttle_box_plot_chart_widget import ThrottleBoxPlotChartWidget
 
@@ -343,6 +347,10 @@ class ThrottleBoxPlotDataManager(UniversalDataLoader):
             if not self._validate_data_format(raw_data):
                 self._debug(f"❌ 驗證失敗！數據結構: {list(raw_data.keys()) if isinstance(raw_data, dict) else type(raw_data)}")
                 raise ValueError("API 回傳數據格式不符合預期")
+
+            # ✅ 關鍵修復：在處理數據之前保存原始數據（供 Stint Selector 使用）
+            self._raw_data_cache = raw_data
+            self._debug(f"✅ 已緩存原始數據供 Stint Selector 使用")
 
             processed_data = self._process_data(raw_data)
             metadata = processed_data.setdefault("metadata", {})
@@ -846,6 +854,18 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
 
         self.control_widget: Optional[ThrottleBoxPlotControlWidget] = None
         self._pending_boxplot_settings: Optional[Dict[str, Any]] = None
+        
+        # Stint Selector 組件 (2026-01-12 新增)
+        self.stint_selector: Optional[UniversalStintSelector] = None
+        self.tab_widget: Optional[QTabWidget] = None
+        self._raw_throttle_data: Optional[Dict[str, Any]] = None  # 緩存原始油門數據
+        
+        # 防抖動計時器 (2026-01-12 新增)
+        self._debounce_timer = QTimer()
+        self._debounce_timer.setSingleShot(True)
+        self._debounce_timer.setInterval(100)  # 100ms 防抖動
+        self._debounce_timer.timeout.connect(self._execute_chart_update)
+        self._pending_update_data: Optional[Dict[str, Any]] = None
 
         logger.info("[THROTTLE_MDI] 開始初始化模組組件...")
         if not self.initialize_module():
@@ -907,6 +927,508 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         control_widget.reload_requested.connect(self._on_reload_requested)
         control_widget.export_requested.connect(self._on_export_requested)
         return control_widget
+    
+    def _setup_ui(self):
+        """
+        覆寫 UI 設置 - 添加 Tab 架構（2026-01-12 更新）
+        
+        Tab 1: 圖表顯示（油門百分比箱型圖）
+        Tab 2: Stint Selection（使用 UniversalStintSelector）
+        """
+        logger.info("[THROTTLE_MDI] _setup_ui() 開始執行 - Tab UI 架構")
+        
+        self.main_widget = QWidget()
+        main_layout = QVBoxLayout(self.main_widget)
+        main_layout.setContentsMargins(5, 5, 5, 5)
+        main_layout.setSpacing(5)
+        
+        # 創建 Tab Widget
+        self.tab_widget = QTabWidget()
+        
+        # ============ Tab 1: 圖表顯示 ============
+        chart_tab = QWidget()
+        chart_tab_layout = QVBoxLayout(chart_tab)
+        chart_tab_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 圖表區域
+        if self.chart_widget and not self._is_widget_valid(self.chart_widget):
+            self._debug("檢測到已失效的圖表組件，重新建立")
+            self._disconnect_chart_widget_signals()
+            try:
+                self.chart_widget = self.create_chart_widget()
+            except Exception as create_exc:
+                self._error(f"重新建立圖表組件失敗: {create_exc}")
+                self.chart_widget = None
+            else:
+                self._connect_chart_widget_signals()
+        
+        if self.chart_widget:
+            chart_frame = QFrame()
+            chart_frame.setFrameStyle(QFrame.StyledPanel)
+            chart_frame.setAttribute(Qt.WA_TransparentForMouseEvents, False)
+            chart_frame.setFocusPolicy(Qt.NoFocus)
+            
+            chart_frame_layout = QVBoxLayout(chart_frame)
+            chart_frame_layout.setContentsMargins(5, 5, 5, 5)
+            chart_frame_layout.addWidget(self.chart_widget)
+            chart_tab_layout.addWidget(chart_frame)
+        
+        self.tab_widget.addTab(chart_tab, tr("throttle_boxplot.tab.chart", "Chart"))
+        
+        # ============ Tab 2: Stint Selection ============
+        stint_tab = QWidget()
+        stint_tab_layout = QVBoxLayout(stint_tab)
+        stint_tab_layout.setContentsMargins(5, 5, 5, 5)
+        
+        # 創建 Stint Selector
+        try:
+            self.stint_selector = UniversalStintSelector()
+            self.stint_selector.selection_changed.connect(self._on_stint_selection_changed)
+            self.stint_selector.merge_mode_changed.connect(self._on_merge_mode_changed)
+            stint_tab_layout.addWidget(self.stint_selector)
+            logger.info("[THROTTLE_MDI] Stint Selector 創建成功")
+        except Exception as exc:
+            logger.error(f"[THROTTLE_MDI] Stint Selector 創建失敗: {exc}")
+            import traceback
+            traceback.print_exc()
+            # 添加佔位標籤
+            placeholder = QLabel(tr("throttle_boxplot.stint.error", "Stint Selector unavailable"))
+            placeholder.setAlignment(Qt.AlignCenter)
+            stint_tab_layout.addWidget(placeholder)
+        
+        self.tab_widget.addTab(stint_tab, tr("throttle_boxplot.tab.stint_selection", "Stint Selection"))
+        
+        # 連接 Tab 切換信號（修復: Tab 切換後圖表消失問題）
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
+        
+        # 添加 Tab Widget 到主佈局
+        main_layout.addWidget(self.tab_widget)
+        
+        # 控制面板（隱藏，通過 create_additional_widgets 創建）
+        additional_widgets = self.create_additional_widgets()
+        for widget in additional_widgets:
+            if widget:
+                widget.setVisible(False)
+        
+        # 狀態列（可選）
+        self.status_bar = None
+        
+        logger.info("[THROTTLE_MDI] Tab UI 設置完成 (Chart + Stint Selection)")
+    
+    def _on_tab_changed(self, index: int) -> None:
+        """
+        處理 Tab 切換事件
+        
+        修復問題: 從 Stint Selection Tab 切換回 Chart Tab 時，
+        需要恢復原始完整數據（未經 Stint 過濾）。
+        
+        Args:
+            index: 當前 Tab 索引 (0=Chart, 1=Stint Selection)
+        """
+        if index == 0:
+            # 切換到 Chart Tab - 根據 Stint 選擇狀態決定顯示內容
+            logger.debug("[THROTTLE_MDI] Tab 切換到 Chart")
+            
+            # ✅ 檢查是否有選中 Stint
+            if self.stint_selector:
+                selected_stints = self.stint_selector.get_selected_stints()
+                if selected_stints:
+                    # ✅ 有選中 Stint → 觸發圖表更新（顯示過濾後的數據）
+                    logger.info(f"[THROTTLE_MDI] 檢測到 {len(selected_stints)} 個選中 Stint，觸發圖表更新")
+                    self._execute_chart_update()
+                    return
+            
+            # ❌ 沒有選中任何 Stint → 恢復完整數據
+            logger.info("[THROTTLE_MDI] 沒有選中 Stint，恢復完整數據")
+            self._restore_full_data()
+        elif index == 1:
+            # 切換到 Stint Selection Tab
+            logger.debug("[THROTTLE_MDI] Tab 切換到 Stint Selection")
+            
+            # ❌ 移除：不要重新設置數據，避免重置用戶的選擇狀態
+            # 用戶的選擇應該在 Tab 之間保持不變
+            # Stint Selector 已經在初始數據載入時設置過了
+    
+    def _on_stint_selection_changed(self, selected_stints: List[StintInfo]) -> None:
+        """處理 Stint 選擇變更（帶防抖動）"""
+        logger.info(f"[THROTTLE_MDI] Stint 選擇變更: {len(selected_stints)} stints")
+        
+        if not self.stint_selector or not self.chart_widget:
+            logger.warning("[THROTTLE_MDI] stint_selector 或 chart_widget 不存在")
+            return
+        
+        # 準備更新數據
+        self._pending_update_data = {'trigger': 'selection_changed', 'stint_count': len(selected_stints)}
+        
+        # 重置防抖動計時器
+        logger.info(f"[THROTTLE_MDI] 啟動防抖動計時器 (100ms)")
+        self._debounce_timer.stop()
+        self._debounce_timer.start()
+    
+    def _on_merge_mode_changed(self, is_merge_mode: bool) -> None:
+        """處理合併模式切換（帶防抖動）"""
+        logger.info(f"[THROTTLE_MDI] 合併模式切換: {'合併' if is_merge_mode else '分組'}")
+        logger.info(f"[THROTTLE_MDI] 啟動防抖動計時器 (100ms)")
+        
+        # 準備更新數據
+        self._pending_update_data = {'trigger': 'merge_mode_changed', 'is_merge': is_merge_mode}
+        
+        # 重置防抖動計時器
+        self._debounce_timer.stop()
+        self._debounce_timer.start()
+    
+    def _restore_full_data(self) -> None:
+        """
+        恢復完整數據（當取消所有 Stint 選擇時）
+        
+        從原始 API 數據重新處理並更新圖表，顯示所有車手的完整數據。
+        """
+        logger.info("[THROTTLE_MDI] 恢復完整數據到圖表")
+        
+        # 從 data_manager 獲取原始數據
+        raw_data = None
+        if hasattr(self.data_manager, '_raw_data_cache') and self.data_manager._raw_data_cache:
+            raw_data = self.data_manager._raw_data_cache
+            logger.debug("[THROTTLE_MDI] 從 data_manager._raw_data_cache 獲取原始數據")
+        elif self._raw_throttle_data:
+            raw_data = self._raw_throttle_data
+            logger.debug("[THROTTLE_MDI] 從 _raw_throttle_data 獲取原始數據")
+        
+        if not raw_data:
+            logger.warning("[THROTTLE_MDI] 無原始數據，無法恢復完整數據")
+            return
+        
+        try:
+            # 使用 data_manager 重新處理原始數據（應用過濾器，但不限制 Stint）
+            if self.data_manager:
+                processed_data = self.data_manager.process_loaded_data(raw_data)
+                self.chart_widget.update_data(processed_data)
+                logger.info("[THROTTLE_MDI] 圖表已恢復完整數據")
+            else:
+                logger.warning("[THROTTLE_MDI] data_manager 不存在，無法重新處理數據")
+        except Exception as exc:
+            logger.error(f"[THROTTLE_MDI] 恢復完整數據失敗: {exc}")
+            import traceback
+            traceback.print_exc()
+    
+    def _execute_chart_update(self) -> None:
+        """執行實際的圖表更新（防抖動後觸發）"""
+        logger.info("[THROTTLE_MDI] ========== _execute_chart_update 被調用 ==========")
+        
+        if not self.stint_selector or not self.chart_widget:
+            logger.warning("[THROTTLE_MDI] stint_selector 或 chart_widget 不存在，中止更新")
+            return
+        
+        # ✅ 檢查是否有選擇任何 Stint
+        selected_stints = self.stint_selector.get_selected_stints()
+        logger.info(f"[THROTTLE_MDI] 當前選擇的 Stint 數量: {len(selected_stints)}")
+        
+        if not selected_stints:
+            # ❌ 沒有選擇任何 Stint → 恢復完整數據
+            logger.info("[THROTTLE_MDI] 沒有選擇任何 Stint，恢復完整數據")
+            self._restore_full_data()
+            return
+        
+        is_merge_mode = self.stint_selector.is_merge_mode()
+        logger.info(f"[THROTTLE_MDI] 執行圖表更新 - 模式: {'合併' if is_merge_mode else '分組'}，Stint 數量: {len(selected_stints)}")
+        
+        if is_merge_mode:
+            # 合併模式：一個車手一個 Box
+            logger.info("[THROTTLE_MDI] 使用合併模式：按車手合併 Stint")
+            
+            # ✅ 從 _raw_data_cache 中提取油門數據（根據 Stint 選擇過濾）
+            driver_values = self._get_selected_throttle_values_by_driver()
+            
+            logger.info(f"[THROTTLE_MDI] 合併模式數據: {len(driver_values)} 位車手")
+            self._update_chart_merged_mode(driver_values)
+        else:
+            # 分組模式：每個 Stint 一個 Box
+            logger.info("[THROTTLE_MDI] 使用分組模式：每個 Stint 獨立顯示")
+            
+            # ✅ 從 _raw_data_cache 中提取油門數據（根據 Stint 選擇過濾）
+            stint_values = self._get_throttle_values_by_stint()
+            
+            total_stints = sum(len(stints) for stints in stint_values.values())
+            logger.info(f"[THROTTLE_MDI] 分組模式數據: {total_stints} 個 Stint")
+            self._update_chart_stint_mode(stint_values)
+    
+    def _get_selected_throttle_values_by_driver(self) -> Dict[str, List[float]]:
+        """
+        獲取選中 Stint 的油門百分比數據（按車手合併）
+        
+        Returns:
+            Dict[driver_code, List[throttle_ratio]]
+        """
+        result: Dict[str, List[float]] = {}
+        
+        if not self.stint_selector:
+            logger.warning("[THROTTLE_MDI] stint_selector 不存在")
+            return result
+        if not self._raw_throttle_data:
+            logger.warning("[THROTTLE_MDI] _raw_throttle_data 不存在，無法提取油門數據")
+            return result
+        
+        selected_stints = self.stint_selector.get_selected_stints()
+        logger.info(f"[THROTTLE_MDI] _get_selected_throttle_values_by_driver: 選中 {len(selected_stints)} 個 Stint")
+        
+        # 調試：列出選中的 Stint
+        for stint in selected_stints[:3]:  # 只顯示前 3 個
+            logger.info(f"[THROTTLE_MDI]   - {stint.driver} Stint {stint.stint_number} (Lap {stint.start_lap}-{stint.end_lap})")
+        
+        # 從原始數據中提取油門數據
+        analysis = self._raw_throttle_data.get('analysis', {})
+        if not analysis and 'data' in self._raw_throttle_data:
+            analysis = self._raw_throttle_data['data'].get('analysis', {})
+        
+        drivers_list = analysis.get('drivers', [])
+        
+        # 建立 driver -> laps 映射
+        driver_laps_map: Dict[str, List[Dict]] = {}
+        for driver_data in drivers_list:
+            driver_code = driver_data.get('driver_code', '')
+            if driver_code:
+                driver_laps_map[driver_code] = driver_data.get('laps', [])
+        
+        for stint in selected_stints:
+            driver = stint.driver
+            if driver not in result:
+                result[driver] = []
+            
+            # 獲取該車手的圈數據
+            laps = driver_laps_map.get(driver, [])
+            
+            # 過濾出屬於該 Stint 的圈
+            lap_count = 0
+            for lap in laps:
+                lap_number = lap.get('lap_number', 0)
+                if stint.start_lap <= lap_number <= stint.end_lap:
+                    # 使用 full_throttle_ratio 作為百分比值 (已經是 0-1 範圍)
+                    ratio = lap.get('full_throttle_ratio')
+                    if ratio is not None:
+                        # 轉換為百分比 (0-100)
+                        result[driver].append(float(ratio) * 100.0)
+                        lap_count += 1
+            
+            logger.info(f"[THROTTLE_MDI]   {driver} Stint {stint.stint_number}: 提取 {lap_count} 圈油門數據")
+        
+        logger.info(f"[THROTTLE_MDI] _get_selected_throttle_values_by_driver 結果: {len(result)} 位車手")
+        return result
+    
+    def _get_throttle_values_by_stint(self) -> Dict[str, Dict[int, List[float]]]:
+        """
+        獲取選中 Stint 的油門百分比數據（按 Stint 分組）
+        
+        Returns:
+            Dict[driver_code, Dict[stint_number, List[throttle_ratio]]]
+        """
+        result: Dict[str, Dict[int, List[float]]] = {}
+        
+        if not self.stint_selector:
+            logger.warning("[THROTTLE_MDI] stint_selector 不存在")
+            return result
+        if not self._raw_throttle_data:
+            logger.warning("[THROTTLE_MDI] _raw_throttle_data 不存在，無法提取油門數據")
+            return result
+        
+        selected_stints = self.stint_selector.get_selected_stints()
+        logger.info(f"[THROTTLE_MDI] _get_throttle_values_by_stint: 選中 {len(selected_stints)} 個 Stint")
+        
+        # 調試：列出選中的 Stint
+        for stint in selected_stints[:3]:  # 只顯示前 3 個
+            logger.info(f"[THROTTLE_MDI]   - {stint.driver} Stint {stint.stint_number} (Lap {stint.start_lap}-{stint.end_lap})")
+        
+        # 從原始數據中提取油門數據
+        analysis = self._raw_throttle_data.get('analysis', {})
+        if not analysis and 'data' in self._raw_throttle_data:
+            analysis = self._raw_throttle_data['data'].get('analysis', {})
+        
+        drivers_list = analysis.get('drivers', [])
+        
+        # 建立 driver -> laps 映射
+        driver_laps_map: Dict[str, List[Dict]] = {}
+        for driver_data in drivers_list:
+            driver_code = driver_data.get('driver_code', '')
+            if driver_code:
+                driver_laps_map[driver_code] = driver_data.get('laps', [])
+        
+        for stint in selected_stints:
+            driver = stint.driver
+            stint_num = stint.stint_number
+            
+            if driver not in result:
+                result[driver] = {}
+            if stint_num not in result[driver]:
+                result[driver][stint_num] = []
+            
+            # 獲取該車手的圈數據
+            laps = driver_laps_map.get(driver, [])
+            
+            # 過濾出屬於該 Stint 的圈
+            lap_count = 0
+            for lap in laps:
+                lap_number = lap.get('lap_number', 0)
+                if stint.start_lap <= lap_number <= stint.end_lap:
+                    ratio = lap.get('full_throttle_ratio')
+                    if ratio is not None:
+                        result[driver][stint_num].append(float(ratio) * 100.0)
+                        lap_count += 1
+            
+            logger.info(f"[THROTTLE_MDI]   {driver} Stint {stint_num}: 提取 {lap_count} 圈油門數據")
+        
+        total_stints = sum(len(stints) for stints in result.values())
+        logger.info(f"[THROTTLE_MDI] _get_throttle_values_by_stint 結果: {total_stints} 個 Stint")
+        return result
+        
+        return result
+    
+    def _update_chart_merged_mode(self, driver_values: Dict[str, List[float]]) -> None:
+        """合併模式：每個車手一個 Box"""
+        if not driver_values:
+            logger.debug("[THROTTLE_MDI] 沒有選中的油門數據")
+            return
+        
+        # 計算統計數據
+        statistics = {}
+        for driver, values in driver_values.items():
+            if not values:
+                continue
+            statistics[driver] = {
+                'mean': float(np.mean(values)),
+                'median': float(np.median(values)),
+                'q1': float(np.percentile(values, 25)),
+                'q3': float(np.percentile(values, 75)),
+                'iqr': float(np.percentile(values, 75) - np.percentile(values, 25)),
+                'count': len(values)
+            }
+        
+        # 準備圖表數據
+        processed_data = {
+            'driver_throttle_durations': driver_values,
+            'statistics': statistics,
+            'metadata': {
+                'data_source': 'stint_filtered',
+                'stint_mode': 'merged'
+            }
+        }
+        
+        # 更新圖表
+        if self.chart_widget and hasattr(self.chart_widget, 'update_data'):
+            self.chart_widget.update_data(processed_data)
+            logger.info(f"[THROTTLE_MDI] 圖表已更新 (合併模式): {len(driver_values)} 車手")
+    
+    def _update_chart_stint_mode(self, stint_values: Dict[str, Dict[int, List[float]]]) -> None:
+        """分組模式：每個 Stint 一個 Box"""
+        if not stint_values:
+            logger.debug("[THROTTLE_MDI] 沒有選中的 Stint 數據")
+            return
+        
+        # 將 stint 數據轉換為圖表格式
+        # 格式: "VER_S1", "VER_S2", "LEC_S1", ...
+        driver_throttle_durations: Dict[str, List[float]] = {}
+        statistics: Dict[str, Dict] = {}
+        
+        for driver, stints in stint_values.items():
+            for stint_num, values in stints.items():
+                if not values:
+                    continue
+                
+                # 創建唯一標籤: "VER_S1"
+                label = f"{driver}_S{stint_num}"
+                driver_throttle_durations[label] = values
+                
+                statistics[label] = {
+                    'mean': float(np.mean(values)),
+                    'median': float(np.median(values)),
+                    'q1': float(np.percentile(values, 25)),
+                    'q3': float(np.percentile(values, 75)),
+                    'iqr': float(np.percentile(values, 75) - np.percentile(values, 25)),
+                    'count': len(values),
+                    'driver': driver,
+                    'stint': stint_num
+                }
+        
+        # 按車手代碼排序
+        sorted_labels = sorted(driver_throttle_durations.keys())
+        driver_throttle_durations = {k: driver_throttle_durations[k] for k in sorted_labels}
+        statistics = {k: statistics[k] for k in sorted_labels}
+        
+        # 準備圖表數據
+        processed_data = {
+            'driver_throttle_durations': driver_throttle_durations,
+            'statistics': statistics,
+            'metadata': {
+                'data_source': 'stint_filtered',
+                'stint_mode': 'separate'
+            }
+        }
+        
+        # 更新圖表
+        if self.chart_widget and hasattr(self.chart_widget, 'update_data'):
+            self.chart_widget.update_data(processed_data)
+            logger.info(f"[THROTTLE_MDI] 圖表已更新 (分組模式): {len(driver_throttle_durations)} 個 Stint")
+    
+    def _update_chart(self, data: dict):
+        """
+        覆寫基類方法 - 同時更新圖表和 Stint Selector
+        
+        當 API 數據載入完成時調用
+        
+        注意：data 參數是處理後的數據（只包含 driver_throttle_durations 等），
+        而 Stint Selector 需要原始 API 數據（包含每圈的詳細信息）。
+        """
+        try:
+            logger.debug(f"[THROTTLE_MDI] _update_chart 被調用")
+            
+            # ✅ 修復：不要使用傳入的 processed data，而是使用緩存的原始數據
+            # 緩存原始數據供 Tab 切換使用
+            if hasattr(self.data_manager, '_raw_data_cache') and self.data_manager._raw_data_cache:
+                self._raw_throttle_data = self.data_manager._raw_data_cache
+                logger.debug(f"[THROTTLE_MDI] 已緩存原始數據 (keys: {list(self._raw_throttle_data.keys()) if isinstance(self._raw_throttle_data, dict) else 'NOT DICT'})")
+            else:
+                logger.warning("[THROTTLE_MDI] data_manager 沒有 _raw_data_cache")
+                self._raw_throttle_data = None
+            
+            # 調用基類方法更新圖表（默認行為）
+            super()._update_chart(data)
+            
+            # 更新 Stint Selector（使用原始數據）
+            if self._raw_throttle_data:
+                self._populate_stint_selector(self._raw_throttle_data)
+            else:
+                logger.warning("[THROTTLE_MDI] 無原始數據，無法更新 Stint Selector")
+            
+        except Exception as e:
+            logger.error(f"[THROTTLE_MDI] 圖表更新失敗: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    def _populate_stint_selector(self, data: dict) -> None:
+        """
+        從 API 數據填充 Stint Selector
+        """
+        if not self.stint_selector:
+            logger.debug("[THROTTLE_MDI] Stint Selector 未初始化，跳過填充")
+            return
+        
+        try:
+            # 獲取原始數據（包含完整圈數信息）
+            raw_data = None
+            if hasattr(self, 'data_manager') and self.data_manager:
+                raw_data = getattr(self.data_manager, '_raw_data_cache', None)
+            
+            if not raw_data:
+                logger.debug("[THROTTLE_MDI] 無原始數據緩存，使用當前數據")
+                raw_data = data
+            
+            # 傳遞數據給 Stint Selector 進行 Stint 偵測
+            self.stint_selector.set_data(raw_data)
+            
+            logger.debug("[THROTTLE_MDI] Stint Selector 已更新")
+            
+        except Exception as e:
+            logger.error(f"[THROTTLE_MDI] Stint Selector 填充失敗: {e}")
+            import traceback
+            traceback.print_exc()
 
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         try:

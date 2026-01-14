@@ -32,7 +32,7 @@ class TabRenamer:
             
             # 彈出輸入對話框
             new_name, ok = QInputDialog.getText(
-                self,
+                self.main_window,
                 tr('tab_rename_dialog_title'),
                 tr('tab_rename_dialog_label'),
                 QLineEdit.Normal,

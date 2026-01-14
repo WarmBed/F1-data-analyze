@@ -172,6 +172,7 @@ class CustomMdiArea(QMdiArea):
         self._magnetic_snap_distance = 15  # 磁吸距離閾值 (像素)
         self._moving_window = None  # 當前正在移動的視窗
         self._original_move_pos = None  # 原始移動位置
+        self._is_applying_snap = False  # 防止遞迴的鎖
         
         # 安裝事件過濾器來監聽子視窗移動
         self.subWindowActivated.connect(self._on_subwindow_activated)
@@ -954,6 +955,10 @@ class CustomMdiArea(QMdiArea):
         if not getattr(self, '_magnetic_snap_enabled', False):
             return super().eventFilter(obj, event)
         
+        # 防止遞迴：如果正在應用 snap，不處理新的移動事件
+        if getattr(self, '_is_applying_snap', False):
+            return super().eventFilter(obj, event)
+        
         # 只處理 QMdiSubWindow 的移動事件
         if isinstance(obj, QMdiSubWindow) and event.type() == event.Move:
             self._apply_magnetic_snap(obj)
@@ -965,11 +970,19 @@ class CustomMdiArea(QMdiArea):
         if moving_window.property("is_welcome_fixed"):
             return  # 不對固定視窗應用磁吸
         
+        # 防止遞迴
+        if getattr(self, '_is_applying_snap', False):
+            return
+        
         current_geo = moving_window.geometry()
         snapped_geo = self._calculate_magnetic_snap_position(moving_window, current_geo)
         
         if snapped_geo != current_geo:
-            moving_window.setGeometry(snapped_geo)
+            try:
+                self._is_applying_snap = True
+                moving_window.setGeometry(snapped_geo)
+            finally:
+                self._is_applying_snap = False
     
     def _calculate_magnetic_snap_position(self, moving_window, current_geo):
         """計算磁吸對齊後的位置"""

@@ -484,6 +484,34 @@ class GuiTranslator:
             'traffic_timeline.status': {'zh': '狀態', 'en': 'Status', 'ja': 'ステータス'},
             'traffic_timeline.title': {'zh': '車流時間線分析', 'en': 'Traffic Timeline Analysis', 'ja': 'トラフィックタイムライン分析'},
             'laptime_boxplot': {'zh': '圈速箱型圖', 'en': 'Lap Time Box Plot', 'ja': 'ラップタイムボックスプロット'},
+            
+            # Box Plot Tab 翻譯
+            'boxplot.tab.chart': {'zh': '圖表', 'en': 'Chart', 'ja': 'チャート'},
+            'boxplot.tab.stint_selection': {'zh': 'Stint 選擇', 'en': 'Stint Selection', 'ja': 'スティント選択'},
+            
+            # Stint Selector 翻譯
+            'stint.merge_mode': {'zh': '合併模式 (每車手一個 Box)', 'en': 'Merge Mode (One Box per Driver)', 'ja': 'マージモード (ドライバーごとに1ボックス)'},
+            'stint.merge_mode_tooltip': {
+                'zh': '勾選時，每位車手選中的所有 Stint 合併為一個 Box。\n取消勾選時，每個 Stint 顯示為獨立的 Box。',
+                'en': 'When checked, all selected stints for each driver are merged into one box.\nWhen unchecked, each stint is shown as a separate box.',
+                'ja': 'チェック時、各ドライバーの選択されたスティントが1つのボックスに統合されます。\nチェック解除時、各スティントが個別のボックスとして表示されます。'
+            },
+            'stint.select_all': {'zh': '全選', 'en': 'Select All', 'ja': '全選択'},
+            'stint.deselect_all': {'zh': '取消全選', 'en': 'Deselect All', 'ja': '全選択解除'},
+            'stint.detected_stints': {'zh': '偵測到的 Stints', 'en': 'Detected Stints', 'ja': '検出されたスティント'},
+            'stint.col.driver': {'zh': '車手 / Stint', 'en': 'Driver / Stint', 'ja': 'ドライバー / スティント'},
+            'stint.col.laps': {'zh': '圈數範圍', 'en': 'Lap Range', 'ja': 'ラップ範囲'},
+            'stint.col.compound': {'zh': '胎型', 'en': 'Compound', 'ja': 'コンパウンド'},
+            'stint.col.count': {'zh': '圈數', 'en': 'Laps', 'ja': 'ラップ数'},
+            'stint.col.avg_time': {'zh': '平均圈速', 'en': 'Avg Time', 'ja': '平均タイム'},
+            'stint.legend': {
+                'zh': 'Stints 基於進站標記自動偵測。勾選/取消勾選以包含在分析中。',
+                'en': 'Stints are detected by pit stop markers. Check/uncheck to include in analysis.',
+                'ja': 'スティントはピットストップマーカーで検出されます。分析に含めるにはチェック/チェック解除してください。'
+            },
+            'stint.waiting': {'zh': '等待數據...', 'en': 'Waiting for data...', 'ja': 'データを待っています...'},
+            'stint.stats': {'zh': '車手: {drivers} | Stints: {selected}/{total}', 'en': 'Drivers: {drivers} | Stints: {selected}/{total}', 'ja': 'ドライバー: {drivers} | スティント: {selected}/{total}'},
+            
             'throttle_box_plot': {'zh': '油門箱型圖', 'en': 'Throttle Box Plot', 'ja': 'スロットル箱ひげ図'},
             'throttle_box_plot.export_dialog_title': {
                 'zh': '儲存油門箱型圖',
@@ -570,6 +598,35 @@ class GuiTranslator:
                 'en': 'The throttle line chart module is still under development. Stay tuned!',
                 'ja': 'スロットル折れ線グラフモジュールは現在開発中です。リリースをお待ちください。'
             },
+            
+            # Pedal Behavior Analysis 油門/煞車行為分析模組
+            'pedal_behavior_analysis': {'zh': '油門/煞車行為分析', 'en': 'Pedal Behavior Analysis', 'ja': 'ペダル動作分析'},
+            'pedal_behavior_analysis_desc': {
+                'zh': '顯示油門、煞車、Trail Braking、滑行四種狀態的堆疊百分比',
+                'en': 'Stacked bar chart showing Throttle, Brake, Trail Braking, Coasting percentages',
+                'ja': 'スロットル、ブレーキ、トレイルブレーキ、コースティングの割合を積み上げ棒グラフで表示'
+            },
+            'pedal_state.throttle_only': {'zh': '全油門', 'en': 'Throttle Only', 'ja': 'スロットルのみ'},
+            'pedal_state.brake_only': {'zh': '全煞車', 'en': 'Brake Only', 'ja': 'ブレーキのみ'},
+            'pedal_state.trail_braking': {'zh': 'Trail Braking', 'en': 'Trail Braking', 'ja': 'トレイルブレーキ'},
+            'pedal_state.coasting': {'zh': '滑行', 'en': 'Coasting', 'ja': 'コースティング'},
+            'pedal_behavior.chart_title': {
+                'zh': '{year} {race} {session} - 油門/煞車行為分析',
+                'en': '{year} {race} {session} - Pedal Behavior Analysis',
+                'ja': '{year} {race} {session} - ペダル動作分析'
+            },
+            'pedal_behavior.no_data': {'zh': '無數據', 'en': 'No Data', 'ja': 'データなし'},
+            'pedal_behavior.reload': {'zh': '重新載入', 'en': 'Reload', 'ja': '再読み込み'},
+            'pedal_behavior.export': {'zh': '匯出圖表', 'en': 'Export Chart', 'ja': 'チャートをエクスポート'},
+            'pedal_behavior.filter_pit': {'zh': '排除進站圈', 'en': 'Exclude Pit Laps', 'ja': 'ピットラップを除外'},
+            'pedal_behavior.filter_yellow': {'zh': '排除黃旗', 'en': 'Exclude Yellow Flag', 'ja': '黄旗を除外'},
+            'pedal_behavior.filter_red': {'zh': '排除紅旗', 'en': 'Exclude Red Flag', 'ja': '赤旗を除外'},
+            'pedal_behavior.filter_sc': {'zh': '排除 SC', 'en': 'Exclude SC', 'ja': 'SCを除外'},
+            'pedal_behavior.filter_vsc': {'zh': '排除 VSC', 'en': 'Exclude VSC', 'ja': 'VSCを除外'},
+            'pedal_behavior.legend': {'zh': '圖例', 'en': 'Legend', 'ja': '凡例'},
+            'pedal_behavior.percentage': {'zh': '百分比 (%)', 'en': 'Percentage (%)', 'ja': 'パーセント (%)'},
+            'pedal_behavior.tab_chart': {'zh': '圖表', 'en': 'Chart', 'ja': 'チャート'},
+            'pedal_behavior.tab_stint': {'zh': 'Stint 選擇', 'en': 'Stint Selection', 'ja': 'スティント選択'},
             
             # 事故分析模組
             'waiting_data_load': {'zh': '等待數據載入...', 'en': 'Waiting for data loading...', 'ja': 'データ読み込み待ち...'},
@@ -798,6 +855,19 @@ class GuiTranslator:
                 'ja': 'ワークスペースを保存（開発中）'
             },
             'export_report': {'zh': '匯出報告...', 'en': 'Export Report...', 'ja': 'レポートをエクスポート...'},
+            'export_pdf_report': {'zh': '匯出所有分頁為 PDF', 'en': 'Export All Tabs to PDF', 'ja': '全タブをPDFにエクスポート'},
+            'pdf_export_error': {'zh': 'PDF 匯出錯誤', 'en': 'PDF Export Error', 'ja': 'PDFエクスポートエラー'},
+            'pdf_reportlab_missing': {
+                'zh': 'reportlab 函式庫未安裝。\n\n請執行：\npip install reportlab',
+                'en': 'reportlab library is not installed.\n\nPlease install it with:\npip install reportlab',
+                'ja': 'reportlabライブラリがインストールされていません。\n\n次のコマンドでインストールしてください:\npip install reportlab'
+            },
+            'pdf_export_info': {'zh': 'PDF 匯出', 'en': 'PDF Export', 'ja': 'PDFエクスポート'},
+            'pdf_no_tabs': {'zh': '沒有分頁可匯出（Home 分頁已跳過）。', 'en': 'No tabs to export (Home tab is skipped).', 'ja': 'エクスポートするタブがありません（ホームタブはスキップ）。'},
+            'pdf_no_content': {'zh': '沒有內容可匯出的分頁。', 'en': 'No tabs with content to export.', 'ja': 'エクスポートするコンテンツのあるタブがありません。'},
+            'pdf_export_success': {'zh': 'PDF 匯出成功', 'en': 'PDF Export Successful', 'ja': 'PDFエクスポート成功'},
+            'pdf_export_saved': {'zh': '報告已儲存至：\n{path}', 'en': 'Report saved to:\n{path}', 'ja': 'レポートの保存先:\n{path}'},
+            'pdf_export_failed': {'zh': 'PDF 匯出失敗：\n{error}', 'en': 'Failed to export PDF:\n{error}', 'ja': 'PDFエクスポートに失敗しました:\n{error}'},
             'exit': {'zh': '結束', 'en': 'Exit', 'ja': '終了'},
             
             # Analysis Menu 項目
@@ -847,6 +917,22 @@ class GuiTranslator:
             'pole_defense_statistics': {'zh': '桿位防守統計', 'en': 'Pole Defense Statistics', 'ja': 'ポールディフェンス統計'},
             'traffic_analysis': {'zh': '車流分析', 'en': 'Traffic Analysis', 'ja': 'トラフィック分析'},
             'time_diff_analysis': {'zh': '時間差分析', 'en': 'Time Diff Analysis', 'ja': 'タイム差分析'},
+            
+            # Pit Loss Table Module 翻譯
+            'pit_loss_table.title': {'zh': '進站時間損失表', 'en': 'Pit Loss Table', 'ja': 'ピットタイムロス表'},
+            'pit_loss_table.window_title': {'zh': '賽道進站時間損失總覽', 'en': 'Circuit Pit Time Loss Overview', 'ja': 'サーキットピットタイムロス概要'},
+            'pit_loss_table.col_circuit': {'zh': '賽道', 'en': 'Circuit', 'ja': 'サーキット'},
+            'pit_loss_table.col_green_flag': {'zh': '綠旗 (秒)', 'en': 'Green Flag (s)', 'ja': 'グリーンフラッグ (秒)'},
+            'pit_loss_table.col_vsc': {'zh': 'VSC (秒)', 'en': 'VSC (s)', 'ja': 'VSC (秒)'},
+            'pit_loss_table.col_sc': {'zh': 'SC (秒)', 'en': 'SC (s)', 'ja': 'SC (秒)'},
+            'pit_loss_table.col_samples': {'zh': '樣本數', 'en': 'Samples', 'ja': 'サンプル数'},
+            'pit_loss_table.col_source': {'zh': '來源', 'en': 'Source', 'ja': 'ソース'},
+            'pit_loss_table.sort_by': {'zh': '排序方式', 'en': 'Sort by', 'ja': '並び替え'},
+            'pit_loss_table.trained': {'zh': '訓練', 'en': 'Trained', 'ja': '訓練済み'},
+            'pit_loss_table.estimated': {'zh': '估算', 'en': 'Estimated', 'ja': '推定'},
+            'pit_loss_table.status.ready': {'zh': '就緒 - 共 {} 條賽道記錄', 'en': 'Ready - {} circuit records loaded', 'ja': '準備完了 - {}サーキット記録読込済み'},
+            'pit_loss_table.status.load_error': {'zh': '載入錯誤', 'en': 'Load Error', 'ja': '読込エラー'},
+            'pit_loss_table.status.load_error_msg': {'zh': '無法載入進站時間損失數據:\n{}', 'en': 'Failed to load pit loss data:\n{}', 'ja': 'ピットタイムロスデータの読込失敗:\n{}'},
             
             # View Menu 項目
             'tile_windows': {'zh': '平鋪視窗', 'en': 'Tile Windows', 'ja': 'ウィンドウを並べて表示'},
@@ -2993,6 +3079,23 @@ Acceleration (100 → {max_speed_full} km/h):
             'help_pole_defense_features': {'zh': '• 桿位防守率\n• 歷年趨勢\n• 賽道比較', 'en': '• Pole defense rate\n• Historical trend\n• Track comparison', 'ja': '• ポール防御率\n• 履歴トレンド\n• トラック比較'},
             'help_pole_defense_colors': {'zh': '綠=成功防守 紅=失去領先', 'en': 'Green=Defended Red=Lost lead', 'ja': '緑=防御成功 赤=リード喪失'},
             
+            'help_pit_loss_table_title': {'zh': '進站時間損失表', 'en': 'Pit Loss Table', 'ja': 'ピットタイムロス表'},
+            'help_pit_loss_table_desc': {
+                'zh': '各賽道進站時間損失總覽。顯示 Green Flag、VSC 和 Safety Car 狀態下的進站時間損失，幫助策略分析。',
+                'en': 'Circuit pit time loss overview. Displays pit time loss under Green Flag, VSC and Safety Car conditions for strategy analysis.',
+                'ja': '各サーキットのピットタイムロス概要。グリーンフラッグ、VSC、セーフティカー状態でのピットタイムロスを表示し、戦略分析を支援。'
+            },
+            'help_pit_loss_table_features': {
+                'zh': '【顯示資訊】\n• Green Flag: 正常進站時間損失\n• VSC: 虛擬安全車進站損失\n• SC: 安全車進站損失\n• 樣本數: 訓練數據量\n• 來源: 數據來源類型',
+                'en': '【Display Information】\n• Green Flag: Normal pit time loss\n• VSC: Virtual safety car pit loss\n• SC: Safety car pit loss\n• Samples: Training data count\n• Source: Data source type',
+                'ja': '【表示情報】\n• グリーンフラッグ: 通常ピットタイムロス\n• VSC: バーチャルセーフティカーピットロス\n• SC: セーフティカーピットロス\n• サンプル数: トレーニングデータ数\n• ソース: データソースタイプ'
+            },
+            'help_pit_loss_table_colors': {
+                'zh': '【顏色含義】\n• 綠色: 較快 (< 20秒)\n• 黃色: 中等 (20-24秒)\n• 紅色: 較慢 (> 24秒)\n\n【應用建議】\n• 使用 VSC/SC 損失規劃最佳進站時機\n• 比較不同賽道的進站成本差異',
+                'en': '【Color Meaning】\n• Green: Fast (< 20s)\n• Yellow: Medium (20-24s)\n• Red: Slow (> 24s)\n\n【Application Tips】\n• Use VSC/SC loss for optimal pit timing\n• Compare pit costs across circuits',
+                'ja': '【カラーの意味】\n• 緑: 速い (< 20秒)\n• 黄: 中程度 (20-24秒)\n• 赤: 遅い (> 24秒)\n\n【活用のヒント】\n• VSC/SCロスで最適ピットタイミングを計画\n• サーキット間のピットコストを比較'
+            },
+            
             'help_start_reaction_title': {'zh': '起跑反應', 'en': 'Start Reaction', 'ja': 'スタート反応'},
             'help_start_reaction_desc': {
                 'zh': '起跑反應時間分析。分析車手從燈滅到首次移動的反應時間，以及 0-50 km/h 加速表現。',
@@ -3048,6 +3151,57 @@ Acceleration (100 → {max_speed_full} km/h):
             'help_position_analysis_desc': {'zh': '車手位置變化追蹤。', 'en': 'Driver position change tracking.', 'ja': 'ドライバーポジション変化追跡。'},
             'help_position_analysis_features': {'zh': '• 位置變化圖\n• 超車統計\n• 關鍵時刻', 'en': '• Position change chart\n• Overtake statistics\n• Key moments', 'ja': '• ポジション変化チャート\n• オーバーテイク統計\n• キーモーメント'},
             'help_position_analysis_colors': {'zh': '綠=超車 紅=被超', 'en': 'Green=Overtake Red=Overtaken', 'ja': '緑=オーバーテイク 赤=オーバーテイクされた'},
+            
+            # =================================================================
+            # Home Page Modules - Weather Timeline & Standings
+            # =================================================================
+            
+            # Weather Timeline 天氣時間軸
+            'weather_timeline_title': {'zh': '比賽週末天氣時間軸', 'en': 'Race Weekend Weather Timeline', 'ja': 'レースウィークエンド天気タイムライン'},
+            'weather_history_title': {'zh': '歷史天氣對比', 'en': 'Historical Weather Comparison', 'ja': '過去の天気比較'},
+            'weather_no_data': {'zh': '暫無天氣數據', 'en': 'No weather data available', 'ja': '天気データがありません'},
+            'weather_future_event': {'zh': '賽季尚未開始，天氣數據暫不可用', 'en': 'Season not started yet, weather data unavailable', 'ja': 'シーズン未開始、天気データなし'},
+            'weather_api_error': {'zh': '無法連接氣象服務', 'en': 'Cannot connect to weather service', 'ja': '天気サービスに接続できません'},
+            'weather_no_event_data': {'zh': '此賽事暫無天氣數據', 'en': 'No weather data for this event', 'ja': 'このイベントの天気データはありません'},
+            'weather_history_unavailable': {'zh': '歷史數據不可用', 'en': 'Historical data unavailable', 'ja': '過去データ利用不可'},
+            'weather_day_minus_2': {'zh': '前2天\n{date}', 'en': 'Day -2\n{date}', 'ja': '2日前\n{date}'},
+            'weather_day_minus_1': {'zh': '前1天\n{date}', 'en': 'Day -1\n{date}', 'ja': '1日前\n{date}'},
+            'weather_race_day': {'zh': '比賽日\n{date}', 'en': 'Race Day\n{date}', 'ja': 'レース当日\n{date}'},
+            'weather_temp_loading': {'zh': '--', 'en': '--', 'ja': '--'},
+            'weather_icon_loading': {'zh': '...', 'en': '...', 'ja': '...'},
+            'weather_rain_loading': {'zh': '--', 'en': '--', 'ja': '--'},
+            'weather_wind_loading': {'zh': '--', 'en': '--', 'ja': '--'},
+            'weather_temp_celsius': {'zh': '{temp:.1f}°C', 'en': '{temp:.1f}°C', 'ja': '{temp:.1f}°C'},
+            'weather_rain_mm': {'zh': '{precip:.1f}mm', 'en': '{precip:.1f}mm', 'ja': '{precip:.1f}mm'},
+            'weather_wind_kmh': {'zh': '{arrow} {speed:.0f}km/h', 'en': '{arrow} {speed:.0f}km/h', 'ja': '{arrow} {speed:.0f}km/h'},
+            'weather_wind_speed': {'zh': '，風速 {speed:.0f}km/h', 'en': ', Wind {speed:.0f}km/h', 'ja': '、風速 {speed:.0f}km/h'},
+            'weather_history_2024': {'zh': '2024 年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降雨 {precip:.1f}mm', 'en': '2024 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, Rain {precip:.1f}mm', 'ja': '2024年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降雨 {precip:.1f}mm'},
+            'weather_history_2023': {'zh': '2023 年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降雨 {precip:.1f}mm', 'en': '2023 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, Rain {precip:.1f}mm', 'ja': '2023年 ({date}): {icon} {temp_min:.1f}°C ~ {temp_max:.1f}°C, 降雨 {precip:.1f}mm'},
+            
+            # Season Progress 賽季進度
+            'season_progress_title': {'zh': '賽季進度 - {year}', 'en': 'Season Progress - {year}', 'ja': 'シーズン進捗 - {year}'},
+            'future_season_not_started': {'zh': '賽季尚未開始，敬請期待', 'en': 'Season Not Started Yet, Stay Tuned', 'ja': 'シーズン未開始、お楽しみに'},
+            
+            # Standings 積分榜
+            'constructor_standings_window_title': {'zh': '車隊積分榜 - {year}', 'en': 'Constructor Standings - {year}', 'ja': 'コンストラクターズランキング - {year}'},
+            'driver_standings_window_title': {'zh': '車手積分榜 - {year}', 'en': 'Driver Standings - {year}', 'ja': 'ドライバーズランキング - {year}'},
+            'constructor_standings_title': {'zh': '車隊積分榜', 'en': 'Constructor Standings', 'ja': 'コンストラクターズ'},
+            'driver_standings_title': {'zh': '車手積分榜', 'en': 'Driver Standings', 'ja': 'ドライバーズ'},
+            'constructor_standings_title_with_round': {'zh': '車隊積分榜 - {year} 第 {round} 站', 'en': 'Constructor Standings - {year} Round {round}', 'ja': 'コンストラクター - {year} 第{round}戦'},
+            'driver_standings_title_with_round': {'zh': '車手積分榜 - {year} 第 {round} 站', 'en': 'Driver Standings - {year} Round {round}', 'ja': 'ドライバー - {year} 第{round}戦'},
+            'constructor_standings': {'zh': '🏆 {year} 車隊積分榜', 'en': '🏆 {year} Constructor Standings', 'ja': '🏆 {year} コンストラクターズ'},
+            'driver_standings': {'zh': '🏁 {year} 車手積分榜', 'en': '🏁 {year} Driver Standings', 'ja': '🏁 {year} ドライバーズ'},
+            
+            # Standings Table Columns 積分榜表格欄位
+            'standings_col_position': {'zh': '名次', 'en': 'Pos', 'ja': '順位'},
+            'standings_col_driver_code': {'zh': '代碼', 'en': 'Code', 'ja': 'コード'},
+            'standings_col_driver': {'zh': '車手', 'en': 'Driver', 'ja': 'ドライバー'},
+            'standings_col_team': {'zh': '車隊', 'en': 'Team', 'ja': 'チーム'},
+            'standings_col_constructor': {'zh': '車隊', 'en': 'Constructor', 'ja': 'コンストラクター'},
+            'standings_col_points': {'zh': '積分', 'en': 'Points', 'ja': 'ポイント'},
+            'standings_col_wins': {'zh': '勝場', 'en': 'Wins', 'ja': '勝利数'},
+            'standings_col_delta': {'zh': '落後差', 'en': 'Gap', 'ja': '差'},
+            'future_season_no_data': {'zh': '賽季數據尚未發布', 'en': 'Season data not yet available', 'ja': 'シーズンデータ未発表'},
         }
     
     def t(self, key, default=None):

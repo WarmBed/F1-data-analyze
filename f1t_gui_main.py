@@ -60,6 +60,7 @@ _setup_safe_stdout()
 import math
 import time
 import warnings
+import webbrowser
 
 # ========== 抑制執行緒清理時的無害警告 ==========
 # 抑制 Python 3.13+ 在解釋器關閉時的 DummyThread 警告
@@ -541,7 +542,7 @@ class StyleHMainWindow(QMainWindow):
         file_menu.addAction(tr('save_workspace', 'Save Workspace'), self.save_workspace)
         file_menu.addAction(tr('load_workspace', 'Load Workspace'), self.load_workspace)
         file_menu.addSeparator()
-        file_menu.addAction('Exit', self.close)
+        file_menu.addAction(tr('export_pdf_report', 'Export All Tabs to PDF'), self.export_tabs_to_pdf)
         file_menu.addSeparator()
         file_menu.addAction('Exit', self.close)
         
@@ -570,9 +571,9 @@ class StyleHMainWindow(QMainWindow):
         # analysis_menu.addSeparator()
         # analysis_menu.addAction(tr('menu_season_progress', 'Season Progress'), self.open_season_progress)
         
-        # Live Timing 菜單 (使用 LiveTimingManager 重構)
-        live_timing_menu = menubar.addMenu(tr('menu_live_timing', 'Live Timing'))
-        self.live_timing_manager.setup_menu(live_timing_menu)
+        # Live Timing 菜單 (已隱藏)
+        # live_timing_menu = menubar.addMenu(tr('menu_live_timing', 'Live Timing'))
+        # self.live_timing_manager.setup_menu(live_timing_menu)
         
         # 工具菜單
         tools_menu = menubar.addMenu(tr('tools_menu'))
@@ -650,7 +651,7 @@ class StyleHMainWindow(QMainWindow):
 
         # 說明菜單
         help_menu = menubar.addMenu(tr('help_menu', '說明'))
-        help_menu.addAction(tr('about_action', '關於 F1T'), self.show_about_dialog)
+        help_menu.addAction(tr('about_action', '關於 F1T'), self.open_help_link)
 
 
     # ========== _setup_live_timing_menu 已移除，使用 LiveTimingManager.setup_menu() ==========
@@ -669,6 +670,17 @@ class StyleHMainWindow(QMainWindow):
         if not hasattr(self, '_about_dialog_shower'):
             self._about_dialog_shower = AboutDialogShower(self)
         return self._about_dialog_shower.show_about_dialog(*args, **kwargs)
+
+    def export_tabs_to_pdf(self, *args, **kwargs):
+        """代理方法 - 委派給 PDFReportExporter"""
+        from windows.managers.pdf_report_exporter import PDFReportExporter
+        if not hasattr(self, '_pdf_report_exporter'):
+            self._pdf_report_exporter = PDFReportExporter(self)
+        return self._pdf_report_exporter.export_all_tabs_to_pdf(*args, **kwargs)
+
+    def open_help_link(self, *args, **kwargs):
+        """開啟官方網站說明連結"""
+        webbrowser.open('https://www.pitwall.info/')
 
     def _open_f1tv_auth_dialog(self, *args, **kwargs):
         """代理方法 - 委派給 F1tvAuthOpener"""
@@ -854,7 +866,11 @@ class StyleHMainWindow(QMainWindow):
         current_year = datetime.now().year
         min_year = 2018  # FastF1/Ergast 支援的最早年份
         self.year_combo.addItems([str(year) for year in range(min_year, current_year + 1)])
-        self.year_combo.setCurrentText(str(current_year))
+        
+        # 🆕 智能年份選擇：如果當前年份沒有已完成的賽事，則回退到上一年
+        # 這樣每年年初（第一場比賽前）不需要手動更新預設年份
+        default_year = self._get_smart_default_year(current_year, min_year)
+        self.year_combo.setCurrentText(str(default_year))
         self.year_combo.setFixedWidth(70)
         toolbar.addWidget(self.year_combo)
         
@@ -899,6 +915,47 @@ class StyleHMainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # 賽季日曆支援
     # ------------------------------------------------------------------
+    def _get_smart_default_year(self, current_year: int, min_year: int) -> int:
+        """
+        智能選擇預設年份：如果當前年份沒有已完成的賽事則回退到上一年。
+        
+        這解決了每年年初（第一場比賽前）需要手動更新預設年份的問題。
+        例如：2026年1月，Australia GP (2026-03-08) 尚未發生，
+        所以自動使用 2025 作為預設年份。
+        
+        Args:
+            current_year: 當前系統年份
+            min_year: 支援的最小年份
+            
+        Returns:
+            建議的預設年份
+        """
+        try:
+            # 嘗試取得當前年份的已完成賽事
+            if hasattr(self, '_season_provider') and self._season_provider:
+                all_events = self._season_provider.get_completed_events(current_year)
+                # 🔧 修正：get_completed_events 返回所有事件，需要過濾 is_completed=True
+                completed_events = [e for e in all_events if e.is_completed]
+                if completed_events and len(completed_events) > 0:
+                    # 當前年份有已完成的賽事，使用當前年份
+                    logger.debug(f"[SMART_YEAR] ✅ {current_year} 有 {len(completed_events)} 場已完成賽事，使用當前年份")
+                    return current_year
+                else:
+                    # 當前年份沒有已完成的賽事，回退到上一年
+                    fallback_year = max(current_year - 1, min_year)
+                    logger.info(f"[SMART_YEAR] ⚠️ {current_year} 尚無已完成賽事（共 {len(all_events)} 場），自動回退到 {fallback_year}")
+                    return fallback_year
+            else:
+                # SeasonProvider 尚未初始化，使用上一年作為安全預設值
+                fallback_year = max(current_year - 1, min_year)
+                logger.debug(f"[SMART_YEAR] ℹ️ SeasonProvider 尚未初始化，使用 {fallback_year}")
+                return fallback_year
+        except Exception as e:
+            # 發生錯誤時回退到上一年
+            fallback_year = max(current_year - 1, min_year)
+            logger.warning(f"[SMART_YEAR] ❌ 檢查賽事時發生錯誤: {e}，回退到 {fallback_year}")
+            return fallback_year
+
     def _get_calendar_events(self, *args, **kwargs):
         """代理方法 - 委派給 CalendarEventsGetter"""
         from windows.managers.calendar_events_getter import CalendarEventsGetter
@@ -1903,6 +1960,13 @@ class StyleHMainWindow(QMainWindow):
         if not hasattr(self, '_pole_defense_opener'):
             self._pole_defense_opener = PoleDefenseOpener(self)
         return self._pole_defense_opener.open_pole_defense_module()
+
+    def _open_pit_loss_table_module(self):
+        """開啟進站時間損失表模組 (Pit Loss Table)"""
+        from windows.managers.pit_loss_table_opener import PitLossTableOpener
+        if not hasattr(self, '_pit_loss_table_opener'):
+            self._pit_loss_table_opener = PitLossTableOpener(self)
+        return self._pit_loss_table_opener.open_pit_loss_table_module()
 
     def _open_traffic_timeline_module(self):
         """開啟車流時間線分析模組 (Traffic Timeline)"""

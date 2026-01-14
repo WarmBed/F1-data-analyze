@@ -840,13 +840,14 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
     # ------------------------------------------------------------------
     def _register_global_sync(self) -> None:
         """註冊到全局同步信號"""
-        sync = GlobalChartSyncSignal.get_instance()
-        sync.register_module(MODULE_THROTTLE_LINE)
-        # 監聽來自其他模組的同步事件
-        sync.drivers_changed.connect(self._on_global_drivers_changed)
-        sync.x_range_changed.connect(self._on_global_x_range_changed)
-        sync.reset_view.connect(self._on_global_reset_view)
-        logger.debug("[THROTTLE_LINE_CHART] Registered to GlobalChartSyncSignal")
+        # 🚀 暫時停用 GlobalChartSyncSignal 以排查性能問題
+        return
+        # sync = GlobalChartSyncSignal.get_instance()
+        # sync.register_module(MODULE_THROTTLE_LINE)
+        # sync.drivers_changed.connect(self._on_global_drivers_changed)
+        # sync.x_range_changed.connect(self._on_global_x_range_changed)
+        # sync.reset_view.connect(self._on_global_reset_view)
+        # logger.debug("[THROTTLE_LINE_CHART] Registered to GlobalChartSyncSignal")
 
     def _unregister_global_sync(self) -> None:
         """取消註冊全局同步信號"""
@@ -865,7 +866,12 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         if source == MODULE_THROTTLE_LINE:
             return  # 忽略自己發出的
         
-        logger.info("[THROTTLE_LINE_CHART] Sync drivers from %s: %s", source, drivers)
+        # 🚀 優化：如果車手列表未變更，跳過處理
+        if drivers == self._selected_drivers:
+            return
+        
+        # logger 降級為 debug 減少 I/O
+        # logger.debug("[THROTTLE_LINE_CHART] Sync drivers from %s: %s", source, drivers)
         
         # 更新控制面板選擇
         if hasattr(self, 'control_panel') and self.control_panel:
@@ -883,7 +889,8 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         if source == MODULE_THROTTLE_LINE:
             return  # 忽略自己發出的
         
-        logger.debug("[THROTTLE_LINE_CHART] Sync X range from %s: %.2f - %.2f", source, x_min, x_max)
+        # 🚀 移除 logger 調用減少 I/O
+        # logger.debug("[THROTTLE_LINE_CHART] Sync X range from %s: %.2f - %.2f", source, x_min, x_max)
         
         # 同步X軸範圍到圖表
         if hasattr(self.chart_widget, 'throttle_chart') and hasattr(self.chart_widget.throttle_chart, 'set_x_range'):
@@ -897,14 +904,20 @@ class ThrottleLineChartMDI(UniversalAnalysisMDI):
         if source == MODULE_THROTTLE_LINE:
             return  # 忽略自己發出的
         
-        logger.debug("[THROTTLE_LINE_CHART] Reset view from %s", source)
+        # 🚀 移除 logger 調用減少 I/O
+        # logger.debug("[THROTTLE_LINE_CHART] Reset view from %s", source)
         
         if hasattr(self.chart_widget, 'reset_view'):
             self.chart_widget.reset_view()
 
     def _on_drivers_selection_changed(self, drivers: List[str]) -> None:
         """處理本模組的車手選擇變更"""
-        logger.info("[THROTTLE_LINE_CHART] Drivers selection changed: %s", drivers)
+        # 🚀 移除 logger.info 調用減少 I/O
+        # logger.info("[THROTTLE_LINE_CHART] Drivers selection changed: %s", drivers)
+        
+        # 🚀 優化：如果車手列表未變更，跳過處理
+        if drivers == self._selected_drivers:
+            return
         
         self._selected_drivers = drivers
         
