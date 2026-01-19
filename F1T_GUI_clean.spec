@@ -12,13 +12,14 @@
 from pathlib import Path
 import certifi
 import sys
+from PyInstaller.utils.hooks import collect_submodules
 
 # 導入版本號
 sys.path.insert(0, str(Path(SPECPATH)))
 try:
     from config.version import APP_VERSION
 except ImportError:
-    APP_VERSION = "V0.15.0"
+    APP_VERSION = "V0.15.1"
 
 # 直接使用版本號（保留 "V" 前綴）
 version_str = APP_VERSION
@@ -28,10 +29,21 @@ block_cipher = None
 # 項目根目錄
 project_root = Path(SPECPATH)
 
+# Python 標準庫路徑 (用於手動添加 unittest)
+import sysconfig
+stdlib_path = Path(sysconfig.get_paths()['stdlib'])
+
 # 需要包含的數據檔案和資料夾
 added_files = [
+    # ========== Python 標準庫模組 (Python 3.13 相容性) ==========
+    # unittest 模組 - PyInstaller 在 Python 3.13 中無法自動收集
+    (str(stdlib_path / 'unittest'), 'unittest'),
+    
     # 圖標和圖片資源
     (str(project_root / 'image'), 'image'),
+    
+    # 字體資源 (PDF 報告用)
+    (str(project_root / 'fonts'), 'fonts'),
     
     # 配置檔案
     (str(project_root / 'config'), 'config'),
@@ -123,6 +135,10 @@ hidden_imports = [
     'email.mime.multipart',
     'email.mime.text',
     
+    # ========== 測試模組（部分功能依賴）==========
+    # 使用 collect_submodules 確保完整收集
+    *collect_submodules('unittest'),
+    
     # ========== 日期時間處理 ==========
     'datetime',
     'dateutil',
@@ -187,7 +203,9 @@ hidden_imports = [
     'modules.gui.base.global_chart_sync_signal',
     'modules.gui.base.loading_indicator',
     'modules.gui.interfaces',
+    'modules.gui.interfaces.analysis_module',
     'modules.gui.themes',
+    'modules.gui.themes.color_palette_provider',
     'modules.gui.shared',
     'modules.gui.shared.season_calendar_provider',
     'modules.gui.settings',
@@ -200,36 +218,54 @@ hidden_imports = [
     
     # ========== All Drivers 分析模組（新結構）==========
     'modules.gui.all_drivers',
+    
+    # Acceleration Chart 模組 (F121)
     'modules.gui.all_drivers.acceleration',
     'modules.gui.all_drivers.acceleration.acceleration_chart_mdi',
     'modules.gui.all_drivers.acceleration.acceleration_chart_module',
     'modules.gui.all_drivers.acceleration.acceleration_chart_data_loader',
     'modules.gui.all_drivers.acceleration.acceleration_chart_widget',
+    'modules.gui.all_drivers.acceleration.register_module',
     
+    # Brake Chart 模組 (F122)
     'modules.gui.all_drivers.brake',
     'modules.gui.all_drivers.brake.brake_chart_mdi',
     'modules.gui.all_drivers.brake.brake_chart_module',
     'modules.gui.all_drivers.brake.brake_chart_data_loader',
     'modules.gui.all_drivers.brake.brake_chart_widget',
     'modules.gui.all_drivers.brake.all_drivers_brake_all_laps_mdi',
+    'modules.gui.all_drivers.brake.all_drivers_brake_all_laps_module',
+    'modules.gui.all_drivers.brake.all_drivers_brake_all_laps_table_widget',
     'modules.gui.all_drivers.brake.all_drivers_brake_performance_mdi',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_module',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_table_widget',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_widget',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_dual_view',
     'modules.gui.all_drivers.brake.brake_all_laps_loader',
     'modules.gui.all_drivers.brake.brake_performance_loader',
+    'modules.gui.all_drivers.brake.register_module',
     
+    # Max Speed 模組
     'modules.gui.all_drivers.max_speed',
     'modules.gui.all_drivers.max_speed.all_drivers_max_speed_mdi',
     'modules.gui.all_drivers.max_speed.all_drivers_max_speed_module',
     'modules.gui.all_drivers.max_speed.max_speed_data_loader',
     'modules.gui.all_drivers.max_speed.all_drivers_max_speed_table_widget',
     
+    # Corner Performance 模組
     'modules.gui.all_drivers.corner_performance',
     'modules.gui.all_drivers.corner_performance.all_drivers_corner_performance_mdi',
     'modules.gui.all_drivers.corner_performance.corner_performance_loader',
     'modules.gui.all_drivers.corner_performance.corner_performance_scatter_widget',
     
+    # Straight Line Speed 模組
     'modules.gui.all_drivers.straight_line_speed',
     'modules.gui.all_drivers.straight_line_speed.all_drivers_straight_line_speed_mdi',
     'modules.gui.all_drivers.straight_line_speed.all_drivers_straight_line_speed_module',
+    'modules.gui.all_drivers.straight_line_speed.all_drivers_straight_line_speed_dual_view',
+    'modules.gui.all_drivers.straight_line_speed.all_drivers_straight_line_speed_table_widget',
+    'modules.gui.all_drivers.straight_line_speed.all_drivers_straight_line_speed_widget',
+    'modules.gui.all_drivers.straight_line_speed.register_module',
     
     # ========== Race Analysis 模組（新結構）==========
     'modules.gui.race_analysis',
@@ -457,6 +493,7 @@ hidden_imports = [
     'windows.managers.season_start_reaction_opener',
     'windows.managers.pole_defense_opener',
     'windows.managers.pdf_report_exporter',
+    'windows.managers.analysis_module_creator',
     
     'windows.dialogs',
     'windows.dialogs.window_settings_dialog',

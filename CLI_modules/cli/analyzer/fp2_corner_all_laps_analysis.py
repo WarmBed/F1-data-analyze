@@ -98,6 +98,32 @@ class FP2CornerAllLapsAnalysis:
             
             # 步驟 5: 組裝結果
             print("[STEP 5/5] 組裝分析結果...")
+            
+            # 🆕 從 mode_a_result 提取每個車手的 stints，建立頂層 stints_available 字典
+            stints_by_driver = {}
+            if mode_a_result and mode_a_result.get('drivers'):
+                for driver_data in mode_a_result['drivers']:
+                    driver_code = driver_data.get('driver')
+                    driver_stints = driver_data.get('stints', [])
+                    if driver_code and driver_stints:
+                        # 只保留 stint 基本資訊（不含 corners 詳細數據，避免重複）
+                        stints_by_driver[driver_code] = [
+                            {
+                                "stint_id": s.get('stint_id'),
+                                "compound": s.get('compound'),
+                                "lap_range": s.get('lap_range'),
+                                "lap_count": s.get('lap_count'),
+                                "type": s.get('type'),
+                                "is_long_run": s.get('is_long_run', False),
+                                "confidence": s.get('confidence', 0),
+                                "stddev": s.get('stddev', 0),
+                                "laps_detail": s.get('laps_detail', [])
+                            }
+                            for s in driver_stints
+                        ]
+            
+            print(f"[INFO] 提取 {len(stints_by_driver)} 位車手的 stint 資料")
+            
             result = {
                 "success": True,
                 "function_id": "120",
@@ -105,6 +131,7 @@ class FP2CornerAllLapsAnalysis:
                 "race": getattr(self.data_loader, 'race_name', None),
                 "session": getattr(self.data_loader, 'session_type', None),
                 "analysis_type": "F120_corner_all_laps_analysis",
+                "stints_available": stints_by_driver,  # 🆕 改為 dict: {driver: [stint1, stint2, ...]}
                 "selected_corners": selected_corners,
                 "mode_a_unified": mode_a_result,
                 "mode_b_grouped": None  # 已停用
@@ -430,16 +457,91 @@ class FP2CornerAllLapsAnalysis:
                             print(f"  [WARNING] {driver} {corner_key}: 無有效數據")
                     
                     if corners_stats:
+                        # 🆕 偵測 stints 並計算每個 stint 的統計
+                        stints = self._detect_stints(driver_laps)
+                        
+                        # 為每個 stint 計算該 stint 範圍內的彎道統計
+                        stints_with_corners = []
+                        for stint in stints:
+                            stint_lap_range = stint['lap_range']
+                            stint_laps = driver_laps[
+                                (driver_laps['LapNumber'] >= stint_lap_range[0]) &
+                                (driver_laps['LapNumber'] <= stint_lap_range[1])
+                            ]
+                            
+                            # 計算此 stint 的彎道統計
+                            stint_corners = {}
+                            for speed_type, corner_info in selected_corners.items():
+                                if corner_info is None:
+                                    continue
+                                
+                                corner_key = f"{speed_type}_corner_{corner_info['corner_number']}"
+                                apex_distance = corner_info['apex_distance']
+                                
+                                stint_apex_speeds = []
+                                stint_entry_speeds = []
+                                stint_exit_speeds = []
+                                
+                                for idx, lap in stint_laps.iterrows():
+                                    is_valid, _ = self._is_valid_lap_strict(lap, driver_laps)
+                                    if not is_valid:
+                                        continue
+                                    
+                                    try:
+                                        cached_telemetry = telemetry_cache.get(driver, {}).get(idx)
+                                        three_points = self._get_corner_three_point_speeds(
+                                            lap, apex_distance,
+                                            entry_offset=-50, exit_offset=50,
+                                            preloaded_telemetry=cached_telemetry
+                                        )
+                                        
+                                        if three_points['apex_speed'] is not None:
+                                            stint_apex_speeds.append(three_points['apex_speed'])
+                                        if three_points['entry_speed'] is not None:
+                                            stint_entry_speeds.append(three_points['entry_speed'])
+                                        if three_points['exit_speed'] is not None:
+                                            stint_exit_speeds.append(three_points['exit_speed'])
+                                    except Exception:
+                                        continue
+                                
+                                # 計算此 stint 此彎道的統計
+                                if stint_apex_speeds:
+                                    stint_corners[corner_key] = {
+                                        "median_speed": float(np.median(stint_apex_speeds)),
+                                        "mean_speed": float(np.mean(stint_apex_speeds)),
+                                        "valid_laps": len(stint_apex_speeds),
+                                        "speeds_raw": [float(s) for s in stint_apex_speeds],
+                                        "entry_speed_median": float(np.median(stint_entry_speeds)) if stint_entry_speeds else None,
+                                        "exit_speed_median": float(np.median(stint_exit_speeds)) if stint_exit_speeds else None
+                                    }
+                            
+                            # 組裝 stint 資料（包含彎道統計）
+                            stint_with_corners = {
+                                "stint_id": stint['stint_id'],
+                                "compound": stint['compound'],
+                                "lap_range": stint['lap_range'],
+                                "lap_count": stint['lap_count'],
+                                "type": stint['type'],
+                                "is_long_run": stint.get('is_long_run', False),
+                                "confidence": stint.get('confidence', 0),
+                                "stddev": stint.get('stddev', 0),
+                                "laps_detail": stint['laps_detail'],
+                                "corners": stint_corners
+                            }
+                            stints_with_corners.append(stint_with_corners)
+                        
                         drivers_data.append({
                             "driver": driver,
                             "total_laps": total_laps,
+                            "stints": stints_with_corners,  # 🆕 新增 stints 陣列
                             "filtering_summary": dict(filtering_summary),
-                            "corners": corners_stats
+                            "corners": corners_stats  # 保留向後兼容
                         })
                         
                         if show_detailed_output:
                             valid_laps = sum(len(c.get('speeds_raw', [])) for c in corners_stats.values())
                             print(f"  [DATA] {driver}: {total_laps} 總圈數, "
+                                  f"{len(stints_with_corners)} stints, "
                                   f"{valid_laps} 有效圈, {sum(filtering_summary.values())} 已過濾")
                 
                 except Exception as e:
@@ -882,6 +984,169 @@ class FP2CornerAllLapsAnalysis:
         except Exception as e:
             print(f"  [WARNING] FP2 階段檢測失敗: {e}")
             return {"long_run": [], "quali_sim": [], "unknown": []}
+    
+    def _detect_stints(self, driver_laps: pd.DataFrame) -> List[Dict[str, Any]]:
+        """
+        偵測車手的所有 stint（用於 GUI stint selection）
+        
+        完全參考 Long Run Calculator 的邏輯：
+        1. 使用 FastF1 的 Stint 欄位進行分組
+        2. 排除 PitIn/PitOut 圈和無效圈
+        3. 排除 outlap（比平均慢超過閾值的圈）
+        4. 計算穩定性分數判斷是否為 long run
+        
+        Returns:
+            List of stint dictionaries
+        """
+        # 參考 Long Run Calculator 的常數
+        MIN_CONSECUTIVE_LAPS = 1  # F120 允許所有 stint（GUI 會顯示全部供用戶選擇）
+        OUTLAP_TIME_THRESHOLD = 5.0  # 秒 - 比平均慢超過此值視為 outlap
+        MAX_LAP_TIME_STDDEV = 1.5  # 秒 - 低於此標準差視為穩定的 long run
+        
+        try:
+            # 檢查是否有 Stint 欄位
+            if 'Stint' not in driver_laps.columns:
+                print("  [WARNING] 沒有 Stint 欄位，無法偵測 stint")
+                return []
+            
+            stints = []
+            
+            # 按 FastF1 的 Stint 欄位分組（與 Long Run Calculator 相同）
+            stint_groups = driver_laps.groupby('Stint', sort=True)
+            
+            for stint_num, stint_laps_df in stint_groups:
+                if pd.isna(stint_num):
+                    continue
+                
+                stint_id = int(stint_num)
+                
+                # Step 1: 過濾 - 排除 pit 圈和無效圈（與 Long Run Calculator 相同）
+                valid_laps = []
+                for idx, lap in stint_laps_df.iterrows():
+                    is_pit_in = pd.notna(lap.get('PitInTime'))
+                    is_pit_out = pd.notna(lap.get('PitOutTime'))
+                    is_valid = lap.get('IsAccurate', True)
+                    if pd.isna(is_valid):
+                        is_valid = True
+                    
+                    # 排除 pit 圈和無效圈
+                    if is_pit_in or is_pit_out or not is_valid:
+                        continue
+                    
+                    # 獲取圈時
+                    lap_time = lap.get('LapTime')
+                    if pd.notna(lap_time):
+                        if hasattr(lap_time, 'total_seconds'):
+                            lap_time_sec = float(lap_time.total_seconds())
+                        else:
+                            lap_time_sec = float(lap_time)
+                    else:
+                        lap_time_sec = None
+                    
+                    # 只有有效圈時才加入
+                    if lap_time_sec and lap_time_sec > 0:
+                        valid_laps.append({
+                            'lap_number': int(lap['LapNumber']),
+                            'lap_time': lap_time_sec,
+                            'tyre_life': int(lap['TyreLife']) if pd.notna(lap.get('TyreLife')) else None,
+                            'compound': lap.get('Compound', 'UNKNOWN') if pd.notna(lap.get('Compound')) else 'UNKNOWN'
+                        })
+                
+                # 如果沒有有效圈，跳過此 stint
+                if not valid_laps:
+                    continue
+                
+                # Step 2: 排除 outlap（與 Long Run Calculator 相同）
+                lap_times = [lap['lap_time'] for lap in valid_laps]
+                avg_time = sum(lap_times) / len(lap_times)
+                
+                clean_laps = [
+                    lap for lap in valid_laps
+                    if lap['lap_time'] < avg_time + OUTLAP_TIME_THRESHOLD
+                ]
+                
+                # 如果過濾後沒有圈數，使用原始有效圈
+                if not clean_laps:
+                    clean_laps = valid_laps
+                
+                # Step 3: 計算穩定性分數（與 Long Run Calculator 相同）
+                clean_times = [lap['lap_time'] for lap in clean_laps]
+                if len(clean_times) > 1:
+                    import statistics
+                    stddev = statistics.stdev(clean_times)
+                else:
+                    stddev = 0
+                
+                is_long_run = stddev < MAX_LAP_TIME_STDDEV and len(clean_laps) >= 4
+                confidence = max(0, 1 - (stddev / MAX_LAP_TIME_STDDEV)) if MAX_LAP_TIME_STDDEV > 0 else 0
+                
+                # Step 4: 獲取 compound（從第一圈，與 Long Run Calculator 相同）
+                compound = clean_laps[0]['compound'] if clean_laps else 'UNKNOWN'
+                
+                # Step 5: 建構 stint 資料
+                lap_numbers = [lap['lap_number'] for lap in clean_laps]
+                
+                # 判斷 stint 類型
+                lap_count = len(clean_laps)
+                if lap_count >= 5:
+                    stint_type = "long_run"
+                elif lap_count <= 2:
+                    stint_type = "quali_sim"
+                else:
+                    stint_type = "unknown"
+                
+                stint_data = {
+                    "stint_id": stint_id,
+                    "compound": compound,
+                    "lap_range": [min(lap_numbers), max(lap_numbers)],
+                    "lap_count": lap_count,
+                    "type": stint_type,
+                    "is_long_run": is_long_run,
+                    "confidence": round(confidence, 3),
+                    "stddev": round(stddev, 3),
+                    "laps_detail": [
+                        {
+                            "lap_number": lap['lap_number'],
+                            "lap_time": lap['lap_time'],
+                            "tyre_life": lap['tyre_life']
+                        }
+                        for lap in clean_laps
+                    ]
+                }
+                stints.append(stint_data)
+            
+            return stints
+            
+        except Exception as e:
+            print(f"  [WARNING] Stint 偵測失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+    
+    def _build_stint_data(self, stint_id: int, laps_detail: List[Dict], 
+                          compound: Optional[str]) -> Dict[str, Any]:
+        """
+        建構單一 stint 的資料結構
+        """
+        lap_numbers = [lap['lap_number'] for lap in laps_detail]
+        lap_count = len(lap_numbers)
+        
+        # 判斷 stint 類型
+        if lap_count >= 5:
+            stint_type = "long_run"
+        elif lap_count <= 3:
+            stint_type = "quali_sim"
+        else:
+            stint_type = "unknown"
+        
+        return {
+            "stint_id": stint_id,
+            "compound": compound if compound else "UNKNOWN",
+            "lap_range": [min(lap_numbers), max(lap_numbers)] if lap_numbers else [0, 0],
+            "lap_count": lap_count,
+            "type": stint_type,
+            "laps_detail": laps_detail
+        }
     
     # ==================== 輔助方法（繼承 F47） ====================
     

@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.15.0"
+APP_VERSION = "V0.15.1"
 
 # 完整版本資訊
 APP_NAME = "PIT WALL"
@@ -15,6 +15,15 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.15.1": {
+        "date": "2026-01-19",
+        "features": [
+            "F120 (FP2 Corner Analysis) 新增 Stint Selection 功能",
+            "F121/F122 模組 Stint 架構準備與優化",
+            "批次生成器流程優化",
+            "修復部分 JSON 輸出結構兼容性",
+        ],
+    },
     "V0.15.0": {
         "date": "2026-01-12",
         "features": [

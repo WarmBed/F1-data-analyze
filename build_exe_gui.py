@@ -21,7 +21,7 @@ try:
     from config.version import APP_VERSION, APP_NAME
     import webbrowser
 except ImportError:
-    APP_VERSION = "V0.15.0"
+    APP_VERSION = "V0.15.1"
     APP_NAME = "PIT WALL"
 
 
@@ -67,6 +67,7 @@ class EXEBuilderGUI:
         self.clean_build_var = tk.BooleanVar(value=True)
         self.show_console_var = tk.BooleanVar(value=False)
         self.onedir_mode_var = tk.BooleanVar(value=False)  # 預設使用單檔案模式（加密保護）
+        self.disable_logs_var = tk.BooleanVar(value=False)  # 禁止 EXE 輸出日誌檔案
         
         tk.Checkbutton(
             options_frame,
@@ -107,6 +108,12 @@ class EXEBuilderGUI:
             options_frame,
             text="EXE 顯示控制台視窗（除錯用）",
             variable=self.show_console_var
+        ).pack(anchor="w")
+        
+        tk.Checkbutton(
+            options_frame,
+            text="禁止輸出 LOGS（正式發布用，節省效能）",
+            variable=self.disable_logs_var
         ).pack(anchor="w")
         
         # 模式說明
@@ -460,8 +467,9 @@ coll = COLLECT(
                 
                 if self.use_venv_var.get():
                     # 虛擬環境需要安裝所有依賴
+                    # ⚠️ PyQt5 必須指定版本，避免 PyInstaller 無法讀取版本 metadata
                     packages.extend([
-                        "PyQt5",
+                        "PyQt5==5.15.10",  # 指定版本確保兼容性
                         "fastf1",
                         "pandas",
                         "matplotlib",
@@ -475,6 +483,7 @@ coll = COLLECT(
                         "seaborn",
                         "scikit-learn",
                         "reportlab",  # PDF 報告生成
+                        "certifi",    # SSL 證書 (spec 文件需要)
                     ])
                 
                 for pkg in packages:
@@ -568,6 +577,38 @@ coll = COLLECT(
             # 如果有修改，寫回檔案
             if modified:
                 spec_file.write_text(content, encoding='utf-8')
+            
+            # 🔒 修改 runtime_hook 來控制 EXE 日誌輸出
+            runtime_hook_file = self.project_root / "hooks" / "runtime_hook_disable_logger.py"
+            if runtime_hook_file.exists():
+                hook_content = runtime_hook_file.read_text(encoding='utf-8')
+                
+                if self.disable_logs_var.get():
+                    # 禁用日誌
+                    if "F1T_EXE_DISABLE_LOG'] = '0'" in hook_content:
+                        hook_content = hook_content.replace(
+                            "F1T_EXE_DISABLE_LOG'] = '0'",
+                            "F1T_EXE_DISABLE_LOG'] = '1'"
+                        )
+                        hook_content = hook_content.replace(
+                            'Logging ENABLED for debugging',
+                            'Logging DISABLED for production'
+                        )
+                        runtime_hook_file.write_text(hook_content, encoding='utf-8')
+                        self.append_log("🔒 已禁用 EXE 日誌輸出（正式發布模式）")
+                else:
+                    # 啟用日誌
+                    if "F1T_EXE_DISABLE_LOG'] = '1'" in hook_content:
+                        hook_content = hook_content.replace(
+                            "F1T_EXE_DISABLE_LOG'] = '1'",
+                            "F1T_EXE_DISABLE_LOG'] = '0'"
+                        )
+                        hook_content = hook_content.replace(
+                            'Logging DISABLED for production',
+                            'Logging ENABLED for debugging'
+                        )
+                        runtime_hook_file.write_text(hook_content, encoding='utf-8')
+                        self.append_log("📝 EXE 日誌輸出已啟用（除錯模式）")
             
             cmd = [python_exe, "-m", "PyInstaller", str(spec_file), "--noconfirm"]
             
