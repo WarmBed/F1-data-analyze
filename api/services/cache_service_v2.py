@@ -228,6 +228,14 @@ FILE_SPECS: Dict[str, FileNameSpec] = {
         prefix="live_timing_traffic_distance",
         template="{prefix}_{year}_{race}_{session}.json"
     ),
+    
+    # === FIA 統計功能 (143) ===
+    "143": FileNameSpec(
+        prefix="fia_season_stats",
+        template="{prefix}_{year}.json",
+        requires_race=False,
+        requires_session=False
+    ),
 }
 
 

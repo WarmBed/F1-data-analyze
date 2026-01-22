@@ -3,7 +3,11 @@
 F1 Analysis Cache Service - 智能 JSON 搜尋服務
 F1 賽車數據分析緩存服務 - 提供快速的 JSON 檔案搜尋與載入功能
 
-版本: 1.0
+⚠️ **已棄用 (DEPRECATED)** ⚠️
+此檔案已不再使用，系統實際使用的是 cache_service_v2.py
+如需更新 API 緩存功能，請修改: api/services/cache_service_v2.py
+
+版本: 1.0 (DEPRECATED)
 作者: F1 Analysis Team
 功能: 智能搜尋現有 JSON 分析結果，避免重複 CLI 執行
 """
