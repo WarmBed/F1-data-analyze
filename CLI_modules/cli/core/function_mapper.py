@@ -159,6 +159,7 @@ class F1AnalysisFunctionMapper:
             140: self._execute_qualifying_result_collector,  # 排位賽結果收集器 (2026-01-05)
             141: self._execute_sc_trigger_probability_model,  # SC 觸發機率模型 (2026-01-05)
             142: self._execute_pit_lane_time_analyzer,  # 進站時間損失分析器 (2026-01-05)
+            143: self._execute_fia_season_stats_analysis,  # FIA 賽季統計分析（PU + Parts）(2026-01-22)
         }
         
         # 子功能映射表
@@ -356,7 +357,8 @@ class F1AnalysisFunctionMapper:
         # 126: Live Timing 天氣分析 (使用 F1 官方 Live Timing API，不需要 FastF1)
         # 127: Live Timing Traffic Distance 分析 (使用 Live Timing cache，不需要 FastF1)
         # 101: 年度起跑反應分析 (使用 Live Timing 數據，不需要 FastF1)
-        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "98", "99", "100", "101", "125", "126", "127"}
+        # 143: FIA 賽季統計分析 (從 FIA 官網抓取 PDF，不需要 FastF1)
+        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "98", "99", "100", "101", "125", "126", "127", "143"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
@@ -5484,8 +5486,12 @@ class F1AnalysisFunctionMapper:
             print(f"\n正在載入 FP2→Q 訓練數據...")
             training_data_dir = Path(__file__).parent.parent.parent.parent / "training_data"
             
-            # 優先使用 2022-2025 多年數據，回退到單年數據
-            fp2_data_file = training_data_dir / "fp2_q_training_data_2022_2025.json"
+            # 優先使用 Cleaning 後的數據 (v4.0)
+            fp2_data_file = training_data_dir / "fp2_q_training_data_cleaned.json"
+            if not fp2_data_file.exists():
+                print("⚠️  找不到清洗後的數據，使用原始 2022-2025 數據...")
+                fp2_data_file = training_data_dir / "fp2_q_training_data_2022_2025.json"
+            
             if not fp2_data_file.exists():
                 fp2_data_file = training_data_dir / "fp2_q_training_data.json"
             
@@ -5556,9 +5562,10 @@ class F1AnalysisFunctionMapper:
                 records = track_data[track]
                 print(f"  數據量: {len(records)} 筆賽事記錄")
                 
-                # 構建訓練集
+                # 構建訓練集 (v3.11: 新增 sample_years 用於時間衰減權重)
                 X_train = []
                 y_train = []
+                sample_years = []  # v3.11: 記錄每個樣本的年份
                 
                 for record in records:
                     # 支援三種格式
@@ -5574,6 +5581,9 @@ class F1AnalysisFunctionMapper:
                         q_time = q_data.get('ideal_lap', 0.0)
                         improvement = q_time - fp2_time
                         y_train.append(improvement)
+                        # v3.11: 記錄年份用於時間衰減權重
+                        record_year = record.get('year') or record.get('metadata', {}).get('year', 2024)
+                        sample_years.append(record_year)
                     else:
                         # 格式 2: 新版嵌套格式 (fp2.drivers, qualifying.results)
                         fp2_section = record.get('fp2', {})
@@ -5642,6 +5652,9 @@ class F1AnalysisFunctionMapper:
                                 
                                 X_train.append(feature_vector)
                                 y_train.append(improvement)
+                                # v3.11: 記錄年份
+                                record_year = record.get('metadata', {}).get('year', 2024)
+                                sample_years.append(record_year)
                             except Exception as e:
                                 print(f"  ⚠️  {driver} 數據解析失敗: {str(e)}")
                                 continue
@@ -5652,24 +5665,36 @@ class F1AnalysisFunctionMapper:
                 
                 X_train = np.array(X_train)
                 y_train = np.array(y_train)
+                sample_years = np.array(sample_years)
                 
                 print(f"  訓練樣本: {len(X_train)} 筆")
                 
-                # 訓練 XGBoost 模型 (簡化版，不使用 Optuna)
+                # v3.11: 計算時間衰減權重 (較新的數據權重更高)
+                current_year = 2025
+                decay_rate = 0.85  # 每過一年權重減少 15%
+                sample_weights = decay_rate ** (current_year - sample_years)
+                print(f"  年份分布: {dict(zip(*np.unique(sample_years, return_counts=True)))}")
+                print(f"  權重範圍: {sample_weights.min():.3f} - {sample_weights.max():.3f}")
+                
+                # 訓練 XGBoost 模型 (v4.0: Optuna Optimized 2026-01-21)
+                # CV MAE: 5.176s (Generalized)
                 model = xgb.XGBRegressor(
-                    n_estimators=300,
-                    learning_rate=0.05,
-                    max_depth=6,
-                    min_child_weight=3,
-                    subsample=0.8,
-                    colsample_bytree=0.8,
-                    gamma=0.1,
+                    n_estimators=353,
+                    max_depth=9,
+                    learning_rate=0.0867,
+                    subsample=0.6378,
+                    colsample_bytree=0.6097,
+                    min_child_weight=6,
+                    reg_alpha=1.0077,
+                    reg_lambda=0.8641,
+                    gamma=0.3904,
+                    objective='reg:squarederror',
                     random_state=42,
                     n_jobs=workers
                 )
                 
-                # 訓練模型
-                model.fit(X_train, y_train)
+                # 訓練模型 (v3.11: 使用時間衰減權重)
+                model.fit(X_train, y_train, sample_weight=sample_weights)
                 
                 # 評估模型
                 y_pred = model.predict(X_train)
@@ -5695,7 +5720,7 @@ class F1AnalysisFunctionMapper:
                     'train_mae': float(train_mae),
                     'train_r2': float(train_r2),
                     'sample_count': len(X_train),
-                    'version': 'v3.10_FP2',
+                    'version': 'v3.11_FP2',  # v3.11: 加強正則化 + 異常值過濾
                     'data_source': 'FP2',
                     'prediction_target': 'Q'
                 }
@@ -5763,32 +5788,25 @@ class F1AnalysisFunctionMapper:
     
     def _identify_quali_sim_laps_fp2(self, driver_laps: 'pd.DataFrame') -> 'pd.DataFrame':
         """
-        識別 FP2 中的排位模擬圈速（方案 2：智能過濾）
+        識別 FP2 中的排位模擬圈速（簡化版：SOFT 胎最快圈）
         
-        過濾策略（多層回退）：
-        層級 1: SOFT 胎 + 短 stint (1-3 圈) + 新胎 (胎齡≤3)
-        層級 2: SOFT 胎 + 任意 stint + 新胎 (胎齡≤3)
-        層級 3: SOFT 胎 + 任意條件
-        層級 4: 所有圈速（在外部處理）
-        
-        嚴格過濾：
-        - Out Lap (PitOutTime 存在)
-        - In Lap (下一圈 PitInTime 存在)
-        - IsAccurate == False
-        - 黃旗/安全車圈（TrackStatus）
+        過濾策略：
+        1. 基礎過濾：Out Lap, In Lap, IsAccurate, 黃旗/安全車
+        2. 直接找 SOFT 胎最快圈（無 TyreLife 限制）
+        3. 回退：無 SOFT 胎時返回空（外部會使用所有圈速最快圈）
         
         Args:
             driver_laps: 單一車手的所有圈速 DataFrame
             
         Returns:
-            符合 Quali Sim 條件的圈速 DataFrame（可能為空）
+            符合條件的 SOFT 胎圈速 DataFrame（可能為空）
         """
         import pandas as pd
         
         if driver_laps.empty:
             return pd.DataFrame()
         
-        # ========== 階段 1: 基礎過濾（嚴格模式） ==========
+        # ========== 階段 1: 基礎過濾 ==========
         filtered_laps = driver_laps.copy()
         
         # 1. IsAccurate 檢查
@@ -5820,7 +5838,6 @@ class F1AnalysisFunctionMapper:
         
         # 4. 黃旗/安全車過濾
         if 'TrackStatus' in filtered_laps.columns:
-            # 過濾包含黃旗、安全車、VSC 的圈速
             filtered_laps = filtered_laps[
                 ~filtered_laps['TrackStatus'].astype(str).str.contains(
                     'Yellow|SafetyCar|VSC', 
@@ -5832,42 +5849,11 @@ class F1AnalysisFunctionMapper:
         if filtered_laps.empty:
             return pd.DataFrame()
         
-        # ========== 階段 2: Quali Sim 識別（多層回退） ==========
-        
-        # 層級 1: SOFT 胎 + 短 stint (≤3 圈) + 新胎 (胎齡≤3)
-        if 'Compound' in filtered_laps.columns and 'Stint' in filtered_laps.columns:
+        # ========== 階段 2: 直接找 SOFT 胎最快圈（無 TyreLife 限制） ==========
+        if 'Compound' in filtered_laps.columns:
             soft_laps = filtered_laps[filtered_laps['Compound'].str.upper() == 'SOFT']
             
-            if not soft_laps.empty and 'TyreLife' in soft_laps.columns:
-                # 檢查每個 stint
-                quali_sim_candidates = []
-                
-                for stint_num in soft_laps['Stint'].unique():
-                    stint_laps = soft_laps[soft_laps['Stint'] == stint_num]
-                    stint_length = len(stint_laps)
-                    
-                    # 檢查是否為短 stint (1-3 圈)
-                    if stint_length <= 3:
-                        # 檢查胎齡 (≤3)
-                        new_tire_laps = stint_laps[stint_laps['TyreLife'] <= 3]
-                        
-                        if not new_tire_laps.empty:
-                            # 找出這個 stint 的最快圈
-                            fastest_in_stint = new_tire_laps.loc[new_tire_laps['LapTime'].idxmin()]
-                            quali_sim_candidates.append(fastest_in_stint)
-                
-                if quali_sim_candidates:
-                    # 從所有候選 stint 中找出最快的一次
-                    result_df = pd.DataFrame(quali_sim_candidates)
-                    return result_df
-            
-            # 層級 2: SOFT 胎 + 任意 stint + 新胎 (胎齡≤3)
-            if not soft_laps.empty and 'TyreLife' in soft_laps.columns:
-                new_tire_laps = soft_laps[soft_laps['TyreLife'] <= 3]
-                if not new_tire_laps.empty:
-                    return new_tire_laps
-            
-            # 層級 3: SOFT 胎 + 任意條件
+            # 直接返回所有 SOFT 胎圈速，讓外部選最快的
             if not soft_laps.empty:
                 return soft_laps
         
@@ -6296,14 +6282,149 @@ class F1AnalysisFunctionMapper:
                 else:
                     pred['optimism_adjustment'] = 0.0
                 
+                pred['predicted_time_xgb'] = float(final_predicted) # Store raw XGB
                 pred['predicted_time'] = float(final_predicted)
-                # improvement 欄位應該是「預測時間 - FP2時間」的總改進量（包含燃油校正）
-                # 這樣 GUI 的 △FP2 才會顯示正確
                 pred['improvement'] = float(final_predicted - pred['fp2_time'])
                 pred['fuel_correction'] = float(fuel_correction) if fuel_correction else None
                 pred['fuel_correction_source'] = correction_source
             
-            predictions.sort(key=lambda x: x['predicted_time'])
+            # ============================================================
+            # v5.0 Ensemble Stacking 邏輯 (XGBoost + LightGBM + CatBoost)
+            # 1. 獲取 LightGBM 預測 (增加多樣性)
+            # 2. 結合 XGBoost 和 LightGBM 生成 Ensemble Time
+            # 3. 使用 CatBoost Ranker 進行最終排序
+            # ============================================================
+            
+            # --- LightGBM Loading ---
+            lgbm_model_path = Path(__file__).parent.parent.parent.parent / "models" / "fp2_q_lightgbm_v5" / "lightgbm_model_v5.0.txt"
+            has_lgbm = False
+            if lgbm_model_path.exists():
+                try:
+                    import lightgbm as lgb
+                    lgb_booster = lgb.Booster(model_file=str(lgbm_model_path))
+                    print(f"\n✅ 啟用 LightGBM (v5.0 Ensemble)")
+                    
+                    # 準備特徵 (與 train_fp2_q_lightgbm.py 一致)
+                    lgbm_feats = [
+                        'ideal_s1', 'ideal_s2', 'ideal_s3', 'ideal_lap',
+                        'low_speed_apex', 'mid_speed_apex', 'high_speed_apex', 'max_speed',
+                        's1_s2_ratio', 'sector_cv', 's2_lap_ratio',
+                        'max_speed_lap_ratio', 'max_speed_s2_ratio', 'speed_consistency',
+                        'fp2_relative_position', 'fp2_gap_to_fastest'
+                    ]
+                    
+                    lgbm_input = []
+                    for p in predictions:
+                        row = [p['features'].get(f, 0.0) for f in lgbm_feats]
+                        lgbm_input.append(row)
+                        
+                    lgbm_preds = lgb_booster.predict(lgbm_input)
+                    
+                    for i, p in enumerate(predictions):
+                        # Calculate LightGBM Time
+                         # Improvement output from model
+                        imp_lgb = lgbm_preds[i]
+                        
+                        # Apply same adjustments as XGBoost (Track, Fuel, etc.)
+                        # Note: LightGBM trained on raw improvement? 
+                        # train_fp2_q_lightgbm.py loaded CLEANED data which has static factors applied?
+                        # No, clean_static_factors UPDATED json files, but clean_data contains RAW improvement?
+                        # Wait, clean_static_factors filters rows, but does not modify 'fp2_d' values inside the list?
+                        # It saves `clean_data` which is a LIST of records.
+                        # The records are ORIGINAL.
+                        # So LightGBM predicts Raw Improvement (Q - FP2).
+                        # We need to apply Track/Evolution adjustments to it too.
+                        
+                        base_lgb = p['fp2_time'] + imp_lgb
+                        
+                        # Apply Adjustments (Re-using calculated values from XGB loop)
+                        # We stored adjustments in p['track_adjustment'], etc.
+                        adj = p.get('track_adjustment', 0) + \
+                              p.get('evolution_adjustment', 0) + \
+                              p.get('consistency_adjustment', 0) + \
+                              p.get('optimism_adjustment', 0)
+                        
+                        fuel = p.get('fuel_correction') or 0
+                        
+                        final_lgb = base_lgb + adj + fuel
+                        p['predicted_time_lgbm'] = final_lgb
+                        
+                    has_lgbm = True
+                except Exception as e:
+                    print(f"⚠️  載入 LightGBM 失敗: {e}")
+            
+            # --- Ensemble Averaging ---
+            if has_lgbm:
+                for p in predictions:
+                    # Weighting: XGB (Optuna) 0.6, LGBM (Dart) 0.4
+                    t_xgb = p['predicted_time_xgb']
+                    t_lgb = p['predicted_time_lgbm']
+                    p['predicted_time'] = 0.6 * t_xgb + 0.4 * t_lgb
+                    p['improvement'] = p['predicted_time'] - p['fp2_time']
+            
+            # --- CatBoost Ranking & Swap ---
+            xgb_times_sorted = sorted([p['predicted_time'] for p in predictions])
+            
+            # 嘗試載入 CatBoost Ranker
+            catboost_model_path = Path(__file__).parent.parent.parent.parent / "models" / "fp2_q_catboost_v4" / "catboost_ranker_v4.0.cbm"
+            use_catboost = False
+            
+            if catboost_model_path.exists():
+                try:
+                    from catboost import CatBoostRanker
+                    ranker = CatBoostRanker()
+                    ranker.load_model(str(catboost_model_path))
+                    print(f"✅ 啟用 CatBoost Ranker (v4.0 Hybrid)")
+                    
+                    # 準備 CatBoost 輸入特徵
+                    # 注意：必須與 train_fp2_q_catboost.py 中的特徵順序一致
+                    numeric_features = [
+                        'ideal_s1', 'ideal_s2', 'ideal_s3', 'ideal_lap',
+                        'low_speed_apex', 'mid_speed_apex', 'high_speed_apex', 'max_speed',
+                        's1_s2_ratio', 'sector_cv', 's2_lap_ratio',
+                        'max_speed_lap_ratio', 'max_speed_s2_ratio', 'speed_consistency',
+                        'fp2_relative_position', 'fp2_gap_to_fastest'
+                    ]
+                    cat_features = ['Track', 'Team']
+                    
+                    # 必須為每一行構建特徵列表 [Num..., Cat...]
+                    batch_data = []
+                    for p in predictions:
+                        row = []
+                        # 數值特徵
+                        for feat in numeric_features:
+                            row.append(p['features'].get(feat, 0.0))
+                        # 類別特徵
+                        row.append(race)       # Track
+                        row.append(p['team'])  # Team
+                        batch_data.append(row)
+                    
+                    # 預測分數 (Relevance Score, Higher is Better usually for YetiRank predictions if trained on relevance labels)
+                    # Train script used Relevance = 21 - Rank. So Higher = Better.
+                    scores = ranker.predict(batch_data)
+                    
+                    for i, p in enumerate(predictions):
+                        p['rank_score'] = float(scores[i])
+                        
+                    # 按分數降序排序 (Higher Score = Better Rank)
+                    predictions.sort(key=lambda x: x['rank_score'], reverse=True)
+                    use_catboost = True
+                    print(f"   Ensemble + Hybrid Swap 應用完成...")
+                    
+                except Exception as e:
+                    print(f"⚠️  載入 CatBoost Ranker 失敗，回退至僅使用 Time Ensemble: {e}")
+                    import traceback
+                    traceback.print_exc()
+            
+            if use_catboost:
+                # 應用 Hybrid Time Swap: 將排序好的 Ensemble 時間分配給 CatBoost 排序後的車手
+                for i, p in enumerate(predictions):
+                    new_time = xgb_times_sorted[i] # 第 i 名應該獲得第 i 快的时间
+                    p['predicted_time'] = new_time
+                    p['improvement'] = new_time - p['fp2_time']
+            else:
+                # 原有邏輯：僅按時間排序
+                predictions.sort(key=lambda x: x['predicted_time'])
             
             # 嘗試獲取實際排位賽結果
             actual_q_times = {}
@@ -7983,6 +8104,58 @@ class F1AnalysisFunctionMapper:
                 "success": False,
                 "message": f"F142 執行失敗: {str(e)}",
                 "function_id": "142"
+            }
+
+
+    def _execute_fia_season_stats_analysis(self, **kwargs):
+        """功能 143: FIA 賽季統計分析
+
+        從 FIA 官網抓取 PU 元件使用狀況與部件更換記錄。
+        支援增量更新，輸出完整賽季 JSON。
+
+        參數:
+            year: 賽季年份 (2024, 2025, ...)
+            force: 是否強制重新處理所有數據
+
+        輸出:
+            - json/fia_season_stats_{year}.json
+        """
+        print("\n" + "="*70)
+        print("功能 143: FIA 賽季統計分析 (PU Elements + Parts Changes)")
+        print("="*70)
+
+        try:
+            from CLI_modules.cli.analyzer.fia_season_stats_analyzer import (
+                run_fia_season_stats_analysis
+            )
+
+            # 參數處理
+            year = kwargs.get("year")
+            if not year:
+                if self.data_loader and getattr(self.data_loader, "year", None):
+                    year = self.data_loader.year
+                else:
+                    year = 2025  # 預設 2025 賽季
+            
+            year = int(year)
+            force = kwargs.get("force", False)
+
+            print(f"[F143] 年份: {year}")
+            print(f"[F143] 模式: {'強制重建' if force else '增量更新'}")
+
+            # 執行分析
+            result = run_fia_season_stats_analysis(year=year, force=force)
+
+            return self._standardize_result(result, 143, "FIA 賽季統計分析")
+
+        except Exception as e:
+            print(f"[ERROR] F143 執行失敗: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                "success": False,
+                "message": f"F143 執行失敗: {str(e)}",
+                "function_id": "143"
             }
 
 

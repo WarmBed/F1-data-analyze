@@ -611,6 +611,18 @@ _make_spec(
         cache_patterns=["live_timing_traffic_distance"],
         notes="CLI function -f 127. Outputs live_timing_traffic_distance_{year}_{race}_{session}.json. Uses F1 official Live Timing API. Each driver entry includes per-lap traffic status (clean/traffic/excluded), total laps count, clean air percentage, traffic percentage. GUI-compatible format for traffic_timeline module.",
     ),
+    _make_spec(
+        "143",
+        name="FIA Season Statistics",
+        description="Downloads and parses FIA official documents (Power Unit elements allocation & Parts changes) from fia.com. Returns per-driver PU element usage counts (ICE/TC/MGU-H/MGU-K/ES/CE) and all parts change records for the specified season. Supports seasons 2023-2025. PU limits: ICE/TC/MGU-H=4, MGU-K/ES/CE=3 per season.",
+        required_params=["year"],
+        optional_params=[],
+        cli_flag_map={
+            "year": "-y"
+        },
+        cache_patterns=["fia_season_stats"],
+        notes="CLI function -f 143. Outputs fia_season_stats_{year}.json. Downloads PDF documents from FIA website, parses tables to extract driver-level PU usage and parts change history. GUI displays color-coded status: green (normal), orange (at limit), red (exceeded).",
+    ),
 ]
 
 

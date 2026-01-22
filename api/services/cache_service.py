@@ -93,6 +93,9 @@ class F1AnalysisCacheService:
             "121": ["fp2_straight_line_all_laps_analysis"],  # ✅ 添加 Function 121 - FP2 直線速度全圈數分析
             "122": ["brake_all_laps_analysis"],  # ✅ 添加 Function 122 - 煞車全圈數分析
             "125": ["vehicle_performance_analysis"],  # ✅ 添加 Function 125 - 車輛性能綜合分析 (F120+F121+F122+F100)
+            "126": ["live_timing_weather"],  # ✅ 添加 Function 126 - Live Timing 天氣分析
+            "127": ["live_timing_traffic_distance"],  # ✅ 添加 Function 127 - Live Timing 車流距離分析
+            "143": ["fia_season_stats"],  # ✅ 添加 Function 143 - FIA 賽季統計 (PU Elements + Parts Changes)
         }
         
         # 賽事名稱標準化映射
@@ -101,7 +104,7 @@ class F1AnalysisCacheService:
             "china": ["china", "chinese", "chinese_grand_prix"],
             "australia": ["australia", "australian", "australian_grand_prix"],
             "bahrain": ["bahrain", "bahraini", "bahrain_grand_prix"],
-            "saudi_arabia": ["saudi", "saudi_arabia", "saudi_arabian_grand_prix"],
+            "saudi_arabia": ["saudi", "saudi_arabia", "saudi_arabian", "saudi_arabian_grand_prix"],
             "italy": ["italy", "italian", "italian_grand_prix", "monza"],
             "monaco": ["monaco", "monaco_grand_prix"],
             "spain": ["spain", "spanish", "spanish_grand_prix", "barcelona"],
@@ -127,7 +130,11 @@ class F1AnalysisCacheService:
         self.race_name_lookup = {}
         for standard_name, variants in self.race_name_variants.items():
             for variant in variants:
-                self.race_name_lookup[variant.lower()] = standard_name
+                # 同時添加原始格式和下劃線格式作為 key
+                variant_lower = variant.lower()
+                variant_underscore = variant_lower.replace(" ", "_")
+                self.race_name_lookup[variant_lower] = standard_name
+                self.race_name_lookup[variant_underscore] = standard_name
         
         print(f"[CACHE] F1 分析緩存服務已初始化")
         print(f"[CACHE] JSON 目錄: {os.path.abspath(self.json_dir)}")
@@ -267,6 +274,15 @@ class F1AnalysisCacheService:
                     f"{self.json_dir}season_calendar_{year}_*.json",      # 單年格式
                     f"{self.json_dir}season_calendar_*.json"              # 任何賽季日曆
                 ]
+            elif function_id == "143":  # ✅ FIA 賽季統計 - 僅 year 參數
+                # 檔案格式: fia_season_stats_{year}.json
+                # 範例: fia_season_stats_2025.json
+                search_patterns = [
+                    f"{self.json_dir}fia_season_stats_{year}.json",       # 精確匹配
+                    f"{self.json_dir}fia_season_stats_{year}_*.json",     # 帶時間戳
+                ]
+                print(f"[CACHE] 📋 Function 143: 搜尋 FIA 賽季統計")
+                print(f"[CACHE]    年份: {year}")
             elif function_id == "29":  # ✅ FIA 部件變更分析 (簡化版) - 僅 year 參數
                 # 檔案格式: fia_parts_analysis_{year}.json 或帶過濾條件的變體
                 # 範例: fia_parts_analysis_2025.json
@@ -497,12 +513,13 @@ class F1AnalysisCacheService:
                 print(f"[CACHE] ✅ 找到 {len(files)} 個匹配檔案")
                 files = sorted(files, key=os.path.getmtime, reverse=True)
                 for file_path in files:
-                    # ✅ Function 79/80/96/97/98/99/100 跳過額外驗證（glob pattern 已足夠精確）
+                    # ✅ Function 79/80/96/97/98/99/100/143 跳過額外驗證（glob pattern 已足夠精確）
                     # Function 79/80: 預測分析 - 檔案名已包含 year 和 race
                     # Function 96: 天氣預報 - 已通過 glob pattern 精確匹配
                     # Function 97/98/99: 賽季級別分析 - 不需要 race/session
                     # Function 100: 歷年旗幟統計 - 檔案名不包含 session
-                    if function_id not in {"79", "80", "96", "97", "98", "99", "100"}:
+                    # Function 143: FIA 賽季統計 - 僅 year 參數
+                    if function_id not in {"79", "80", "96", "97", "98", "99", "100", "143"}:
                         if not self._file_matches_race(file_path, race):
                             continue
                         if not self._file_matches_session(file_path, session):
@@ -517,6 +534,11 @@ class F1AnalysisCacheService:
                     # ✅ Function 96: 天氣預報 - 直接返回（glob pattern 已精確匹配）
                     elif function_id == "96":
                         if result:
+                            return result
+                    # ✅ Function 143: FIA 賽季統計 - 直接返回（僅 year 匹配）
+                    elif function_id == "143":
+                        if result:
+                            print(f"[CACHE] ✅ 找到 FIA 賽季統計: {os.path.basename(file_path)}")
                             return result
                     # ✅ Function 97/98/99/100 使用特殊驗證邏輯
                     elif function_id in {"97", "98", "99", "100"}:

@@ -518,6 +518,11 @@ class ContextMenuTreeWidget(QTreeWidget):
             logger.debug(f"[TREE_CLICK] 開啟 Pit Loss Table 模組")
             self.main_window._open_pit_loss_table_module()
         
+        # FIA Season Statistics FIA 賽季統計
+        elif clean_name in ["FIA Season Statistics", "FIA 賽季統計", "FIA賽季統計", "FIAシーズン統計"]:
+            logger.debug(f"[TREE_CLICK] 開啟 FIA Season Statistics 模組")
+            self.main_window._open_fia_season_stats_module()
+        
         # Traffic Analysis 車流分析 (Historical 版本，位於 Race Overview)
         elif clean_name in ["Traffic Analysis", "車流分析", "トラフィック分析"]:
             logger.debug(f"[TREE_CLICK] 開啟 Traffic Analysis 模組 (Historical)")

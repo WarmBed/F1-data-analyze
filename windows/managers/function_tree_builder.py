@@ -126,6 +126,7 @@ class FunctionTreeBuilder:
         QTreeWidgetItem(multi_season_group, [tr("season_start_reaction", "Season Start Reaction")])
         QTreeWidgetItem(multi_season_group, [tr("pole_defense_statistics", "Pole Defense Statistics")])
         QTreeWidgetItem(multi_season_group, [tr("pit_loss_table.title", "Pit Loss Table")])
+        QTreeWidgetItem(multi_season_group, [tr("fia_season_stats", "FIA Season Statistics")])
         
         # ========== Live Timing ==========
         live_timing_group = QTreeWidgetItem(tree, [tr("live_timing_tree", "Live Timing")])

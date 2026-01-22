@@ -937,15 +937,16 @@ class StyleHMainWindow(QMainWindow):
         toolbar.addWidget(QLabel(tr("year_label", "Year:")))
         self.year_combo = QComboBox()
         self.year_combo.setObjectName("ParameterCombo")
-        # ✅ 修正年份範圍：只包含有數據的年份 (2018-當前年份)
         from datetime import datetime
         current_year = datetime.now().year
-        min_year = 2018  # FastF1/Ergast 支援的最早年份
-        self.year_combo.addItems([str(year) for year in range(min_year, current_year + 1)])
+        min_year = 2022
+        max_year = 2026
+        self.year_combo.addItems([str(year) for year in range(min_year, max_year + 1)])
         
         # 🆕 智能年份選擇：如果當前年份沒有已完成的賽事，則回退到上一年
         # 這樣每年年初（第一場比賽前）不需要手動更新預設年份
-        default_year = self._get_smart_default_year(current_year, min_year)
+        bounded_current_year = max(min_year, min(current_year, max_year))
+        default_year = self._get_smart_default_year(bounded_current_year, min_year, max_year)
         self.year_combo.setCurrentText(str(default_year))
         self.year_combo.setFixedWidth(70)
         toolbar.addWidget(self.year_combo)
@@ -991,7 +992,7 @@ class StyleHMainWindow(QMainWindow):
     # ------------------------------------------------------------------
     # 賽季日曆支援
     # ------------------------------------------------------------------
-    def _get_smart_default_year(self, current_year: int, min_year: int) -> int:
+    def _get_smart_default_year(self, current_year: int, min_year: int, max_year: int) -> int:
         """
         智能選擇預設年份：如果當前年份沒有已完成的賽事則回退到上一年。
         
@@ -1013,22 +1014,21 @@ class StyleHMainWindow(QMainWindow):
                 # 🔧 修正：get_completed_events 返回所有事件，需要過濾 is_completed=True
                 completed_events = [e for e in all_events if e.is_completed]
                 if completed_events and len(completed_events) > 0:
-                    # 當前年份有已完成的賽事，使用當前年份
                     logger.debug(f"[SMART_YEAR] ✅ {current_year} 有 {len(completed_events)} 場已完成賽事，使用當前年份")
-                    return current_year
+                    return max(min_year, min(current_year, max_year))
                 else:
-                    # 當前年份沒有已完成的賽事，回退到上一年
                     fallback_year = max(current_year - 1, min_year)
+                    fallback_year = min(fallback_year, max_year)
                     logger.info(f"[SMART_YEAR] ⚠️ {current_year} 尚無已完成賽事（共 {len(all_events)} 場），自動回退到 {fallback_year}")
                     return fallback_year
             else:
-                # SeasonProvider 尚未初始化，使用上一年作為安全預設值
                 fallback_year = max(current_year - 1, min_year)
+                fallback_year = min(fallback_year, max_year)
                 logger.debug(f"[SMART_YEAR] ℹ️ SeasonProvider 尚未初始化，使用 {fallback_year}")
                 return fallback_year
         except Exception as e:
-            # 發生錯誤時回退到上一年
             fallback_year = max(current_year - 1, min_year)
+            fallback_year = min(fallback_year, max_year)
             logger.warning(f"[SMART_YEAR] ❌ 檢查賽事時發生錯誤: {e}，回退到 {fallback_year}")
             return fallback_year
 
@@ -2036,6 +2036,13 @@ class StyleHMainWindow(QMainWindow):
         if not hasattr(self, '_pole_defense_opener'):
             self._pole_defense_opener = PoleDefenseOpener(self)
         return self._pole_defense_opener.open_pole_defense_module()
+
+    def _open_fia_season_stats_module(self):
+        """開啟 FIA 賽季統計模組 (FIA Season Statistics)"""
+        from windows.managers.fia_season_stats_opener import FiaSeasonStatsOpener
+        if not hasattr(self, '_fia_season_stats_opener'):
+            self._fia_season_stats_opener = FiaSeasonStatsOpener(self)
+        return self._fia_season_stats_opener.open_fia_season_stats_module()
 
     def _open_pit_loss_table_module(self):
         """開啟進站時間損失表模組 (Pit Loss Table)"""
