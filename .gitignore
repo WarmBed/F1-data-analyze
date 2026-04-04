@@ -48,6 +48,10 @@ coverage.xml
 *.swo
 *~
 
+# AI agent local config (personal, not part of project)
+.agent/
+.claude/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -64,6 +68,10 @@ tmp/
 logs/
 LOGS/
 *.log
+
+# 原始碼目錄例外 - CLI cache module 是程式碼，不是資料快取
+!CLI_modules/cli/cache/
+!CLI_modules/cli/cache/*.py
 
 # FastF1 cache
 f1_analysis_cache/

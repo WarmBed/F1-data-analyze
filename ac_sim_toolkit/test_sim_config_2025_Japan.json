@@ -1,0 +1,233 @@
+{
+    "metadata": {
+        "year": 2025,
+        "race": "Japan",
+        "source_session": "FP2",
+        "generated_at": "2026-01-22T02:31:17.803671",
+        "calibration": {
+            "sec_per_10kg": 0.3
+        }
+    },
+    "grid": [
+        {
+            "name": "PIA",
+            "team": "McLaren",
+            "real_gap": 0.0,
+            "ac_params": {
+                "ballast": 0,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "NOR",
+            "team": "McLaren",
+            "real_gap": 0.049,
+            "ac_params": {
+                "ballast": 1,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "HAD",
+            "team": "Racing Bulls",
+            "real_gap": 0.404,
+            "ac_params": {
+                "ballast": 13,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "HAM",
+            "team": "Ferrari",
+            "real_gap": 0.43,
+            "ac_params": {
+                "ballast": 14,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "LAW",
+            "team": "Racing Bulls",
+            "real_gap": 0.445,
+            "ac_params": {
+                "ballast": 14,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "RUS",
+            "team": "Mercedes",
+            "real_gap": 0.453,
+            "ac_params": {
+                "ballast": 15,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "LEC",
+            "team": "Ferrari",
+            "real_gap": 0.472,
+            "ac_params": {
+                "ballast": 15,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "VER",
+            "team": "Red Bull Racing",
+            "real_gap": 0.556,
+            "ac_params": {
+                "ballast": 18,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "GAS",
+            "team": "Alpine",
+            "real_gap": 0.643,
+            "ac_params": {
+                "ballast": 21,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "SAI",
+            "team": "Williams",
+            "real_gap": 0.718,
+            "ac_params": {
+                "ballast": 23,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "ALB",
+            "team": "Williams",
+            "real_gap": 0.909,
+            "ac_params": {
+                "ballast": 30,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "HUL",
+            "team": "Kick Sauber",
+            "real_gap": 0.948,
+            "ac_params": {
+                "ballast": 31,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "BOR",
+            "team": "Kick Sauber",
+            "real_gap": 1.221,
+            "ac_params": {
+                "ballast": 40,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "OCO",
+            "team": "Haas F1 Team",
+            "real_gap": 1.393,
+            "ac_params": {
+                "ballast": 46,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "BEA",
+            "team": "Haas F1 Team",
+            "real_gap": 1.54,
+            "ac_params": {
+                "ballast": 51,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "ANT",
+            "team": "Mercedes",
+            "real_gap": 1.619,
+            "ac_params": {
+                "ballast": 53,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "ALO",
+            "team": "Aston Martin",
+            "real_gap": 1.864,
+            "ac_params": {
+                "ballast": 62,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "TSU",
+            "team": "Red Bull Racing",
+            "real_gap": 2.511,
+            "ac_params": {
+                "ballast": 83,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "STR",
+            "team": "Aston Martin",
+            "real_gap": 2.731,
+            "ac_params": {
+                "ballast": 91,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        },
+        {
+            "name": "DOO",
+            "team": "Alpine",
+            "real_gap": 3.545,
+            "ac_params": {
+                "ballast": 118,
+                "restrictor": 0,
+                "ai_level": 100,
+                "aggression": 80
+            }
+        }
+    ]
+}
