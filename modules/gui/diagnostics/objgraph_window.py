@@ -812,15 +812,31 @@ logger.debug("=" * 60)
             _sys.stderr = stderr_buffer
             
             # 步驟 3: 準備執行環境
+            # ⚠️ 安全性：限制 exec 可用的 builtin，避免高風險操作
+            # 保留診斷工具所需的最小集合；移除 open/compile/eval/exec/__import__
+            _safe_builtins = {
+                name: getattr(__builtins__, name, None) or __builtins__.get(name)  # type: ignore[union-attr]
+                for name in (
+                    "print", "len", "range", "enumerate", "zip", "map", "filter",
+                    "sorted", "reversed", "list", "dict", "set", "tuple",
+                    "int", "float", "str", "bool", "type", "isinstance", "issubclass",
+                    "hasattr", "getattr", "setattr", "dir", "vars", "repr",
+                    "min", "max", "sum", "abs", "round", "hex", "oct", "bin",
+                    "True", "False", "None", "Exception", "ValueError", "TypeError",
+                )
+                if (getattr(__builtins__, name, None) or
+                    (isinstance(__builtins__, dict) and __builtins__.get(name))) is not None
+            }
+            if isinstance(__builtins__, dict):
+                _safe_builtins = {k: v for k, v in __builtins__.items() if k in _safe_builtins}
             exec_globals = {
-                '__builtins__': __builtins__,
+                '__builtins__': _safe_builtins,
                 'objgraph': objgraph,
                 'gc': gc,
                 'threading': __import__('threading'),
                 'os': os,
                 'Path': Path,
                 'datetime': datetime,
-                'open': open  # 添加 open 函數
             }
             
             try:

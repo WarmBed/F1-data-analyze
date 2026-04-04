@@ -640,10 +640,11 @@ class SignalRRecorderWindow(QMainWindow):
             
     def _on_open_dir(self):
         """開啟錄製目錄"""
-        import subprocess
+        import os
         dir_path = self.txt_rec_dir.text()
         if Path(dir_path).exists():
-            subprocess.Popen(f'explorer "{dir_path}"')
+            # 使用 os.startfile 避免字串插值命令注入
+            os.startfile(dir_path)
         else:
             QMessageBox.warning(self, "Error", "Directory does not exist")
             

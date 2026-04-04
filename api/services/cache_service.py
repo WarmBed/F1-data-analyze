@@ -25,6 +25,26 @@ from collections import Counter
 from api.models.function_specs import normalize_function_id
 
 
+def _sanitize_glob_component(value: str) -> str:
+    """
+    消毒插入 glob 模式的字串，防止 Path Traversal 攻擊。
+
+    移除或替換 '..', '/', '\\', glob 萬用字元 '*', '?', '[', ']'
+    以及 null byte，確保不能透過 race/driver/year 等參數逃逸 json/ 目錄。
+    """
+    if not isinstance(value, str):
+        value = str(value)
+    # 移除 null byte
+    value = value.replace("\x00", "")
+    # 移除路徑分隔符號與目錄遍歷序列
+    value = value.replace("../", "").replace("..\\", "").replace("..", "")
+    value = value.replace("/", "_").replace("\\", "_")
+    # 移除 glob 萬用字元（允許的通配符應在程式碼中由我們自行加入，不由使用者控制）
+    for ch in ("*", "?", "[", "]"):
+        value = value.replace(ch, "")
+    return value
+
+
 class F1AnalysisCacheService:
     """F1 分析緩存服務 - 智能 JSON 搜尋與管理"""
     
@@ -194,6 +214,16 @@ class F1AnalysisCacheService:
         lap = params.get("lap")
         lap1 = params.get("lap1")
         lap2 = params.get("lap2")
+
+        # ⚠️ 安全性：消毒所有使用者輸入，防止 Path Traversal 插入 glob 路徑
+        if race_param and race_param != "*":
+            race_param = _sanitize_glob_component(race_param)
+        if driver1 and driver1 != "*":
+            driver1 = _sanitize_glob_component(driver1)
+        if driver2 and driver2 != "*":
+            driver2 = _sanitize_glob_component(driver2)
+        if session and session != "*":
+            session = _sanitize_glob_component(session)
 
         normalized_race = self._normalize_race_name(race_param)
         race_tokens = self._build_race_search_tokens(race_param)
