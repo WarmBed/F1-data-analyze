@@ -17,6 +17,7 @@ from PyQt5.QtGui import QColor, QBrush
 from modules.gui.themes.color_palette_provider import color_palette_provider
 
 from core.logger import get_logger
+from core.gui_i18n import tr
 logger = get_logger(__name__)
 
 

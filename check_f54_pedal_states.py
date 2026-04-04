@@ -27,7 +27,7 @@ if sys.stdout.encoding != 'utf-8':
 
 # 設定
 JSON_DIR = Path("json")
-API_BASE = "https://localhost:8000"
+API_BASE = "http://localhost:8000"
 
 
 def check_lap_has_pedal_states(lap: Dict) -> Tuple[bool, str]:

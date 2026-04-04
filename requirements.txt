@@ -1,0 +1,78 @@
+# F1T - Formula 1 Telemetry Analysis Station
+# 生產依賴清單 (Production Dependencies)
+# 生成日期: 2026-04-04
+# Python 版本: 3.13.x
+#
+# 安裝方式:
+#   pip install -r requirements.txt
+#
+# 分層說明:
+#   Section 1: F1 資料來源
+#   Section 2: 資料科學 / 機器學習
+#   Section 3: GUI 框架
+#   Section 4: Web API 框架
+#   Section 5: 網路工具
+#   Section 6: 工具類
+
+# ── Section 1: F1 資料來源 ──────────────────────────────────────────────────
+fastf1==3.6.0                 # FastF1 官方 F1 遙測資料庫
+requests-cache==1.2.1         # FastF1 HTTP 快取層
+requests==2.32.4              # HTTP 客戶端
+
+# ── Section 2: 資料科學 / 機器學習 ─────────────────────────────────────────
+numpy==2.2.6                  # 數值計算基礎
+pandas==2.3.1                 # 資料框處理
+scipy==1.14.1                 # 科學計算（插值、統計）
+scikit-learn==1.5.2           # 機器學習框架
+xgboost==3.1.1                # XGBoost 預測模型
+joblib==1.4.2                 # 模型序列化
+matplotlib==3.10.5            # 圖表繪製（CLI 輸出）
+python-dateutil==2.9.0.post0  # 日期解析工具
+pytz==2024.2                  # 時區支援
+
+# ── Section 3: GUI 框架 ────────────────────────────────────────────────────
+PyQt5==5.15.11                # Qt5 主框架
+PyQt5-Qt5==5.15.2             # Qt5 執行環境
+PyQt5_sip==12.17.0            # SIP 綁定層
+Pillow==11.0.0                # 圖片處理（啟動畫面、Logo）
+
+# ── Section 4: Web API 框架 ────────────────────────────────────────────────
+fastapi==0.116.1               # REST API 框架
+uvicorn==0.35.0               # ASGI 服務器
+pydantic==2.11.7              # 資料驗證
+pydantic_core==2.33.2         # Pydantic 核心
+starlette==0.47.2             # FastAPI 基礎層
+httpx==0.28.1                 # 異步 HTTP 客戶端（測試用）
+httpcore==1.0.9               # HTTP 協定核心
+anyio==4.9.0                  # 異步框架抽象層
+sniffio==1.3.1                # 異步後端偵測
+
+# ── Section 5: 網路工具 ────────────────────────────────────────────────────
+aiohttp==3.11.13              # 異步 HTTP（即時數據串流）
+websockets==13.1              # WebSocket 協定
+websocket-client==1.8.0       # WebSocket 客戶端
+urllib3==2.4.0                # HTTP 連線池
+certifi==2025.4.26            # SSL 憑證
+charset-normalizer==3.4.0     # 字符集偵測
+idna==3.10                    # 國際化域名
+
+# ── Section 6: SignalR / 即時資料 ─────────────────────────────────────────
+gevent==24.10.3               # 協程框架（SignalR 依賴）
+gevent-websocket==0.10.1      # Gevent WebSocket
+bottle==0.13.2                # SignalR 輕量伺服器
+bottle-websocket==0.2.9       # Bottle WebSocket 擴充
+trio==0.30.0                  # 結構化並行
+trio-websocket==0.12.2        # Trio WebSocket
+selenium==4.33.0              # F1TV 身份驗證自動化
+
+# ── Section 7: 工具類 ──────────────────────────────────────────────────────
+psutil==7.0.0                 # 系統監控（記憶體監控模組）
+prettytable==3.16.0           # CLI 表格輸出
+tqdm==4.67.1                  # 進度條（資料下載）
+rich==13.9.3                  # 豐富終端輸出
+colorama==0.4.6               # Windows 終端色彩
+objgraph==3.6.2               # 物件圖形分析（記憶體診斷）
+click==8.2.1                  # CLI 工具（uvicorn 依賴）
+h11==0.16.0                   # HTTP/1.1 實現
+typing_extensions==4.13.2     # Typing 擴充
+annotated-types==0.7.0        # Pydantic 型別標注

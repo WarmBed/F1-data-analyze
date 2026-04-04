@@ -132,16 +132,11 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 def setup_cors_middleware(app):
-    """設置 CORS 中間件"""
+    """設置 CORS 中間件（origins 由 cors.py 的 ALLOWED_ORIGINS 統一管理）"""
+    from api.middleware.cors import ALLOWED_ORIGINS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",  # React 開發服務器
-            "http://localhost:8080",  # Vue 開發服務器
-            "http://127.0.0.1:3000",
-            "http://127.0.0.1:8080",
-            "http://localhost:5173",  # Vite 開發服務器
-        ],
+        allow_origins=ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["*"],

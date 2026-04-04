@@ -15,6 +15,20 @@ import time
 import json
 
 
+# 統一的 CORS allowed origins（cors.py 與 handlers.py 共用此清單）
+ALLOWED_ORIGINS: list[str] = [
+    "http://localhost:3000",   # React 開發服務器
+    "http://localhost:8080",   # Vue 開發服務器
+    "http://localhost:5000",   # 其他前端框架
+    "http://localhost:5173",   # Vite 開發服務器
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:5000",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",   # 本機 API 服務
+]
+
+
 class CORSConfigMiddleware:
     """CORS 配置中間件工廠"""
     
@@ -22,14 +36,7 @@ class CORSConfigMiddleware:
     def create_cors_middleware():
         """創建 CORS 中間件配置"""
         return CORSMiddleware(
-            allow_origins=[
-                "http://localhost:3000",  # React 開發服務器
-                "http://localhost:8080",  # Vue 開發服務器
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:8080",
-                "http://localhost:5000",  # 其他前端框架
-                "http://127.0.0.1:5000"
-            ],
+            allow_origins=ALLOWED_ORIGINS,
             allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             allow_headers=[
@@ -89,7 +96,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 t for t in self.request_times[client_ip]
                 if current_time - t < 60
             ]
-        else:
+            # [memory leak 修復] 清空後刪除 key，避免長時間累積過期 IP
+            if not self.request_times[client_ip]:
+                del self.request_times[client_ip]
+        
+        if client_ip not in self.request_times:
             self.request_times[client_ip] = []
         
         # 檢查請求數量

@@ -1,7 +1,7 @@
-"""Utility helpers for resolving the public API base URL for GUI components.
+"""Utility helpers for resolving the API base URL for GUI components.
 
-This module enforces that GUI modules only talk to the public-facing API
-endpoint, preventing accidental regressions to localhost development URLs.
+Defaults to the local API server (http://localhost:8000) since the system
+now runs in local-only mode without an external public IP.
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from typing import Callable, Iterable, Optional
 from urllib.parse import urlparse
 import ipaddress
 
-PUBLIC_API_BASE_URL = "https://localhost:8000"
+PUBLIC_API_BASE_URL = "http://localhost:8000"
 DEFAULT_CONFIG_PATH = Path("config/api_config.json")
 EventLogger = Optional[Callable[[str], None]]
 
@@ -34,8 +34,10 @@ def _normalize_candidate(raw_url: str) -> Optional[str]:
 
     parsed = urlparse(candidate)
     if not parsed.scheme:
-        # Assume https if no scheme is provided.
-        candidate = f"https://{candidate}"
+        # Assume http for localhost, https for everything else.
+        host_guess = candidate.split("/")[0].split(":")[0].lower()
+        scheme = "http" if host_guess in {"localhost", "127.0.0.1"} else "https"
+        candidate = f"{scheme}://{candidate}"
         parsed = urlparse(candidate)
 
     if parsed.scheme not in {"https", "http"}:
@@ -45,9 +47,7 @@ def _normalize_candidate(raw_url: str) -> Optional[str]:
     if not netloc:
         return None
 
-    # Force https for any valid host.
-    candidate = f"https://{netloc}"
-    return candidate.rstrip("/")
+    return f"{parsed.scheme}://{netloc}".rstrip("/")
 
 
 def _is_internal_host(hostname: str) -> bool:
@@ -92,11 +92,11 @@ def resolve_api_base_url(
     event_logger: EventLogger = None,
     preferred_urls: Iterable[tuple[str, str]] | None = None,
 ) -> str:
-    """Resolve the API base URL while filtering out localhost/internal targets.
+    """Resolve the API base URL.
 
-    The resolution order respects the environment variable ``F1_API_BASE_URL``
-    followed by the optional JSON config file. Any URLs that point to local or
-    internal hosts are ignored so the GUI always targets the public endpoint.
+    Resolution order: environment variable ``F1_API_BASE_URL`` → JSON config
+    file → default (localhost:8000). All valid http/https URLs are accepted,
+    including local addresses.
     """
 
     effective_config_path = Path(config_path) if config_path else DEFAULT_CONFIG_PATH
@@ -112,15 +112,10 @@ def resolve_api_base_url(
             _log(event_logger, f"忽略 {source}: 無法解析的 URL 值 `{raw_url}`")
             continue
 
-        parsed = urlparse(normalized)
-        if _is_internal_host(parsed.hostname or ""):
-            _log(event_logger, f"忽略 {source}: {normalized} 屬於本地/內部位址，改用公開 API")
-            continue
-
         _log(event_logger, f"採用 API 基底網址 {normalized} (來源: {source})")
         return normalized
 
-    _log(event_logger, f"使用預設公開 API 網域 {PUBLIC_API_BASE_URL}")
+    _log(event_logger, f"使用預設 API 網址 {PUBLIC_API_BASE_URL}")
     return PUBLIC_API_BASE_URL
 
 
