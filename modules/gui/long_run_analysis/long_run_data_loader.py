@@ -287,7 +287,7 @@ class LongRunDataLoader(QObject):
         if resolve_fn is None:
             # Fallback to default API URL
             self._debug("Could not load resolve_api_base_url, using default")
-            return "https://localhost:8000"
+            return "http://localhost:8000"
         
         preferred: List[tuple] = []
         

@@ -45,11 +45,11 @@ class FP2QualifyingPredictionApiWorker(QThread):
         
         Args:
             params: API 參數 (year, race, etc.)
-            base_url: API 基礎 URL (預設: https://localhost:8000)
+            base_url: API 基礎 URL (預設: http://localhost:8000)
             timeout: 請求超時時間（秒）
         """
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
         self._logger = get_logger(component="fp2_qual_pred_api_worker")
@@ -433,7 +433,7 @@ class FP2QualifyingPredictionMDI(UniversalAnalysisMDI):
         載入初始資料 - 強制使用 API
         
         優先級：
-        1. API 調用 (https://localhost:8000)
+        1. API 調用 (http://localhost:8000)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
         self._logger.info("[FP2_QUAL_PRED_MDI] 開始載入初始資料...")
@@ -453,7 +453,7 @@ class FP2QualifyingPredictionMDI(UniversalAnalysisMDI):
         self._logger.info("[FP2_QUAL_PRED_MDI] 創建 API Worker...")
         self.api_worker = FP2QualifyingPredictionApiWorker(
             params=api_params,
-            base_url="https://localhost:8000",
+            base_url="http://localhost:8000",
             timeout=60.0
         )
         

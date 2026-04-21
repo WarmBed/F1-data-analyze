@@ -10,7 +10,7 @@ def test_f47_api():
     """測試功能 47 API 端點"""
     
     # API 配置
-    url = "https://localhost:8000/analyze"
+    url = "http://localhost:8000/analyze"
     payload = {
         "function_id": "47",
         "year": "2024",

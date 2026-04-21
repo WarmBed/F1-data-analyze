@@ -63,7 +63,7 @@ class TempAnalysisApiWorker(QThread):
 
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 20.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
 

@@ -28,7 +28,7 @@ class TestApiWorker(QThread):
             print(f"[TEST_WORKER] 🚀 開始執行 (timeout={self.timeout}秒)")
             self.progress.emit(20)
             
-            endpoint = "https://localhost:8000/api/v2/analysis/execute"
+            endpoint = "http://localhost:8000/api/v2/analysis/execute"
             params = {
                 "function_id": 2,
                 "year": 2025,

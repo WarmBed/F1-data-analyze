@@ -59,7 +59,7 @@ class TelemetryApiWorker(QThread):
     def __init__(self, base_url: str, params: Dict[str, Any], timeout: float = 75.0,
                  request_token: Optional[int] = None, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         # 🔴 修復：大幅減少超時時間，避免長時間阻塞
         # 從 75 秒改為 10 秒，配合 _cleanup_api_worker 的 5 秒 wait

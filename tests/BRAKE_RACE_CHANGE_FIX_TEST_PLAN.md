@@ -59,7 +59,7 @@ all_analysis_types = {
 
 ### **前置條件**
 1. 確保有多個 race 的數據 JSON 檔案（例如 China、Japan）
-2. 或確保 API 可用（`https://localhost:8000`）
+2. 或確保 API 可用（`http://localhost:8000`）
 
 ---
 

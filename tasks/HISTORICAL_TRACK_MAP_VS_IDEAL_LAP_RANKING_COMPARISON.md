@@ -25,7 +25,7 @@
 | 繼承基類 | `QThread` | `QThread` | ✅ 一致 |
 | 信號定義 | `progress`, `success`, `failure` | `progress`, `success`, `failure` | ✅ 一致 |
 | `__init__` 參數 | `params`, `base_url`, `timeout` | `base_url`, `params`, `timeout`, `parent` | ⚠️ **參數順序不同** |
-| 預設 base_url | `"https://localhost:8000"` | `"https://localhost:8000"` | ✅ 一致 |
+| 預設 base_url | `"http://localhost:8000"` | `"http://localhost:8000"` | ✅ 一致 |
 | 預設 timeout | `60.0` | `60.0` | ✅ 一致 |
 
 **🔴 發現問題 1**: API Worker 的 `__init__` 參數順序不同

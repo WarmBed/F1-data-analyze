@@ -5,7 +5,7 @@ import requests
 import sys
 
 def test_api():
-    url = "https://localhost:8000/api/v2/analysis/execute"
+    url = "http://localhost:8000/api/v2/analysis/execute"
     params = {"function_id": 97, "year": 2025}
     
     print("Testing Season Progress API...")

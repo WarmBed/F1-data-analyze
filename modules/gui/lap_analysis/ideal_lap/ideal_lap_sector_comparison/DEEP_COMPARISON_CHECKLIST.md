@@ -45,7 +45,7 @@
 | └─ _on_api_success() | ✅ 有 | ❌ **缺少** | 🔴 需要補充 |
 | └─ _on_api_failure() | ✅ 有 | ❌ **缺少** | 🔴 需要補充 |
 | **3. API 端點** | | | |
-| └─ https://localhost:8000 | ✅ 有 | ❌ **缺少** | 🔴 需要補充 |
+| └─ http://localhost:8000 | ✅ 有 | ❌ **缺少** | 🔴 需要補充 |
 | └─ POST /api/v2/analysis/execute | ✅ 有 | ❌ **缺少** | 🔴 需要補充 |
 | └─ function_id=53 | ✅ 有 | ❌ **缺少** | 🔴 需要補充 |
 | **4. 數據處理流程** | | | |
@@ -67,7 +67,7 @@ class IdealLapRankingApiWorker(QThread):
     success = pyqtSignal(dict)
     failure = pyqtSignal(str)
     
-    def __init__(self, params, base_url="https://localhost:8000", timeout=60.0):
+    def __init__(self, params, base_url="http://localhost:8000", timeout=60.0):
         # ...
     
     def run(self):
@@ -96,7 +96,7 @@ def load_initial_data(self):
     # 創建 API Worker
     self.api_worker = IdealLapRankingApiWorker(
         params={"year": self.year, "race": self.race, "session": self.session},
-        base_url="https://localhost:8000",
+        base_url="http://localhost:8000",
         timeout=60.0
     )
     # 連接信號
@@ -175,7 +175,7 @@ def __init__(self, year: str = None, race: str = None, session: str = None, pare
 1. ❌ **添加 API Worker 類別** - `IdealLapSectorComparisonApiWorker`
 2. ❌ **添加 load_initial_data() 方法** - 主要載入入口
 3. ❌ **添加 API 回調方法** - `_on_api_progress`, `_on_api_success`, `_on_api_failure`
-4. ❌ **使用公開 API 網域** - `https://localhost:8000`
+4. ❌ **使用公開 API 網域** - `http://localhost:8000`
 5. ❌ **修正 __init__ 參數** - 改為延遲初始化，從基類屬性獲取
 
 ### High（強烈建議）

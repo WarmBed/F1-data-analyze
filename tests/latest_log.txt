@@ -34,8 +34,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [acceleration_MDI_DATA] 🔗 創建 AccelerationAnalysisDataLoader...
 2025-10-22 23:45:46 | INFO | f1.console | [acceleration_MDI_DATA] 🚀 調用 load_acceleration_data...
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 初始化 Acceleration Analysis 載入器
-2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] API 基底網址: https://localhost:8000
+2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] API 基底網址: http://localhost:8000
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 本地 JSON 後備已啟用 (策略: 預設策略 (允許本地 JSON 後備))
 2025-10-22 23:45:46 | INFO | f1.console | [ACCELERATION_LOADER] ✅ 加速度分析數據載入器初始化完成（基於TelemetryDataLoader v2.0）
 2025-10-22 23:45:46 | INFO | f1.console | [ACCELERATION_LOADER] 🔄 向後兼容接口：load_acceleration_data
@@ -47,8 +47,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] API 將使用 ALB 作為第二車手參數
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 請求標識 (token): 1
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 單車手模式啟動，driver2 將使用 ALB
-2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 🚀 呼叫 API: https://localhost:8000/api/v2/analysis/execute
+2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 🚀 呼叫 API: http://localhost:8000/api/v2/analysis/execute
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL DEBUG] 參數: {'year': 2025, 'race': 'Australia', 'session': 'R', 'driver1': 'ALB', 'driver2': 'ALB', 'lap1': 1, 'lap2': 1, 'force_refresh': False}
 2025-10-22 23:45:46 | INFO | f1.console | [ACCEL_LOADER] ✅ API Worker 已啟動（超時: 10.0s）
 2025-10-22 23:45:46 | INFO | f1.console | [acceleration_MDI_DATA] ✅ acceleration數據載入請求提交成功
@@ -89,8 +89,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [distancediff_MDI_DATA] 🔗 創建 distancediffAnalysisDataLoader...
 2025-10-22 23:45:46 | INFO | f1.console | [distancediff_MDI_DATA] 🚀 調用 load_distancediff_data...
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 初始化 Distance Diff Analysis 載入器
-2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] API 基底網址: https://localhost:8000
+2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] API 基底網址: http://localhost:8000
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 本地 JSON 後備已啟用 (策略: 預設策略 (允許本地 JSON 後備))
 2025-10-22 23:45:46 | INFO | f1.console | [DISTANCEDIFF_LOADER] ✅ 距離差分析數據載入器初始化完成（基於TelemetryDataLoader v2.0）
 2025-10-22 23:45:46 | INFO | f1.console | [DISTANCEDIFF_LOADER] 🔄 向後兼容接口：load_distancediff_data
@@ -102,8 +102,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] API 將使用 ALB 作為第二車手參數
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 請求標識 (token): 1
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 單車手模式啟動，driver2 將使用 ALB
-2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 🚀 呼叫 API: https://localhost:8000/api/v2/analysis/execute
+2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 🚀 呼叫 API: http://localhost:8000/api/v2/analysis/execute
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF DEBUG] 參數: {'year': 2025, 'race': 'Australia', 'session': 'R', 'driver1': 'ALB', 'driver2': 'ALB', 'lap1': 1, 'lap2': 1, 'force_refresh': False}
 2025-10-22 23:45:46 | INFO | f1.console | [DISTDIFF_LOADER] ✅ API Worker 已啟動（超時: 10.0s）
 2025-10-22 23:45:46 | INFO | f1.console | [distancediff_MDI_DATA] ✅ distancediff數據載入請求提交成功
@@ -143,8 +143,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [speeddiff_MDI_DATA] 🔗 創建 speeddiffAnalysisDataLoader...
 2025-10-22 23:45:46 | INFO | f1.console | [speeddiff_MDI_DATA] 🚀 調用 load_speeddiff_data...
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 初始化 Speed Diff Analysis 載入器
-2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] API 基底網址: https://localhost:8000
+2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] API 基底網址: http://localhost:8000
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 本地 JSON 後備已啟用 (策略: 預設策略 (允許本地 JSON 後備))
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF_LOADER] ✅ 速度差分析數據載入器初始化完成（基於TelemetryDataLoader v2.0）
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF_LOADER] 🔄 向後兼容接口：load_speeddiff_data
@@ -156,8 +156,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] API 將使用 ALB 作為第二車手參數
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 請求標識 (token): 1
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 單車手模式啟動，driver2 將使用 ALB
-2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 🚀 呼叫 API: https://localhost:8000/api/v2/analysis/execute
+2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 🚀 呼叫 API: http://localhost:8000/api/v2/analysis/execute
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF DEBUG] 參數: {'year': 2025, 'race': 'Australia', 'session': 'R', 'driver1': 'ALB', 'driver2': 'ALB', 'lap1': 1, 'lap2': 1, 'force_refresh': False}
 2025-10-22 23:45:46 | INFO | f1.console | [SPEEDDIFF_LOADER] ✅ API Worker 已啟動（超時: 10.0s）
 2025-10-22 23:45:46 | INFO | f1.console | [speeddiff_MDI_DATA] ✅ speeddiff數據載入請求提交成功
@@ -204,8 +204,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [RAIN_MDI] 收到參數: 2025 Australia R
 2025-10-22 23:45:46 | INFO | f1.console | [RAIN_MDI] 更新數據管理器參數...
 2025-10-22 23:45:46 | INFO | f1.console | [RAIN_MDI] 開始載入數據...
-2025-10-22 23:45:46 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 透過 API 載入降雨資料: base_url=https://localhost:8000, params={'year': 2025, 'race': 'Australia', 'session': 'R'}
+2025-10-22 23:45:46 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [[RAIN_ANALYSIS] DEBUG] 透過 API 載入降雨資料: base_url=http://localhost:8000, params={'year': 2025, 'race': 'Australia', 'session': 'R'}
 2025-10-22 23:45:46 | INFO | f1.console | [RAIN_MDI] 數據載入結果: True
 2025-10-22 23:45:46 | INFO | f1.console | [RAIN_MDI] 更新圖表數據...
 2025-10-22 23:45:46 | INFO | f1.console | [RAIN_RANGE_DEBUG] 計算範圍，圖表類型: primary
@@ -239,8 +239,8 @@
 2025-10-22 23:45:46 | INFO | f1.console | [TRACK_ANALYSIS_MDI] ========== 更新參數 ==========
 2025-10-22 23:45:46 | INFO | f1.console | [TRACK_ANALYSIS_MDI] 參數: 2025 Australia R
 2025-10-22 23:45:46 | INFO | f1.console | [REFRESH] [MODULE] Track Analysis_2025_United States_R 參數已更新: {'year': '2025', 'race': 'Australia', 'session': 'R'}
-2025-10-22 23:45:46 | INFO | f1.console | [[TRACK_ANALYSIS] DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:46 | INFO | f1.console | [[TRACK_ANALYSIS] DEBUG] 透過 API 載入賽道資料: base_url=https://localhost:8000, params={'year': 2025, 'race': 'Australia', 'session': 'R'}
+2025-10-22 23:45:46 | INFO | f1.console | [[TRACK_ANALYSIS] DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [[TRACK_ANALYSIS] DEBUG] 透過 API 載入賽道資料: base_url=http://localhost:8000, params={'year': 2025, 'race': 'Australia', 'session': 'R'}
 2025-10-22 23:45:46 | INFO | f1.console | [TRACK_ANALYSIS_MDI] 狀態: 正在透過 API 載入賽道分析資料...
 2025-10-22 23:45:46 | INFO | f1.console | [[TRACK_ANALYSIS] DEBUG] 啟動 API 請求
 2025-10-22 23:45:46 | INFO | f1.console | [[TRACK_ANALYSIS] DEBUG] 創建 API Worker (timeout=45.0秒)
@@ -268,14 +268,14 @@
 2025-10-22 23:45:46 | INFO | f1.console | [LOAD] 載入進站分析數據: 2025 Australia R
 2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 開始載入車手進站數據: 2025 Australia R
 2025-10-22 23:45:46 | INFO | f1.console | [PROGRESS] 載入進度: 5%
-2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
 2025-10-22 23:45:46 | INFO | f1.console | [PROGRESS] 載入進度: 15%
 2025-10-22 23:45:46 | INFO | f1.console | [STATUS] 狀態變更: 正在透過 API 載入車手進站數據...
 2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 開始載入車隊進站數據: 2025 Australia R
-2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
 2025-10-22 23:45:46 | INFO | f1.console | [STATUS] 狀態變更: 正在透過 API 載入車隊進站數據...
 2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 開始載入車手詳細進站數據: 2025 Australia R
-2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [PITSTOP_MANAGER] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
 2025-10-22 23:45:46 | INFO | f1.console | [STATUS] 狀態變更: 正在透過 API 載入車手詳細進站數據...
 2025-10-22 23:45:46 | INFO | f1.console | [PROGRESS] 載入進度: 15%
 2025-10-22 23:45:46 | INFO | f1.console | [STATUS] 狀態變更: 呼叫 API 取得車手進站分析資料...
@@ -293,7 +293,7 @@
 2025-10-22 23:45:46 | INFO | f1.console | 🔄 [ACCIDENT_MODULE] 載入參數: 2025 Australia R
 2025-10-22 23:45:46 | INFO | f1.console | [AccidentStatisticsWidget] 表格數據已清除
 2025-10-22 23:45:46 | INFO | f1.console | [AccidentStatisticsWidget] 顯示載入狀態
-2025-10-22 23:45:46 | INFO | f1.console | [ACCIDENT_API DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:46 | INFO | f1.console | [ACCIDENT_API DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
 2025-10-22 23:45:46 | INFO | f1.gui.main | 🔍 [BATCH_DEBUG] update_parameters 返回: None
 2025-10-22 23:45:46 | INFO | f1.gui.main | 圈速控制 - 更新成功
 2025-10-22 23:45:46 | INFO | f1.console | [STATUS] 狀態變更: 呼叫 API 取得車手進站詳細分析資料...
@@ -367,8 +367,8 @@
 2025-10-22 23:45:47 | INFO | f1.console | [TIRE_MDI] 收到參數: 2025 Australia R
 2025-10-22 23:45:47 | INFO | f1.console | [TIRE_MDI] 更新數據管理器參數...
 2025-10-22 23:45:47 | INFO | f1.console | [TIRE_MDI] 開始載入數據...
-2025-10-22 23:45:47 | INFO | f1.console | [[TIRE_ANALYSIS] DEBUG] 採用 API 基底網址 https://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
-2025-10-22 23:45:47 | INFO | f1.console | [[TIRE_ANALYSIS] DEBUG] 透過 API 載入輪胎策略資料: base_url=https://localhost:8000, params={'year': 2025, 'race': 'Australia', 'session': 'R'}
+2025-10-22 23:45:47 | INFO | f1.console | [[TIRE_ANALYSIS] DEBUG] 採用 API 基底網址 http://localhost:8000 (來源: 環境變數 F1_API_BASE_URL)
+2025-10-22 23:45:47 | INFO | f1.console | [[TIRE_ANALYSIS] DEBUG] 透過 API 載入輪胎策略資料: base_url=http://localhost:8000, params={'year': 2025, 'race': 'Australia', 'session': 'R'}
 2025-10-22 23:45:47 | INFO | f1.console | [TIRE_MDI] 數據載入結果: True
 2025-10-22 23:45:47 | INFO | f1.console | [TIRE_MDI] 等待 data_loaded 信號進行圖表更新 (非同步載入) ...
 2025-10-22 23:45:47 | INFO | f1.console | [TIRE_MDI] 參數更新完成

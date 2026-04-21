@@ -48,7 +48,7 @@ class IdealLapRankingApiWorker(QThread):
     
     def __init__(self, params: Dict[str, Any], base_url: str = None, timeout: float = 60.0):
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     
@@ -75,7 +75,7 @@ class IdealLapSectorComparisonApiWorker(QThread):
     
     def __init__(self, params: Dict[str, Any], base_url: str = None, timeout: float = 60.0):
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     
@@ -632,7 +632,7 @@ def _on_api_failure(self, error_msg: str):
                 f"API 錯誤: {error_msg}\n"
                 f"JSON 錯誤: {str(fallback_error)}\n\n"
                 f"請檢查:\n"
-                f"1. API 服務器是否運行在 https://localhost:8000\n"
+                f"1. API 服務器是否運行在 http://localhost:8000\n"
                 f"2. 本地 JSON 檔案是否存在\n"
                 f"3. 參數是否正確 ({self.year} {self.race} {self.session})"
             )

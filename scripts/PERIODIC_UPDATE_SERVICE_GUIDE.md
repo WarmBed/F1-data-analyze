@@ -99,7 +99,7 @@ python scripts/race_event_detector.py
 ```json
 {
   "api": {
-    "base_url": "https://localhost:8000",
+    "base_url": "http://localhost:8000",
     "timeout": 120
   },
   
@@ -272,7 +272,7 @@ python f1_analysis_modular_main.py -f 96
 Get-Content logs/periodic_update_service.log -Tail 50
 
 # 3. 檢查網路連線
-curl https://localhost:8000/health
+curl http://localhost:8000/health
 ```
 
 ---

@@ -6,7 +6,7 @@ import json
 
 def validate_api_corners():
     """完整驗證 API 彎道資訊"""
-    url = 'https://localhost:8000/api/v2/analysis/execute'
+    url = 'http://localhost:8000/api/v2/analysis/execute'
     params = {
         'function_id': 2,
         'year': 2024,

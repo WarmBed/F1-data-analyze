@@ -47,7 +47,7 @@ Historical 模式完全可用，用於播放已下載的賽事數據。
 ### 1. API 服務器狀態
 ```powershell
 # 確認 API 服務器運行中
-curl https://localhost:8000/api/v2/system/health
+curl http://localhost:8000/api/v2/system/health
 ```
 
 **預期結果**：

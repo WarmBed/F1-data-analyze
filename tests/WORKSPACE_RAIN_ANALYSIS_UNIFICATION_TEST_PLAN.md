@@ -210,7 +210,7 @@
 
 **API 請求檢查**:
 ```
-POST https://localhost:8000/analyze
+POST http://localhost:8000/analyze
 {
   "function_id": "1",
   "year": "2024",

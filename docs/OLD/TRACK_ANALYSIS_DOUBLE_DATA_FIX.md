@@ -10,7 +10,7 @@
 
 ### API 響應結構
 
-外網 API (`https://localhost:8000`) 返回**雙層 `data` 結構**：
+外網 API (`http://localhost:8000`) 返回**雙層 `data` 結構**：
 
 ```json
 {
@@ -207,7 +207,7 @@ python f1t_gui_main.py
 
 ## ⚠️ 注意事項
 
-1. **API 可用性**: 需要 `https://localhost:8000` 可訪問
+1. **API 可用性**: 需要 `http://localhost:8000` 可訪問
 2. **數據緩存**: API 使用緩存，首次請求可能較慢
 3. **本地後備**: 若 API 不可用，自動回退到本地 JSON
 4. **雙層結構檢測**: 僅在需要時啟用，不影響單層結構

@@ -98,7 +98,7 @@ print("""
    python f1_analysis_modular_main.py -f 34 -y 2025 -r "saudi arabia" -s R
 
 4. 測試 API 調用（外網）:
-   curl -X POST https://localhost:8000/analyze \\
+   curl -X POST http://localhost:8000/analyze \\
      -H "Content-Type: application/json" \\
      -d '{"function_id": "34", "year": 2025, "race": "japan", "session": "R"}'
 """)

@@ -66,7 +66,7 @@ class PitstopAnalysisApiWorker(QThread):
         parent=None,
     ):
         super().__init__(parent)
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.function_id = int(function_id)
         self.params = dict(params)
         self.label = label

@@ -42,7 +42,7 @@ class _ChampionshipStandingsApiWorker(QThread):
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
-        self.base_url = base_url.rstrip("/") or "https://localhost:8000"
+        self.base_url = base_url.rstrip("/") or "http://localhost:8000"
         self.year = int(year)
         self.round_hint = round_hint
         self.include_constructors = include_constructors

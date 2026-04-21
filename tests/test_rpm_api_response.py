@@ -3,7 +3,7 @@ import requests
 import json
 
 # 模擬 RPM 跨賽事比較的 API 請求
-api_url = "https://localhost:8000/api/v2/analysis/cross-event-comparison"
+api_url = "http://localhost:8000/api/v2/analysis/cross-event-comparison"
 params = {
     "driver1": "VER",
     "year1": 2024,

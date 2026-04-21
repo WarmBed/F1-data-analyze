@@ -4,7 +4,7 @@
 import requests
 import time
 
-base_url = "https://localhost:8000"
+base_url = "http://localhost:8000"
 endpoint = f"{base_url}/api/v2/analysis/execute"
 
 params = {

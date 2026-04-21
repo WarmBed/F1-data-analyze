@@ -148,7 +148,7 @@
 ### API 配置
 ```python
 # TelemetryDataManager.__init__
-self._api_base_url = self._determine_api_base_url()  # "https://localhost:8000"
+self._api_base_url = self._determine_api_base_url()  # "http://localhost:8000"
 self._api_timeout = 75.0
 ```
 

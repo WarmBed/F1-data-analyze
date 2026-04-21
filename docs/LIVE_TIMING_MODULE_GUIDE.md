@@ -176,7 +176,7 @@ class LocalLiveF1DataSource:
 **角色**: 連接外部 API 獲取歷史數據
 
 #### 功能:
-- 連接 `https://localhost:8000`
+- 連接 `http://localhost:8000`
 - 支援緩存機制
 - 異步請求處理
 

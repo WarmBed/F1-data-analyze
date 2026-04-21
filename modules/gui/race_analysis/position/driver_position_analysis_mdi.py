@@ -47,11 +47,11 @@ class DriverPositionApiWorker(QThread):
         
         Args:
             params: API 參數 (year, race, session)
-            base_url: API 基礎 URL (預設: https://localhost:8000)
+            base_url: API 基礎 URL (預設: http://localhost:8000)
             timeout: 請求超時時間（秒）
         """
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     
@@ -363,7 +363,7 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         logger.debug("[POSITION_MDI] 🌐 創建 API Worker...")
         self.api_worker = DriverPositionApiWorker(
             params=api_params,
-            base_url="https://localhost:8000",
+            base_url="http://localhost:8000",
             timeout=60.0
         )
         

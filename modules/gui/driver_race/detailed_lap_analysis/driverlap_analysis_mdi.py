@@ -44,7 +44,7 @@ class DetailedLapAnalysisApiWorker(QThread):
         parent: Optional[QObject] = None,
     ) -> None:
         super().__init__(parent)
-        self.base_url = (base_url or "https://localhost:8000").rstrip("/")
+        self.base_url = (base_url or "http://localhost:8000").rstrip("/")
         self.params = dict(params)
         self.timeout = float(timeout)
 

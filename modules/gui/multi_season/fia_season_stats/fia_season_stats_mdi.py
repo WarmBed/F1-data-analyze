@@ -58,7 +58,7 @@ class FiaSeasonStatsApiWorker(QThread):
 
     def __init__(self, base_url: str, year: int, timeout: float = 120.0, parent=None):
         super().__init__(parent)
-        self.base_url = (base_url or "https://localhost:8000").rstrip("/")
+        self.base_url = (base_url or "http://localhost:8000").rstrip("/")
         self.year = year
         self.timeout = timeout
 

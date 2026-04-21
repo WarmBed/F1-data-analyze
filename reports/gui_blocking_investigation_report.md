@@ -159,7 +159,7 @@ class IdealLapRankingApiWorker(QThread):
     
     def __init__(self, params: Dict[str, Any], base_url: str = None, timeout: float = 60.0):
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     

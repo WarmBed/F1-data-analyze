@@ -61,11 +61,11 @@ class IdealLapSectorComparisonApiWorker(QThread):
         
         Args:
             params: API 參數 (year, race, session, etc.)
-            base_url: API 基礎 URL (預設: https://localhost:8000)
+            base_url: API 基礎 URL (預設: http://localhost:8000)
             timeout: 請求超時時間（秒）
         """
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     
@@ -596,7 +596,7 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
                     f"API 錯誤: {error_msg}\n"
                     f"JSON 錯誤: {str(fallback_error)}\n\n"
                     f"請檢查:\n"
-                    f"1. API 服務器是否運行在 https://localhost:8000\n"
+                    f"1. API 服務器是否運行在 http://localhost:8000\n"
                     f"2. 本地 JSON 檔案是否存在\n"
                     f"3. 參數是否正確 ({self.year} {self.race} {self.session})"
                 )

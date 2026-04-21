@@ -5,7 +5,7 @@ import requests
 import certifi
 
 def test_color_api():
-    url = "https://localhost:8000/api/v2/analysis/execute"
+    url = "http://localhost:8000/api/v2/analysis/execute"
     params = {"function_id": 98, "year": 2025}
     
     try:

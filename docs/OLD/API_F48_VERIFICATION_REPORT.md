@@ -7,7 +7,7 @@ API F48 驗證總結報告
 ## 測試結果
 
 ### 1. API 連接測試 ✅
-- **API 端點**: https://localhost:8000/analyze
+- **API 端點**: http://localhost:8000/analyze
 - **狀態碼**: 200 OK
 - **Success**: True
 - **Message**: 分析完成 (功能 48)

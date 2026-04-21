@@ -1,7 +1,7 @@
 import requests
 import json
 
-url = "https://localhost:8000/api/v2/analysis/execute"
+url = "http://localhost:8000/api/v2/analysis/execute"
 params = {"function_id": "100", "year": "2025", "race": "Brazil", "session": "R"}
 
 print("正在請求 API...")

@@ -227,7 +227,7 @@ def load_initial_data(self):
         print(f"[IDEAL_LAP_MDI] 🌐 啟動 API Worker...")
         self.api_worker = IdealLapRankingApiWorker(
             params=api_params,
-            base_url="https://localhost:8000",
+            base_url="http://localhost:8000",
             timeout=60.0
         )
         
@@ -413,7 +413,7 @@ MDI: update_analysis_parameters(year, race, session)
 [IDEAL_LAP_MDI] 🌐 觸發資料重新載入...
 [IDEAL_LAP_MDI] 🚀 開始載入資料: 2024 Italy Q
 [IDEAL_LAP_MDI] 🌐 啟動 API Worker...
-[API_WORKER] 🌐 調用 API: https://localhost:8000/api/v2/analysis/execute
+[API_WORKER] 🌐 調用 API: http://localhost:8000/api/v2/analysis/execute
 [API_WORKER] 📋 參數: {'function_id': 53, 'year': 2024, 'race': 'Italy', 'session': 'Q'}
 [IDEAL_LAP_MDI] ✅ API 調用成功
 [IDEAL_LAP_MDI] 資料載入完成，開始處理...

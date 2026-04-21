@@ -22,7 +22,7 @@ print("=" * 80)
 print()
 
 # API 配置
-API_BASE_URL = "https://localhost:8000"
+API_BASE_URL = "http://localhost:8000"
 FUNCTION_ID = 97
 YEAR = 2025
 

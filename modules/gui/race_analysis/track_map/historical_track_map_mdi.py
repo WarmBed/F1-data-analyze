@@ -448,7 +448,7 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
         logger.debug("[HISTORICAL_TRACK_MAP_MDI] 創建 API Worker...")
         self.api_worker = HistoricalTrackMapApiWorker(
             params=api_params,  # ✅ 第一個參數（匹配 Ideal Lap Ranking）
-            base_url="https://localhost:8000",
+            base_url="http://localhost:8000",
             timeout=60.0
         )
         

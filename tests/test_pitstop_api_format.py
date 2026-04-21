@@ -7,7 +7,7 @@ print('=' * 80)
 
 # 測試 Function 5 (車手詳細進站數據)
 print('\n[Function 5] 車手詳細進站數據:')
-r5 = requests.get('https://localhost:8000/analyze', params={
+r5 = requests.get('http://localhost:8000/analyze', params={
     'function_id': 5,
     'year': 2025,
     'race': 'Mexico',

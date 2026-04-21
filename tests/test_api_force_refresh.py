@@ -4,7 +4,7 @@ import requests
 print("正在測試 API (force_refresh=True)...")
 try:
     r = requests.post(
-        'https://localhost:8000/api/v2/analysis/execute',
+        'http://localhost:8000/api/v2/analysis/execute',
         params={
             'function_id': '29',
             'year': 2025,

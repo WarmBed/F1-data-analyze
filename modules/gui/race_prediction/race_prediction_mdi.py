@@ -45,11 +45,11 @@ class RacePredictionApiWorker(QThread):
         
         Args:
             params: API 參數 (year, race, etc.)
-            base_url: API 基礎 URL (預設: https://localhost:8000)
+            base_url: API 基礎 URL (預設: http://localhost:8000)
             timeout: 請求超時時間（秒）
         """
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     
@@ -407,7 +407,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         載入初始資料 - 強制使用 API
         
         優先級：
-        1. API 調用 (https://localhost:8000)
+        1. API 調用 (http://localhost:8000)
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
         logger.info("[RACE_PRED_MDI] Starting data load...")
@@ -427,7 +427,7 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         logger.debug("[RACE_PRED_MDI] Creating API Worker...")
         self.api_worker = RacePredictionApiWorker(
             params=api_params,
-            base_url="https://localhost:8000",
+            base_url="http://localhost:8000",
             timeout=60.0
         )
         

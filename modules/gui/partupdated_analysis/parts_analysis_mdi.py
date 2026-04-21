@@ -51,11 +51,11 @@ class PartsAnalysisApiWorker(QThread):
         
         Args:
             params: API 參數 (year, team, driver, race, etc.)
-            base_url: API 基礎 URL (預設: https://localhost:8000)
+            base_url: API 基礎 URL (預設: http://localhost:8000)
             timeout: 請求超時時間（秒）
         """
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     
@@ -219,7 +219,7 @@ class PartsAnalysisMDI(UniversalAnalysisMDI):
         
         # 初始化參數（將在 initialize_module 中設置）
         self.year = None
-        self.api_base_url = "https://localhost:8000"
+        self.api_base_url = "http://localhost:8000"
         
         # 狀態變數
         self._current_data = None
@@ -351,7 +351,7 @@ class PartsAnalysisMDI(UniversalAnalysisMDI):
         觸發初始數據載入 - 強制使用 API
         
         優先級：
-        1. API 調用 (https://localhost:8000)
+        1. API 調用 (http://localhost:8000)
         2. 無備援（API-ONLY 模式）
         """
         logger.info("[PARTS_MDI] 🚀 觸發初始載入: year=%s", self.year)

@@ -23,6 +23,6 @@
 - （選擇）設定 `F1T_ALLOW_PITSTOP_JSON_FALLBACK=1` 並停用 API，確認 CLI 重新產出後 GUI 能載入新 JSON。
 
 ## 備註
-- API 基底網址優先讀取 `F1_API_BASE_URL`，其次為 `config/api_config.json` 的 `api_base_url`，預設 `https://localhost:8000`。
+- API 基底網址優先讀取 `F1_API_BASE_URL`，其次為 `config/api_config.json` 的 `api_base_url`，預設 `http://localhost:8000`。
 - 後備策略可透過環境變數或 `set_local_fallback_allowed()` 手動切換，預設停用本地 JSON。
 - API 回傳的 metadata 會寫入 GUI 顯示層，可用於追蹤來源與延遲時間。

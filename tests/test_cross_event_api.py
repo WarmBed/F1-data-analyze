@@ -7,7 +7,7 @@ import json
 # 呼叫 API
 print("🔄 呼叫跨賽事比較 API...")
 response = requests.post(
-    'https://localhost:8000/api/v2/analysis/cross-event-comparison',
+    'http://localhost:8000/api/v2/analysis/cross-event-comparison',
     params={
         'driver1': 'NOR',
         'year1': '2025',

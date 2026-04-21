@@ -105,7 +105,7 @@ except requests.exceptions.ConnectionError:
     print("  python refactored_api.py")
     print()
     print("或使用已部署的服務:")
-    print("  https://localhost:8000")
+    print("  http://localhost:8000")
     
 except Exception as e:
     print()

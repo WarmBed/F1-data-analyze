@@ -26,7 +26,7 @@ def test_action_column():
     print("=" * 80)
     
     # 創建 Widget（提供必要的 api_base_url 參數）
-    api_base_url = "https://localhost:8000"
+    api_base_url = "http://localhost:8000"
     widget = PartsAnalysisWidget(api_base_url=api_base_url)
     
     # 載入數據

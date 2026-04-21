@@ -155,7 +155,7 @@ query_params: Dict[str, Any] = {
 
 **錯誤代碼**（Brake 舊版）：
 ```python
-self.base_url = "https://localhost:8000"  # ❌ 硬編碼
+self.base_url = "http://localhost:8000"  # ❌ 硬編碼
 ```
 
 **正確代碼**（Speed 參考）：
@@ -357,7 +357,7 @@ def __init__(self, driver1: str, year1: int, race1: str, session1: str, lap1: in
 
 **修復前**：
 ```python
-self.base_url = "https://localhost:8000"
+self.base_url = "http://localhost:8000"
 ```
 
 **修復後**：

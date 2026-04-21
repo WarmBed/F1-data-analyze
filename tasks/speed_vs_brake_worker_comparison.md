@@ -89,11 +89,11 @@
 | 13 | （空行）| （無空行）| ⚠️ 格式不同 |
 | 14 | `self.force_refresh = force_refresh` | `self.force_refresh = force_refresh` | ✅ 相同 |
 | 15 | `self.timeout = timeout` | `self.timeout = timeout` | ✅ 相同 |
-| 16 | `self.base_url = resolve_api_base_url().rstrip('/')` | `self.base_url = "https://localhost:8000"` | ❌ **關鍵差異！** |
+| 16 | `self.base_url = resolve_api_base_url().rstrip('/')` | `self.base_url = "http://localhost:8000"` | ❌ **關鍵差異！** |
 
 **差異**：
 - Speed：`resolve_api_base_url().rstrip('/')` （動態解析）
-- Brake：`"https://localhost:8000"` （硬編碼）
+- Brake：`"http://localhost:8000"` （硬編碼）
 
 ### 5. `run()` 方法 - 變數定義
 
@@ -255,7 +255,7 @@
 
 5. **`base_url` 來源**
    - Speed: `resolve_api_base_url().rstrip('/')`（動態）
-   - Brake: 硬編碼 `"https://localhost:8000"`
+   - Brake: 硬編碼 `"http://localhost:8000"`
    - **影響**：無法支援本地開發環境
 
 6. **timeout 類型和值**

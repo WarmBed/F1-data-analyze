@@ -73,7 +73,7 @@ main_window.setCentralWidget(mdi_area)
 try:
     print("🚀 創建 PartsAnalysisWidget...")
     parts_widget = PartsAnalysisWidget(
-        api_base_url="https://localhost:8000",
+        api_base_url="http://localhost:8000",
         year="2025"
     )
     print("✅ PartsAnalysisWidget 創建成功")

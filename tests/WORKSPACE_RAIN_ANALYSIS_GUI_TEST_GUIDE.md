@@ -225,7 +225,7 @@ python f1t_gui_main.py
 
 **前提**:
 1. API 服務運行: `python refactored_api.py`
-2. 或使用正式 API: `https://localhost:8000`
+2. 或使用正式 API: `http://localhost:8000`
 
 **操作**:
 1. 清空本地 JSON 緩存（可選）:

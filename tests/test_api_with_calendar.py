@@ -4,7 +4,7 @@ import json
 import requests
 
 def test_updated_api():
-    url = "https://localhost:8000/api/v2/analysis/execute"
+    url = "http://localhost:8000/api/v2/analysis/execute"
     params = {
         "function_id": 97,
         "year": 2025,

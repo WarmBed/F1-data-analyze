@@ -48,11 +48,11 @@ class SeasonProgressApiWorker(QThread):
         
         Args:
             params: API parameters (year, etc.)
-            base_url: API base URL (default: https://localhost:8000)
+            base_url: API base URL (default: http://localhost:8000)
             timeout: Request timeout (seconds)
         """
         super().__init__()
-        self.base_url = (base_url or "https://localhost:8000").rstrip('/')
+        self.base_url = (base_url or "http://localhost:8000").rstrip('/')
         self.params = dict(params)
         self.timeout = timeout
     

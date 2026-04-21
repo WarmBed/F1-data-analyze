@@ -1183,7 +1183,7 @@ class LongRunLoader:
             pass
         
         # Default to public API
-        return "https://localhost:8000"
+        return "http://localhost:8000"
     
     def _fetch_api_data(
         self, 

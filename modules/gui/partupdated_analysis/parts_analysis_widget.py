@@ -1017,7 +1017,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     
     window = PartsAnalysisWidget(
-        api_base_url="https://localhost:8000",
+        api_base_url="http://localhost:8000",
         year=2025
     )
     window.setWindowTitle(tr('fia_parts_analysis', "FIA Parts Analysis Widget - API-ONLY Test"))

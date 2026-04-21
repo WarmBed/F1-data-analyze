@@ -4,7 +4,7 @@ import json
 import time
 
 # 外網 API 網址
-API_URL = "https://localhost:8000/analyze"
+API_URL = "http://localhost:8000/analyze"
 
 # 測試參數
 payload = {

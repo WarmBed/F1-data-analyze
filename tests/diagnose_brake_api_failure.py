@@ -80,7 +80,7 @@ except Exception as e:
 print("\n" + "=" * 80)
 print("建議檢查項目：")
 print("=" * 80)
-print("1. API 端點是否正確：https://localhost:8000/api/v2/analysis/execute")
+print("1. API 端點是否正確：http://localhost:8000/api/v2/analysis/execute")
 print("2. API 服務是否運行中")
 print("3. loader 中的 _fetch_via_api_and_cache 是否正確處理錯誤")
 print("4. 是否有 CLI 回退邏輯（應該已禁用）")

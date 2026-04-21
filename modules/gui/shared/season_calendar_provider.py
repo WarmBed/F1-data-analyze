@@ -35,7 +35,7 @@ __all__ = [
 
 
 API_ENDPOINT = "/api/v2/analysis/execute"
-DEFAULT_BASE_URL = "https://localhost:8000"
+DEFAULT_BASE_URL = "http://localhost:8000"
 CONFIG_PATH = Path("config/api_config.json")
 JSON_DIR = Path(os.getenv("F1_ANALYSIS_JSON_DIR", "json"))
 

@@ -234,7 +234,7 @@ def load_initial_data(self):
     
     self.api_worker = IdealLapRankingApiWorker(
         params=api_params,
-        base_url="https://localhost:8000",
+        base_url="http://localhost:8000",
         timeout=60.0
     )
     
@@ -623,7 +623,7 @@ elif window_type == "telemetry":
 
 ```
 [WORKSPACE] 🔨 重建視窗: 'Pitstop Analysis_2025_United States_R' (type=pitstop)
-[PITSTOP_MANAGER] 初始化完成，API 基底網址: https://localhost:8000
+[PITSTOP_MANAGER] 初始化完成，API 基底網址: http://localhost:8000
 [WORKSPACE] ✅ Pitstop Analysis 模組已創建
 [WORKSPACE] [DEBUG] 視窗 'Pitstop Analysis_2025_United States_R' 可見性: True
 [WORKSPACE] ✅ 視窗已可見: Pitstop Analysis_2025_United States_R
@@ -638,7 +638,7 @@ elif window_type == "telemetry":
 
 ```
 [WORKSPACE] 🔨 重建視窗: 'Pitstop Analysis_2025_United States_R' (type=pitstop)
-[PITSTOP_MANAGER] 初始化完成，API 基底網址: https://localhost:8000
+[PITSTOP_MANAGER] 初始化完成，API 基底網址: http://localhost:8000
 [WORKSPACE] ✅ Pitstop Analysis 模組已創建
 🔄 [PITSTOP_MODULE] 參數變更觸發數據重載: 2025 United States R
 📅 [PITSTOP_MODULE] 已安排數據載入任務: 2025 United States R
@@ -647,7 +647,7 @@ elif window_type == "telemetry":
 [WORKSPACE] ✅ 視窗已可見: Pitstop Analysis_2025_United States_R
 🔄 [PITSTOP_MODULE] 載入數據: 2025 United States R
 [PITSTOP_MANAGER] 開始載入車手進站數據: 2025 United States R
-[PITSTOP_MANAGER] 🌐 調用 API: https://localhost:8000/api/v2/analysis/execute?function_id=12
+[PITSTOP_MANAGER] 🌐 調用 API: http://localhost:8000/api/v2/analysis/execute?function_id=12
 [PITSTOP_MANAGER] ✅ API 調用成功
 [PITSTOP_MANAGER] 📊 數據載入完成，共 20 位車手
 ```

@@ -57,7 +57,7 @@ DriverStandingsDataLoader.load_data(year=2025, function_id=97)
     ↓
 UniversalDataLoader._load_from_api()
     ↓
-POST https://localhost:8000/api/v2/analyze
+POST http://localhost:8000/api/v2/analyze
     params: {function_id: 97, year: 2025}
     ↓
 CLI Backend (championship_standings_analysis.py)
@@ -1184,7 +1184,7 @@ def _debug(self, message: str):
 ```
 [DRIVER_STANDINGS] 初始化完成: year=2025
 [DRIVER_STANDINGS] 開始載入車手積分資料: {'year': '2025', 'function_id': 97}
-[API] 請求 URL: https://localhost:8000/api/v2/analyze
+[API] 請求 URL: http://localhost:8000/api/v2/analyze
 [API] 請求參數: {'function_id': '97', 'year': 2025}
 [API] ✅ API 請求成功 (2.35s)
 [VALIDATION] ✅ 數據驗證通過 (20 位車手)
