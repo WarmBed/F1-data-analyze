@@ -116,14 +116,40 @@ reports/*.prof
 
 # Machine learning artifacts
 catboost_info/
+models/best_xgb_params.json
+models/fp2_q_*/
 models/**/*.pkl
 models/**/*.cbm
 models/**/*.bin
 models/**/*.joblib
 
+# Simulation and local experiment outputs
+ac_sim_output/
+fia_cache/
+fonts/
+entry_list_advanced.ini
+physics_config.json
+
+# Ad hoc local investigation scripts and outputs
+check_*.py
+cleanup_duplicate_json.py
+generate_manual_entry_guide.py
+run_ac_simulation_phase1.py
+temp_*.py
+test_*_output.txt
+test_imports.py
+test_exe_imports.py
+test_tutorial_import.py
+tune_fp2_q_xgboost.py
+train_fp2_q_catboost.py
+train_fp2_q_lightgbm.py
+verify_build_env.py
+*_output.txt
+
 # Media that should not be redistributed from the repository
 *.mp3
 *.wav
+*.gif
 
 # Keep source cache package code if present
 !CLI_modules/cli/cache/
