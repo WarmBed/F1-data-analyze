@@ -1072,10 +1072,12 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
         stint_tab_layout = QVBoxLayout(stint_tab)
         stint_tab_layout.setContentsMargins(5, 5, 5, 5)
         
-        # 創建 Stint Selector
-        self.stint_selector = UniversalStintSelector()
+        # 創建 Stint Selector (V0.15.1: 添加 module_id 和 Global Sync)
+        self.stint_selector = UniversalStintSelector(module_id="lap_boxplot_lap_analysis")
         self.stint_selector.selection_changed.connect(self._on_stint_selection_changed)
         self.stint_selector.merge_mode_changed.connect(self._on_merge_mode_changed)
+        # V0.15.1: 預設啟用全局同步
+        self.stint_selector.enable_global_sync(True)
         stint_tab_layout.addWidget(self.stint_selector)
         
         self.tab_widget.addTab(stint_tab, tr("boxplot.tab.stint_selection", "Stint Selection"))
@@ -1176,6 +1178,12 @@ class LapTimeBoxPlotAnalysis(UniversalAnalysisMDI):
                 raw_data = self.data_manager.get_raw_data()
                 if raw_data:
                     logger.debug("[BOXPLOT_MDI] 更新 Stint Selector...")
+                    # V0.15.1: 設置 Session 資訊（用於 Global Sync 過濾）
+                    self.stint_selector.set_session_info(
+                        year=str(self.current_year),
+                        race=self.current_race,
+                        session=self.current_session
+                    )
                     self.stint_selector.set_data(raw_data)
                     # Stint Selector 會自動觸發 selection_changed 信號
                     # 這會調用 _on_stint_selection_changed 來更新圖表

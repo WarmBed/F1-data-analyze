@@ -401,8 +401,16 @@ class PedalBehaviorStackedBarChartWidget(QWidget):
             pass  # Provider 已有預設回退機制
     
     def _get_team_color(self, driver_code: str) -> QColor:
-        """獲取車手的車隊顏色"""
-        color = color_palette_provider.get_driver_color(driver_code, format="qcolor")
+        """
+        獲取車手的車隊顏色
+        
+        支援純車手代碼（如 "ALB"）或帶 Stint 後綴（如 "ALB S1"）
+        """
+        # 提取純車手代碼（移除 " S{stint_id}" 後綴）
+        # 例如 "ALB S3" → "ALB", "VER" → "VER"
+        pure_driver_code = driver_code.split(' ')[0] if ' S' in driver_code else driver_code
+        
+        color = color_palette_provider.get_driver_color(pure_driver_code, format="qcolor")
         if isinstance(color, QColor):
             return QColor(color)
         return QColor(128, 128, 128)  # 預設灰色

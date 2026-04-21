@@ -13,8 +13,9 @@ import sys
 import json
 import re
 import hashlib
+import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from collections import defaultdict
 
@@ -30,6 +31,100 @@ try:
 except ImportError as e:
     print(f"[F143] 缺少必要套件: {e}")
     print("[F143] 請執行: pip install requests pdfplumber")
+
+# =============================================================================
+# 智能刷新配置
+# =============================================================================
+
+FIA_STATS_REFRESH_HOURS = 24  # 預設 24 小時刷新間隔
+FIA_STATS_POST_RACE_REFRESH_HOURS = 4  # 賽後 4 小時內強制刷新
+FIA_STATS_POST_RACE_WINDOW_HOURS = 72  # 賽後監控窗口 72 小時
+JSON_OUTPUT_DIR = os.getenv("F1_ANALYSIS_JSON_DIR", "json")
+
+
+# =============================================================================
+# 智能刷新檢查
+# =============================================================================
+
+def check_fia_stats_freshness(year: int) -> Dict[str, Any]:
+    """
+    檢查 FIA 賽季統計 JSON 的新鮮度
+    
+    Args:
+        year: 賽季年份
+        
+    Returns:
+        包含檢查結果的字典
+    """
+    json_dir = Path(JSON_OUTPUT_DIR)
+    json_path = json_dir / f"fia_season_stats_{year}.json"
+    
+    if not json_path.exists():
+        return {
+            "exists": False,
+            "path": None,
+            "age_hours": None,
+            "is_fresh": False,
+            "should_regenerate": True,
+            "reason": f"JSON 檔案不存在: {json_path}"
+        }
+    
+    # 計算檔案年齡
+    file_mtime = datetime.fromtimestamp(json_path.stat().st_mtime)
+    age = datetime.now() - file_mtime
+    age_hours = age.total_seconds() / 3600
+    
+    # 檢查最近賽事
+    race_config = _get_race_config(year)
+    now = datetime.now()
+    
+    # 找出最近完成的賽事
+    recent_race = None
+    for race in race_config:
+        race_date = datetime.strptime(race["date"], "%Y-%m-%d")
+        if race_date < now:
+            recent_race = race
+    
+    # 賽後監控邏輯
+    if recent_race:
+        race_date = datetime.strptime(recent_race["date"], "%Y-%m-%d")
+        hours_since_race = (now - race_date).total_seconds() / 3600
+        
+        # 賽後 72 小時內，使用更短的刷新間隔
+        if hours_since_race < FIA_STATS_POST_RACE_WINDOW_HOURS:
+            refresh_interval = FIA_STATS_POST_RACE_REFRESH_HOURS
+            reason_prefix = f"賽後監控模式 ({recent_race['name']})"
+        else:
+            refresh_interval = FIA_STATS_REFRESH_HOURS
+            reason_prefix = "常規模式"
+    else:
+        refresh_interval = FIA_STATS_REFRESH_HOURS
+        reason_prefix = "常規模式"
+    
+    is_fresh = age_hours < refresh_interval
+    
+    return {
+        "exists": True,
+        "path": str(json_path),
+        "age_hours": round(age_hours, 2),
+        "refresh_interval_hours": refresh_interval,
+        "is_fresh": is_fresh,
+        "should_regenerate": not is_fresh,
+        "reason": f"{reason_prefix}: 檔案年齡 {age_hours:.1f} 小時, 刷新間隔 {refresh_interval} 小時",
+        "recent_race": recent_race["name"] if recent_race else None,
+    }
+
+
+def _get_race_config(year: int) -> List[Dict]:
+    """獲取指定年份的賽事配置"""
+    if year == 2025:
+        return RACE_CONFIG_2025
+    elif year == 2024:
+        return RACE_CONFIG_2024
+    elif year == 2023:
+        return RACE_CONFIG_2023
+    else:
+        return RACE_CONFIG_2025  # 預設使用 2025 配置
 
 
 # =============================================================================
@@ -678,7 +773,7 @@ class FIASeasonStatsAggregator:
 # =============================================================================
 
 def run_fia_season_stats_analysis(year: int, force: bool = False) -> Dict[str, Any]:
-    """執行 FIA 賽季統計分析
+    """執行 FIA 賽季統計分析 (支援智能刷新)
     
     Args:
         year: 賽季年份 (2024, 2025, ...)
@@ -690,8 +785,34 @@ def run_fia_season_stats_analysis(year: int, force: bool = False) -> Dict[str, A
     print(f"\n{'='*60}")
     print(f"[F143] FIA 賽季統計分析")
     print(f"[F143] 年份: {year}")
-    print(f"[F143] 模式: {'強制重建' if force else '增量更新'}")
     print(f"{'='*60}")
+    
+    # 智能刷新檢查
+    if not force:
+        freshness = check_fia_stats_freshness(year)
+        print(f"\n[刷新檢查] {freshness['reason']}")
+        
+        if freshness["is_fresh"] and freshness["exists"]:
+            print(f"[跳過] JSON 仍在有效期內 ({freshness['age_hours']:.1f} 小時)")
+            print(f"[提示] 使用 --force 強制重新生成")
+            
+            # 讀取現有 JSON 返回
+            try:
+                with open(freshness["path"], "r", encoding="utf-8") as f:
+                    existing_data = json.load(f)
+                return {
+                    "success": True,
+                    "message": f"FIA {year} 賽季統計（從快取讀取，{freshness['age_hours']:.1f} 小時前更新）",
+                    "data": existing_data,
+                    "json_path": freshness["path"],
+                    "from_cache": True,
+                }
+            except Exception as e:
+                print(f"[警告] 讀取快取失敗，將重新生成: {e}")
+        else:
+            print(f"[更新] 需要重新生成 JSON")
+    else:
+        print(f"[F143] 模式: 強制重建")
     
     try:
         aggregator = FIASeasonStatsAggregator(year)
@@ -705,6 +826,7 @@ def run_fia_season_stats_analysis(year: int, force: bool = False) -> Dict[str, A
             "message": f"FIA {year} 賽季統計分析完成",
             "data": output,
             "json_path": str(aggregator._get_json_path()),
+            "from_cache": False,
         }
         
     except Exception as e:

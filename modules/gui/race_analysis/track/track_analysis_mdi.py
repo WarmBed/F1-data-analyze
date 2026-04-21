@@ -233,7 +233,7 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             self._debug(f"年份參數無法轉換為整數: {year}")
             return False
 
-        if year_int < 2020 or year_int > 2030:
+        if year_int < 2022 or year_int > 2026:
             self._debug(f"年份參數無效: {year_int}")
             return False
         
@@ -348,13 +348,7 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
-        env_value = os.getenv("F1T_ALLOW_TRACK_JSON_FALLBACK")
-        if env_value is not None:
-            normalized = str(env_value).strip().lower()
-            if normalized in {"1", "true", "yes", "on"}:
-                return True, f"環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
-            return False, f"環境變數 F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
-        return True, "預設策略 (允許本地 JSON 後備)"
+        return False, "API-ONLY 模式：本地 JSON 後備已停用"
 
     def _is_api_available(self) -> bool:
         available = is_api_available()
@@ -364,24 +358,15 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle local JSON fallback policy."""
-        self._allow_local_fallback = bool(allowed)
-        self._fallback_policy_reason = reason or "手動覆寫"
-        state = "啟用" if self._allow_local_fallback else "停用"
-        self._debug(f"本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
+        self._allow_local_fallback = False
+        self._fallback_policy_reason = "API-ONLY 模式：本地 JSON 後備已停用"
+        self._debug("本地 JSON 後備在 API-ONLY 模式下不可啟用")
 
     def load_data_from_local(self, **kwargs) -> bool:
         """Force loading data via legacy local JSON workflow for diagnostics."""
-        previous_state = self._allow_local_fallback
-        previous_reason = self._fallback_policy_reason
-        try:
-            self._allow_local_fallback = True
-            self._fallback_policy_reason = "手動診斷模式"
-            self._debug("以手動模式使用本地 JSON 後備流程")
-            self._last_data_source = "local-json"
-            return super().load_data(**kwargs)
-        finally:
-            self._allow_local_fallback = previous_state
-            self._fallback_policy_reason = previous_reason
+        self._debug("API-ONLY 模式：已停用本地 JSON 後備流程")
+        self.load_error.emit(tr("api_only_no_local_fallback", "API-ONLY 模式：本地 JSON 後備已停用"))
+        return False
 
     def load_data(self, **kwargs) -> bool:
         """載入賽道分析資料，優先透過 API，失敗時回退本地流程。"""
@@ -408,20 +393,22 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
         try:
             if not self._is_api_available():
-                self._debug("API 健康檢查失敗，改用本地 JSON 後備")
-                self.status_changed.emit("偵測到 API 服務未啟動，改用本地資料")
-                self._last_data_source = "local-json"
+                message = tr("api_offline_api_only", "API 服務未啟動，且本地 JSON 後備已停用")
+                self._debug(message)
+                self.status_changed.emit(message)
+                self.load_error.emit(message)
                 self._is_loading = False
-                return super().load_data(**kwargs)
+                return False
 
             self._start_api_request(self._pending_params)
             return True
         except Exception as exc:
             self._error(f"啟動 API 請求失敗: {exc}")
+            message = tr("api_request_failed_api_only", "API 載入失敗，且本地 JSON 後備已停用")
             self._is_loading = False
-            self.status_changed.emit("API 載入失敗，改用本地資料")
-            self._last_data_source = "local-json"
-            return super().load_data(**kwargs)
+            self.status_changed.emit(message)
+            self.load_error.emit(message)
+            return False
 
     def set_api_base_url(self, base_url: Optional[str]) -> None:
         """Allows external callers to override API base URL."""

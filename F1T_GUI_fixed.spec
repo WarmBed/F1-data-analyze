@@ -32,6 +32,44 @@ hidden_imports = [
     'Crypto.Cipher',
     'Crypto.Cipher.AES',
     'jwt',               # PyJWT (token 解析)
+    
+    # ========== All Drivers 分析模組（新結構）==========
+    'modules.gui.all_drivers',
+    
+    # Acceleration Chart 模組 (F121)
+    'modules.gui.all_drivers.acceleration',
+    'modules.gui.all_drivers.acceleration.acceleration_chart_mdi',
+    'modules.gui.all_drivers.acceleration.acceleration_chart_module',
+    'modules.gui.all_drivers.acceleration.acceleration_chart_data_loader',
+    'modules.gui.all_drivers.acceleration.acceleration_chart_widget',
+    'modules.gui.all_drivers.acceleration.register_module',
+    
+    # Brake Chart 模組 (F122)
+    'modules.gui.all_drivers.brake',
+    'modules.gui.all_drivers.brake.brake_chart_mdi',
+    'modules.gui.all_drivers.brake.brake_chart_module',
+    'modules.gui.all_drivers.brake.brake_chart_data_loader',
+    'modules.gui.all_drivers.brake.brake_chart_widget',
+    'modules.gui.all_drivers.brake.all_drivers_brake_all_laps_mdi',
+    'modules.gui.all_drivers.brake.all_drivers_brake_all_laps_module',
+    'modules.gui.all_drivers.brake.all_drivers_brake_all_laps_table_widget',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_mdi',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_module',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_table_widget',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_widget',
+    'modules.gui.all_drivers.brake.all_drivers_brake_performance_dual_view',
+    'modules.gui.all_drivers.brake.brake_all_laps_loader',
+    'modules.gui.all_drivers.brake.brake_performance_loader',
+    'modules.gui.all_drivers.brake.register_module',
+    
+    # Corner Performance 模組
+    'modules.gui.all_drivers.corner_performance',
+    'modules.gui.all_drivers.corner_performance.all_drivers_corner_performance_mdi',
+    'modules.gui.all_drivers.corner_performance.corner_performance_loader',
+    'modules.gui.all_drivers.corner_performance.corner_performance_scatter_widget',
+    
+    # Windows 管理模組
+    'windows.managers.analysis_module_creator',
 ]
 
 a = Analysis(

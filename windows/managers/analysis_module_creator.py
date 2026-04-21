@@ -17,8 +17,15 @@ class AnalysisModuleCreator:
     def __init__(self, main_window):
         self.main_window = main_window
 
-    def _create_analysis_module(self, function_name, module_type_hint: Optional[str] = None):
-        """創建分析模組實例"""
+    def _create_analysis_module(self, function_name, module_type_hint: Optional[str] = None, corner_type_hint: Optional[str] = None):
+        """創建分析模組實例
+        
+        Args:
+            function_name: 功能名稱（用於映射到模組類型）
+            module_type_hint: 模組類型提示（可選）
+            corner_type_hint: 彎道類型提示（可選，用於 corner_performance 模組）
+                              有效值: "low_speed", "mid_speed", "high_speed"
+        """
         # ✅ 🔥🔥🔥 調試點 0：方法入口 🔥🔥🔥
         logger.debug(f"🔥🔥🔥 [MODULE_FACTORY] _create_analysis_module 被調用！")
         logger.debug(f"🔥 function_name = {function_name}")
@@ -1582,9 +1589,13 @@ class AnalysisModuleCreator:
                 # 處理彎道性能分析模組 (F47) - 統一處理所有類型
                 elif module_type == "corner_performance":
                     try:
-                        # 🔑 根據 matched_keyword 判斷彎道類型
+                        # 🔑 優先使用 corner_type_hint（從 workspace 載入時傳入）
+                        # 其次從 matched_keyword 判斷彎道類型
                         corner_type = "low_speed"  # 預設
-                        if matched_keyword:
+                        if corner_type_hint and corner_type_hint in ("low_speed", "mid_speed", "high_speed"):
+                            corner_type = corner_type_hint
+                            logger.debug(f"[DEBUG] [MODULE_FACTORY] 使用 corner_type_hint: {corner_type}")
+                        elif matched_keyword:
                             keyword_lower = matched_keyword.lower()
                             if "mid" in keyword_lower or "中速" in keyword_lower:
                                 corner_type = "mid_speed"

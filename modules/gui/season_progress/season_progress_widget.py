@@ -39,7 +39,7 @@ class SeasonProgressWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.progress_data: Optional[Dict[str, Any]] = None
-        self.season_year: int = 2024
+        self.season_year: Optional[int] = None
         self._init_ui()
     
     def _init_ui(self):
@@ -112,12 +112,15 @@ class SeasonProgressWidget(QWidget):
             logger.debug("[SEASON_PROGRESS_WIDGET] Data keys: %s", list(data.keys()))
         
         self.progress_data = data
-        self.season_year = data.get("season_year", 2024)
+        self.season_year = data.get("season_year") or data.get("year")
         
         print(f"[DEBUG WIDGET] season_year: {self.season_year}")
         
         # Update title
-        title = tr("season_progress_title", "Season Progress - {year}").format(year=self.season_year)
+        if self.season_year is not None:
+            title = tr("season_progress_title", "Season Progress - {year}").format(year=self.season_year)
+        else:
+            title = tr("season_progress_title", "Season Progress")
         self.title_label.setText(title)
         print(f"[DEBUG WIDGET] 標題已更新: {title}")
         

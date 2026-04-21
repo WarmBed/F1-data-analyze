@@ -107,6 +107,10 @@ class WorkspaceSerializer:
         # Long Run Analysis (長跑與衰退分析)
         "LongRunAnalysis": "long_run_analysis",
         
+        # Corner Performance Analysis (彎道性能分析 - F47)
+        # ✅ 注意：三種類型使用相同的 window_type，透過 corner_type 參數區分
+        "AllDriversCornerPerformanceMDI": "corner_performance",
+        
         # ============================================================
         # Live Timing 模組 (BaseLiveTimingMDI 子類)
         # ============================================================
@@ -536,7 +540,13 @@ class WorkspaceSerializer:
             if hasattr(widget, 'lap2') and widget.lap2:
                 parameters['lap2'] = widget.lap2
             
-            # 策略 5: Gap Evolution Chart 特殊處理
+            # 策略 5: 彎道性能分析特殊處理（Corner Performance - low/mid/high speed）
+            # ✅ 必須保存 corner_type 以區分三種彎道類型
+            if hasattr(widget, 'corner_type') and widget.corner_type:
+                parameters['corner_type'] = widget.corner_type
+                logger.debug(f"[WORKSPACE] 📊 Corner Performance 參數提取: corner_type={widget.corner_type}")
+            
+            # 策略 6: Gap Evolution Chart 特殊處理
             # Gap Evolution 是從 Chase Strategy 動態創建的子視窗
             if hasattr(widget, 'analysis_type') and widget.analysis_type == 'gap_evolution_chart':
                 # 提取 Gap Evolution 特有參數
@@ -910,9 +920,17 @@ class WorkspaceSerializer:
             # - 調用 API 而非讀取 JSON
             # - 與手動開啟完全相同的初始化流程
             logger.debug(f"[WORKSPACE] 🔧 調用主視窗的 _create_analysis_module() 方法...")
+            
+            # ✅ 從配置參數中提取 corner_type（用於 corner_performance 模組）
+            saved_parameters = window_config.get('parameters', {})
+            corner_type_hint = saved_parameters.get('corner_type', None)
+            if corner_type_hint:
+                logger.debug(f"[WORKSPACE] 📊 從配置讀取 corner_type: {corner_type_hint}")
+            
             analysis_module = self.main_window._create_analysis_module(
                 window_type,  # 使用 window_type 作為 function_name
-                module_type_hint=window_type  # 提供類型提示
+                module_type_hint=window_type,  # 提供類型提示
+                corner_type_hint=corner_type_hint  # 傳遞 corner_type（如果有）
             )
             
             if not analysis_module:

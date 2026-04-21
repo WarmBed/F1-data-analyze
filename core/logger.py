@@ -48,11 +48,37 @@ def _load_logging_config() -> Dict[str, Any]:
         "patch_print": True
     }
 
+
+class SafeStreamHandler(logging.StreamHandler):
+    """
+    安全的 StreamHandler，忽略 Windows 下 flush 時的 OSError。
+    
+    這個問題通常發生在 debugpy + PyQt5 環境下，
+    當 QApplication.processEvents() 被嵌套調用時，
+    stdout/stderr 可能暫時變得無效。
+    """
+    
+    def flush(self):
+        try:
+            super().flush()
+        except OSError:
+            # 忽略 Windows flush 錯誤（通常是 Errno 22: Invalid argument）
+            pass
+    
+    def emit(self, record):
+        try:
+            super().emit(record)
+        except OSError:
+            # 忽略 emit 時的 OSError
+            pass
+
+
 __all__ = [
     "setup_logging",
     "get_logger",
     "restore_print",
     "logged_print",
+    "SafeStreamHandler",
 ]
 
 _DEFAULT_COMPONENT = "app"
@@ -254,6 +280,18 @@ def setup_logging(
             config_dict = config
 
         logging.config.dictConfig(config_dict)
+        
+        # 🔧 禁用 Python 的 lastResort handler，避免 debugpy + PyQt5 環境下的 flush 錯誤
+        # logging.lastResort 是一個 _StderrHandler，當沒有配置 handler 時會寫入 stderr
+        # 在 debugpy 環境下 stderr.flush() 可能導致 OSError: [Errno 22] Invalid argument
+        logging.lastResort = None
+        
+        # 🔧 清除 root logger 的所有 StreamHandler，避免 debugpy 環境下的 flush 錯誤
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            if isinstance(handler, logging.StreamHandler):
+                root_logger.removeHandler(handler)
+        
         _CONFIGURED = True
         _ACTIVE_COMPONENT = component_normalised
 

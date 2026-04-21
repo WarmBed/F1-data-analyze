@@ -30,6 +30,9 @@ import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 from collections import defaultdict
 
+# 導入共用 Stint 偵測器
+from CLI_modules.cli.utils.stint_detector import StintDetector
+
 
 class FP2StraightLineAllLapsAnalysis:
     """直線速度全圈數分析類別（支援所有會話類型）"""
@@ -91,7 +94,7 @@ class FP2StraightLineAllLapsAnalysis:
             print("[STEP 4/5] 執行統一分析...")
             analysis_result = self._analyze_unified_mode(main_straight, all_drivers, show_detailed_output)
             
-            # 步驟 5: 組裝結果
+            # 步驟 5: 組裝結果...
             print("[STEP 5/5] 組裝分析結果...")
             result = {
                 "success": True,
@@ -103,6 +106,7 @@ class FP2StraightLineAllLapsAnalysis:
                 "main_straight": main_straight,
                 "drivers": analysis_result.get("drivers", []),
                 "summary": analysis_result.get("summary", {}),
+                "stints_available": analysis_result.get("stints_available", False),
             }
             
             print(f"[F121 SUCCESS] 直線速度全圈數分析完成 ({session_type})\n")
@@ -250,25 +254,51 @@ class FP2StraightLineAllLapsAnalysis:
                               show_detailed: bool = True) -> Dict[str, Any]:
         """
         統一分析所有有效圈
+        
+        2026-01-19 更新：添加 stint 偵測和 stint-level 統計
         """
         print("[MODE A] 開始統一分析...")
         
         driver_results = []
+        stint_detector = StintDetector(debug=False)
+        has_stints = False
         
         for driver in all_drivers:
+            # 獲取車手圈數
+            driver_laps = self.laps[self.laps['Driver'] == driver].copy()
+            
+            # 基礎分析（全部圈統計）
             driver_stats = self._analyze_driver_straight_speed(
                 driver, main_straight, mode='unified'
             )
-            if driver_stats:
-                driver_results.append(driver_stats)
+            if not driver_stats:
+                continue
+            
+            # 偵測 stint
+            stints = stint_detector.detect_stints(driver_laps)
+            
+            if stints:
+                has_stints = True
+                # 為每個 stint 計算速度統計
+                stints_with_stats = self._analyze_stints_speed(
+                    driver, stints, main_straight
+                )
+                driver_stats["stints"] = stints_with_stats
+            else:
+                driver_stats["stints"] = []
+            
+            driver_results.append(driver_stats)
         
         print(f"[MODE A] 統一分析完成 - 成功分析 {len(driver_results)} 位車手")
+        if has_stints:
+            print(f"[MODE A] Stint 數據已偵測，支援 GUI Stint Selection")
         
         return {
             "mode": "unified",
             "description": "所有有效圈統一分析",
             "total_drivers": len(driver_results),
-            "drivers": driver_results
+            "drivers": driver_results,
+            "stints_available": has_stints
         }
     
     # ===== 車手直線速度分析 =====
@@ -387,6 +417,90 @@ class FP2StraightLineAllLapsAnalysis:
         except Exception as e:
             print(f"[WARNING] 分析 {driver} 失敗: {e}")
             return None
+    
+    def _analyze_stints_speed(self, driver: str, stints: List[Dict[str, Any]], 
+                               main_straight: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        為每個 stint 計算直線速度統計
+        
+        Args:
+            driver: 車手代碼
+            stints: stint 列表（來自 StintDetector）
+            main_straight: 主直線區段信息
+        
+        Returns:
+            帶有速度統計的 stint 列表
+        """
+        stints_with_stats = []
+        
+        for stint in stints:
+            stint_data = dict(stint)  # 複製原始 stint 數據
+            
+            # 獲取此 stint 的圈號範圍
+            lap_range = stint.get("lap_range", [0, 0])
+            if not lap_range or len(lap_range) < 2:
+                stint_data["speed_stats"] = None
+                stints_with_stats.append(stint_data)
+                continue
+            
+            start_lap, end_lap = lap_range[0], lap_range[1]
+            
+            # 收集此 stint 的速度數據
+            stint_max_speeds = []
+            stint_accel_times = []
+            
+            driver_laps = self.laps[
+                (self.laps['Driver'] == driver) &
+                (self.laps['LapNumber'] >= start_lap) &
+                (self.laps['LapNumber'] <= end_lap)
+            ].copy()
+            
+            for _, lap in driver_laps.iterrows():
+                lap_number = int(lap['LapNumber'])
+                lap_obj = self._get_lap_object(driver, lap_number)
+                if lap_obj is None:
+                    continue
+                
+                # 獲取 car_data
+                car_data = self._get_lap_car_data(lap_obj)
+                if car_data is None or car_data.empty:
+                    continue
+                
+                # 計算距離
+                if 'Distance' not in car_data.columns:
+                    car_data['Distance'] = self._calculate_distance_from_car_data(car_data)
+                
+                # 獲取最高速度
+                max_speed = self._get_max_speed_in_straight_from_car_data(car_data, main_straight)
+                if max_speed is not None:
+                    stint_max_speeds.append(max_speed)
+                    
+                    # 計算加速性能
+                    accel_data = self._calculate_acceleration_in_segment(car_data, main_straight)
+                    if accel_data is not None:
+                        stint_accel_times.append(accel_data['time_seconds'])
+            
+            # 計算統計
+            if stint_max_speeds:
+                speed_stats = self._calculate_speed_stats(stint_max_speeds)
+                stint_data["speed_stats"] = speed_stats
+                stint_data["max_speed_median"] = speed_stats.get("median", 0)
+                stint_data["max_speed_samples"] = len(stint_max_speeds)
+                
+                if stint_accel_times:
+                    accel_stats = self._calculate_acceleration_stats(stint_accel_times)
+                    stint_data["acceleration_stats"] = accel_stats
+                else:
+                    stint_data["acceleration_stats"] = None
+            else:
+                stint_data["speed_stats"] = None
+                stint_data["max_speed_median"] = None
+                stint_data["max_speed_samples"] = 0
+                stint_data["acceleration_stats"] = None
+            
+            stints_with_stats.append(stint_data)
+        
+        return stints_with_stats
     
     def _filter_laps_by_mode(self, driver_laps: pd.DataFrame, mode: str) -> pd.DataFrame:
         """過濾有效圈數"""

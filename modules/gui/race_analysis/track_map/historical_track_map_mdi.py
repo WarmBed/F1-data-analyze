@@ -1804,8 +1804,8 @@ class HistoricalTrackMapMDI(UniversalAnalysisMDI):
                     logger.warning(f"[HISTORICAL_TRACK_MAP_MDI] DRS 數據檔案不存在: {json_path}")
                     return []
             
-            # 讀取 JSON
-            with open(json_path, 'r', encoding='utf-8') as f:
+            # 讀取 JSON (使用 utf-8-sig 自動處理 BOM)
+            with open(json_path, 'r', encoding='utf-8-sig') as f:
                 circuit_data = json.load(f)
             
             # 提取 DRS 區域

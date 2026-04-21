@@ -18,6 +18,7 @@ import glob
 import json
 
 from PyQt5.QtCore import QObject, QThread, QTimer, pyqtSignal
+from core.gui_i18n import tr
 
 # 設定日誌
 logger = logging.getLogger(__name__)
@@ -43,6 +44,11 @@ class CliAnalysisWorker(QThread):
     def run(self):
         """執行 CLI 分析"""
         try:
+            disabled_message = tr("cli_disabled", "API-ONLY 模式：CLI 調用已禁用")
+            logger.warning("[CLI_WORKER] %s", disabled_message)
+            self.progress_updated.emit(disabled_message)
+            self.analysis_completed.emit(False, disabled_message)
+            return
             # 構建CLI命令
             cmd = [
                 sys.executable,
@@ -170,23 +176,11 @@ class CliAnalysisManager(QObject):
             'status': 'starting'
         }
         
-        # 創建工作線程
-        worker = CliAnalysisWorker(year, race, session, force_mode)
-        worker.progress_updated.connect(lambda msg: self.analysis_progress.emit(request_id, msg))
-        worker.output_received.connect(lambda output: self.analysis_output.emit(request_id, output))
-        worker.analysis_completed.connect(lambda success, msg: self._on_analysis_completed(request_id, success, msg))
-        
-        # 存儲並啟動線程
-        self.worker_threads[request_id] = worker
-        worker.start()
-        
-        # 發送開始信號
+        disabled_message = tr("cli_disabled", "API-ONLY 模式：CLI 調用已禁用")
         self.analysis_started.emit(request_id, year, race, session)
-        
-        # 開始監控 JSON 文件
-        self._start_json_monitoring(request_id, year, race, session)
-        
-        logger.debug(f"[START] CLI分析請求已創建: {request_id} ({year} {race} {session})")
+        self.analysis_progress.emit(request_id, disabled_message)
+        self.analysis_completed.emit(request_id, False, disabled_message)
+        logger.debug(f"[START] CLI分析請求已被禁用: {request_id} ({year} {race} {session})")
         return request_id
     
     def cancel_analysis(self, request_id):

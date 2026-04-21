@@ -39,6 +39,9 @@ import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
 from collections import defaultdict, Counter
 
+# 導入共用 Stint 偵測器
+from CLI_modules.cli.utils.stint_detector import StintDetector
+
 
 class BrakeAllLapsAnalysis:
     """煞車性能全圈數分析類別（支援所有會話類型）"""
@@ -130,6 +133,7 @@ class BrakeAllLapsAnalysis:
                 },
                 "drivers": analysis_result.get("drivers", []),
                 "summary": analysis_result.get("summary", {}),
+                "stints_available": analysis_result.get("stints_available", False),
             }
             
             print(f"[F122 SUCCESS] 煞車性能全圈數分析完成 ({session_type})\n")
@@ -487,6 +491,8 @@ class BrakeAllLapsAnalysis:
         """
         統一分析模式：所有車手在主煞車點的全圈數性能
         
+        2025-01-19 更新：添加 stint 偵測和 stint-level 統計
+        
         Args:
             main_brake_zone: 主煞車點信息
             all_drivers: 所有車手代碼
@@ -498,14 +504,20 @@ class BrakeAllLapsAnalysis:
                     "driver": 車手代碼,
                     "brake_decel_stats": 減速度統計,
                     "raw_decel_trend": 原始每圈減速度值（未過濾）,
-                    "valid_laps_count": 有效圈數
+                    "valid_laps_count": 有效圈數,
+                    "stints": stint-level 統計（如有）
                 }, ...],
-                "summary": 整體摘要
+                "summary": 整體摘要,
+                "stints_available": 是否有 stint 數據
             }
         """
         drivers_results = []
         brake_zone_distance = main_brake_zone['distance']
         distance_tolerance = 100  # ±100m 容差
+        
+        # Stint 偵測器
+        stint_detector = StintDetector(debug=False)
+        has_stints = False
         
         for driver in all_drivers:
             if show_detailed:
@@ -573,23 +585,112 @@ class BrakeAllLapsAnalysis:
                 if entry_speed_stats:
                     print(f"  煞車前速度中位數: {entry_speed_stats.get('median', 0):.1f} km/h")
             
-            drivers_results.append({
+            driver_result = {
                 "driver": driver,
                 "brake_decel_stats": brake_stats,
                 "entry_speed_stats": entry_speed_stats,  # 🆕 煞車前速度統計
                 "raw_decel_trend": raw_decel_trend,
                 "valid_laps_count": len(all_decels),
                 "outlier_count": sum(outlier_flags)
-            })
+            }
+            
+            # 偵測 stint 並計算 stint-level 統計
+            stints = stint_detector.detect_stints(driver_laps)
+            
+            if stints:
+                has_stints = True
+                # 為每個 stint 計算煞車統計
+                stints_with_stats = self._analyze_stints_brake(
+                    driver, stints, brake_zone_distance, distance_tolerance, raw_decel_trend
+                )
+                driver_result["stints"] = stints_with_stats
+                if show_detailed and stints_with_stats:
+                    print(f"  Stint 數量: {len(stints_with_stats)}")
+            else:
+                driver_result["stints"] = []
+            
+            drivers_results.append(driver_result)
         
         # 生成摘要
         summary = self._generate_summary(drivers_results)
         
+        if has_stints:
+            print(f"\n[MODE A] Stint 數據已偵測，支援 GUI Stint Selection")
+        
         return {
             "drivers": drivers_results,
-            "summary": summary
+            "summary": summary,
+            "stints_available": has_stints
         }
     
+    def _analyze_stints_brake(self, driver: str, stints: List[Dict], 
+                              brake_zone_distance: float, distance_tolerance: float,
+                              raw_decel_trend: List[Dict]) -> List[Dict]:
+        """
+        為每個 stint 計算煞車性能統計
+        
+        Args:
+            driver: 車手代碼
+            stints: stint 列表（來自 StintDetector）
+            brake_zone_distance: 煞車點距離
+            distance_tolerance: 距離容差
+            raw_decel_trend: 原始每圈減速度趨勢（已計算好的）
+        
+        Returns:
+            List of stint dictionaries with brake stats
+        """
+        stints_with_stats = []
+        
+        # 建立 lap_number -> decel 的映射
+        lap_to_decel = {}
+        lap_to_entry_speed = {}
+        for item in raw_decel_trend:
+            lap_to_decel[item['lap_number']] = item['max_decel']
+            lap_to_entry_speed[item['lap_number']] = item.get('entry_speed')
+        
+        for stint_info in stints:
+            # 修復：StintDetector 返回 'laps_detail' 而非 'laps'
+            # 從 laps_detail 提取 lap_number 列表
+            laps_detail = stint_info.get('laps_detail', [])
+            stint_laps = [lap['lap_number'] for lap in laps_detail] if laps_detail else []
+            
+            stint_compound = stint_info.get('compound', 'UNKNOWN')
+            stint_number = stint_info.get('stint_id', stint_info.get('stint_number', 0))
+            
+            # 收集該 stint 的減速度值
+            stint_decels = []
+            stint_entry_speeds = []
+            
+            for lap_num in stint_laps:
+                if lap_num in lap_to_decel:
+                    stint_decels.append(lap_to_decel[lap_num])
+                    entry_speed = lap_to_entry_speed.get(lap_num)
+                    if entry_speed is not None:
+                        stint_entry_speeds.append(entry_speed)
+            
+            if not stint_decels:
+                continue
+            
+            # 過濾異常值並計算統計
+            filtered_decels, _ = self._filter_outliers_by_median(stint_decels, driver, threshold=2.0)
+            
+            if not filtered_decels:
+                continue
+            
+            brake_stats = self._calculate_brake_stats(filtered_decels)
+            entry_speed_stats = self._calculate_entry_speed_stats(stint_entry_speeds) if stint_entry_speeds else {}
+            
+            stints_with_stats.append({
+                "stint_number": stint_number,
+                "compound": stint_compound,
+                "lap_range": [min(stint_laps), max(stint_laps)],
+                "valid_laps_count": len(stint_decels),
+                "brake_decel_stats": brake_stats,
+                "entry_speed_stats": entry_speed_stats
+            })
+        
+        return stints_with_stats
+
     def _analyze_brake_performance_in_zone(self,
                                            driver: str,
                                            lap_number: int,

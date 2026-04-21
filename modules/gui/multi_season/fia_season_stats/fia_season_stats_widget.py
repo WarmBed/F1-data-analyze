@@ -36,8 +36,9 @@ from PyQt5.QtWidgets import (
     QApplication, QMessageBox
 )
 
-from core.gui_i18n import tr
+from core.gui_i18n import tr, get_team_name_text
 from core.logger import get_logger
+from modules.gui.themes.color_palette_provider import color_palette_provider
 
 logger = get_logger(__name__)
 
@@ -179,11 +180,13 @@ class FiaSeasonStatsWidget(QWidget):
         
         # 表格
         self._table = QTableWidget()
-        self._table.setColumnCount(8)
+        self._table.setColumnCount(10)  # 新增 Team + Status 欄位
         self._table.setHorizontalHeaderLabels([
             "#",
             tr('driver', 'Driver'),
-            "ICE", "TC", "MGU-H", "MGU-K", "ES", "CE"
+            tr('team', 'Team'),
+            "ICE", "TC", "MGU-H", "MGU-K", "ES", "CE",
+            tr('status', 'Status')
         ])
         
         # 表格屬性
@@ -195,14 +198,17 @@ class FiaSeasonStatsWidget(QWidget):
         
         # 列寬設定
         header = self._table.horizontalHeader()
-        header.setSectionResizeMode(0, QHeaderView.Fixed)
-        header.setSectionResizeMode(1, QHeaderView.Stretch)
-        for i in range(2, 8):
-            header.setSectionResizeMode(i, QHeaderView.Fixed)
+        header.setSectionResizeMode(0, QHeaderView.Fixed)   # #
+        header.setSectionResizeMode(1, QHeaderView.Stretch) # Driver
+        header.setSectionResizeMode(2, QHeaderView.Stretch) # Team
+        for i in range(3, 9):
+            header.setSectionResizeMode(i, QHeaderView.Fixed)  # PU 元件
+        header.setSectionResizeMode(9, QHeaderView.Fixed)  # Status 欄位
         
         self._table.setColumnWidth(0, 40)   # #
-        for i in range(2, 8):
+        for i in range(3, 9):
             self._table.setColumnWidth(i, 60)  # PU 元件欄位
+        self._table.setColumnWidth(9, 90)  # Status 欄位
         
         layout.addWidget(self._table)
         return panel
@@ -320,13 +326,18 @@ class FiaSeasonStatsWidget(QWidget):
         # 排序車手 (按車號)
         sorted_drivers = sorted(
             self._drivers_data.items(),
-            key=lambda x: int(x[0]) if x[0].isdigit() else 999
+            key=lambda x: int(x[1].get("number", "999")) if str(x[1].get("number", "999")).isdigit() else 999
         )
         
         row = 0
-        for car_number, driver_info in sorted_drivers:
+        for driver_code, driver_info in sorted_drivers:
+            # 過濾掉 Unknown 車手
+            actual_driver_code = driver_info.get("code", "???")
+            if actual_driver_code == "UNK" or driver_info.get("name", "") == "Unknown":
+                continue
+            
             # 計算車手狀態
-            pu_data = driver_info.get("pu", {})
+            pu_data = driver_info.get("pu_elements", {})
             driver_status = self._get_driver_status(pu_data)
             
             # 篩選
@@ -339,24 +350,30 @@ class FiaSeasonStatsWidget(QWidget):
             
             self._table.insertRow(row)
             
-            # 序號
-            seq_item = QTableWidgetItem(str(row + 1))
-            seq_item.setTextAlignment(Qt.AlignCenter)
+            # 獲取車手顏色（車隊顏色）
+            driver_color = self._get_driver_color(actual_driver_code)
+            
+            # 序號（帶車隊顏色）
+            seq_item = self._create_colored_item(str(row + 1), driver_color)
             self._table.setItem(row, 0, seq_item)
             
-            # 車手 (代碼 + 名稱)
-            driver_code = driver_info.get("code", "???")
+            # 車手 (代碼 + 名稱)（帶車隊顏色）
             driver_name = driver_info.get("name", "Unknown")
-            driver_text = f"{driver_code} ({driver_name})"
-            driver_item = QTableWidgetItem(driver_text)
-            
-            # 根據狀態設置車手欄位顏色
-            status_color = STATUS_COLORS.get(driver_status, STATUS_COLORS["normal"])
-            driver_item.setForeground(QBrush(QColor(status_color)))
+            driver_text = f"{actual_driver_code} ({driver_name})"
+            driver_item = self._create_colored_item(driver_text, driver_color)
+            driver_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             self._table.setItem(row, 1, driver_item)
             
+            # 車隊（帶車隊顏色，使用多國語言翻譯）
+            team_name = driver_info.get("team", "Unknown")
+            team_translated = get_team_name_text(team_name)
+            team_item = self._create_colored_item(team_translated, driver_color)
+            team_item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+            team_item.setToolTip(team_translated)
+            self._table.setItem(row, 2, team_item)
+            
             # PU 元件欄位
-            for col, element in enumerate(["ICE", "TC", "MGU-H", "MGU-K", "ES", "CE"], start=2):
+            for col, element in enumerate(["ICE", "TC", "MGU-H", "MGU-K", "ES", "CE"], start=3):
                 count = pu_data.get(element, 0)
                 limit = PU_LIMITS.get(element, 4)
                 element_status = self._get_element_status(count, limit)
@@ -375,6 +392,16 @@ class FiaSeasonStatsWidget(QWidget):
                     item.setFont(font)
                 
                 self._table.setItem(row, col, item)
+            
+            # 狀態欄位
+            status_text, status_color = self._get_status_display(driver_status)
+            status_item = QTableWidgetItem(status_text)
+            status_item.setTextAlignment(Qt.AlignCenter)
+            status_item.setForeground(QBrush(QColor(status_color)))
+            font = status_item.font()
+            font.setBold(True)
+            status_item.setFont(font)
+            self._table.setItem(row, 9, status_item)
             
             row += 1
         
@@ -402,13 +429,13 @@ class FiaSeasonStatsWidget(QWidget):
         self._detail_title.setText(f"{driver_name} ({driver_code})\n{team}")
         
         # 更新 PU 進度條
-        self._update_pu_bars(driver_data.get("pu", {}))
+        self._update_pu_bars(driver_data.get("pu_elements", {}))
         
         # 更新零件更換記錄
         self._update_parts_list(car_number)
         
         # 更新總體狀態
-        self._update_overall_status(driver_data.get("pu", {}))
+        self._update_overall_status(driver_data.get("pu_elements", {}))
     
     def _update_pu_bars(self, pu_data: Dict[str, int]):
         """更新 PU 進度條"""
@@ -528,7 +555,7 @@ class FiaSeasonStatsWidget(QWidget):
         exceeded_count = 0
         
         for driver_info in self._drivers_data.values():
-            pu_data = driver_info.get("pu", {})
+            pu_data = driver_info.get("pu_elements", {})
             status = self._get_driver_status(pu_data)
             
             if status == "normal":
@@ -572,6 +599,57 @@ class FiaSeasonStatsWidget(QWidget):
                 return "warning"
         
         return "normal"
+    
+    def _get_driver_color(self, driver_code: str) -> QColor:
+        """
+        獲取車手顏色（使用通用顏色系統）
+        
+        Args:
+            driver_code: 車手代碼（例如: "VER", "HAM"）
+            
+        Returns:
+            QColor: 車手顏色
+        """
+        return color_palette_provider.get_driver_color(driver_code, fallback=True)
+    
+    def _create_colored_item(self, text: str, bg_color: QColor) -> QTableWidgetItem:
+        """
+        創建帶背景色的表格項目，自動選擇文字顏色
+        
+        Args:
+            text: 顯示文字
+            bg_color: 背景顏色
+            
+        Returns:
+            QTableWidgetItem: 帶顏色的表格項目
+        """
+        item = QTableWidgetItem(text)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setBackground(QBrush(bg_color))
+        
+        # 根據背景色亮度決定文字顏色
+        luminance = (0.299 * bg_color.red() + 0.587 * bg_color.green() + 0.114 * bg_color.blue())
+        text_color = QColor(255, 255, 255) if luminance < 128 else QColor(0, 0, 0)
+        item.setForeground(QBrush(text_color))
+        item.setTextAlignment(Qt.AlignCenter)
+        return item
+    
+    def _get_status_display(self, status: str) -> tuple:
+        """
+        獲取狀態顯示文字和顏色
+        
+        Args:
+            status: 狀態字串 ("normal", "warning", "exceeded")
+            
+        Returns:
+            tuple: (顯示文字, 狀態顏色)
+        """
+        if status == "exceeded":
+            return (tr("exceeded", "EXCEEDED"), STATUS_COLORS["exceeded"])
+        elif status == "warning":
+            return (tr("at_limit", "AT LIMIT"), STATUS_COLORS["warning"])
+        else:
+            return (tr("normal", "NORMAL"), STATUS_COLORS["normal"])
     
     def clear_data(self):
         """清除數據"""

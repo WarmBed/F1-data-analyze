@@ -2,17 +2,18 @@
 """
 GlobalChartSyncSignal - 跨模組圖表同步信號機制
 
-用於同步 Detailed Lap Analysis 和 Throttle Line Chart 之間的：
+用於同步多個分析模組之間的：
 1. 車手選擇（5 位車手）
 2. X 軸縮放範圍（圈數）
 3. 重置視圖
+4. Stint 選擇同步（V0.15.1 新增）
 
 設計為單例模式，確保所有模組使用同一個信號實例。
 """
 
 from __future__ import annotations
 
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple, Dict, Any
 from PyQt5.QtCore import QObject, pyqtSignal
 
 from core.logger import get_logger
@@ -30,6 +31,7 @@ class GlobalChartSyncSignal(QObject):
         reset_view: 重置視圖信號
         module_registered: 模組註冊時發出
         module_unregistered: 模組取消註冊時發出
+        stint_selection_changed: 當 Stint 選擇改變時發出 (V0.15.1)
     """
     
     # 單例實例
@@ -41,6 +43,10 @@ class GlobalChartSyncSignal(QObject):
     reset_view = pyqtSignal(str)  # source_module
     module_registered = pyqtSignal(str)  # module_name
     module_unregistered = pyqtSignal(str)  # module_name
+    
+    # Stint 同步信號 (V0.15.1 新增)
+    # 參數: (selected_stints_data, is_merge_mode, year, race, session, source_module)
+    stint_selection_changed = pyqtSignal(list, bool, str, str, str, str)
     
     # 支援的模組標識
     MODULE_DETAILED_LAP = "detailed_lap_analysis"
@@ -56,6 +62,9 @@ class GlobalChartSyncSignal(QObject):
         self._current_drivers: List[str] = []
         self._current_x_range: Optional[Tuple[float, float]] = None
         self._is_zoomed: bool = False
+        
+        # Stint 同步狀態 (V0.15.1)
+        self._current_stint_selection: Optional[Dict[str, Any]] = None
         
         logger.debug("[GLOBAL_SYNC] GlobalChartSyncSignal 初始化完成")
     
@@ -75,6 +84,7 @@ class GlobalChartSyncSignal(QObject):
             cls._instance._current_drivers.clear()
             cls._instance._current_x_range = None
             cls._instance._is_zoomed = False
+            cls._instance._current_stint_selection = None
             cls._instance = None
             logger.debug("[GLOBAL_SYNC] 單例實例已重置")
     
@@ -176,6 +186,88 @@ class GlobalChartSyncSignal(QObject):
         self.reset_view.emit(source)
         logger.debug(f"[GLOBAL_SYNC] 重置視圖 (來源: {source})")
     
+    # ========== Stint 選擇同步 (V0.15.1) ==========
+    
+    def emit_stint_selection_changed(
+        self,
+        selected_stints: List[Dict[str, Any]],
+        is_merge_mode: bool,
+        year: str,
+        race: str,
+        session: str,
+        source: str
+    ) -> None:
+        """
+        發出 Stint 選擇改變信號
+        
+        Args:
+            selected_stints: 選中的 Stint 列表，每個元素包含:
+                - driver: 車手代碼 (str)
+                - stint_number: Stint 編號 (int)
+                - start_lap: 起始圈數 (int)
+                - end_lap: 結束圈數 (int)
+                - compound: 輪胎類型 (str)
+            is_merge_mode: 是否為合併模式
+            year: 年份
+            race: 賽事名稱
+            session: 場次 (FP1, FP2, Q, R, etc.)
+            source: 發出信號的模組標識
+        """
+        # 保存當前狀態
+        self._current_stint_selection = {
+            'selected_stints': selected_stints,
+            'is_merge_mode': is_merge_mode,
+            'year': year,
+            'race': race,
+            'session': session,
+            'source': source
+        }
+        
+        # 發射信號
+        self.stint_selection_changed.emit(
+            selected_stints, is_merge_mode, year, race, session, source
+        )
+        
+        logger.debug(
+            f"[GLOBAL_SYNC] Stint 選擇改變: {len(selected_stints)} stints, "
+            f"merge={is_merge_mode}, session={year} {race} {session} (來源: {source})"
+        )
+    
+    def get_current_stint_selection(self) -> Optional[Dict[str, Any]]:
+        """
+        獲取當前 Stint 選擇狀態
+        
+        Returns:
+            Dict containing:
+                - selected_stints: List of selected stint info
+                - is_merge_mode: bool
+                - year, race, session: Session identifiers
+                - source: Last module that triggered the change
+            或 None 如果尚無選擇
+        """
+        return self._current_stint_selection
+    
+    def is_same_session(self, year: str, race: str, session: str) -> bool:
+        """
+        檢查指定的 Session 是否與當前 Stint 選擇的 Session 相同
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 場次
+            
+        Returns:
+            bool: 是否為相同 Session
+        """
+        if not self._current_stint_selection:
+            return False
+        
+        return (
+            self._current_stint_selection.get('year') == year and
+            self._current_stint_selection.get('race') == race and
+            self._current_stint_selection.get('session') == session
+        )
+    
     # ========== 內部方法 ==========
     
     def _clear_sync_state(self) -> None:
@@ -183,6 +275,7 @@ class GlobalChartSyncSignal(QObject):
         self._current_drivers.clear()
         self._current_x_range = None
         self._is_zoomed = False
+        self._current_stint_selection = None
         logger.debug("[GLOBAL_SYNC] 同步狀態已清除（所有模組已關閉）")
 
 

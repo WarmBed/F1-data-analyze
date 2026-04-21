@@ -925,95 +925,32 @@ class UniversalAnalysisMDI(IAnalysisModule):
     def update_window_title(self) -> None:
         """更新視窗標題 - 確保完全替換，不累積舊標題"""
         try:
-            # 🔍 調試：檢查 parent_window 狀態
-            logger.debug(f"[UPDATE_TITLE_DEBUG] ========== 開始更新視窗標題 ==========")
-            logger.debug(f"[UPDATE_TITLE_DEBUG] hasattr(self, 'parent_window'): {hasattr(self, 'parent_window')}")
-            
             # 檢查 parent_window 屬性（MDI 子視窗引用）
             parent = getattr(self, 'parent_window', None)
-            logger.debug(f"[UPDATE_TITLE_DEBUG] parent_window 值: {parent}")
-            logger.debug(f"[UPDATE_TITLE_DEBUG] parent_window 類型: {type(parent).__name__ if parent else 'None'}")
-            
-            if parent:
-                logger.debug(f"[UPDATE_TITLE_DEBUG] hasattr(parent, 'setWindowTitle'): {hasattr(parent, 'setWindowTitle')}")
             
             if parent and hasattr(parent, 'setWindowTitle'):
                 # 生成新標題（確保使用當前參數）
                 new_title = self.get_window_title(self.current_year, self.current_race, self.current_session)
                 
-                # ✅ [FIX] 獲取舊標題以便調試
+                # 獲取舊標題以便調試
                 old_title = parent.windowTitle() if hasattr(parent, 'windowTitle') else "N/A"
                 
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 舊標題: {old_title}")
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 新標題: {new_title}")
-                
-                # ✅ [FIX] 直接設置新標題（完全替換，不追加）
+                # 直接設置新標題（完全替換，不追加）
                 parent.setWindowTitle(new_title)
                 
-                # 🔥 **關鍵修正**: 同時更新自訂標題列（PopoutSubWindow 的 title_bar）
+                # 同時更新自訂標題列（PopoutSubWindow 的 title_bar）
                 if hasattr(parent, 'title_bar') and parent.title_bar:
-                    logger.debug(f"[UPDATE_TITLE_DEBUG] 發現自訂標題列，更新標題...")
                     if hasattr(parent.title_bar, 'update_title'):
                         parent.title_bar.update_title(new_title)
-                        logger.info(f"[UPDATE_TITLE_DEBUG] ✅ 自訂標題列已更新")
-                    else:
-                        logger.warning(f"[UPDATE_TITLE_DEBUG] ⚠️  title_bar 沒有 update_title 方法")
-                else:
-                    logger.debug(f"[UPDATE_TITLE_DEBUG] 沒有自訂標題列，跳過")
                 
-                # 🔥 強制刷新視窗標題顯示
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 強制刷新視窗標題...")
-                
-                # 方法 1: 刷新子視窗
+                # 刷新視窗顯示（不使用 processEvents 以避免嵌套調用問題）
                 parent.update()
-                parent.repaint()
                 
-                # 方法 2: 刷新 MDI Area
-                from PyQt5.QtWidgets import QApplication
-                if parent.parent():
-                    parent.parent().update()
-                    parent.parent().repaint()
-                
-                # 方法 3: 強制處理事件
-                QApplication.processEvents()
-                
-                # 方法 4: 驗證標題確實已更改
-                current_title = parent.windowTitle()
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 驗證當前標題: {current_title}")
-                if current_title != new_title:
-                    logger.warning(f"[UPDATE_TITLE_DEBUG] ⚠️  標題未更新，重試...")
-                    parent.setWindowTitle(new_title)
-                    QApplication.processEvents()
-                    # 再次驗證
-                    final_title = parent.windowTitle()
-                    logger.debug(f"[UPDATE_TITLE_DEBUG] 重試後的標題: {final_title}")
-                
-                # 🔥 強制觸發標題列重繪
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 強制觸發 MDI 子視窗標題列重繪...")
-                if hasattr(parent, 'setWindowState'):
-                    # 保存當前狀態
-                    current_state = parent.windowState()
-                    # 臨時改變狀態以觸發重繪
-                    from PyQt5.QtCore import Qt
-                    parent.setWindowState(current_state)
-                    QApplication.processEvents()
-                
-                # 最終驗證
-                final_check_title = parent.windowTitle()
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 最終檢查標題: {final_check_title}")
-                logger.debug(f"[UPDATE_TITLE_DEBUG] 標題是否正確: {final_check_title == new_title}")
-                
-                logger.info(f"[UPDATE_TITLE_DEBUG] ✅ 視窗標題已更新")
-                self._debug(f"🏷️ 視窗標題已更新")
-                self._debug(f"   舊標題: {old_title}")
-                self._debug(f"   新標題: {new_title}")
+                self._debug(f"視窗標題已更新: {old_title} -> {new_title}")
             else:
-                logger.error(f"[UPDATE_TITLE_DEBUG] ❌ 無法更新標題：parent_window={parent is not None}, hasattr={hasattr(parent, 'setWindowTitle') if parent else False}")
+                logger.debug(f"[UPDATE_TITLE] 無法更新標題：parent_window 無效")
         except Exception as e:
-            logger.error(f"[UPDATE_TITLE_DEBUG] ❌ 更新視窗標題時發生錯誤: {e}")
-            self._error(f"更新視窗標題失敗: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"[UPDATE_TITLE] 更新視窗標題失敗: {e}")
     
     def cleanup(self):
         """清理資源 - 參照速度分析模組增強版"""

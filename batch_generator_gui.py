@@ -41,6 +41,38 @@ sys.path.insert(0, str(Path(__file__).parent))
 # 配置常數
 # ============================================================================
 
+# 🆕 賽事名稱標準化映射（與 API cache_service 保持一致）
+# FastF1 EventName → API 標準名稱
+RACE_NAME_STANDARDIZATION = {
+    "Australian": "Australia",
+    "Chinese": "China", 
+    "Japanese": "Japan",
+    "Bahrain": "Bahrain",
+    "Saudi Arabian": "Saudi Arabia",
+    "Italian": "Italy",
+    "Monaco": "Monaco",
+    "Spanish": "Spain",
+    "Canadian": "Canada",
+    "British": "Great Britain",
+    "Austrian": "Austria",
+    "Hungarian": "Hungary",
+    "Belgian": "Belgium",
+    "Dutch": "Netherlands",
+    "Azerbaijan": "Azerbaijan",
+    "Singapore": "Singapore",
+    "United States": "United States",
+    "Mexican": "Mexico",
+    "Mexico City": "Mexico City",
+    "Brazilian": "Brazil",
+    "São Paulo": "Brazil",
+    "Qatari": "Qatar",
+    "Qatar": "Qatar",
+    "Abu Dhabi": "Abu Dhabi",
+    "Las Vegas": "Las Vegas",
+    "Miami": "Miami",
+    "Emilia Romagna": "Emilia Romagna",
+}
+
 # 功能分類
 FUNCTION_CATEGORIES = {
     "Race Overview 賽事概況": {
@@ -79,7 +111,7 @@ FUNCTION_CATEGORIES = {
         "color": "#2ecc71"
     },
     "Season Analysis 年度分析": {
-        "functions": [101],
+        "functions": [101, 143],
         "description": "Season-wide analysis (year only) 年度分析",
         "color": "#8e44ad"
     },
@@ -87,36 +119,37 @@ FUNCTION_CATEGORIES = {
 
 # 功能配置
 FUNCTION_CONFIGS = {
-    1: {"name": "Rain Analysis 降雨分析", "sessions": {"FP1", "FP2", "FP3", "Q", "SQ", "R"}},
-    2: {"name": "Track Analysis 賽道分析", "sessions": {"FP1", "FP2", "FP3", "Q", "SQ", "R"}},
-    3: {"name": "Driver Fastest Pitstop 車手最快進站", "sessions": {"R"}},
-    4: {"name": "Team Pitstop Ranking 車隊進站排行", "sessions": {"R"}},
-    5: {"name": "Driver Detailed Pitstop 車手進站詳細", "sessions": {"R"}},
-    8: {"name": "Accident Analysis 事故分析", "sessions": {"R"}},
-    25: {"name": "Driver Race Position 車手位置", "sessions": {"Q", "SQ", "R"}},
-    26: {"name": "Tire Strategy 輪胎策略", "sessions": {"R"}},
-    28: {"name": "Detailed Lap Analysis 詳細圈速", "sessions": {"Q", "SQ", "R"}},
-    34: {"name": "Brake Performance 煞車性能", "sessions": {"FP1", "FP2", "FP3", "Q", "SQ", "R"}},
-    47: {"name": "Corner Analysis 彎道分析", "sessions": {"FP1", "FP2", "FP3", "Q", "SQ", "R"}},
-    48: {"name": "Straight Line Speed 直線速度", "sessions": {"FP1", "FP2", "FP3", "Q", "SQ", "R"}},
-    53: {"name": "Ideal Lap Analysis 理想圈分析", "sessions": {"FP3", "Q", "R"}},
-    54: {"name": "Throttle Analysis 油門分析", "sessions": {"FP1", "FP2", "FP3", "Q", "SQ", "R"}},
-    55: {"name": "Fuel Corrected Laptime 燃油校正圈速", "sessions": {"R"}},
-    56: {"name": "Tire Degradation 輪胎衰退", "sessions": {"R"}},
-    57: {"name": "Combined Laptime Prediction 綜合圈速預測", "sessions": {"R"}},
-    58: {"name": "Pit Stop Strategy 進站策略", "sessions": {"R"}},
+    1: {"name": "Rain Analysis 降雨分析", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    2: {"name": "Track Analysis 賽道分析", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    3: {"name": "Driver Fastest Pitstop 車手最快進站", "sessions": {"S", "R"}},
+    4: {"name": "Team Pitstop Ranking 車隊進站排行", "sessions": {"S", "R"}},
+    5: {"name": "Driver Detailed Pitstop 車手進站詳細", "sessions": {"S", "R"}},
+    8: {"name": "Accident Analysis 事故分析", "sessions": {"S", "R"}},
+    25: {"name": "Driver Race Position 車手位置", "sessions": {"SQ", "Q", "S", "R"}},
+    26: {"name": "Tire Strategy 輪胎策略", "sessions": {"S", "R"}},
+    28: {"name": "Detailed Lap Analysis 詳細圈速", "sessions": {"SQ", "Q", "S", "R"}},
+    34: {"name": "Brake Performance 煞車性能", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    47: {"name": "Corner Analysis 彎道分析", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    48: {"name": "Straight Line Speed 直線速度", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    53: {"name": "Ideal Lap Analysis 理想圈分析", "sessions": {"FP3", "SQ", "Q", "S", "R"}},
+    54: {"name": "Throttle Analysis 油門分析", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    55: {"name": "Fuel Corrected Laptime 燃油校正圈速", "sessions": {"S", "R"}},
+    56: {"name": "Tire Degradation 輪胎衰退", "sessions": {"S", "R"}},
+    57: {"name": "Combined Laptime Prediction 綜合圈速預測", "sessions": {"S", "R"}},
+    58: {"name": "Pit Stop Strategy 進站策略", "sessions": {"S", "R"}},
     74: {"name": "FP3->Q Prediction 排位賽預測", "sessions": {"FP3"}},
     76: {"name": "FP2->Q Prediction FP2排位預測", "sessions": {"FP2"}},
     80: {"name": "Q->R Prediction 正賽預測", "sessions": {"Q"}},
-    81: {"name": "Overtake Data Collection 超車數據收集", "sessions": {"R"}},
+    81: {"name": "Overtake Data Collection 超車數據收集", "sessions": {"S", "R"}},
     100: {"name": "Historical Track Map 歷年旗幟統計", "sessions": set()},
-    120: {"name": "FP2 Corner All Laps 彎道全圈數", "sessions": {"FP2"}},
-    121: {"name": "FP2 Straight Line All Laps 直線全圈數", "sessions": {"FP2"}},
-    122: {"name": "Brake All Laps Analysis 煞車全圈數", "sessions": {"FP2"}},
-    125: {"name": "Vehicle Performance 車輛性能綜合", "sessions": {"R"}},
-    126: {"name": "Live Timing Weather 天氣分析", "sessions": {"FP2", "FP3", "Q", "R"}},
-    127: {"name": "Traffic Timeline 車流時間線", "sessions": {"R"}},
+    120: {"name": "Corner All Laps 彎道全圈數", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    121: {"name": "Straight Line All Laps 直線全圈數", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    122: {"name": "Brake All Laps Analysis 煞車全圈數", "sessions": {"FP1", "FP2", "FP3", "SQ", "Q", "S", "R"}},
+    125: {"name": "Vehicle Performance 車輛性能綜合", "sessions": {"S", "R"}},
+    126: {"name": "Live Timing Weather 天氣分析", "sessions": {"FP2", "FP3", "SQ", "Q", "S", "R"}},
+    127: {"name": "Traffic Timeline 車流時間線", "sessions": {"S", "R"}},
     101: {"name": "Season Start Reaction 年度起跑分析", "sessions": set(), "season_only": True},
+    143: {"name": "FIA Season Stats FIA賽季統計", "sessions": set(), "season_only": True},
 }
 
 # 無超時功能 (大數據量)
@@ -213,11 +246,18 @@ class GeneratorWorker(QThread):
                     stdout_text = process.stdout or ""
                     
                     # 判斷是否只有警告（無真正錯誤內容）
-                    warning_keywords = ["UserWarning", "DeprecationWarning", "FutureWarning", "warnings.warn"]
+                    warning_keywords = [
+                        "UserWarning", "DeprecationWarning", "FutureWarning", 
+                        "warnings.warn", "Correcting user input"  # FastF1 名稱校正警告
+                    ]
                     error_keywords = ["Error:", "Exception:", "Traceback", "找不到", "失敗", "錯誤"]
                     
                     has_only_warnings = any(kw in stderr_text for kw in warning_keywords)
                     has_real_error = any(kw in stderr_text for kw in error_keywords)
+                    
+                    # 檢查 stdout 是否有成功指示
+                    success_indicators = ["[SUCCESS]", "[FINISH]", "分析完成", "JSON 已保存", "完成輸出"]
+                    has_success_in_stdout = any(kw in stdout_text for kw in success_indicators)
                     
                     # 過濾警告行，看是否有其他實質內容
                     non_warning_lines = [
@@ -225,7 +265,10 @@ class GeneratorWorker(QThread):
                         if line.strip() and not any(kw in line for kw in warning_keywords)
                     ]
                     
-                    if has_only_warnings and not has_real_error and len(non_warning_lines) == 0:
+                    # 判斷成功條件：有成功指示 或 只有警告無錯誤
+                    is_actually_success = has_success_in_stdout or (has_only_warnings and not has_real_error and len(non_warning_lines) == 0)
+                    
+                    if is_actually_success:
                         # 只有警告，無實質錯誤 - 需要從日誌確認真正結果
                         # 暫時標記為成功（因為 CLI 輸出被 logger 捕獲）
                         self.log_message.emit(f"✅ 成功 (有警告): {task_desc}")
@@ -396,7 +439,7 @@ class BatchGeneratorGUI(QMainWindow):
         options_layout.addWidget(QLabel("Sessions 階段:"), 1, 0)
         session_layout = QHBoxLayout()
         self.session_checkboxes = {}
-        for session in ["FP1", "FP2", "FP3", "Q", "R"]:
+        for session in ["FP1", "FP2", "FP3", "SQ", "Q", "S", "R"]:
             cb = QCheckBox(session)
             cb.setChecked(session == "R")  # 預設只選 R
             self.session_checkboxes[session] = cb
@@ -540,9 +583,11 @@ class BatchGeneratorGUI(QMainWindow):
             if cb.isChecked():
                 race_name = cb.property("race_name")
                 if race_name:
-                    # 簡化賽事名稱
+                    # 簡化賽事名稱並標準化
                     simple_name = race_name.replace(' Grand Prix', '')
-                    selected_races.append(simple_name)
+                    # 🆕 使用標準化映射（與 API 一致）
+                    standardized_name = RACE_NAME_STANDARDIZATION.get(simple_name, simple_name)
+                    selected_races.append(standardized_name)
         
         # 取得選擇的功能
         selected_functions = [fid for fid, cb in self.function_checkboxes.items() if cb.isChecked()]

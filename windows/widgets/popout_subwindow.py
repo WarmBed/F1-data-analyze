@@ -72,9 +72,9 @@ class PopoutSubWindow(QMdiSubWindow):
         self.setAttribute(Qt.WA_DeleteOnClose, True)
         
         # [TOOL] 新增：本地參數存儲 (用於非同步狀態)
-        self.local_year = "2025"
-        self.local_race = "Japan"
-        self.local_session = "R"
+        self.local_year = None
+        self.local_race = None
+        self.local_session = None
         self._season_event_lookup: Dict[str, SeasonEvent] = {}
         self._display_to_race_key: Dict[str, str] = {}
         
@@ -98,6 +98,12 @@ class PopoutSubWindow(QMdiSubWindow):
                     # [TOOL] 新增：設置參數提供者（如果沒有傳入的話）
                     if not self._parameter_provider:
                         self._parameter_provider = MainWindowParameterProvider(current_parent)
+                    try:
+                        self.local_year = str(self._parameter_provider.get_current_year())
+                        self.local_race = self._parameter_provider.get_current_race()
+                        self.local_session = self._parameter_provider.get_current_session()
+                    except Exception as e:
+                        logger.warning(f"[WARNING] [INIT] 無法初始化本地參數: {e}")
                     logger.debug(f"[LINK] [INIT] {title} 已找到主視窗引用")
                     break
                 current_parent = current_parent.parent()
@@ -277,6 +283,16 @@ class PopoutSubWindow(QMdiSubWindow):
                 else:
                     # 非同步模式：使用本地參數
                     logger.debug(f"🔴 [SYNC_DEBUG] 同步模式停用 - 使用本地參數")
+                    if self._parameter_provider and (self.local_year is None or self.local_race is None or self.local_session is None):
+                        try:
+                            self.local_year = str(self._parameter_provider.get_current_year())
+                            self.local_race = self._parameter_provider.get_current_race()
+                            self.local_session = self._parameter_provider.get_current_session()
+                        except Exception as e:
+                            logger.warning(f"[WARNING] [SYNC] 無法補齊本地參數: {e}")
+                    if self.local_year is None or self.local_race is None or self.local_session is None:
+                        logger.warning(f"[WARNING] [SYNC] 本地參數不完整，略過更新")
+                        return False
                     logger.debug(f"🔴 [SYNC_DEBUG] 本地參數: year={self.local_year}, race={self.local_race}, session={self.local_session}")
                     params = {
                         'year': int(self.local_year),  # 轉換為int

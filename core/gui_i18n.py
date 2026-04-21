@@ -78,7 +78,7 @@ class GuiTranslator:
             'tab_page': {'zh': '分頁{number}', 'en': 'Tab {number}', 'ja': 'タブ {number}'},
             'help_menu': {'zh': '說明', 'en': 'Help', 'ja': 'ヘルプ'},
             'open_help_center': {'zh': '使用說明...', 'en': 'User Guide...', 'ja': '使用ガイド...'},
-            'about_action': {'zh': '關於 F1T', 'en': 'About F1T', 'ja': 'F1T について'},
+            'about_action': {'zh': '關於 PITWALL', 'en': 'About PITWALL', 'ja': 'PITWALL について'},
             
             # F1TV Account 相關
             'f1tv_account_menu': {'zh': 'F1TV 帳號', 'en': 'F1TV Account', 'ja': 'F1TVアカウント'},

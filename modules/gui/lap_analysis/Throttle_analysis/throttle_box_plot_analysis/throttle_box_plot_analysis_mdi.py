@@ -980,11 +980,13 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
         stint_tab_layout = QVBoxLayout(stint_tab)
         stint_tab_layout.setContentsMargins(5, 5, 5, 5)
         
-        # 創建 Stint Selector
+        # 創建 Stint Selector (V0.15.1: 添加 module_id 和 Global Sync)
         try:
-            self.stint_selector = UniversalStintSelector()
+            self.stint_selector = UniversalStintSelector(module_id="throttle_boxplot")
             self.stint_selector.selection_changed.connect(self._on_stint_selection_changed)
             self.stint_selector.merge_mode_changed.connect(self._on_merge_mode_changed)
+            # V0.15.1: 預設啟用全局同步
+            self.stint_selector.enable_global_sync(True)
             stint_tab_layout.addWidget(self.stint_selector)
             logger.info("[THROTTLE_MDI] Stint Selector 創建成功")
         except Exception as exc:
@@ -1419,6 +1421,13 @@ class ThrottleBoxPlotAnalysis(UniversalAnalysisMDI):
             if not raw_data:
                 logger.debug("[THROTTLE_MDI] 無原始數據緩存，使用當前數據")
                 raw_data = data
+            
+            # V0.15.1: 設置 Session 資訊（用於 Global Sync 過濾）
+            self.stint_selector.set_session_info(
+                year=str(self.current_year),
+                race=str(self.current_race),
+                session=str(self.current_session)
+            )
             
             # 傳遞數據給 Stint Selector 進行 Stint 偵測
             self.stint_selector.set_data(raw_data)

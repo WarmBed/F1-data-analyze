@@ -4,141 +4,127 @@ __pycache__/
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
+.eggs/
 *.egg
 
-# Virtual Environment
+# Virtual environments
+.venv/
 venv/
 ENV/
 env/
+venv_build/
+venv_build_*/
 
-# PyInstaller
+# Build and packaging outputs
+build/
+dist/
+downloads/
+wheels/
 *.manifest
-# *.spec  # 註釋掉 - F1T_GUI_clean.spec 需要上傳
+*.spec.tmp
+*.toc
+*.pkg
+*.exe
+*.dll
+*.pyd
 
-# Unit test / coverage
-htmlcov/
-.tox/
+# Test, coverage, profiling
+.pytest_cache/
 .coverage
 .coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+htmlcov/
+.tox/
 .hypothesis/
-.pytest_cache/
+*.cover
+*.prof
 
-# IDEs
+# IDE and local agent state
 .vscode/
 .idea/
+.agent/
+.claude/
 *.swp
 *.swo
 *~
 
-# AI agent local config (personal, not part of project)
-.agent/
-.claude/
-
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Project specific
-
-# ⭐ 個人語言配置檔案（會自動生成，不應上傳）
-core/gui_language_config.json
-
-# Cache and temporary files
-cache/
-CACHE/
-tmp/
+# Logs and temporary files
 logs/
 LOGS/
+tmp/
+temp/
 *.log
+*.tmp
 
-# 原始碼目錄例外 - CLI cache module 是程式碼，不是資料快取
-!CLI_modules/cli/cache/
-!CLI_modules/cli/cache/*.py
+# Sensitive local configuration and tunnel credentials
+cloudflared/
+*.pem
+*.key
+*.crt
+*.cert
+*.token
+.env
+.env.*
+!.env.example
+config/local_*.json
+*.local.json
+core/gui_language_config.json
 
-# FastF1 cache
+# Formula 1 data caches and generated datasets
+cache/
+CACHE/
 f1_analysis_cache/
-
-# JSON outputs (分析結果，太大且會頻繁變動)
-json/*.json
+fastf1_cache/
+fia_cache/
+data/live_timing_cache/
+data/live_timing_recordings/
+json/
 json2/
 json3/
 JSON2/
 JSON3/
-json_backup/*.json
-json_exports/*.json
+json_backup/
+json_exports/
 test_json_output/
-
-# 大型文檔資料夾（不上傳到 GitHub）
-f1ADOC/
-F1ADOC/
-
-# Investigation outputs
-investigation_output/
-
-# Build outputs
-build/
-dist/
-
-# ⚠️ 專案輸出目錄（僅排除大型輸出檔案，不排除目錄本身）
-# tests/      # ❌ 不能排除 - 包含測試程式碼
-# reports/    # ❌ 不能排除 - 包含重要報告
-# tasks/      # ❌ 不能排除 - 包含任務文檔
-# charts/     # ❌ 不能排除 - 包含圖表程式碼
-
-# ⚠️ GitHub 100MB 限制 - 排除大型 pkl 和 cache 檔案
-data/live_timing_cache/
-json/LiveF1/**/_aligned_cache.pkl
-json/LiveF1/**/Pre-Season_Practice_*/Position.json
-
-# ⚠️ 大型資料檔案 - 全部忽略 (2025-12-24 更新)
-*.pkl
-models/*.pkl
-models/**/*.pkl
-
-# JSON 分析輸出 - 全部忽略
-json/
-json/**
-
-# 訓練資料 - 忽略
 training_data/
-training_data/**
+team_radio_data/
 
-# 報告輸出 - 忽略
+# Large/generated data formats
+*.pkl
+*.ff1pkl
+*.pickle
+*.sqlite
+*.sqlite3
+*.db
+*.jsonStream
+*.npy
+*.npz
+
+# Generated reports and release artifacts
+report/
+reports/profiling/
+reports/performance/
 reports/*.json
-reports/*.html
 reports/*.csv
+reports/*.html
+reports/*.prof
+*.pdf
 
-# 刪除資料夾 - 完全忽略
-刪除資料夾/
+# Machine learning artifacts
+catboost_info/
+models/**/*.pkl
+models/**/*.cbm
+models/**/*.bin
+models/**/*.joblib
 
-# Cloudflared
-cloudflared/*.log
-cloudflared/.token
+# Media that should not be redistributed from the repository
+*.mp3
+*.wav
 
-# Local configuration
-config/local_*.json
-*.local.json
-
-# 測試資料
-tests/__pycache__/
-tests/*.pyc
-
-.venv/
+# Keep source cache package code if present
+!CLI_modules/cli/cache/
+!CLI_modules/cli/cache/*.py

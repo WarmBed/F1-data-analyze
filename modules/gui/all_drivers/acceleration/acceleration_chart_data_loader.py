@@ -202,12 +202,25 @@ class AccelerationChartDataLoader(QObject):
         """進度更新回調"""
         self.progress_updated.emit(value)
     
-    def _on_api_success(self, data: Dict[str, Any]):
-        """API 成功回調"""
+    def _on_api_success(self, payload: Dict[str, Any]):
+        """API 成功回調
+        
+        API 返回格式: {"success": true, "data": {...actual_data...}, ...}
+        此方法提取 data 欄位傳遞給 MDI
+        """
         logger.info("[ACCEL_CHART_LOADER] API 數據載入成功")
-        self._cached_data = data
+        
+        # 提取實際數據 (API wrapper 中的 data 欄位)
+        # 2025-01-19: 修復 - API 返回 {success, data: {...}} 結構
+        actual_data = payload.get("data", payload)
+        
+        # 確保 drivers 存在
+        if "drivers" not in actual_data and "drivers" in payload:
+            actual_data = payload
+        
+        self._cached_data = actual_data
         self.status_changed.emit(tr("Data loaded successfully"))
-        self.data_loaded.emit(data)
+        self.data_loaded.emit(actual_data)
     
     def _on_api_failure(self, error: str):
         """API 失敗回調"""

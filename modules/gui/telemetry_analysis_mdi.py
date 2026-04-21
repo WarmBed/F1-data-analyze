@@ -241,13 +241,10 @@ class TelemetryDataManager(QObject):
             self.status_changed.emit("正在透過 API 載入遙測分析資料...")
 
             if not self._is_api_available():
-                msg = "偵測到 API 服務未啟動，改用本地 JSON 後備"
+                msg = "API 服務未啟動，且本地 JSON 後備已停用"
                 logger.warning(f"[TELEMETRY] {msg}")
                 self.status_changed.emit(msg)
-                if self._fallback_to_local("API 服務未啟動"):
-                    return True
-
-                self.error_occurred.emit("找不到可用的遙測資料來源，請啟動 API 或提供本地 JSON")
+                self.error_occurred.emit(msg)
                 self.loading_finished.emit()
                 self._is_loading = False
                 return False
@@ -256,10 +253,7 @@ class TelemetryDataManager(QObject):
             return True
         except Exception as exc:
             logger.error(f"[TELEMETRY] 啟動 API 請求失敗: {exc}")
-            self.status_changed.emit("API 請求初始化失敗，改用本地 JSON/CLI 後備流程")
-            if self._fallback_to_local(str(exc)):
-                return True
-
+            self.status_changed.emit("API 請求初始化失敗")
             self.error_occurred.emit(f"載入遙測數據失敗: {exc}")
             self.loading_finished.emit()
             self._is_loading = False
@@ -267,14 +261,6 @@ class TelemetryDataManager(QObject):
 
     def _should_prioritize_local_cache(self) -> bool:
         """判斷是否應優先使用本地快取以提升測試穩定性"""
-        try:
-            if os.getenv("F1T_FORCE_LOCAL_TELEMETRY_CACHE") in {"1", "true", "True"}:
-                return True
-            # Pytest 執行期間預設優先使用本地快取，避免網路波動導致測試失敗
-            if os.getenv("PYTEST_CURRENT_TEST"):
-                return True
-        except Exception:
-            pass
         return False
     def _determine_api_base_url(self) -> str:
         return resolve_api_base_url(
@@ -287,21 +273,12 @@ class TelemetryDataManager(QObject):
             self._debug("API marked offline by shared runtime cache")
         return available
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
-        env_value = os.getenv("F1T_ALLOW_TELEMETRY_JSON_FALLBACK")
-        if env_value is not None:
-            normalized = str(env_value).strip().lower()
-            if normalized in {"1", "true", "yes", "on"}:
-                return True, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
-            return False, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
-        return True, "預設策略 (允許本地 JSON 後備)"
+        return False, "API-ONLY 模式：本地 JSON 後備已停用"
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
-        self._allow_local_fallback = bool(allowed)
-        self._fallback_policy_reason = reason or "手動覆寫"
-        state = "啟用" if self._allow_local_fallback else "停用"
-        logger.info(
-            f"[TELEMETRY_MANAGER] 本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})"
-        )
+        self._allow_local_fallback = False
+        self._fallback_policy_reason = "API-ONLY 模式：本地 JSON 後備已停用"
+        logger.info("[TELEMETRY_MANAGER] API-ONLY 模式：本地 JSON 後備不可啟用")
 
     def set_api_base_url(self, base_url: Optional[str]) -> None:
         if base_url:
@@ -412,18 +389,14 @@ class TelemetryDataManager(QObject):
 
         except Exception as exc:
             logger.error(f"[TELEMETRY] 處理 API 回傳失敗: {exc}")
-            self.status_changed.emit("API 數據格式錯誤，改用本地 JSON/CLI")
-            if self._fallback_to_local(str(exc)):
-                return
+            self.status_changed.emit("API 數據格式錯誤")
             self.error_occurred.emit(f"API 數據處理失敗: {exc}")
             self.loading_finished.emit()
             self._is_loading = False
 
     def _on_api_error(self, message: str) -> None:
         logger.error(f"[TELEMETRY] API 請求失敗: {message}")
-        self.status_changed.emit("API 請求失敗，改用本地 JSON/CLI 後備流程")
-        if self._fallback_to_local(message):
-            return
+        self.status_changed.emit("API 請求失敗")
         self.error_occurred.emit(f"API 請求失敗: {message}")
         self.loading_finished.emit()
         self._is_loading = False
@@ -438,20 +411,8 @@ class TelemetryDataManager(QObject):
                 "force_refresh": False,
             }
 
-        if not self._allow_local_fallback:
-            message = (
-                "API 載入失敗，且本地 JSON 後備已停用。"
-                " 如需啟用，請設定環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK=1 或呼叫 set_local_fallback_allowed(True)。"
-            )
-            logger.warning(f"[TELEMETRY] {message} 詳細: {reason}")
-            return False
-
-        self.status_changed.emit("API 失敗，改用本地 JSON/CLI 數據")
-        self.loading_progress.emit(35)
-        success = self._start_local_workflow(params, fallback_reason=reason)
-        if not success:
-            logger.error(f"[TELEMETRY] 本地 JSON 後備啟動失敗: {reason}")
-        return success
+        logger.warning(f"[TELEMETRY] API-ONLY 模式：本地 JSON 後備已停用，原因: {reason}")
+        return False
 
     def _start_local_workflow(self, params: Dict[str, Any], fallback_reason: Optional[str] = None) -> bool:
         year = params.get("year")

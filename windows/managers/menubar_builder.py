@@ -116,7 +116,7 @@ class MenubarBuilder:
 
         # 說明菜單
         help_menu = menubar.addMenu(tr('help_menu', '說明'))
-        help_menu.addAction(tr('about_action', '關於 F1T'), self.show_about_dialog)
+        help_menu.addAction(tr('about_action', '關於 PITWALL'), self.show_about_dialog)
 
 
     # ========== _setup_live_timing_menu 已移除，使用 LiveTimingManager.setup_menu() ==========

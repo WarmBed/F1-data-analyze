@@ -329,6 +329,9 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
                         "corners": converted_corners
                     })
                 
+                # 檢查並傳遞 stint 數據
+                stints_available = raw_data.get("stints_available", False)
+                
                 processed = {
                     "success": True,
                     "year": raw_data.get("year"),
@@ -342,10 +345,11 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
                     },
                     "mode_a_unified": raw_data.get("mode_a_unified"),
                     "mode_b_grouped": raw_data.get("mode_b_grouped"),
+                    "stints_available": stints_available,  # 傳遞 stint 可用性標記
                     "raw_data": raw_data
                 }
                 
-                self._debug(f"F120 數據處理完成: {len(converted_drivers)} 位車手")
+                self._debug(f"F120 數據處理完成: {len(converted_drivers)} 位車手, stints_available={stints_available}")
                 
             else:
                 # F47 兼容模式 (舊版數據)

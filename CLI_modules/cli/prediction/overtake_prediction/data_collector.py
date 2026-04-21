@@ -611,6 +611,10 @@ class OvertakeDataCollector:
         """
         從位置時間線偵測超車事件
         
+        過濾條件:
+        1. 跳過非綠旗狀態 (SC/VSC 期間的位置變化不算超車)
+        2. 跳過 Pit 進站相關的位置變化 (進站/出站不算超車)
+        
         Args:
             tyre_state: {timestamp: {driver_num: {'compound': str, 'age': int}}}
         """
@@ -621,6 +625,7 @@ class OvertakeDataCollector:
             return overtakes
         
         prev_positions = {}  # {driver: position}
+        prev_pit_status = {}  # {driver: in_pit} - 追蹤 Pit 狀態變化
         
         for i, timestamp in enumerate(timestamps):
             current = position_timeline[timestamp]
@@ -632,14 +637,21 @@ class OvertakeDataCollector:
             # 跳過非綠旗狀態 (SC/VSC 期間的位置變化不算超車)
             if track_status not in ['GREEN']:
                 prev_positions = {d: s['position'] for d, s in current.items()}
+                prev_pit_status = {d: s.get('in_pit', False) for d, s in current.items()}
                 continue
             
             # 比較位置變化
             for driver, state in current.items():
                 curr_pos = state['position']
                 prev_pos = prev_positions.get(driver)
+                driver_in_pit = state.get('in_pit', False)
+                driver_was_in_pit = prev_pit_status.get(driver, False)
                 
                 if prev_pos is None:
+                    continue
+                
+                # ⚠️ 跳過正在 Pit 或剛從 Pit 出來的車手 (不是真正的超車)
+                if driver_in_pit or driver_was_in_pit:
                     continue
                 
                 # 位置提升 = 可能的超車
@@ -651,8 +663,14 @@ class OvertakeDataCollector:
                         
                         other_curr = other_state['position']
                         other_prev = prev_positions.get(other_driver)
+                        other_in_pit = other_state.get('in_pit', False)
+                        other_was_in_pit = prev_pit_status.get(other_driver, False)
                         
                         if other_prev is None:
+                            continue
+                        
+                        # ⚠️ 跳過被超車者正在 Pit 或剛進 Pit 的情況 (不是真正的超車)
+                        if other_in_pit or other_was_in_pit:
                             continue
                         
                         # 確認超車: driver 從 prev > other_prev 變成 curr < other_curr
@@ -685,8 +703,9 @@ class OvertakeDataCollector:
                             )
                             overtakes.append(event)
             
-            # 更新前一狀態
+            # 更新前一狀態 (包含 Pit 狀態)
             prev_positions = {d: s['position'] for d, s in current.items()}
+            prev_pit_status = {d: s.get('in_pit', False) for d, s in current.items()}
         
         # 去重 (同圈同對只算一次)
         unique_overtakes = []

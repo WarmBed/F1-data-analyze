@@ -169,7 +169,7 @@ class DriverStandingsMDI(QWidget):
     簡單的 QWidget 容器，整合資料載入器和表格元件
     """
     
-    def __init__(self, year: str = "2024", parent=None):
+    def __init__(self, year: str, parent=None):
         """
         初始化 MDI 視窗
         
@@ -178,7 +178,11 @@ class DriverStandingsMDI(QWidget):
             parent: 父元件
         """
         super().__init__(parent)
-        self.year = str(year)
+        if year is None or str(year).strip() == "":
+            self.year = ""
+            logger.error("[DRIVER_MDI] 初始化失敗：缺少年份參數")
+        else:
+            self.year = str(year)
         
         # 初始化 UI
         self._setup_ui()
@@ -232,6 +236,10 @@ class DriverStandingsMDI(QWidget):
         2. 備援: 本地 JSON 檔案（API 失敗時）
         """
         logger.info("[DRIVER_MDI] 觸發初始載入: year=%s", self.year)
+        if not self.year:
+            self.status_label.setText(tr("missing_year", "缺少年份參數，無法載入資料"))
+            self.progress_bar.hide()
+            return
         self.status_label.setText(tr("loading_status", "正在從 API 載入車手積分資料..."))
         self.progress_bar.setValue(10)
         self.progress_bar.show()

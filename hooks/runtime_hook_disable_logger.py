@@ -15,7 +15,7 @@ IS_EXE_MODE = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
 
 if IS_EXE_MODE:
     # ✅ 啟用日誌系統（除錯模式）
-    os.environ['F1T_EXE_DISABLE_LOG'] = '0'
+    os.environ['F1T_EXE_DISABLE_LOG'] = '1'
     
     # 輸出提示訊息
-    print("[HOOK] EXE mode: Logging ENABLED for debugging")
+    print("[HOOK] EXE mode: Logging DISABLED for production")

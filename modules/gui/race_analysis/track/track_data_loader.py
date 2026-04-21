@@ -79,7 +79,7 @@ class TrackUniversalDataLoader(UniversalDataLoader):
         
         # 驗證參數類型和範圍
         year = params.get("year")
-        if not isinstance(year, int) or year < 2020 or year > 2030:
+        if not isinstance(year, int) or year < 2022 or year > 2026:
             logger.error("[TRACK_ANALYSIS] 年份參數無效: %s", year)
             return False
         

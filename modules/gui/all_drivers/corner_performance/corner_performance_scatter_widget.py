@@ -32,6 +32,9 @@ from typing import Dict, List, Any, Optional
 # 導入國際化和車隊顔色
 from core.gui_i18n import tr
 from modules.gui.themes.color_palette_provider import color_palette_provider
+from core.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class CornerPerformanceScatterWidget(QWidget):
@@ -64,6 +67,10 @@ class CornerPerformanceScatterWidget(QWidget):
         self.current_data: Optional[Dict] = None
         self.current_corner_type = corner_type  # 使用傳入的初始值
         self.highlighted_driver: Optional[str] = None
+        
+        # Stint 過濾模式
+        self.is_merge_mode = True  # True: 每個車手一個點, False: 每個 stint 一個點
+        self.selected_stints: Dict[str, List[int]] = {}  # {driver: [stint_numbers]}
         
         # 圖表顯示相關
         self.scatter_points = None  # 散佈點對象
@@ -242,6 +249,10 @@ class CornerPerformanceScatterWidget(QWidget):
         X 軸：入彎速度（entry_50m_speed）
         Y 軸：出彎速度（exit_50m_speed）
         顏色：彎中心速度（apex_speed）
+        
+        支援兩種模式：
+        - Merge Mode: 每個車手一個點 (使用 corners 統計)
+        - Split Mode: 每個 stint 一個點 (使用 stints[].corners)
         """
         try:
             if not self.current_data:
@@ -262,58 +273,126 @@ class CornerPerformanceScatterWidget(QWidget):
                 self._show_no_data_message()
                 return
             
-            # 獲取車手數據列表
-            fastest_lap_analysis = self.current_data.get("fastest_lap_analysis", {})
-            drivers_data = fastest_lap_analysis.get("drivers", [])
-            
-            if not drivers_data:
-                self._show_no_data_message()
-                return
+            # 彎道類型對應的鍵名
+            corner_key = f"{self.current_corner_type}_corner_{corner_info['corner_number']}"
             
             # 準備散佈圖數據
             x_data = []  # 入彎速度
             y_data = []  # 出彎速度
             colors = []  # 彎中心速度
-            labels = []  # 車手代碼
+            labels = []  # 標籤
             
             # 清空車手數據映射
             self.driver_data_map = {}
             
-            # 彎道類型對應的鍵名
-            corner_key = f"{self.current_corner_type}_corner_{corner_info['corner_number']}"
-            
-            for driver_data in drivers_data:
-                driver = driver_data.get("driver", "")
+            if self.is_merge_mode:
+                # ========== Merge Mode: 每個車手一個點 ==========
+                fastest_lap_analysis = self.current_data.get("fastest_lap_analysis", {})
+                drivers_data = fastest_lap_analysis.get("drivers", [])
                 
-                # 過濾被隱藏的車手
-                if driver in self.hidden_drivers:
-                    continue
+                if not drivers_data:
+                    self._show_no_data_message()
+                    return
                 
-                corners = driver_data.get("corners", {})
-                corner_speeds = corners.get(corner_key)
-                
-                if not corner_speeds:
-                    continue
-                
-                entry_speed = corner_speeds.get("entry_50m_speed")
-                exit_speed = corner_speeds.get("exit_50m_speed")
-                apex_speed = corner_speeds.get("apex_speed")
-                
-                # 只添加有效數據
-                if entry_speed and exit_speed and apex_speed:
-                    index = len(x_data)  # 當前索引
-                    x_data.append(entry_speed)
-                    y_data.append(exit_speed)
-                    colors.append(apex_speed)
-                    labels.append(driver)
+                for driver_data in drivers_data:
+                    driver = driver_data.get("driver", "")
                     
-                    # 儲存車手數據映射（用於懸停提示）
-                    self.driver_data_map[index] = {
-                        'driver': driver,
-                        'entry_speed': entry_speed,
-                        'exit_speed': exit_speed,
-                        'apex_speed': apex_speed
-                    }
+                    # 過濾被隱藏的車手
+                    if driver in self.hidden_drivers:
+                        continue
+                    
+                    corners = driver_data.get("corners", {})
+                    corner_speeds = corners.get(corner_key)
+                    
+                    if not corner_speeds:
+                        continue
+                    
+                    entry_speed = corner_speeds.get("entry_50m_speed")
+                    exit_speed = corner_speeds.get("exit_50m_speed")
+                    apex_speed = corner_speeds.get("apex_speed")
+                    
+                    if entry_speed and exit_speed and apex_speed:
+                        index = len(x_data)
+                        x_data.append(entry_speed)
+                        y_data.append(exit_speed)
+                        colors.append(apex_speed)
+                        labels.append(driver)
+                        
+                        self.driver_data_map[index] = {
+                            'driver': driver,
+                            'entry_speed': entry_speed,
+                            'exit_speed': exit_speed,
+                            'apex_speed': apex_speed,
+                            'label': driver
+                        }
+            else:
+                # ========== Split Mode: 每個 stint 一個點 ==========
+                mode_a = self.current_data.get("mode_a_unified", {})
+                drivers_data = mode_a.get("drivers", [])
+                
+                if not drivers_data:
+                    # Fallback to fastest_lap_analysis
+                    fastest_lap_analysis = self.current_data.get("fastest_lap_analysis", {})
+                    drivers_data = fastest_lap_analysis.get("drivers", [])
+                    if drivers_data:
+                        logger.warning("[SCATTER] Split mode: mode_a_unified unavailable, falling back to merge mode display")
+                        self.is_merge_mode = True
+                        self.draw_scatter_chart()
+                        return
+                    else:
+                        self._show_no_data_message()
+                        return
+                
+                for driver_data in drivers_data:
+                    driver = driver_data.get("driver", "")
+                    
+                    # 過濾被隱藏的車手
+                    if driver in self.hidden_drivers:
+                        continue
+                    
+                    stints = driver_data.get("stints", [])
+                    
+                    for stint in stints:
+                        stint_id = stint.get("stint_id", 0)
+                        compound = stint.get("compound", "UNKNOWN")
+                        
+                        # 檢查此 stint 是否在選中列表中
+                        if self.selected_stints:
+                            if driver not in self.selected_stints:
+                                continue
+                            if stint_id not in self.selected_stints[driver]:
+                                continue
+                        
+                        corners = stint.get("corners", {})
+                        corner_speeds = corners.get(corner_key)
+                        
+                        if not corner_speeds:
+                            continue
+                        
+                        # F120 stint corners 使用不同的欄位名稱
+                        entry_speed = corner_speeds.get("entry_speed_median")
+                        exit_speed = corner_speeds.get("exit_speed_median")
+                        apex_speed = corner_speeds.get("median_speed")
+                        
+                        if entry_speed and exit_speed and apex_speed:
+                            index = len(x_data)
+                            x_data.append(entry_speed)
+                            y_data.append(exit_speed)
+                            colors.append(apex_speed)
+                            
+                            # 標籤顯示車手 + Stint
+                            label = f"{driver} S{stint_id}"
+                            labels.append(label)
+                            
+                            self.driver_data_map[index] = {
+                                'driver': driver,
+                                'stint_id': stint_id,
+                                'compound': compound,
+                                'entry_speed': entry_speed,
+                                'exit_speed': exit_speed,
+                                'apex_speed': apex_speed,
+                                'label': label
+                            }
             
             if not x_data:
                 self._show_no_data_message()
@@ -436,11 +515,15 @@ class CornerPerformanceScatterWidget(QWidget):
             for idx, lbl in enumerate(label_positions):
                 x_offset = lbl['x_offset']
                 y_offset = lbl['y_offset']
-                driver_code = lbl['label']
+                label_text = lbl['label']  # 可能是 "ALB" 或 "ALB S3"
                 
                 # 根據偏移方向決定對齊方式
                 ha = 'left' if x_offset > 0 else 'right'
                 va = 'bottom' if y_offset > 0 else 'top'
+                
+                # 提取純車手代碼（移除 " S{stint_id}" 後綴）
+                # 例如 "ALB S3" → "ALB", "VER" → "VER"
+                driver_code = label_text.split(' ')[0] if ' S' in label_text else label_text
                 
                 # 獲取車隊顏色
                 bg_color = self._get_driver_color_hex(driver_code)
@@ -451,7 +534,7 @@ class CornerPerformanceScatterWidget(QWidget):
                 
                 # 繪製帶背景色的標籤
                 self.ax.annotate(
-                    driver_code,
+                    label_text,  # 顯示完整標籤（如 "ALB S3"）
                     (lbl['x'], lbl['y']),
                     xytext=(x_offset, y_offset),
                     textcoords='offset points',
@@ -666,9 +749,20 @@ class CornerPerformanceScatterWidget(QWidget):
                     self.hover_annotation.set_va(va)
                 
                 # 組合顯示文字
+                driver_display = driver_info['driver']
+                
+                # Split mode 顯示 stint 資訊
+                stint_line = ""
+                if 'stint_id' in driver_info:
+                    stint_id = driver_info['stint_id']
+                    compound = driver_info.get('compound', 'UNKNOWN')
+                    driver_display = f"{driver_info['driver']} S{stint_id}"
+                    stint_line = f"{tr('compound_label', 'Compound')}: {compound}\n"
+                
                 text = (
-                    f"{driver_info['driver']}\n"
+                    f"{driver_display}\n"
                     f"────────────\n"
+                    f"{stint_line}"
                     f"{tr('entry_label', '入彎')}: {driver_info['entry_speed']:.1f} km/h\n"
                     f"{tr('apex_label', '彎心')}: {driver_info['apex_speed']:.1f} km/h\n"
                     f"{tr('exit_label', '出彎')}: {driver_info['exit_speed']:.1f} km/h"
@@ -940,6 +1034,56 @@ class CornerPerformanceScatterWidget(QWidget):
         self.hidden_drivers.clear()
         
         # 重繪圖表（顯示所有數據並調整軸範圍）
+        self.draw_scatter_chart()
+    
+    def filter_by_stints(self, filter_result: Dict[str, List[int]]):
+        """
+        根據 Stint 選擇過濾顯示的車手
+        
+        Args:
+            filter_result: {driver: [stint_numbers]} 格式的過濾條件
+                          只有在此字典中的車手會顯示
+        """
+        if not filter_result:
+            # 空過濾 = 隱藏所有
+            logger.info("[SCATTER] filter_by_stints: Empty filter, hiding all")
+            return
+        
+        # 取得選中的車手列表
+        selected_drivers = set(filter_result.keys())
+        
+        # 更新隱藏列表：不在選中列表中的車手會被隱藏
+        all_drivers = set(self.driver_data_map.get(i, {}).get('driver', '') 
+                          for i in self.driver_data_map.keys())
+        
+        self.hidden_drivers = all_drivers - selected_drivers
+        
+        logger.info(f"[SCATTER] filter_by_stints: Showing {len(selected_drivers)} drivers, hiding {len(self.hidden_drivers)}")
+        
+        # 重繪圖表
+        self.draw_scatter_chart()
+    
+    def set_visible_drivers(self, drivers: List[str]):
+        """
+        設置可見的車手列表
+        
+        Args:
+            drivers: 要顯示的車手代碼列表
+        """
+        if not drivers:
+            return
+        
+        visible_set = set(drivers)
+        
+        # 更新隱藏列表
+        all_drivers = set(self.driver_data_map.get(i, {}).get('driver', '')
+                          for i in self.driver_data_map.keys())
+        
+        self.hidden_drivers = all_drivers - visible_set
+        
+        logger.info(f"[SCATTER] set_visible_drivers: Showing {len(visible_set)} drivers")
+        
+        # 重繪圖表
         self.draw_scatter_chart()
 
     

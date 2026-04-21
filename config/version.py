@@ -7,7 +7,7 @@ Version Management for F1 TelemetryStation Pro
 """
 
 # 應用程式版本號
-APP_VERSION = "V0.15.1"
+APP_VERSION = "V0.16.0"
 
 # 完整版本資訊
 APP_NAME = "PIT WALL"
@@ -15,6 +15,23 @@ APP_FULL_TITLE = f"{APP_NAME} {APP_VERSION}"
 
 # 版本歷史
 VERSION_HISTORY = {
+    "V0.16.0": {
+        "date": "2026-01-22",
+        "features": [
+            "新增 F143 FIA Season Stats 模組：PU 元件使用統計與部件更換記錄",
+            "FIA Season Stats GUI：車隊顏色背景、狀態欄位、車隊欄位",
+            "智能刷新機制：24 小時常規更新，賽後 4 小時快速更新",
+            "批次生成器支援 F143 年度分析功能",
+            "自動過濾 Unknown 車手",
+        ],
+    },
+    "V0.15.2": {
+        "date": "2026-01-22",
+        "features": [
+            "F143 初始開發版本",
+            "FIA Season Stats 基礎功能",
+        ],
+    },
     "V0.15.1": {
         "date": "2026-01-19",
         "features": [
@@ -27,7 +44,6 @@ VERSION_HISTORY = {
     "V0.15.0": {
         "date": "2026-01-12",
         "features": [
-            "新增 Pit Loss Table 模組：24 賽道進站時間損失總覽",
             "進站時間訓練數據修正：Hungaroring/Las Vegas/Yas Marina 映射問題修復",
             "全部 24 賽道皆有真實訓練數據（無估算值）",
             "新增進站時間色彩編碼：綠色（快）/黃色（中）/紅色（慢）",

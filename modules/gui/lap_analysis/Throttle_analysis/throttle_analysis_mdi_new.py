@@ -902,9 +902,8 @@ class ThrottleAnalysisModule(IAnalysisModule):
                         main_window.create_telemetry_analysis()
                         return True
             
-            # 方法2: 通過CLI生成遙測分析數據（Function 12）
-            logger.debug(f"[THROTTLE_MDI] 🔧 通過CLI生成遙測分析數據（Function 12）...")
-            return self._generate_telemetry_via_cli()
+            logger.warning("[THROTTLE_MDI] API-ONLY 模式：已停用 CLI 生成遙測分析數據")
+            return False
             
         except Exception as e:
             logger.error(f"[THROTTLE_MDI] _trigger_telemetry_analysis 失敗: {e}")
@@ -912,50 +911,8 @@ class ThrottleAnalysisModule(IAnalysisModule):
 
     def _generate_telemetry_via_cli(self) -> bool:
         """通過CLI生成遙測分析數據（Function 12）"""
-        try:
-            import subprocess
-            import threading
-            import time
-            
-            # 構建CLI命令 - 功能12是車手詳細遙測分析（正確的遙測數據來源）
-            command = [
-                "python", "f1_analysis_modular_main.py",
-                "-f", "12",  # 功能12: 車手詳細遙測分析
-                "-y", str(self.current_year),
-                "-r", self.current_race,
-                "-s", self.current_session
-            ]
-            
-            logger.debug(f"[THROTTLE_MDI] 🔧 執行CLI命令: {' '.join(command)}")
-            
-            # 同步執行CLI命令（因為油門分析需要立即使用結果）
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True,
-                encoding='utf-8',
-                cwd=os.getcwd()
-            )
-            
-            stdout, stderr = process.communicate(timeout=120)  # 2分鐘超時
-            
-            if process.returncode == 0:
-                logger.info(f"[THROTTLE_MDI] ✅ 遙測分析CLI執行成功")
-                # 等待檔案寫入完成
-                time.sleep(2)
-                return True
-            else:
-                logger.error(f"[THROTTLE_MDI] ❌ 遙測分析CLI執行失敗: {stderr}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            logger.debug(f"[THROTTLE_MDI] ⏰ 遙測分析CLI執行超時")
-            process.kill()
-            return False
-        except Exception as e:
-            logger.error(f"[THROTTLE_MDI] _generate_telemetry_via_cli 失敗: {e}")
-            return False
+        logger.warning("[THROTTLE_MDI] API-ONLY 模式：CLI 生成已停用")
+        return False
 
     def _extract_fastest_laps_from_telemetry(self, telemetry_file: str) -> Optional[Dict[str, int]]:
         """從遙測分析JSON檔案中提取最速圈數據"""

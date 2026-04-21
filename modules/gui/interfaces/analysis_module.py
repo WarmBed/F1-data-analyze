@@ -207,11 +207,11 @@ class IAnalysisModule(QObject, ABC, metaclass=AnalysisModuleMeta):
         """
         try:
             # 基本參數驗證
-            if not (2018 <= year <= 2025):
+            if not (2022 <= year <= 2026):
                 return False
             if not race or len(race.strip()) == 0:
                 return False
-            if session not in ['FP1', 'FP2', 'FP3', 'Q', 'R', 'S']:
+            if session not in ['FP1', 'FP2', 'FP3', 'SQ', 'Q', 'R', 'S']:
                 return False
             return True
         except Exception:

@@ -27,6 +27,7 @@ import certifi
 import requests
 from core.api_base_url import resolve_api_base_url
 from core.logger import get_logger
+from core.gui_i18n import tr
 
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
@@ -326,7 +327,7 @@ class TrackAnalysisWorkerThread(QThread):
                 self.analysis_completed.emit(track_data)
                 return True
 
-        self.progress_updated.emit(70, "未找到有效快取，執行 CLI 生成...")
+        self.progress_updated.emit(70, tr("api_only_cli_disabled", "API-ONLY 模式：本地快取不足，CLI 生成已停用"))
         if self.run_cli_analysis():
             generated = self.cache_manager.find_latest_track_json(self.year, self.race, self.session)
             if generated:
@@ -348,35 +349,8 @@ class TrackAnalysisWorkerThread(QThread):
     
     def run_cli_analysis(self):
         """執行CLI賽道路線分析"""
-        try:
-            cli_script = os.path.join(project_root, "f1_analysis_modular_main.py")
-            command = [
-                "python", cli_script,
-                "-f", "2",  # 功能2: 賽道路線分析
-                "-y", str(self.year),
-                "-r", self.race,
-                "-s", self.session
-                # 注意：功能2不需要車手參數，因為是分析整個賽道路線
-            ]
-            
-            result = subprocess.run(
-                command,
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                encoding='utf-8',
-                errors='replace',  # 遇到無法解碼的字符時用替代字符
-                timeout=300  # 5分鐘超時
-            )
-            
-            return result.returncode == 0
-            
-        except subprocess.TimeoutExpired:
-            logger.error("[ERROR] CLI分析執行超時")
-            return False
-        except Exception as e:
-            logger.exception("[ERROR] CLI分析執行錯誤: %s", e)
-            return False
+        logger.warning("[TRACK_ANALYSIS] API-ONLY 模式：CLI 分析已停用")
+        return False
     
     def load_json_data(self, file_path: str) -> Optional[Dict[str, Any]]:
         try:

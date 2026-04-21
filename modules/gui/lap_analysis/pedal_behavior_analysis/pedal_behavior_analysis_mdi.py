@@ -344,10 +344,12 @@ class PedalBehaviorAnalysisMDI(UniversalAnalysisMDI):
         stint_tab_layout = QVBoxLayout(stint_tab)
         stint_tab_layout.setContentsMargins(5, 5, 5, 5)
         
-        # 創建 Stint Selector
-        self.stint_selector = UniversalStintSelector()
+        # 創建 Stint Selector (V0.15.1: 添加 module_id 和 Global Sync)
+        self.stint_selector = UniversalStintSelector(module_id="pedal_behavior")
         self.stint_selector.selection_changed.connect(self._on_stint_selection_changed)
         self.stint_selector.merge_mode_changed.connect(self._on_merge_mode_changed)
+        # V0.15.1: 預設啟用全局同步
+        self.stint_selector.enable_global_sync(True)
         stint_tab_layout.addWidget(self.stint_selector)
         
         self.tab_widget.addTab(stint_tab, tr("pedal_behavior.tab_stint", "Stint Selection"))
@@ -376,6 +378,12 @@ class PedalBehaviorAnalysisMDI(UniversalAnalysisMDI):
             raw_data = self.data_manager.get_raw_data()
             if raw_data:
                 logger.debug("[PEDAL_MDI] 更新 Stint Selector...")
+                # V0.15.1: 設置 Session 資訊（用於 Global Sync 過濾）
+                self.stint_selector.set_session_info(
+                    year=str(self.current_year),
+                    race=self.current_race,
+                    session=self.current_session
+                )
                 self.stint_selector.set_data(raw_data)
                 # Stint Selector 會自動觸發 selection_changed 信號
                 return
@@ -406,18 +414,21 @@ class PedalBehaviorAnalysisMDI(UniversalAnalysisMDI):
         
         # 根據合併模式獲取選中的 Lap 數據
         if self.stint_selector.is_merge_mode():
-            # 合併模式：合併所有選中 Stint 的 Laps
+            # 合併模式：合併所有選中 Stint 的 Laps（按車手）
             selected_laps_by_driver = self._merge_selected_stints(selected_stints, raw_lap_data)
+            if not selected_laps_by_driver:
+                logger.debug("[PEDAL_MDI] 沒有選中的 Lap 數據")
+                return
+            # 計算平均 Pedal State（應用過濾）
+            driver_pedal_data = self._calculate_pedal_states_from_laps(selected_laps_by_driver)
         else:
-            # 分組模式：每個 Stint 單獨計算（暫不支援）
-            selected_laps_by_driver = self._merge_selected_stints(selected_stints, raw_lap_data)
-        
-        if not selected_laps_by_driver:
-            logger.debug("[PEDAL_MDI] 沒有選中的 Lap 數據")
-            return
-        
-        # 計算平均 Pedal State（應用過濾）
-        driver_pedal_data = self._calculate_pedal_states_from_laps(selected_laps_by_driver)
+            # 分組模式：每個 Stint 單獨計算（如 ALB S1, ALB S2）
+            stint_laps_dict = self._split_selected_stints(selected_stints, raw_lap_data)
+            if not stint_laps_dict:
+                logger.debug("[PEDAL_MDI] 沒有選中的 Lap 數據")
+                return
+            # 計算每個 Stint 的 Pedal State
+            driver_pedal_data = self._calculate_pedal_states_from_laps(stint_laps_dict)
         
         # 更新圖表
         processed_data = {
@@ -444,7 +455,7 @@ class PedalBehaviorAnalysisMDI(UniversalAnalysisMDI):
             self._on_stint_selection_changed(selected)
     
     def _merge_selected_stints(self, selected_stints: List[StintInfo], raw_lap_data: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
-        """合併選中 Stint 的 Lap 數據"""
+        """合併選中 Stint 的 Lap 數據（按車手合併）"""
         merged = {}
         
         for stint in selected_stints:
@@ -463,6 +474,32 @@ class PedalBehaviorAnalysisMDI(UniversalAnalysisMDI):
             merged[driver_code].extend(stint_laps)
         
         return merged
+    
+    def _split_selected_stints(self, selected_stints: List[StintInfo], raw_lap_data: Dict[str, List[Dict]]) -> Dict[str, List[Dict]]:
+        """
+        分離選中 Stint 的 Lap 數據（每個 Stint 獨立）
+        
+        返回格式: {"ALB S1": [...], "ALB S2": [...], "VER S1": [...]}
+        """
+        split_data = {}
+        
+        for stint in selected_stints:
+            driver_code = stint.driver
+            stint_number = stint.stint_number
+            
+            if driver_code not in raw_lap_data:
+                continue
+            
+            # 過濾出 Stint 範圍內的 Laps
+            driver_laps = raw_lap_data[driver_code]
+            stint_laps = [lap for lap in driver_laps if stint.start_lap <= lap.get('lap_number', 0) <= stint.end_lap]
+            
+            if stint_laps:
+                # 使用 "VER S1" 格式作為 key
+                stint_key = f"{driver_code} S{stint_number}"
+                split_data[stint_key] = stint_laps
+        
+        return split_data
     
     def _calculate_pedal_states_from_laps(self, laps_by_driver: Dict[str, List[Dict]]) -> Dict[str, Dict[str, float]]:
         """從 Lap 數據計算平均 Pedal State（應用過濾）"""

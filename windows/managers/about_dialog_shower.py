@@ -29,7 +29,7 @@ class AboutDialogShower:
                 "GitHub：WarmBed / F1-data-analyze"
             ),
         )
-        QMessageBox.information(self.main_window, tr('about_action', '關於 F1T'), about_message)
+        QMessageBox.information(self.main_window, tr('about_action', '關於 PITWALL'), about_message)
     
     # ===========================================
     # F1TV Authentication Methods

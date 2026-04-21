@@ -206,17 +206,29 @@ class BrakeChartDataLoader(QObject):
             self._api_worker.wait(3000)  # 等待最多 3 秒
     
     def _on_api_success(self, payload: Dict[str, Any]):
-        """API 請求成功"""
+        """API 請求成功
+        
+        API 返回格式: {"success": true, "data": {...actual_data...}, ...}
+        此方法提取 data 欄位傳遞給 MDI
+        """
         logger.info("[BRAKE_CHART_LOADER] API 數據載入成功")
         
+        # 提取實際數據 (API wrapper 中的 data 欄位)
+        # 2025-01-19: 修復 - API 返回 {success, data: {...}} 結構
+        actual_data = payload.get("data", payload)
+        
+        # 確保 drivers 存在
+        if "drivers" not in actual_data and "drivers" in payload:
+            actual_data = payload
+        
         # 緩存數據
-        self._cached_data = payload
+        self._cached_data = actual_data
         
         # 更新狀態
         self.status_changed.emit(tr("data_loaded", "Data loaded"))
         
         # 發送數據
-        self.data_loaded.emit(payload)
+        self.data_loaded.emit(actual_data)
     
     def _on_api_failure(self, error_msg: str):
         """API 請求失敗"""

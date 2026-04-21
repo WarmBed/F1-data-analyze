@@ -64,7 +64,7 @@ class UniversalStintSelector(QWidget):
     selection_changed = pyqtSignal(list)  # List[StintInfo]
     merge_mode_changed = pyqtSignal(bool)  # is_merge_mode
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, module_id: str = None):
         super().__init__(parent)
         
         # 數據存儲
@@ -75,6 +75,17 @@ class UniversalStintSelector(QWidget):
         # 狀態
         self._is_merge_mode = True  # 預設合併模式（每個車手一個 Box）
         self._block_signals = False  # 用於暫時阻止信號發射
+        
+        # Global Sync 狀態 (V0.15.1)
+        self._global_sync_enabled = False  # 預設關閉，由 Linkage 按鈕控制
+        self._module_id = module_id or f"stint_selector_{id(self)}"
+        self._session_year: Optional[str] = None
+        self._session_race: Optional[str] = None
+        self._session_name: Optional[str] = None
+        self._is_applying_external = False  # 防止迴圈更新
+        
+        # 連接全局同步信號
+        self._connect_global_sync()
         
         self._setup_ui()
         
@@ -140,6 +151,20 @@ class UniversalStintSelector(QWidget):
         self.tire_hard_cb.setChecked(True)
         self.tire_hard_cb.stateChanged.connect(self._on_tire_filter_changed)
         control_layout.addWidget(self.tire_hard_cb)
+        
+        # INTERMEDIATE checkbox (綠色)
+        self.tire_intermediate_cb = QCheckBox("INTER")
+        self.tire_intermediate_cb.setStyleSheet("QCheckBox { color: #33FF33; font-weight: bold; }")
+        self.tire_intermediate_cb.setChecked(True)
+        self.tire_intermediate_cb.stateChanged.connect(self._on_tire_filter_changed)
+        control_layout.addWidget(self.tire_intermediate_cb)
+        
+        # WET checkbox (藍色)
+        self.tire_wet_cb = QCheckBox("WET")
+        self.tire_wet_cb.setStyleSheet("QCheckBox { color: #3399FF; font-weight: bold; }")
+        self.tire_wet_cb.setChecked(True)
+        self.tire_wet_cb.stateChanged.connect(self._on_tire_filter_changed)
+        control_layout.addWidget(self.tire_wet_cb)
         
         # 分隔線
         control_layout.addWidget(self._create_separator())
@@ -264,6 +289,10 @@ class UniversalStintSelector(QWidget):
             allowed.add('MEDIUM')
         if self.tire_hard_cb.isChecked():
             allowed.add('HARD')
+        if hasattr(self, 'tire_intermediate_cb') and self.tire_intermediate_cb.isChecked():
+            allowed.add('INTERMEDIATE')
+        if hasattr(self, 'tire_wet_cb') and self.tire_wet_cb.isChecked():
+            allowed.add('WET')
         return allowed
     
     def _on_tire_filter_changed(self) -> None:
@@ -356,6 +385,17 @@ class UniversalStintSelector(QWidget):
             self._detect_stints_format_f54(drivers_list)
             return
         
+        # 嘗試格式 3: Function 120 (F120 corner_performance)
+        # 格式: mode_a_unified.drivers[{driver, stints: [...]}]
+        mode_a = data.get('mode_a_unified', {})
+        if not mode_a and 'data' in data:
+            mode_a = data['data'].get('mode_a_unified', {})
+        
+        f120_drivers = mode_a.get('drivers', [])
+        if f120_drivers and data.get('stints_available', False):
+            self._detect_stints_format_f120(f120_drivers)
+            return
+        
         logger.warning("[STINT_SELECTOR] No driver data found in any supported format")
     
     def _detect_stints_format_f28(self, all_drivers: Dict[str, Any]) -> None:
@@ -417,6 +457,74 @@ class UniversalStintSelector(QWidget):
                 self._all_stints.extend(stints)
         
         logger.debug(f"[STINT_SELECTOR] F54 format: Detected {len(self._all_stints)} stints for {len(self._driver_stints)} drivers")
+    
+    def _detect_stints_format_f120(self, drivers_list: List[Dict]) -> None:
+        """
+        From Function 120 (corner_performance) format
+        
+        Format: [{"driver": "VER", "stints": [{stint_id, compound, lap_range, ...}]}]
+        
+        F120 already has pre-detected stint data, so we just need to convert it
+        """
+        for driver_data in drivers_list:
+            if not isinstance(driver_data, dict):
+                continue
+            
+            driver_code = driver_data.get('driver', '')
+            if not driver_code:
+                continue
+            
+            stints_raw = driver_data.get('stints', [])
+            if not isinstance(stints_raw, list) or not stints_raw:
+                continue
+            
+            driver_stints: List[StintInfo] = []
+            
+            for stint_raw in stints_raw:
+                if not isinstance(stint_raw, dict):
+                    continue
+                
+                stint_id = stint_raw.get('stint_id', 0)
+                compound = stint_raw.get('compound', 'UNKNOWN')
+                if compound:
+                    compound = compound.upper()
+                
+                lap_range = stint_raw.get('lap_range', [0, 0])
+                start_lap = lap_range[0] if len(lap_range) > 0 else 0
+                end_lap = lap_range[1] if len(lap_range) > 1 else start_lap
+                
+                lap_count = stint_raw.get('lap_count', end_lap - start_lap + 1)
+                stint_type = stint_raw.get('type', 'unknown')
+                
+                # Extract lap times from laps_detail if available
+                lap_times = []
+                laps_detail = stint_raw.get('laps_detail', [])
+                for lap_info in laps_detail:
+                    if isinstance(lap_info, dict):
+                        lap_time = lap_info.get('lap_time_seconds')
+                        if lap_time and lap_time > 0:
+                            lap_times.append(float(lap_time))
+                
+                avg_time = sum(lap_times) / len(lap_times) if lap_times else 0.0
+                
+                stint_info = StintInfo(
+                    driver=driver_code,
+                    stint_number=stint_id,
+                    start_lap=start_lap,
+                    end_lap=end_lap,
+                    lap_count=lap_count,
+                    compound=compound,
+                    lap_times=lap_times,
+                    avg_time=avg_time,
+                    selected=True
+                )
+                driver_stints.append(stint_info)
+            
+            if driver_stints:
+                self._driver_stints[driver_code] = driver_stints
+                self._all_stints.extend(driver_stints)
+        
+        logger.info(f"[STINT_SELECTOR] F120 format: Loaded {len(self._all_stints)} stints for {len(self._driver_stints)} drivers")
         
     def _detect_driver_stints(self, driver_code: str, laps: List[Dict]) -> List[StintInfo]:
         """
@@ -735,8 +843,13 @@ class UniversalStintSelector(QWidget):
         
     def _emit_selection_changed(self) -> None:
         """發射選擇變更信號"""
+        if self._block_signals:
+            return
         selected = [s for s in self._all_stints if s.selected]
         self.selection_changed.emit(selected)
+        
+        # V0.15.1: 觸發全局同步
+        self._emit_global_sync()
         
     def get_selected_stints(self) -> List[StintInfo]:
         """獲取選中的 Stint 列表"""
@@ -791,3 +904,176 @@ class UniversalStintSelector(QWidget):
     def get_driver_stints(self, driver: str) -> List[StintInfo]:
         """獲取指定車手的 Stint 列表"""
         return self._driver_stints.get(driver, [])
+    
+    # ========== Global Sync Methods (V0.15.1) ==========
+    
+    def _connect_global_sync(self) -> None:
+        """連接全局同步信號"""
+        try:
+            from .global_chart_sync_signal import get_global_chart_sync
+            sync = get_global_chart_sync()
+            sync.stint_selection_changed.connect(self._on_global_stint_selection_changed)
+            logger.debug(f"[STINT_SELECTOR] {self._module_id}: Global sync connected")
+        except Exception as e:
+            logger.warning(f"[STINT_SELECTOR] Failed to connect global sync: {e}")
+    
+    def set_session_info(self, year: str, race: str, session: str) -> None:
+        """
+        設置 Session 資訊（用於 Global Sync 過濾）
+        
+        Args:
+            year: 年份
+            race: 賽事名稱
+            session: 場次 (FP1, FP2, Q, R, etc.)
+        """
+        self._session_year = year
+        self._session_race = race
+        self._session_name = session
+        logger.debug(f"[STINT_SELECTOR] {self._module_id}: Session set to {year} {race} {session}")
+    
+    def enable_global_sync(self, enabled: bool) -> None:
+        """
+        啟用或停用全局同步（由 Linkage 按鈕控制）
+        
+        Args:
+            enabled: 是否啟用
+        """
+        self._global_sync_enabled = enabled
+        logger.info(f"[STINT_SELECTOR] {self._module_id}: Global sync {'enabled' if enabled else 'disabled'}")
+    
+    def is_global_sync_enabled(self) -> bool:
+        """是否啟用全局同步"""
+        return self._global_sync_enabled
+    
+    def _on_global_stint_selection_changed(
+        self,
+        selected_stints_data: List[Dict[str, Any]],
+        is_merge_mode: bool,
+        year: str,
+        race: str,
+        session: str,
+        source: str
+    ) -> None:
+        """
+        處理來自其他模組的 Stint 選擇變更
+        
+        Args:
+            selected_stints_data: 選中的 Stint 列表
+            is_merge_mode: 是否為合併模式
+            year, race, session: Session 資訊
+            source: 信號來源模組
+        """
+        # 忽略自己發出的信號
+        if source == self._module_id:
+            return
+        
+        # 如果全局同步未啟用，忽略
+        if not self._global_sync_enabled:
+            return
+        
+        # 檢查 Session 是否匹配
+        if (self._session_year != year or 
+            self._session_race != race or 
+            self._session_name != session):
+            logger.debug(
+                f"[STINT_SELECTOR] {self._module_id}: Ignoring sync from {source} "
+                f"(session mismatch: {self._session_year}/{self._session_race}/{self._session_name} "
+                f"vs {year}/{race}/{session})"
+            )
+            return
+        
+        # 應用外部選擇
+        self.apply_external_selection(selected_stints_data, is_merge_mode)
+    
+    def apply_external_selection(
+        self, 
+        selected_stints_data: List[Dict[str, Any]], 
+        is_merge_mode: bool
+    ) -> None:
+        """
+        應用來自外部的 Stint 選擇（Global Sync 用）
+        
+        Args:
+            selected_stints_data: 選中的 Stint 列表，格式:
+                [{'driver': str, 'stint_number': int, ...}, ...]
+            is_merge_mode: 是否為合併模式
+        """
+        if self._is_applying_external:
+            return
+        
+        self._is_applying_external = True
+        logger.info(f"[STINT_SELECTOR] {self._module_id}: Applying external selection "
+                   f"({len(selected_stints_data)} stints, merge={is_merge_mode})")
+        
+        try:
+            # 建立 lookup set: (driver, stint_number)
+            selected_keys = set()
+            for stint_data in selected_stints_data:
+                driver = stint_data.get('driver', '')
+                stint_num = stint_data.get('stint_number', 0)
+                if driver and stint_num:
+                    selected_keys.add((driver, stint_num))
+            
+            # 更新本地選擇狀態
+            for stint in self._all_stints:
+                key = (stint.driver, stint.stint_number)
+                stint.selected = key in selected_keys
+            
+            # 更新 merge mode
+            self._is_merge_mode = is_merge_mode
+            
+            # 更新 UI（暫時阻止信號）
+            self._block_signals = True
+            self.merge_mode_cb.setChecked(is_merge_mode)
+            self._update_tree_checkboxes()
+            self._update_stats()
+            self._block_signals = False
+            
+            # 發射本地 selection_changed（供 MDI 更新圖表）
+            # 但不觸發全局同步（因為 _is_applying_external = True）
+            selected = [s for s in self._all_stints if s.selected]
+            self.selection_changed.emit(selected)
+            
+        except Exception as e:
+            logger.error(f"[STINT_SELECTOR] {self._module_id}: Failed to apply external selection: {e}")
+        finally:
+            self._is_applying_external = False
+    
+    def _emit_global_sync(self) -> None:
+        """發射全局同步信號"""
+        if not self._global_sync_enabled:
+            return
+        
+        if self._is_applying_external:
+            return  # 防止迴圈
+        
+        if not all([self._session_year, self._session_race, self._session_name]):
+            logger.debug(f"[STINT_SELECTOR] {self._module_id}: Skipping global sync (session info not set)")
+            return
+        
+        try:
+            from .global_chart_sync_signal import get_global_chart_sync
+            sync = get_global_chart_sync()
+            
+            # 準備選中的 Stint 資料
+            selected_stints_data = []
+            for stint in self._all_stints:
+                if stint.selected:
+                    selected_stints_data.append({
+                        'driver': stint.driver,
+                        'stint_number': stint.stint_number,
+                        'start_lap': stint.start_lap,
+                        'end_lap': stint.end_lap,
+                        'compound': stint.compound
+                    })
+            
+            sync.emit_stint_selection_changed(
+                selected_stints=selected_stints_data,
+                is_merge_mode=self._is_merge_mode,
+                year=self._session_year,
+                race=self._session_race,
+                session=self._session_name,
+                source=self._module_id
+            )
+        except Exception as e:
+            logger.error(f"[STINT_SELECTOR] {self._module_id}: Failed to emit global sync: {e}")

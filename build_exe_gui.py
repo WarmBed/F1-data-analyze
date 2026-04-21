@@ -21,7 +21,7 @@ try:
     from config.version import APP_VERSION, APP_NAME
     import webbrowser
 except ImportError:
-    APP_VERSION = "V0.15.1"
+    APP_VERSION = "V0.16.0"
     APP_NAME = "PIT WALL"
 
 
