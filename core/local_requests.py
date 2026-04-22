@@ -63,7 +63,76 @@ def _extract_params(params: Optional[Dict[str, Any]], json_body: Optional[Dict[s
     merged.pop("function_id", None)
     merged.pop("function", None)
     merged.pop("f", None)
+    nested_parameters = merged.pop("parameters", None)
+    if isinstance(nested_parameters, dict):
+        local_params = dict(nested_parameters)
+        local_params.update(merged)
+        return local_params
     return merged
+
+
+def _fallback_color_payload(year: Any = None, colormap: str = "fastf1") -> Dict[str, Any]:
+    teams = {
+        "red bull": {"team_name": "Red Bull", "selected_hex": "#0600EF"},
+        "ferrari": {"team_name": "Ferrari", "selected_hex": "#E80020"},
+        "mercedes": {"team_name": "Mercedes", "selected_hex": "#27F4D2"},
+        "mclaren": {"team_name": "McLaren", "selected_hex": "#FF8000"},
+        "aston martin": {"team_name": "Aston Martin", "selected_hex": "#00665F"},
+        "alpine": {"team_name": "Alpine", "selected_hex": "#FF87BC"},
+        "haas": {"team_name": "Haas", "selected_hex": "#B6BABD"},
+        "rb": {"team_name": "RB", "selected_hex": "#364AA9"},
+        "kick sauber": {"team_name": "Kick Sauber", "selected_hex": "#00E700"},
+        "williams": {"team_name": "Williams", "selected_hex": "#00A0DD"},
+    }
+    driver_to_team = {
+        "VER": ("red bull", "Max Verstappen"),
+        "LAW": ("red bull", "Liam Lawson"),
+        "PER": ("red bull", "Sergio Perez"),
+        "LEC": ("ferrari", "Charles Leclerc"),
+        "HAM": ("ferrari", "Lewis Hamilton"),
+        "RUS": ("mercedes", "George Russell"),
+        "ANT": ("mercedes", "Andrea Kimi Antonelli"),
+        "NOR": ("mclaren", "Lando Norris"),
+        "PIA": ("mclaren", "Oscar Piastri"),
+        "ALO": ("aston martin", "Fernando Alonso"),
+        "STR": ("aston martin", "Lance Stroll"),
+        "GAS": ("alpine", "Pierre Gasly"),
+        "COL": ("alpine", "Franco Colapinto"),
+        "DOO": ("alpine", "Jack Doohan"),
+        "OCO": ("haas", "Esteban Ocon"),
+        "BEA": ("haas", "Oliver Bearman"),
+        "TSU": ("rb", "Yuki Tsunoda"),
+        "HAD": ("rb", "Isack Hadjar"),
+        "HUL": ("kick sauber", "Nico Hulkenberg"),
+        "BOR": ("kick sauber", "Gabriel Bortoleto"),
+        "ALB": ("williams", "Alexander Albon"),
+        "SAI": ("williams", "Carlos Sainz"),
+    }
+    drivers = {}
+    for code, (team_slug, name) in driver_to_team.items():
+        team = teams.get(team_slug, {})
+        drivers[code] = {
+            "driver_name": name,
+            "team_slug": team_slug,
+            "hex": team.get("selected_hex", "#808080"),
+        }
+
+    return {
+        "success": True,
+        "message": "Local fallback colour palette",
+        "source": "local_fallback",
+        "data": {
+            "data": {
+                "teams": teams,
+                "drivers": drivers,
+                "metadata": {
+                    "season_year": int(year or 2026),
+                    "colormap": colormap,
+                    "source": "local_fallback",
+                },
+            }
+        },
+    }
 
 
 def post(url: str, *args: Any, **kwargs: Any) -> Any:
@@ -77,6 +146,11 @@ def post(url: str, *args: Any, **kwargs: Any) -> Any:
             function_id = _extract_function_id(params, json_body)
             local_params = _extract_params(params, json_body)
             payload = execute_analysis_sync(function_id, **local_params)
+            if str(function_id) == "98" and not payload.get("success"):
+                payload = _fallback_color_payload(
+                    year=local_params.get("year"),
+                    colormap=str(local_params.get("colormap") or "fastf1"),
+                )
             return LocalResponse(payload=payload, status_code=200, url=str(url))
         except Exception as exc:
             return LocalResponse(

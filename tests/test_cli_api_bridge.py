@@ -8,6 +8,7 @@ if ROOT not in sys.path:
 
 from api.models.function_specs import FUNCTION_SPECS
 from api.services.simple_analysis_service import SimpleF1AnalysisService
+from core.local_requests import _extract_params
 
 
 def test_function_specs_basic_properties():
@@ -60,3 +61,15 @@ def test_function_spec_straight_line_speed_registered():
     assert spec.required_params == ["year", "race", "session"]
     assert "all_drivers_straight_line_speed" in spec.cache_patterns
     assert spec.cli_flag_map["year"] == "-y"
+
+
+def test_local_request_params_flattens_gui_payload():
+    params = _extract_params(
+        None,
+        {
+            "function_id": "96",
+            "parameters": {"year": 2025, "race": "Australia"},
+        },
+    )
+
+    assert params == {"year": 2025, "race": "Australia"}

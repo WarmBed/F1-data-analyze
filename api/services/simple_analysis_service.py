@@ -110,7 +110,7 @@ class SimpleF1AnalysisService:
             # 導入 CLI 的新鮮度檢查功能
             from CLI_modules.cli.analyzer.championship_standings_analysis import check_standings_freshness
             
-            print(f"[SERVICE] 🔍 檢查積分榜新鮮度 (year={year})...")
+            print(f"[SERVICE] CHECK standings freshness (year={year})...")
             
             # 在線程中執行同步的 CLI 函數
             freshness_result = await asyncio.to_thread(check_standings_freshness, year)
@@ -123,27 +123,27 @@ class SimpleF1AnalysisService:
             reason = freshness_result.get("reason", "")
             
             if should_regenerate:
-                print(f"[SERVICE] ⚠️ 積分榜數據過時！")
-                print(f"[SERVICE]    └─ 原因: {reason}")
-                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
-                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
-                print(f"[SERVICE]    └─ 將強制調用 CLI 刷新")
+                print(f"[SERVICE] WARN standings data is stale")
+                print(f"[SERVICE]      reason: {reason}")
+                print(f"[SERVICE]      data age: {age_info}")
+                print(f"[SERVICE]      refresh interval: {refresh_interval} hours")
+                print(f"[SERVICE]      force CLI refresh enabled")
             else:
-                print(f"[SERVICE] ✅ 積分榜數據還新鮮")
-                print(f"[SERVICE]    └─ 原因: {reason}")
-                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
-                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+                print(f"[SERVICE] OK standings data is fresh")
+                print(f"[SERVICE]      reason: {reason}")
+                print(f"[SERVICE]      data age: {age_info}")
+                print(f"[SERVICE]      refresh interval: {refresh_interval} hours")
             
             return should_regenerate
             
         except ImportError as e:
-            print(f"[SERVICE] ⚠️ 無法導入 CLI 新鮮度檢查模組: {e}")
-            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            print(f"[SERVICE] WARN cannot import CLI freshness checker: {e}")
+            print(f"[SERVICE]      fallback: no forced refresh")
             return False
             
         except Exception as e:
-            print(f"[SERVICE] ❌ 檢查新鮮度時發生錯誤: {e}")
-            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            print(f"[SERVICE] ERROR freshness check failed: {e}")
+            print(f"[SERVICE]      fallback: no forced refresh")
             import traceback
             traceback.print_exc()
             return False
@@ -165,7 +165,7 @@ class SimpleF1AnalysisService:
             # 導入 CLI 的新鮮度檢查功能
             from CLI_modules.cli.analyzer.race_weather_forecast import check_weather_forecast_freshness
             
-            print(f"[SERVICE] 🔍 檢查天氣預報新鮮度 (year={year}, event={event_name})...")
+            print(f"[SERVICE] CHECK weather forecast freshness (year={year}, event={event_name})...")
             
             # 在線程中執行同步的 CLI 函數
             freshness_result = await asyncio.to_thread(
@@ -182,27 +182,27 @@ class SimpleF1AnalysisService:
             reason = freshness_result.get("reason", "")
             
             if should_regenerate:
-                print(f"[SERVICE] ⚠️ 天氣預報數據過時！")
-                print(f"[SERVICE]    └─ 原因: {reason}")
-                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
-                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
-                print(f"[SERVICE]    └─ 將強制調用 CLI 刷新")
+                print(f"[SERVICE] WARN weather forecast data is stale")
+                print(f"[SERVICE]      reason: {reason}")
+                print(f"[SERVICE]      data age: {age_info}")
+                print(f"[SERVICE]      refresh interval: {refresh_interval} hours")
+                print(f"[SERVICE]      force CLI refresh enabled")
             else:
-                print(f"[SERVICE] ✅ 天氣預報數據還新鮮")
-                print(f"[SERVICE]    └─ 原因: {reason}")
-                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
-                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+                print(f"[SERVICE] OK weather forecast data is fresh")
+                print(f"[SERVICE]      reason: {reason}")
+                print(f"[SERVICE]      data age: {age_info}")
+                print(f"[SERVICE]      refresh interval: {refresh_interval} hours")
             
             return should_regenerate
             
         except ImportError as e:
-            print(f"[SERVICE] ⚠️ 無法導入 CLI 天氣預報檢查模組: {e}")
-            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            print(f"[SERVICE] WARN cannot import CLI weather forecast checker: {e}")
+            print(f"[SERVICE]      fallback: no forced refresh")
             return False
             
         except Exception as e:
-            print(f"[SERVICE] ❌ 檢查天氣預報新鮮度時發生錯誤: {e}")
-            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            print(f"[SERVICE] ERROR weather forecast freshness check failed: {e}")
+            print(f"[SERVICE]      fallback: no forced refresh")
             import traceback
             traceback.print_exc()
             return False
@@ -233,27 +233,27 @@ class SimpleF1AnalysisService:
             age_info = f"{age_hours:.1f} 小時" if age_hours is not None else "未知"
             
             if should_regenerate:
-                print(f"[SERVICE] ⚠️ 賽季日曆數據過時！")
-                print(f"[SERVICE]    └─ 原因: {reason}")
-                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
-                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
-                print(f"[SERVICE]    └─ 將強制調用 CLI 刷新")
+                print(f"[SERVICE] WARN season calendar data is stale")
+                print(f"[SERVICE]      reason: {reason}")
+                print(f"[SERVICE]      data age: {age_info}")
+                print(f"[SERVICE]      refresh interval: {refresh_interval} hours")
+                print(f"[SERVICE]      force CLI refresh enabled")
             else:
-                print(f"[SERVICE] ✅ 賽季日曆數據還新鮮")
-                print(f"[SERVICE]    └─ 原因: {reason}")
-                print(f"[SERVICE]    └─ 數據年齡: {age_info}")
-                print(f"[SERVICE]    └─ 刷新間隔: {refresh_interval} 小時")
+                print(f"[SERVICE] OK season calendar data is fresh")
+                print(f"[SERVICE]      reason: {reason}")
+                print(f"[SERVICE]      data age: {age_info}")
+                print(f"[SERVICE]      refresh interval: {refresh_interval} hours")
             
             return should_regenerate
             
         except ImportError as e:
-            print(f"[SERVICE] ⚠️ 無法導入 CLI 賽季日曆檢查模組: {e}")
-            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            print(f"[SERVICE] WARN cannot import CLI season calendar checker: {e}")
+            print(f"[SERVICE]      fallback: no forced refresh")
             return False
             
         except Exception as e:
-            print(f"[SERVICE] ❌ 檢查賽季日曆新鮮度時發生錯誤: {e}")
-            print(f"[SERVICE]    └─ 降級為不強制刷新")
+            print(f"[SERVICE] ERROR season calendar freshness check failed: {e}")
+            print(f"[SERVICE]      fallback: no forced refresh")
             import traceback
             traceback.print_exc()
             return False
@@ -269,7 +269,7 @@ class SimpleF1AnalysisService:
 
         # 🔍 調試：顯示 Function 100 的參數
         if spec.function_id == "100":
-            print(f"[SERVICE] 🔍 _build_cli_command for Function 100:")
+            print(f"[SERVICE] DEBUG _build_cli_command for Function 100:")
             print(f"[SERVICE]    params = {params}")
             print(f"[SERVICE]    cli_flag_map = {spec.cli_flag_map}")
 
@@ -289,7 +289,7 @@ class SimpleF1AnalysisService:
 
         # 🔍 調試：顯示 Function 100 的最終命令
         if spec.function_id == "100":
-            print(f"[SERVICE] 🔍 CLI 命令: {' '.join(cmd)}")
+            print(f"[SERVICE] DEBUG CLI command: {' '.join(cmd)}")
 
         return cmd
     
@@ -314,7 +314,7 @@ class SimpleF1AnalysisService:
             if canonical_id == "97" and not force_refresh:
                 force_refresh = await self._check_standings_freshness(prepared_params.get("year"))
                 if force_refresh:
-                    print(f"[SERVICE] 🔄 積分榜數據過時，啟用強制刷新")
+                    print(f"[SERVICE] REFRESH standings data is stale, forcing refresh")
             
             # 🔄 智慧刷新檢查：Function 96 (Weather Forecast) 專用
             if canonical_id == "96" and not force_refresh:
@@ -323,13 +323,13 @@ class SimpleF1AnalysisService:
                     prepared_params.get("race")
                 )
                 if force_refresh:
-                    print(f"[SERVICE] 🔄 天氣預報數據過時，啟用強制刷新")
+                    print(f"[SERVICE] REFRESH weather forecast data is stale, forcing refresh")
             
             # 🔄 智慧刷新檢查：Function 99 (Season Calendar) 專用
             if canonical_id == "99" and not force_refresh:
                 force_refresh = await self._check_calendar_freshness()
                 if force_refresh:
-                    print(f"[SERVICE] 🔄 賽季日曆數據過時，啟用強制刷新")
+                    print(f"[SERVICE] REFRESH season calendar data is stale, forcing refresh")
 
             if not force_refresh:
                 print("[SERVICE] 檢查緩存...")
@@ -341,7 +341,7 @@ class SimpleF1AnalysisService:
 
                 if cached_result:
                     execution_time = time.time() - start_time
-                    print(f"[SERVICE] ✅ 緩存命中! (耗時: {execution_time:.3f}s)")
+                    print(f"[SERVICE] OK cache hit (elapsed: {execution_time:.3f}s)")
                     self._metrics["cache_hits"] += 1
                     self._metrics["last_execution_time"] = execution_time
                     self._record_history(
@@ -384,7 +384,7 @@ class SimpleF1AnalysisService:
                 )
 
                 if refreshed_data:
-                    print(f"[SERVICE] ✅ CLI 執行成功! (耗時: {execution_time:.3f}s)")
+                    print(f"[SERVICE] OK CLI execution succeeded (elapsed: {execution_time:.3f}s)")
                     recorded = self._complete_active_task(
                         request_id,
                         status="completed",
@@ -471,7 +471,7 @@ class SimpleF1AnalysisService:
                     message=error_message,
                 )
 
-            print(f"[SERVICE] ❌ CLI 執行失敗! (耗時: {execution_time:.3f}s)")
+            print(f"[SERVICE] ERROR CLI execution failed (elapsed: {execution_time:.3f}s)")
             return {
                 "success": False,
                 "message": "分析執行失敗",
@@ -510,7 +510,7 @@ class SimpleF1AnalysisService:
                     message=str(e),
                 )
 
-            print(f"[SERVICE] ❌ 服務異常! (耗時: {execution_time:.3f}s): {e}")
+            print(f"[SERVICE] ERROR service exception (elapsed: {execution_time:.3f}s): {e}")
             return {
                 "success": False,
                 "message": "服務執行異常",
