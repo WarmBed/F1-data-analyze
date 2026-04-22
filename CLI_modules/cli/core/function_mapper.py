@@ -355,6 +355,7 @@ class F1AnalysisFunctionMapper:
         # 84: LLM 超車解釋器 (使用模型預測結果，不需要 FastF1)
         # 85: 即時超車監控 (使用 Live API，不需要 FastF1)
         # 96: 賽事天氣預報 (使用 Open-Meteo API，不需要 FastF1 數據)
+        # 97: 賽季積分查詢 (使用 Ergast/本地 JSON，不需要 FastF1 數據)
         # 98: 車隊顏色分析, 99: 賽季賽程查詢
         # 100: 歷年旗幟統計分析 (掃描 2020-2025 年數據)
         # 58: 進站策略預測 (使用本地資料庫計算，不需要 FastF1 數據)
@@ -363,7 +364,7 @@ class F1AnalysisFunctionMapper:
         # 127: Live Timing Traffic Distance 分析 (使用 Live Timing cache，不需要 FastF1)
         # 101: 年度起跑反應分析 (使用 Live Timing 數據，不需要 FastF1)
         # 143: FIA 賽季統計分析 (從 FIA 官網抓取 PDF，不需要 FastF1)
-        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "98", "99", "100", "101", "125", "126", "127", "143"}
+        system_functions = {"18", "19", "20", "21", "22", "29", "49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "97", "98", "99", "100", "101", "125", "126", "127", "143"}
 
         normalized_id = str(function_id)
         if normalized_id in system_functions:
