@@ -98,6 +98,7 @@ import datetime
 import traceback
 import subprocess
 import importlib
+import re
 from pathlib import Path
 from enum import Enum, auto
 
@@ -994,11 +995,10 @@ class StyleHMainWindow(QMainWindow):
     # ------------------------------------------------------------------
     def _get_smart_default_year(self, current_year: int, min_year: int, max_year: int) -> int:
         """
-        智能選擇預設年份：如果當前年份沒有已完成的賽事則回退到上一年。
+        智能選擇預設年份：優先使用本地有 standings 資料的最新年份。
         
-        這解決了每年年初（第一場比賽前）需要手動更新預設年份的問題。
-        例如：2026年1月，Australia GP (2026-03-08) 尚未發生，
-        所以自動使用 2025 作為預設年份。
+        本地版 GUI 開啟時首頁會載入 constructor/driver standings。如果當前年份
+        沒有本地 Function 97 JSON，預設選該年份會讓首頁右側表格是空的。
         
         Args:
             current_year: 當前系統年份
@@ -1008,21 +1008,33 @@ class StyleHMainWindow(QMainWindow):
             建議的預設年份
         """
         try:
+            latest_standings_year = self._get_latest_local_standings_year(
+                min_year=min_year,
+                max_year=min(current_year, max_year),
+            )
+
             # 嘗試取得當前年份的已完成賽事
             if hasattr(self, '_season_provider') and self._season_provider:
                 all_events = self._season_provider.get_completed_events(current_year)
                 # 🔧 修正：get_completed_events 返回所有事件，需要過濾 is_completed=True
                 completed_events = [e for e in all_events if e.is_completed]
                 if completed_events and len(completed_events) > 0:
+                    if latest_standings_year is not None and latest_standings_year < current_year:
+                        logger.info(
+                            "[SMART_YEAR] %s has completed races but no local standings; using %s",
+                            current_year,
+                            latest_standings_year,
+                        )
+                        return latest_standings_year
                     logger.debug(f"[SMART_YEAR] ✅ {current_year} 有 {len(completed_events)} 場已完成賽事，使用當前年份")
                     return max(min_year, min(current_year, max_year))
                 else:
-                    fallback_year = max(current_year - 1, min_year)
+                    fallback_year = latest_standings_year or max(current_year - 1, min_year)
                     fallback_year = min(fallback_year, max_year)
                     logger.info(f"[SMART_YEAR] ⚠️ {current_year} 尚無已完成賽事（共 {len(all_events)} 場），自動回退到 {fallback_year}")
                     return fallback_year
             else:
-                fallback_year = max(current_year - 1, min_year)
+                fallback_year = latest_standings_year or max(current_year - 1, min_year)
                 fallback_year = min(fallback_year, max_year)
                 logger.debug(f"[SMART_YEAR] ℹ️ SeasonProvider 尚未初始化，使用 {fallback_year}")
                 return fallback_year
@@ -1031,6 +1043,24 @@ class StyleHMainWindow(QMainWindow):
             fallback_year = min(fallback_year, max_year)
             logger.warning(f"[SMART_YEAR] ❌ 檢查賽事時發生錯誤: {e}，回退到 {fallback_year}")
             return fallback_year
+
+    def _get_latest_local_standings_year(self, *, min_year: int, max_year: int) -> Optional[int]:
+        """Return the newest supported year with local Function 97 standings JSON."""
+
+        years = set()
+        json_dir = Path(os.getenv("F1_ANALYSIS_JSON_DIR", "json"))
+        if not json_dir.exists():
+            return None
+
+        for path in json_dir.glob("championship_standings_*.json"):
+            match = re.match(r"championship_standings_(\d{4})_", path.name)
+            if not match:
+                continue
+            year = int(match.group(1))
+            if min_year <= year <= max_year:
+                years.add(year)
+
+        return max(years) if years else None
 
     def _get_calendar_events(self, *args, **kwargs):
         """代理方法 - 委派給 CalendarEventsGetter"""
