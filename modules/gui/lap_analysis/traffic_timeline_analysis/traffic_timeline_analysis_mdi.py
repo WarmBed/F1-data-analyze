@@ -17,6 +17,7 @@ Version: 1.0.0
 from __future__ import annotations
 
 import time
+import os
 from typing import Dict, List, Any, Optional
 
 import certifi
@@ -448,6 +449,10 @@ class TrafficTimelineAnalysis(UniversalAnalysisMDI):
         logger.error("[TRAFFIC_TIMELINE_MDI] Data load error: %s", error_message)
 
         if not hasattr(self, "main_widget") or self.main_widget is None:
+            return
+
+        # Offscreen regression runs cannot safely handle modal dialogs.
+        if os.getenv("QT_QPA_PLATFORM", "").lower() == "offscreen":
             return
 
         solution_text = (
