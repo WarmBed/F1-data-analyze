@@ -10,6 +10,7 @@ Date: 2025-12-30
 Version: 1.0.0
 """
 
+import json
 import os
 import sys
 from pathlib import Path
@@ -38,6 +39,7 @@ _PROJECT_ROOT = _setup_project_path()
 
 from typing import Dict, Any, Optional, List
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
+from core.runtime_mode import is_local_first
 
 # Import core modules using absolute path to avoid conflict with strategy_simulator/core
 _core_logger = None
@@ -262,6 +264,9 @@ class LongRunDataLoader(QObject):
             
             self._pending_params = params
             self._is_loading = True
+
+            if is_local_first() and self._load_from_local_json(params):
+                return True
             
             # Determine API base URL
             self._api_base_url = self._determine_api_base_url()
@@ -279,6 +284,69 @@ class LongRunDataLoader(QObject):
             self._is_loading = False
             self.load_error.emit(str(e))
             return False
+
+    def _load_from_local_json(self, params: Dict[str, Any]) -> bool:
+        """Load detailed lap JSON directly for local desktop mode."""
+        try:
+            year = params["year"]
+            race = self._normalise_race_name(params["race"])
+            session = params["session"]
+            candidates = self._local_json_candidates(year, race, session)
+            for path in candidates:
+                if not path.exists():
+                    continue
+                with path.open("r", encoding="utf-8") as handle:
+                    raw_data = json.load(handle)
+                if not self._validate_data_format(raw_data):
+                    self._error(f"Local long-run JSON has invalid format: {path}")
+                    continue
+                self._last_api_metadata = {
+                    "source": "local_json",
+                    "path": str(path),
+                    "function_id": self.CLI_FUNCTION,
+                }
+                self._last_data_source = "local_json"
+                self._is_loading = False
+                self.load_progress.emit(100)
+                self.status_changed.emit(_lazy_tr("long_run.loaded", "Data loaded successfully"))
+                self.data_loaded.emit(raw_data)
+                return True
+
+            searched = ", ".join(str(path) for path in candidates)
+            self._is_loading = False
+            self.load_error.emit(
+                f"Local detailed lap JSON not found for {year} {race} {session}. Searched: {searched}"
+            )
+            return True
+        except Exception as exc:
+            self._error(f"Local JSON load failed: {exc}")
+            self._is_loading = False
+            self.load_error.emit(str(exc))
+            return True
+
+    def _local_json_candidates(self, year: int, race: str, session: str) -> List[Path]:
+        race_variants = []
+        for value in (race, race.replace("_", " "), race.replace(" ", "_")):
+            if value and value not in race_variants:
+                race_variants.append(value)
+        base_dirs = []
+        if _PROJECT_ROOT:
+            base_dirs.extend([Path(_PROJECT_ROOT) / "json", Path(_PROJECT_ROOT) / "json_exports"])
+        base_dirs.extend([Path("json"), Path("json_exports")])
+        candidates: List[Path] = []
+        for base_dir in base_dirs:
+            for race_value in race_variants:
+                candidates.append(
+                    base_dir / f"detailed_laptime_analysis_{year}_{race_value}_{session}_all_drivers.json"
+                )
+        return candidates
+
+    @staticmethod
+    def _normalise_race_name(race: str) -> str:
+        race = str(race or "").strip()
+        if "(" in race:
+            race = race.split("(", 1)[0].strip()
+        return race.replace("_", " ")
     
     def _determine_api_base_url(self) -> str:
         """Determine API base URL"""

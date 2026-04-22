@@ -3,6 +3,10 @@
 ThrottleOptionsPrompter - 從 f1t_gui_main.py 提取
 """
 
+import os
+
+from PyQt5.QtWidgets import QDialog
+
 from core.logger import get_logger
 
 from core.logger import get_logger
@@ -26,7 +30,10 @@ class ThrottleOptionsPrompter:
             logger.debug(f"[THROTTLE] 無法載入油門分析選項對話框: {exc}")
             return {"box_plot": True, "line_chart": False}
 
-        dialog = ThrottleAnalysisOptionsDialog(self)
+        if os.getenv("QT_QPA_PLATFORM", "").lower() == "offscreen":
+            return {"box_plot": True, "line_chart": False}
+
+        dialog = ThrottleAnalysisOptionsDialog(self.main_window)
         result = dialog.exec_()
 
         if result != QDialog.Accepted:

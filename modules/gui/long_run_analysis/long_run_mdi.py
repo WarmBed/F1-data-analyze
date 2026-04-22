@@ -17,6 +17,7 @@ Version: 1.0.0
 """
 
 import sys
+import time
 from pathlib import Path
 
 # CRITICAL: Add project root to sys.path FIRST to ensure 'core' module
@@ -129,6 +130,8 @@ class LongRunAnalysis(QWidget):
         self._data: Optional[Dict[str, Any]] = None
         self._is_loading: bool = False
         self._data_loader = None
+        self._last_loaded_signature: Optional[Tuple[int, str, str]] = None
+        self._last_loaded_at: float = 0.0
         self._team_fuel_habits: Dict[str, Dict] = {}  # Team -> habits data
         
         # Load team fuel habits training data
@@ -1975,6 +1978,15 @@ class LongRunAnalysis(QWidget):
         """Load lap data via API"""
         if self._is_loading:
             return
+
+        signature = (int(self.year), str(self.race), str(self.session))
+        if (
+            self._data is not None
+            and self._last_loaded_signature == signature
+            and (time.monotonic() - self._last_loaded_at) < 5.0
+        ):
+            _get_logger().debug("Skipping duplicate Long Run load for %s", signature)
+            return
         
         self._is_loading = True
         self.progress_bar.show()
@@ -2004,6 +2016,8 @@ class LongRunAnalysis(QWidget):
         """Handle received data"""
         self._is_loading = False
         self._data = data
+        self._last_loaded_signature = (int(self.year), str(self.race), str(self.session))
+        self._last_loaded_at = time.monotonic()
         self.progress_bar.setValue(100)
         self.progress_bar.hide()
         self._update_status(_lazy_tr("long_run.loaded", "Data loaded successfully"))

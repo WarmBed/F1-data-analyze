@@ -77,6 +77,130 @@ class AccidentDataManager(QObject):
         QTimer.singleShot(1000, lambda: self.statistics_loaded.emit(mock_data))
 
 
+class AccidentDataManager(QObject):
+    """Local-only accident data manager used by the stable Accident MDI."""
+
+    statistics_loaded = pyqtSignal(dict)
+    statistics_reload_requested = pyqtSignal()
+    error_occurred = pyqtSignal(str)
+    loading_progress = pyqtSignal(int)
+    status_changed = pyqtSignal(str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.current_year = None
+        self.current_race = None
+        self.current_session = None
+
+    def loadAccidentStatistics(self, year: str, race: str, session: str):
+        self.current_year = str(year)
+        self.current_race = str(race)
+        self.current_session = str(session)
+
+        def emit_loaded():
+            try:
+                data = self._load_from_local_runtime(year, race, session)
+                if not data:
+                    data = self._load_from_json(year, race, session)
+                self.statistics_loaded.emit(self._to_summary(data))
+            except Exception as exc:
+                logger.error("[AccidentDataManager] local load failed: %s", exc)
+                self.error_occurred.emit(str(exc))
+
+        QTimer.singleShot(0, emit_loaded)
+
+    def _load_from_local_runtime(self, year: str, race: str, session: str) -> Dict[str, Any]:
+        try:
+            from core import local_requests as requests
+
+            response = requests.post(
+                "http://127.0.0.1:9/api/v2/analysis/execute",
+                params={
+                    "function_id": 8,
+                    "year": int(year),
+                    "race": str(race).replace(" ", "_"),
+                    "session": session,
+                },
+                timeout=60,
+                headers={"Accept": "application/json"},
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if not isinstance(payload, dict) or not payload.get("success", False):
+                return {}
+            data = payload.get("data", {})
+            if isinstance(data, dict) and isinstance(data.get("data"), dict):
+                return data["data"]
+            return data if isinstance(data, dict) else {}
+        except Exception as exc:
+            logger.debug("[AccidentDataManager] local runtime unavailable: %s", exc)
+            return {}
+
+    def _load_from_json(self, year: str, race: str, session: str) -> Dict[str, Any]:
+        from pathlib import Path
+
+        race_variants = {str(race), str(race).replace(" ", "_"), str(race).replace("_", " ")}
+        patterns = []
+        for race_name in race_variants:
+            patterns.extend([
+                f"all_incidents_summary_{year}_{race_name}_{session}.json",
+                f"all_incidents_summary_{year}_{race_name}.json",
+                f"accident_statistics_summary_{year}_{race_name}_{session}.json",
+            ])
+
+        for base in (Path("json"), Path("json_exports"), Path("cache")):
+            for pattern in patterns:
+                for path in base.glob(pattern):
+                    try:
+                        with path.open("r", encoding="utf-8") as fh:
+                            payload = json.load(fh)
+                        data = payload.get("data", payload) if isinstance(payload, dict) else payload
+                        return data if isinstance(data, dict) else {"all_incidents": data}
+                    except Exception as exc:
+                        logger.debug("[AccidentDataManager] failed reading %s: %s", path, exc)
+        return {}
+
+    def _to_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        payload = data.get("data", data) if isinstance(data, dict) else {}
+        incidents = []
+        if isinstance(payload, dict):
+            for key in ("all_incidents", "incidents", "incident_records", "incident_list"):
+                value = payload.get(key)
+                if isinstance(value, list):
+                    incidents = value
+                    break
+
+        incidents_by_type: Dict[str, int] = {}
+        red_flags = 0
+        safety_periods = 0
+        severity_values = []
+        for item in incidents:
+            if not isinstance(item, dict):
+                continue
+            incident_type = item.get("type") or item.get("incident_type") or item.get("category") or item.get("message") or "Incident"
+            incident_type = str(incident_type)
+            incidents_by_type[incident_type] = incidents_by_type.get(incident_type, 0) + 1
+            text = " ".join(str(item.get(k, "")) for k in ("type", "message", "category", "status")).lower()
+            if "red" in text:
+                red_flags += 1
+            if "safety car" in text or " vsc" in text or text.startswith("vsc"):
+                safety_periods += 1
+            try:
+                severity_values.append(float(item.get("severity_score", item.get("severity", 0)) or 0))
+            except (TypeError, ValueError):
+                pass
+
+        total = len(incidents)
+        average_severity = sum(severity_values) / len(severity_values) if severity_values else 0.0
+        return {
+            "total_incidents": int(payload.get("total_incidents", total) if isinstance(payload, dict) else total),
+            "safety_car_periods": int(payload.get("safety_car_periods", safety_periods) if isinstance(payload, dict) else safety_periods),
+            "red_flag_periods": int(payload.get("red_flag_periods", red_flags) if isinstance(payload, dict) else red_flags),
+            "average_incident_severity": float(payload.get("average_incident_severity", average_severity) if isinstance(payload, dict) else average_severity),
+            "incidents_by_type": incidents_by_type,
+        }
+
+
 class AccidentStatisticsWidget(QWidget):
     """事故統計總覽控件 (簡化樣式版本)"""
     

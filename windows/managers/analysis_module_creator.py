@@ -38,7 +38,6 @@ class AnalysisModuleCreator:
             # 確保所有模組都被導入
             import modules.gui.race_analysis.temp.temp_analysis_module  # 溫度分析模組
             import modules.gui.tire_analysis.tire_analysis_module  # 輪胎策略分析模組
-            import modules.gui.race_analysis.accident.accident_analysis_mdi  # 事故分析模組
             import modules.gui.lap_analysis.gear_analysis.gear_analysis_mdi  # 檔位分析模組
             import modules.gui.lap_analysis.brake_analysis.brake_analysis_mdi  # 煞車分析模組
             import modules.gui.driver_race.detailed_lap_analysis.driverlap_analysis_module  # 詳細圈速分析模組
@@ -503,7 +502,7 @@ class AnalysisModuleCreator:
                 # 處理事故分析模組
                 elif module_type == "accident_analysis":
                     try:
-                        from modules.gui.race_analysis.accident.accident_analysis_mdi import AccidentAnalysisModule
+                        from modules.gui.race_analysis.accident.accident_analysis_mdi_simple import AccidentAnalysisModule
                         logger.debug(f"[OK] [MODULE_FACTORY] 創建事故分析模組實例")
                         
                         # 創建模組實例並設置參數提供者
@@ -1911,7 +1910,7 @@ class AnalysisModuleCreator:
                 elif module_type == "long_run_analysis":
                     try:
                         logger.debug(f"[DEBUG]    [MODULE_FACTORY] 開始創建 Long Run & Degradation 分析模組...")
-                        from modules.gui.long_run_analysis.long_run_mdi import LongRunAnalysis
+                        from modules.gui.long_run_analysis.long_run_mdi_simple import LongRunAnalysis
                         logger.debug(f"[OK] [MODULE_FACTORY] Long Run 分析模組導入成功")
                         
                         # 獲取當前參數

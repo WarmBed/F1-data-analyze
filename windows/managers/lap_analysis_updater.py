@@ -40,6 +40,7 @@ class LapAnalysisUpdater:
         
         # 定義應該被更新的分析類型（包含所有模組類型）
         all_analysis_types = {
+            'long_run',
             # 遙測分析類型
             'speed_analysis',  # 速度分析
             'speed',          # 速度圖表
