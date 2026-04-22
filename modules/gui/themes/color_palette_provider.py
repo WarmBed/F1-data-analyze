@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-import requests
+from core import local_requests as requests
 from PyQt5.QtGui import QColor
 
 from core.api_base_url import resolve_api_base_url

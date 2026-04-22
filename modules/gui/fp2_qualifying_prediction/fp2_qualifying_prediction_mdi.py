@@ -12,7 +12,7 @@ FP2 to Qualifying Prediction MDI
 """
 
 import time
-import requests
+from core import local_requests as requests
 import certifi
 from typing import Dict, Any
 from PyQt5.QtWidgets import QGroupBox, QPushButton, QLabel, QHBoxLayout, QMessageBox

@@ -20,7 +20,7 @@ import time
 from typing import Dict, List, Any, Optional
 
 import certifi
-import requests
+from core import local_requests as requests
 from PyQt5.QtCore import pyqtSignal, QThread
 from PyQt5.QtWidgets import QWidget, QFileDialog, QMessageBox
 

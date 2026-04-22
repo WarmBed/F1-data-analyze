@@ -8,7 +8,7 @@ import os
 import time
 from typing import Any, Dict, List, Optional
 
-import requests
+from core import local_requests as requests
 import certifi
 from PyQt5.QtCore import QThread, pyqtSignal
 

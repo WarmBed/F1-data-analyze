@@ -104,7 +104,7 @@ from enum import Enum, auto
 # ✅ 導入集中管理的版本號
 from config.version import APP_VERSION, APP_FULL_TITLE
 from typing import Any, Dict, List, Optional
-import requests
+from core import local_requests as requests
 
 import core.dependency_guard  # noqa: F401  # 確保可選依賴存在
 

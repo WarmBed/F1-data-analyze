@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 
-import requests
+from core import local_requests as requests
 import certifi
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available

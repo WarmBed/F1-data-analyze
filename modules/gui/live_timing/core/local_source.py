@@ -17,7 +17,7 @@ import sys
 import json
 import base64
 import zlib
-import requests
+from core import local_requests as requests
 import certifi
 from pathlib import Path
 from typing import List, Dict, Any, Optional

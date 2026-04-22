@@ -14,8 +14,10 @@ CLI -> LocalAnalysisExecutor or direct CLI entry -> cache / CLI modules / servic
 
 ## Current Result
 
-The project can start in local mode and the core smoke tests pass, but the GUI
-is not fully migrated yet. Many GUI modules still call API endpoints directly.
+The project can start in local mode and the core smoke tests pass. GUI modules
+no longer import the real `requests` package directly; local analysis endpoint
+calls are routed through `core.local_requests`, which executes in-process via
+`LocalAnalysisExecutor`.
 
 ## Tests Run
 
@@ -111,6 +113,21 @@ Eight corrupt local JSON files were repaired before the final passing run. The
 repair details are recorded in `logs/invalid_json_repair_report.json`. These
 data files are local generated artifacts and are intentionally not tracked.
 
+### Local GUI request bridge
+
+The GUI code now imports `core.local_requests` as `requests`. This compatibility
+layer intercepts calls to `/api/v2/analysis/execute` and runs:
+
+```text
+GUI loader -> core.local_requests -> LocalAnalysisExecutor -> cache / CLI
+```
+
+Direct imports of the real `requests` package in `modules/gui` and `windows`:
+
+```text
+0
+```
+
 ### Focused pytest
 
 Command:
@@ -164,9 +181,10 @@ pickle.load                60
 fastf1.get_session         27
 ```
 
-These numbers show why the project is not yet a clean local-only UI. The API
-dependency is disabled at the runtime layer, but many GUI modules still contain
-legacy API call paths.
+The remaining `requests.post` / `requests.get` call sites are compatibility
+call sites that now use `core.local_requests` in GUI code. They should still be
+gradually rewritten to explicit `LocalAnalysisWorker` usage, but they no longer
+require a running HTTP API server in local mode.
 
 ## Required Clean Local Version Work
 

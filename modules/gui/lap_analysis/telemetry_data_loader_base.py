@@ -35,7 +35,7 @@ import pickle
 import time
 from datetime import datetime
 import threading
-import requests
+from core import local_requests as requests
 import certifi
 import pandas as pd
 import subprocess

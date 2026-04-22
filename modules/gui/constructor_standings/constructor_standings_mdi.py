@@ -13,7 +13,7 @@ Constructor Standings MDI
 import sys
 import time
 import certifi
-import requests
+from core import local_requests as requests
 from typing import Dict, Any
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QProgressBar, QLabel,

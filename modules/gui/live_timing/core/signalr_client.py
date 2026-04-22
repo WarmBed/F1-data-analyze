@@ -28,7 +28,7 @@ from typing import Dict, List, Any, Optional, Callable
 from queue import Queue, Empty
 from datetime import datetime
 
-import requests
+from core import local_requests as requests
 
 from PyQt5.QtCore import QThread, pyqtSignal
 

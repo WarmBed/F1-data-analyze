@@ -15,7 +15,7 @@ import sys
 import os
 import time
 import json
-import requests
+from core import local_requests as requests
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtWidgets import (

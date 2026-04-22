@@ -25,7 +25,7 @@ from modules.gui.interfaces.analysis_module import IAnalysisModule
 from core.gui_i18n import tr
 
 # 導入 API 相關模組
-import requests
+from core import local_requests as requests
 import certifi
 import time
 from core.api_base_url import resolve_api_base_url

@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from typing import Any, Dict, Optional
 
-import requests
+from core import local_requests as requests
 import certifi
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 

@@ -9,7 +9,7 @@ import copy
 from typing import Dict, Any, List, Optional, Tuple
 
 import certifi
-import requests
+from core import local_requests as requests
 from core.api_base_url import resolve_api_base_url
 from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QGroupBox, QComboBox, QLabel, QCheckBox, QGridLayout
 from PyQt5.QtCore import pyqtSignal, QObject, QThread

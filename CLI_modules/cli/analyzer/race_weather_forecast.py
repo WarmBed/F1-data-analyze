@@ -67,6 +67,12 @@ ARCHIVE_DAILY_VARS = (
 )
 
 
+def _determine_weather_refresh_interval(year: int, event_name: str) -> float:
+    """Return the refresh interval for cached weather output."""
+
+    return WEATHER_REFRESH_HOURS
+
+
 def _normalise_key(value: Optional[str]) -> str:
     if not value:
         return ""

@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
 from PyQt5.QtGui import QColor
-import requests
+from core import local_requests as requests
 import time
 
 from core.gui_i18n import tr

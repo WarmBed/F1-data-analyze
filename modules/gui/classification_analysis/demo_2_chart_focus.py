@@ -30,7 +30,7 @@ from PyQt5.QtWidgets import (
     QPushButton, QApplication, QScrollArea
 )
 from PyQt5.QtCore import Qt, pyqtSignal, QThread
-import requests
+from core import local_requests as requests
 
 from core.gui_i18n import tr
 from core.api_base_url import resolve_api_base_url

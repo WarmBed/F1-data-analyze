@@ -24,7 +24,7 @@ import base64
 import pickle
 import hashlib
 import time
-import requests
+from core import local_requests as requests
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple, Callable
 from datetime import datetime

@@ -10,7 +10,7 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-import requests
+from core import local_requests as requests
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available
 from PyQt5.QtCore import QObject, QThread, Qt, pyqtSignal

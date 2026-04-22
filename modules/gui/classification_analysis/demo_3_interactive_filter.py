@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import (
     QHeaderView, QApplication
 )
 from PyQt5.QtCore import Qt, QThread, pyqtSignal
-import requests
+from core import local_requests as requests
 
 from core.gui_i18n import tr
 from core.api_base_url import resolve_api_base_url

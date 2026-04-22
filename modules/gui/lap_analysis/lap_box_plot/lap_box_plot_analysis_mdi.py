@@ -35,7 +35,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker
 from PyQt5.QtGui import QFont
 
-import requests
+from core import local_requests as requests
 import certifi
 from core.api_base_url import resolve_api_base_url
 from core.api_runtime_state import is_api_available

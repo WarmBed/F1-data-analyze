@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 import time
-import requests
+from core import local_requests as requests
 import certifi
 
 import pandas as pd

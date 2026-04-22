@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Optional, Tuple
 
 import certifi
-import requests
+from core import local_requests as requests
 from core.api_base_url import resolve_api_base_url
 from core.logger import get_logger
 from core.gui_i18n import tr

@@ -21,7 +21,7 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import requests
+from core import local_requests as requests
 import certifi
 from core.api_base_url import resolve_api_base_url
 from core.logger import get_logger

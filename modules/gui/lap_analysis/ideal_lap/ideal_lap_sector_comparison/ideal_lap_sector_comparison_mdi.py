@@ -13,7 +13,7 @@ Ideal Lap Sector Comparison MDI
 import sys
 import time
 import traceback
-import requests
+from core import local_requests as requests
 import certifi
 from typing import Dict, Any, Optional
 from PyQt5.QtWidgets import (

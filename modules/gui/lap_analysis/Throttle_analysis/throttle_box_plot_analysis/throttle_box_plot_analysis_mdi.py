@@ -24,7 +24,7 @@ from typing import Dict, List, Any, Optional, Tuple, Set
 
 import numpy as np
 import certifi
-import requests
+from core import local_requests as requests
 from PyQt5.QtCore import Qt, pyqtSignal, QThread, QSignalBlocker, QTimer
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import (

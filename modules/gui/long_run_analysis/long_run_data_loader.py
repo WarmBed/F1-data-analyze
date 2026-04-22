@@ -111,8 +111,8 @@ class LongRunApiWorker(QThread):
     
     def run(self):
         """Execute API request"""
-        import requests
-from core.gui_i18n import tr
+        from core import local_requests as requests
+        from core.gui_i18n import tr
         
         try:
             self.progress.emit(10)

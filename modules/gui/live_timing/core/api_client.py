@@ -9,7 +9,7 @@ Date: 2025-12-05
 """
 
 import json
-import requests
+from core import local_requests as requests
 from typing import Dict, Any, Optional, Callable
 from pathlib import Path
 from functools import lru_cache

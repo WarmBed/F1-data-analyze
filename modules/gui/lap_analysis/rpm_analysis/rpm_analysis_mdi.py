@@ -24,7 +24,7 @@ from PyQt5.QtGui import QFont, QIcon, QPalette, QColor
 from modules.gui.interfaces.analysis_module import IAnalysisModule
 from core.gui_i18n import tr
 from core.api_base_url import resolve_api_base_url
-import requests
+from core import local_requests as requests
 import certifi
 import time
 

@@ -14,17 +14,16 @@ current_dir = os.path.dirname(__file__)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
 sys.path.insert(0, project_root)
 
-from modules.gui.lap_analysis.linkage import (
-
 from core.logger import get_logger
-logger = get_logger(__name__)
-
+from modules.gui.lap_analysis.linkage import (
     LapAnalysisLinkageMixin,
     LapAnalysisLinkageDrawingMixin,
     linkage_manager,
     LinkageButton,
     create_linkage_toolbar
 )
+
+logger = get_logger(__name__)
 
 
 class ModernSpeedAnalysisChart(QWidget, LapAnalysisLinkageMixin, LapAnalysisLinkageDrawingMixin):

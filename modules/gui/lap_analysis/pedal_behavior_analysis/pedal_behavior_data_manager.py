@@ -19,7 +19,7 @@ Version: 2.0.0 (API-FIRST)
 import os
 import time
 import certifi
-import requests
+from core import local_requests as requests
 import numpy as np
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtCore import pyqtSignal, QThread

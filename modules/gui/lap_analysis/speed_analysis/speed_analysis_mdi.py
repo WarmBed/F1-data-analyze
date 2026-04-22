@@ -11,7 +11,7 @@ import json
 import datetime
 import traceback
 import time
-import requests
+from core import local_requests as requests
 import certifi
 from typing import Dict, List, Any, Optional
 from PyQt5.QtWidgets import (

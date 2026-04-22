@@ -17,7 +17,7 @@ import time
 from typing import Any, Dict, Optional
 
 import certifi
-import requests
+from core import local_requests as requests
 from PyQt5.QtCore import QThread, pyqtSignal, QObject
 
 from core.api_base_url import resolve_api_base_url

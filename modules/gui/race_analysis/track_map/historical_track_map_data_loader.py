@@ -15,7 +15,7 @@ Version: 1.0.0
 
 import os
 import time
-import requests
+from core import local_requests as requests
 import certifi
 from typing import Dict, List, Any, Optional, Tuple
 from PyQt5.QtCore import QThread, pyqtSignal

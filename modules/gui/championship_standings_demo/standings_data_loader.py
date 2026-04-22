@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 import certifi
-import requests
+from core import local_requests as requests
 from PyQt5.QtCore import QObject, QThread, pyqtSignal
 
 from core.api_base_url import resolve_api_base_url

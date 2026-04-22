@@ -1478,8 +1478,8 @@ logger.debug("=" * 60)
     def _on_open_speed_analysis(self):
         """Open Speed Analysis - 通過 API 打開速度分析模組"""
         try:
-            import requests
-import certifi
+            from core import local_requests as requests
+            import certifi
             
             # F1T API 端點
             api_base = "http://localhost:8000"
