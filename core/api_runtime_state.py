@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, timezone
 from threading import RLock
 from typing import Any, Dict, Optional
 
+from core.runtime_mode import is_api_enabled
 from core.runtime_status_resolver import RuntimeStatusState, RuntimeStatusView
 
 
@@ -87,6 +88,9 @@ def is_api_available(grace_period: float = 30.0) -> bool:
         grace_period: seconds the cached value remains authoritative before we fall
                       back to an optimistic assumption.
     """
+    if not is_api_enabled():
+        return False
+
     with _LOCK:
         snapshot = ApiStatusSnapshot(
             health_state=_SNAPSHOT.health_state,

@@ -18,6 +18,10 @@ from windows.workers.api_workers import (
     ApiRuntimeWorker
 )
 
+from windows.workers.local_task_worker import (
+    LocalAnalysisWorker,
+)
+
 __all__ = [
     'CliAnalysisWorker',
     'CliAnalysisManager',
@@ -25,4 +29,5 @@ __all__ = [
     'cli_analysis_manager',
     'ApiHealthWorker',
     'ApiRuntimeWorker',
+    'LocalAnalysisWorker',
 ]

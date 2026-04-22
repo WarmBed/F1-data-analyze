@@ -7,6 +7,11 @@ F1 Analysis API - 分析相關路由
 作者: F1 Analysis Team
 """
 
+# LOCAL_ONLY_REFACTOR:
+# Legacy optional API adapter. Do not add new analysis logic here. Heavy
+# transforms should move to core/service modules, then this router can delegate
+# to core.local_analysis_executor or be removed.
+
 from fastapi import APIRouter, HTTPException, Query
 from typing import Dict, Any, Optional
 import time

@@ -7,6 +7,11 @@ F1 Analysis Simple Service - 簡化版分析服務
 作者: F1 Analysis Team
 """
 
+# LOCAL_ONLY_REFACTOR:
+# Despite living under api.services, this is currently the closest local
+# execution engine: it checks cache and runs CLI modules without HTTP. Keep it
+# as the temporary LocalAnalysisExecutor backend, then move it to core/analysis.
+
 import os
 import sys
 import asyncio

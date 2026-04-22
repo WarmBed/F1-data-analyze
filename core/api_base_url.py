@@ -1,4 +1,4 @@
-"""Utility helpers for resolving the API base URL for GUI components.
+"""Utility helpers for resolving the legacy API base URL for GUI components.
 
 Defaults to the local API server (http://localhost:8000) since the system
 now runs in local-only mode without an external public IP.
@@ -11,6 +11,10 @@ from pathlib import Path
 from typing import Callable, Iterable, Optional
 from urllib.parse import urlparse
 import ipaddress
+
+# LOCAL_ONLY_REFACTOR:
+# This module remains only for legacy hybrid/API paths. New GUI execution
+# should use core.local_analysis_executor instead of resolving an API URL.
 
 PUBLIC_API_BASE_URL = "http://localhost:8000"
 DEFAULT_CONFIG_PATH = Path("config/api_config.json")

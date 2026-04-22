@@ -9,6 +9,11 @@ F1T GUI - CLI Workers
 提取日期: 2025-06-14
 """
 
+# LOCAL_ONLY_REFACTOR:
+# This file contains a disabled GUI-to-CLI subprocess path followed by
+# unreachable legacy code. Do not add new work here. The replacement path should
+# be a shared local task runner calling core.local_analysis_executor.
+
 import os
 import sys
 import subprocess

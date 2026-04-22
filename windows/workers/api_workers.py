@@ -9,6 +9,11 @@ API 健康檢查和運行時狀態查詢的背景工作執行緒。
 提取日期: 2025-06-14
 """
 
+# LOCAL_ONLY_REFACTOR:
+# Legacy API-mode workers. The desktop app is moving to a local-first runtime,
+# so new GUI code should use a local task runner instead of these workers.
+# Keep this file temporarily for hybrid/API compatibility during migration.
+
 import time
 import datetime
 import logging
@@ -19,6 +24,7 @@ except ImportError:
     requests = None
 
 from PyQt5.QtCore import QThread, pyqtSignal
+from core.runtime_mode import is_api_enabled
 
 # 設定日誌
 logger = logging.getLogger(__name__)
@@ -48,6 +54,18 @@ class ApiHealthWorker(QThread):
 
     def run(self):
         """執行一次健康檢查"""
+        if not is_api_enabled():
+            self.result_ready.emit({
+                "state": "disabled",
+                "details": ["API workers disabled in local runtime mode"],
+                "errors": [],
+                "latency_ms": None,
+                "checked_at": datetime.datetime.now().isoformat(timespec='seconds'),
+                "base_url": self.base_url,
+                "manual": self.manual,
+            })
+            return
+
         if self._should_stop:
             return
             
@@ -145,6 +163,15 @@ class ApiRuntimeWorker(QThread):
 
     def run(self):
         """執行一次 API 請求"""
+        if not is_api_enabled():
+            self.result_ready.emit({
+                "ok": False,
+                "payload": None,
+                "error": "API runtime worker disabled in local runtime mode",
+                "endpoint": f"{self.base_url}/api/v2/analysis/status",
+            })
+            return
+
         if self._should_stop:
             return
             

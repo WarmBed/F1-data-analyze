@@ -22,7 +22,8 @@ def test_function_specs_basic_properties():
             assert param in spec.cli_flag_map
 
     calendar_spec = FUNCTION_SPECS["99"]
-    assert calendar_spec.required_params == ["year"]
+    assert calendar_spec.required_params == []
+    assert calendar_spec.optional_params == ["year"]
     assert calendar_spec.cli_flag_map.get("year") == "-y"
 
     color_spec = FUNCTION_SPECS["98"]

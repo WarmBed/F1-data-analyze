@@ -9,6 +9,11 @@ F1 Analysis Function Mapper - 統一功能映射器
 支援: 1-52 整數化功能映射系統
 """
 
+# LOCAL_ONLY_REFACTOR:
+# This mapper should become a CLI implementation adapter only. Public function
+# metadata should come from api.models.function_specs for now, then move to
+# core/analysis/function_specs.py when the local executor is separated.
+
 import sys
 
 # Force UTF-8 output
