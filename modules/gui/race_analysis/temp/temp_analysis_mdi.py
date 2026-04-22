@@ -215,6 +215,16 @@ class TempAnalysisDataManager(UniversalDataLoader):
             return False, f"環境變數 F1T_ALLOW_TEMP_JSON_FALLBACK={env_value}"
         return False, "預設策略 (API 優先，不允許本地回退)"
 
+    # Override fallback policy with deterministic ASCII-safe implementation.
+    def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
+        env_value = os.getenv("F1T_ALLOW_TEMP_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"env F1T_ALLOW_TEMP_JSON_FALLBACK={env_value}"
+            return False, f"env F1T_ALLOW_TEMP_JSON_FALLBACK={env_value}"
+        return True, "default-enabled local JSON fallback"
+
     def _is_api_available(self) -> bool:
         available = is_api_available()
         if not available:
@@ -376,6 +386,86 @@ class TempAnalysisDataManager(UniversalDataLoader):
         self.status_changed.emit("使用本地 JSON/CLI 後備載入降雨資料...")
         self.load_error.emit(f"API 載入失敗，使用本地資料: {reason}")
         super().load_data(**params)
+
+    # Override fallback implementation to avoid false "failed" state when API
+    # can be recovered from local JSON data.
+    def _fallback_to_local(self, reason: str) -> None:
+        params = self._pending_params or {}
+        if not params:
+            self.load_error.emit(f"API load failed: {reason}")
+            return
+
+        if not self._allow_local_fallback:
+            self._last_data_source = "local-fallback-disabled"
+            self._last_api_meta = {}
+            self.status_changed.emit("API failed and local fallback is disabled")
+            self.load_error.emit(
+                "API load failed and local fallback is disabled. "
+                "Set F1T_ALLOW_TEMP_JSON_FALLBACK=1 to enable fallback."
+            )
+            return
+
+        self._last_data_source = "local-json"
+        self._last_api_meta = {}
+        fallback_params = self._find_local_fallback_params(params)
+        self._debug(f"API failed ({reason}); fallback params={fallback_params}")
+        self.status_changed.emit("API failed; loading local JSON fallback...")
+        loaded = bool(super().load_data(**fallback_params))
+        if loaded:
+            self.status_changed.emit("Loaded local JSON fallback")
+            return
+        self.load_error.emit(f"API failed and local fallback failed: {reason}")
+
+    def _find_local_fallback_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        result = dict(params)
+        race = str(params.get("race") or "").strip()
+        session = str(params.get("session") or "").strip().upper()
+        try:
+            requested_year = int(params.get("year"))
+        except Exception:
+            requested_year = 2026
+
+        aliases = self._race_aliases(race)
+        search_roots = []
+        for folder in getattr(self.config, "search_directories", []) or []:
+            root = Path.cwd() / str(folder)
+            if root.exists():
+                search_roots.append(root)
+
+        for year in range(requested_year, 2017, -1):
+            for race_alias in aliases:
+                for pattern in self.config.file_patterns:
+                    filename = pattern.format(year=year, race=race_alias, session=session)
+                    if any((root / filename).exists() for root in search_roots):
+                        result["year"] = year
+                        result["race"] = race_alias
+                        return result
+        return result
+
+    def _race_aliases(self, race: str) -> List[str]:
+        base = str(race or "").strip()
+        if not base:
+            return []
+        aliases = [base, base.replace("_", " "), base.replace(" ", "_")]
+        mapping = {
+            "Japan": "Japanese",
+            "Japanese": "Japan",
+            "Saudi Arabia": "Saudi Arabian",
+            "Saudi Arabian": "Saudi Arabia",
+            "Mexico": "Mexico City",
+            "Mexico City": "Mexico",
+            "Great Britain": "British",
+            "British": "Great Britain",
+        }
+        mapped = mapping.get(base)
+        if mapped:
+            aliases.extend([mapped, mapped.replace("_", " "), mapped.replace(" ", "_")])
+
+        deduped: List[str] = []
+        for value in aliases:
+            if value and value not in deduped:
+                deduped.append(value)
+        return deduped
 
     def _cleanup_api_worker(self) -> None:
         """

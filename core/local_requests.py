@@ -41,6 +41,52 @@ class LocalResponse:
         return None
 
 
+class Session:
+    """Minimal requests.Session-compatible wrapper.
+
+    It preserves normal network behavior but routes supported local API calls
+    through this module when local-first mode is enabled.
+    """
+
+    def __init__(self) -> None:
+        self._session = _real_requests.Session()
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._session, name)
+
+    def request(self, method: str, url: str, *args: Any, **kwargs: Any) -> Any:
+        method_upper = str(method or "").upper()
+        if method_upper == "POST":
+            return self.post(url, *args, **kwargs)
+        if method_upper == "GET":
+            return self.get(url, *args, **kwargs)
+        return self._session.request(method, url, *args, **kwargs)
+
+    def get(self, url: str, *args: Any, **kwargs: Any) -> Any:
+        if is_local_first():
+            parsed = urlparse(str(url))
+            if parsed.path.endswith("/api/v2/system/health") or parsed.path.endswith("/api/v2/analysis/status"):
+                return get(url, *args, **kwargs)
+        return self._session.get(url, *args, **kwargs)
+
+    def post(self, url: str, *args: Any, **kwargs: Any) -> Any:
+        if is_local_first() and _is_local_analysis_execute(url):
+            return post(url, *args, **kwargs)
+        return self._session.post(url, *args, **kwargs)
+
+    def head(self, url: str, *args: Any, **kwargs: Any) -> Any:
+        return self._session.head(url, *args, **kwargs)
+
+    def close(self) -> None:
+        self._session.close()
+
+    def __enter__(self) -> "Session":
+        return self
+
+    def __exit__(self, exc_type: Any, exc: Any, tb: Any) -> None:
+        self.close()
+
+
 def _is_local_analysis_execute(url: str) -> bool:
     parsed = urlparse(str(url))
     return parsed.path.endswith("/api/v2/analysis/execute")
@@ -191,4 +237,27 @@ def get(url: str, *args: Any, **kwargs: Any) -> Any:
     return _real_requests.get(url, *args, **kwargs)
 
 
-__all__ = ["exceptions", "get", "post", "LocalResponse"]
+def head(url: str, *args: Any, **kwargs: Any) -> Any:
+    return _real_requests.head(url, *args, **kwargs)
+
+
+def request(method: str, url: str, *args: Any, **kwargs: Any) -> Any:
+    method_upper = str(method or "").upper()
+    if method_upper == "POST":
+        return post(url, *args, **kwargs)
+    if method_upper == "GET":
+        return get(url, *args, **kwargs)
+    if method_upper == "HEAD":
+        return head(url, *args, **kwargs)
+    return _real_requests.request(method, url, *args, **kwargs)
+
+
+__all__ = [
+    "exceptions",
+    "get",
+    "post",
+    "head",
+    "request",
+    "Session",
+    "LocalResponse",
+]
