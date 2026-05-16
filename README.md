@@ -57,6 +57,7 @@ pip install -r requirements-dev.txt
 Desktop GUI:
 
 ```powershell
+$env:F1T_RUNTIME_MODE = "local"
 python f1t_gui_main.py
 ```
 
@@ -66,7 +67,34 @@ Alternative modular entry point:
 python f1_analysis_modular_main.py
 ```
 
-Some modules expect locally generated cache or data folders. Missing data should be regenerated locally and should not be committed.
+The GUI release path is local-first. It must not require a separately running REST API server for the validated historical and live timing workflows. Some analysis modules generate or read local cache/data folders; those outputs are ignored by Git and must not be committed.
+
+## Release Verification
+
+The current release gate uses real 2026 Miami race data because it has complete local historical replay coverage in this workspace:
+
+```powershell
+$env:QT_QPA_PLATFORM = "offscreen"
+$env:F1T_RUNTIME_MODE = "local"
+$env:PYTHONIOENCODING = "utf-8"
+
+venv_build\Scripts\python.exe tools\run_direct_gui_validation.py `
+  --year 2026 --race Miami --session R `
+  --report logs\direct_gui_validation_2026_miami_release.json `
+  --screenshot logs\direct_gui_validation_2026_miami_release.png
+
+venv_build\Scripts\python.exe tools\run_live_timing_data_validation.py `
+  --year 2026 --race Miami --session R `
+  --report logs\live_timing_data_validation_2026_miami_strict_numeric_after_fix.json `
+  --screenshot logs\live_timing_data_validation_2026_miami_strict_numeric_after_fix.png `
+  --screenshot-dir logs\live_timing_data_validation_2026_miami_strict_numeric_after_fix
+```
+
+Expected validated coverage:
+
+- Historical/direct GUI modules: 10/10
+- Live timing modules: 28/28 with strict numeric or semantic data evidence
+- Generated screenshots and JSON reports stay under `logs/` and are ignored by Git
 
 ## Data And Legal Notes
 
