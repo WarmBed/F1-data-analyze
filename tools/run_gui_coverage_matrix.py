@@ -465,13 +465,27 @@ def main() -> int:
     results: List[Dict[str, Any]] = []
     if args.scope == "matrix":
         previous = {}
-        direct_report = LOG_DIR / "direct_gui_validation_2026_japan.json"
+        direct_report = LOG_DIR / f"direct_gui_validation_{args.year}_{args.race.lower()}_release.json"
+        if not direct_report.exists():
+            direct_report = LOG_DIR / "direct_gui_validation_2026_japan.json"
         if direct_report.exists():
             data = json.loads(direct_report.read_text(encoding="utf-8"))
             previous = {item.get("name"): item for item in data.get("results", [])}
+        live_previous = {}
+        live_candidates = [
+            LOG_DIR / f"live_timing_data_validation_{args.year}_{args.race.lower()}_strict_numeric_after_fix.json",
+            LOG_DIR / f"live_timing_data_validation_{args.year}_{args.race.lower()}_release.json",
+            LOG_DIR / f"live_timing_data_validation_{args.year}_{args.race.lower()}.json",
+        ]
+        for live_report in live_candidates:
+            if not live_report.exists():
+                continue
+            data = json.loads(live_report.read_text(encoding="utf-8"))
+            live_previous = {item.get("label"): item for item in data.get("results", [])}
+            break
         for idx, path in indexed_leaves:
             label = path[-1]
-            prior = previous.get(label)
+            prior = live_previous.get(label) if path and path[0] == "Live Timing" else previous.get(label)
             ok = bool(prior and prior.get("ok"))
             results.append(
                 {
@@ -479,7 +493,13 @@ def main() -> int:
                     "path": path,
                     "label": label,
                     "status": "pass" if ok else "pending",
-                    "source": "direct_gui_validation" if ok else None,
+                    "source": (
+                        "live_timing_data_validation"
+                        if ok and path and path[0] == "Live Timing"
+                        else "direct_gui_validation"
+                        if ok
+                        else None
+                    ),
                     "evidence": prior if ok else None,
                 }
             )
