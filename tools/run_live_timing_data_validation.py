@@ -19,12 +19,21 @@ os.environ.setdefault("F1T_RUNTIME_MODE", "local")
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PyQt5.QtCore import QCoreApplication
-from PyQt5.QtWidgets import QApplication, QGridLayout, QWidget
+from PyQt5.QtWidgets import QApplication, QLabel, QGridLayout, QTableWidget, QWidget
 
 from tools.run_gui_coverage_matrix import _DummyMain, _data_signal, _get_widget, _leaf_paths
 
 
 LOG_DIR = ROOT / "logs"
+FAIL_TEXT = (
+    "failed",
+    "load failed",
+    "api request failed",
+    "under development",
+    "not implemented",
+    "no data available",
+    "waiting for data",
+)
 
 
 def _process(duration: float = 0.2) -> None:
@@ -46,6 +55,73 @@ def _session_name(code: str) -> str:
     }.get(code, code)
 
 
+def _visible_text_samples(widget: QWidget, limit: int = 40) -> List[str]:
+    samples: List[str] = []
+    for label in widget.findChildren(QLabel):
+        try:
+            if not label.isVisible():
+                continue
+            text = label.text().strip()
+        except Exception:
+            continue
+        if text and text not in samples:
+            samples.append(text)
+        if len(samples) >= limit:
+            break
+    return samples
+
+
+def _table_samples(widget: QWidget, limit: int = 40) -> List[str]:
+    samples: List[str] = []
+    for table in widget.findChildren(QTableWidget):
+        rows = min(table.rowCount(), 8)
+        cols = min(table.columnCount(), 8)
+        for row in range(rows):
+            values: List[str] = []
+            for col in range(cols):
+                item = table.item(row, col)
+                if item is not None:
+                    value = item.text().strip()
+                    if value:
+                        values.append(value)
+            if values:
+                samples.append(" | ".join(values))
+            if len(samples) >= limit:
+                return samples
+    return samples
+
+
+def _has_numeric_sample(samples: List[str]) -> bool:
+    return any(any(ch.isdigit() for ch in sample) for sample in samples)
+
+
+def _module_passes(label: str, load_ok: bool, signal: Dict[str, Any], text_samples: List[str], table_samples: List[str]) -> bool:
+    if not load_ok or signal.get("failures"):
+        return False
+    if signal.get("loaded") and (_has_numeric_sample(text_samples) or _has_numeric_sample(table_samples)):
+        return True
+    # Map/trace style widgets can be numeric-data backed without table text.
+    numeric_optional = {
+        "Track Map",
+        "Circle Map",
+        "Pit Window",
+        "Tyre Strategy",
+        "Lap Time Distribution",
+        "Track & Weather",
+        "Speed Trace",
+        "Throttle Trace",
+        "Brake Trace",
+        "Gear Trace",
+        "DRS Trace",
+        "RPM Trace",
+        "Pedal Behavior",
+        "S1 Comparison",
+        "S2 Comparison",
+        "S3 Comparison",
+    }
+    return label in numeric_optional and not signal.get("failures")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--year", type=int, default=2026)
@@ -53,9 +129,11 @@ def main() -> int:
     parser.add_argument("--session", default="R")
     parser.add_argument("--report", type=Path, default=LOG_DIR / "live_timing_data_validation_2026_miami.json")
     parser.add_argument("--screenshot", type=Path, default=LOG_DIR / "live_timing_data_validation_2026_miami.png")
+    parser.add_argument("--screenshot-dir", type=Path, default=LOG_DIR / "live_timing_data_validation_2026_miami")
     args = parser.parse_args()
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    args.screenshot_dir.mkdir(parents=True, exist_ok=True)
     app = QApplication.instance() or QApplication([])
 
     from modules.gui.live_timing import LiveTimingDataManager, LiveTimingModuleFactory
@@ -116,8 +194,22 @@ def main() -> int:
             result.update({"ok": False, "error": entry["create_error"]})
         else:
             signal = _data_signal(entry.get("module"), entry.get("widget"))
+            widget = entry.get("widget")
+            text_samples = _visible_text_samples(widget) if isinstance(widget, QWidget) else []
+            table_samples = _table_samples(widget) if isinstance(widget, QWidget) else []
             result.update(signal)
-            result["ok"] = bool(load_ok and not signal.get("failures"))
+            result["visible_text_samples"] = text_samples[:20]
+            result["table_samples"] = table_samples[:20]
+            result["has_numeric_sample"] = _has_numeric_sample(text_samples + table_samples)
+            result["ok"] = _module_passes(entry["label"], load_ok, signal, text_samples, table_samples)
+            if isinstance(widget, QWidget):
+                try:
+                    safe_name = "".join(ch if ch.isalnum() else "_" for ch in entry["label"]).strip("_").lower()
+                    screenshot_path = args.screenshot_dir / f"{safe_name}.png"
+                    widget.grab().save(str(screenshot_path))
+                    result["screenshot"] = str(screenshot_path)
+                except Exception as exc:
+                    result["screenshot_error"] = f"{type(exc).__name__}: {exc}"
         results.append(result)
 
     _process(1.0)
@@ -145,6 +237,7 @@ def main() -> int:
         },
         "progress_tail": progress[-20:],
         "screenshot": str(args.screenshot),
+        "screenshot_dir": str(args.screenshot_dir),
         "total_modules": len(results),
         "passed_modules": sum(1 for item in results if item.get("ok")),
         "results": results,
