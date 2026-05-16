@@ -386,7 +386,11 @@ def main():
     print("=" * 60)
     
     # API Key
-    API_KEY = "REMOVED_GEMINI_API_KEY"
+    import os
+    API_KEY = os.getenv("GEMINI_API_KEY")
+    if not API_KEY:
+        print("[ERROR] GEMINI_API_KEY environment variable is required")
+        return
     
     # 初始化分析器
     try:
