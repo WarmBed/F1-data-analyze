@@ -141,6 +141,82 @@ def _semantic_samples(module: Any, widget: QWidget) -> List[str]:
                 samples.append(f"sf_history lap={lap}: sf={sf_pct:.1f}% current_lap={current_lap}")
             break
 
+    for obj in [item for item in objects if item is not None]:
+        track_data = getattr(obj, "_track_data", None)
+        if isinstance(track_data, dict) and track_data:
+            positions = track_data.get("position_records") or []
+            corners = (track_data.get("official_corners") or {}).get("corners") or []
+            samples.append(f"track_map positions={len(positions)} corners={len(corners)}")
+            break
+
+    for obj in [item for item in objects if item is not None]:
+        driver_stints = getattr(obj, "_driver_stints", None)
+        driver_info = getattr(obj, "_driver_info", None)
+        current_lap = getattr(obj, "_current_lap", None)
+        total_laps = getattr(obj, "_total_laps", None)
+        if isinstance(driver_stints, dict) and driver_stints:
+            samples.append(
+                f"tyre_strategy drivers={len(driver_stints)} "
+                f"stints={sum(len(v or []) for v in driver_stints.values())} "
+                f"lap={current_lap}/{total_laps}"
+            )
+            break
+        if isinstance(driver_info, dict) and driver_info and total_laps:
+            samples.append(f"driver_info drivers={len(driver_info)} total_laps={total_laps}")
+
+    for obj in [item for item in objects if item is not None]:
+        positions = getattr(obj, "_driver_positions", None)
+        if isinstance(positions, dict) and positions:
+            samples.append(f"driver_positions drivers={len(positions)}")
+            break
+
+    for obj in [item for item in objects if item is not None]:
+        driver_data = getattr(obj, "_driver_data", None)
+        if isinstance(driver_data, dict) and driver_data:
+            for driver_num, data in list(driver_data.items())[:5]:
+                if isinstance(data, dict):
+                    value = data.get("lap_time") or data.get("best_lap_time") or data.get("position")
+                    samples.append(f"lap_distribution {driver_num}: value={value}")
+            break
+
+    for obj in [item for item in objects if item is not None]:
+        current_laps = getattr(obj, "_all_current_laps", None)
+        best_laps = getattr(obj, "_all_best_laps", None)
+        if isinstance(current_laps, dict) and current_laps:
+            for driver_num, lap_data in list(current_laps.items())[:5]:
+                points = len(getattr(lap_data, "distances", []) or [])
+                lap_number = getattr(lap_data, "lap_number", None)
+                if points:
+                    samples.append(f"trace_current {driver_num}: lap={lap_number} points={points}")
+            if any(sample.startswith("trace_current ") for sample in samples):
+                break
+        if isinstance(best_laps, dict) and best_laps:
+            for driver_num, lap_data in list(best_laps.items())[:5]:
+                points = len(getattr(lap_data, "distances", []) or [])
+                lap_number = getattr(lap_data, "lap_number", None)
+                if points:
+                    samples.append(f"trace_best {driver_num}: lap={lap_number} points={points}")
+            if any(sample.startswith("trace_best ") for sample in samples):
+                break
+
+    for obj in [item for item in objects if item is not None]:
+        driver_stats = getattr(obj, "_driver_stats", None)
+        if isinstance(driver_stats, dict) and driver_stats:
+            for driver_num, stats in list(driver_stats.items())[:8]:
+                total = getattr(stats, "total_samples", 0)
+                lap = getattr(stats, "current_lap", 0)
+                pending = len(getattr(stats, "current_lap_samples", []) or [])
+                samples.append(f"pedal {driver_num}: samples={total} pending={pending} lap={lap}")
+            break
+
+    for obj in [item for item in objects if item is not None]:
+        lap_value = getattr(obj, "_current_lap", None)
+        total_laps = getattr(obj, "_total_laps", None)
+        wind_speed = getattr(obj, "_wind_speed", None)
+        if total_laps and (lap_value is not None or wind_speed is not None):
+            samples.append(f"track_weather lap={lap_value}/{total_laps} wind={wind_speed}")
+            break
+
     return samples[:30]
 
 
@@ -155,27 +231,6 @@ def _module_passes(
     if not load_ok or signal.get("failures"):
         return False
     if signal.get("loaded") and _has_numeric_sample(text_samples + table_samples + semantic_samples):
-        return True
-    # Map/trace style widgets can be numeric-data backed without table text.
-    numeric_optional = {
-        "Track Map",
-        "Circle Map",
-        "Pit Window",
-        "Tyre Strategy",
-        "Lap Time Distribution",
-        "Track & Weather",
-        "Speed Trace",
-        "Throttle Trace",
-        "Brake Trace",
-        "Gear Trace",
-        "DRS Trace",
-        "RPM Trace",
-        "Pedal Behavior",
-        "S1 Comparison",
-        "S2 Comparison",
-        "S3 Comparison",
-    }
-    if label in numeric_optional and not signal.get("failures"):
         return True
     return _has_numeric_sample(semantic_samples)
 
@@ -240,6 +295,9 @@ def main() -> int:
     _process(0.8)
     if load_ok:
         try:
+            for progress_value in [idx / 100 for idx in range(2, 72, 2)]:
+                dm.seek_by_progress(progress_value)
+                _process(0.08)
             dm.seek_by_progress(0.5)
         except Exception:
             pass

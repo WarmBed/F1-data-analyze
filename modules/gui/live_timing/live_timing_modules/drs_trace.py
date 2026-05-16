@@ -894,9 +894,10 @@ class DRSTraceWidget(HoverTooltipMixin, QWidget):
             x = driver_data.get('x')
             y = driver_data.get('y')
             
-            # drs 必須有效，lap 可以是 0 (編隊圈) 或正整數
+            # Some historical replay caches do not include channel 45 (DRS).
+            # Plot closed/unavailable DRS as 0 instead of leaving the module blank.
             if drs is None:
-                continue
+                drs = 0
             
             # 處理 lap_number: None 視為 0 (編隊圈)
             if lap_number is None:
