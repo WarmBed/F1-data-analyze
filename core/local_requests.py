@@ -8,6 +8,7 @@ the local executor. Other URLs are delegated to the real ``requests`` package.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -63,14 +64,12 @@ class Session:
         return self._session.request(method, url, *args, **kwargs)
 
     def get(self, url: str, *args: Any, **kwargs: Any) -> Any:
-        if is_local_first():
-            parsed = urlparse(str(url))
-            if parsed.path.endswith("/api/v2/system/health") or parsed.path.endswith("/api/v2/analysis/status"):
-                return get(url, *args, **kwargs)
+        if _should_route_local_health(url):
+            return get(url, *args, **kwargs)
         return self._session.get(url, *args, **kwargs)
 
     def post(self, url: str, *args: Any, **kwargs: Any) -> Any:
-        if is_local_first() and _is_local_analysis_execute(url):
+        if _should_route_local_analysis(url):
             return post(url, *args, **kwargs)
         return self._session.post(url, *args, **kwargs)
 
@@ -92,6 +91,25 @@ def _is_local_analysis_execute(url: str) -> bool:
     return parsed.path.endswith("/api/v2/analysis/execute")
 
 
+def _is_local_host(url: str) -> bool:
+    parsed = urlparse(str(url))
+    host = (parsed.hostname or "").lower()
+    return host in {"", "localhost", "127.0.0.1", "::1"}
+
+
+def _should_route_local_analysis(url: str) -> bool:
+    # For desktop local runtime, loopback API-style execute calls should always
+    # be routed in-process to avoid hard dependency on an HTTP server.
+    return _is_local_analysis_execute(url) and (_is_local_host(url) or is_local_first())
+
+
+def _should_route_local_health(url: str) -> bool:
+    parsed = urlparse(str(url))
+    if not (_is_local_host(url) or is_local_first()):
+        return False
+    return parsed.path.endswith("/api/v2/system/health") or parsed.path.endswith("/api/v2/analysis/status")
+
+
 def _extract_function_id(params: Optional[Dict[str, Any]], json_body: Optional[Dict[str, Any]]) -> Any:
     source = params or json_body or {}
     function_id = source.get("function_id") or source.get("function") or source.get("f")
@@ -101,6 +119,24 @@ def _extract_function_id(params: Optional[Dict[str, Any]], json_body: Optional[D
 
 
 def _extract_params(params: Optional[Dict[str, Any]], json_body: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    def _normalize_race_value(value: Any) -> Any:
+        if value is None:
+            return value
+        text = str(value).strip()
+        if not text:
+            return text
+        # Normalize UI dropdown value like "Japan (2026-03-29)" -> "Japan"
+        text = re.sub(r"\s*\(\d{4}-\d{2}-\d{2}\)\s*$", "", text)
+        text = text.rstrip(" _-")
+        return text.strip()
+
+    def _normalize_payload(payload: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = dict(payload)
+        for key in ("race", "event", "race_name"):
+            if key in normalized:
+                normalized[key] = _normalize_race_value(normalized.get(key))
+        return normalized
+
     merged: Dict[str, Any] = {}
     if json_body:
         merged.update(json_body)
@@ -111,10 +147,10 @@ def _extract_params(params: Optional[Dict[str, Any]], json_body: Optional[Dict[s
     merged.pop("f", None)
     nested_parameters = merged.pop("parameters", None)
     if isinstance(nested_parameters, dict):
-        local_params = dict(nested_parameters)
+        local_params = _normalize_payload(dict(nested_parameters))
         local_params.update(merged)
-        return local_params
-    return merged
+        return _normalize_payload(local_params)
+    return _normalize_payload(merged)
 
 
 def _fallback_color_payload(year: Any = None, colormap: str = "fastf1") -> Dict[str, Any]:
@@ -187,7 +223,7 @@ def post(url: str, *args: Any, **kwargs: Any) -> Any:
     params = kwargs.get("params")
     json_body = kwargs.get("json")
 
-    if is_local_first() and _is_local_analysis_execute(url):
+    if _should_route_local_analysis(url):
         try:
             function_id = _extract_function_id(params, json_body)
             local_params = _extract_params(params, json_body)
@@ -217,13 +253,13 @@ def get(url: str, *args: Any, **kwargs: Any) -> Any:
     """Return local health/status responses where possible; proxy otherwise."""
 
     parsed = urlparse(str(url))
-    if is_local_first() and parsed.path.endswith("/api/v2/system/health"):
+    if _should_route_local_health(url) and parsed.path.endswith("/api/v2/system/health"):
         return LocalResponse(
             payload={"success": True, "status": "local", "message": "Local runtime active"},
             status_code=200,
             url=str(url),
         )
-    if is_local_first() and parsed.path.endswith("/api/v2/analysis/status"):
+    if _should_route_local_health(url) and parsed.path.endswith("/api/v2/analysis/status"):
         try:
             state = execute_analysis_sync(99, year=2026).get("runtime", {})
         except Exception:

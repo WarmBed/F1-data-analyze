@@ -80,7 +80,7 @@ class QualifyingPredictionDataLoader(UniversalDataLoader):
         self.race = race
 
         # API-ONLY 模式：停用本地 JSON 後備
-        self._allow_local_fallback = False
+        self._allow_local_fallback = True
         self._debug("[QUALIFYING_PRED_LOADER] 已停用本地 JSON 後備 (API-ONLY)")
         
         self._debug(f"[QUALIFYING_PRED_LOADER] 初始化完成: {year} {race}")
@@ -406,10 +406,12 @@ class QualifyingPredictionDataLoader(UniversalDataLoader):
         race = params.get("race", self.race)
         
         # 排位賽預測的檔案命名模式
+        race_token = str(race).replace(" ", "_")
         patterns = [
             f"qualifying_prediction_{year}_{race}.json",
+            f"qualifying_prediction_{year}_{race_token}.json",
             f"qual_pred_{year}_{race}.json",
-            f"*qualifying*prediction*{year}*{race}*.json"
+            f"qual_pred_{year}_{race_token}.json",
         ]
         
         return patterns

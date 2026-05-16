@@ -17,9 +17,10 @@ import sys
 import asyncio
 import asyncio.subprocess as aio_subprocess
 import time
+import re
 from collections import deque
 from datetime import datetime
-from typing import Dict, Any, Optional, Deque, Union
+from typing import Dict, Any, Optional, Deque, Union, List, Tuple
 
 from uuid import uuid4
 
@@ -40,6 +41,21 @@ from api.models.function_specs import (
 
 
 class SimpleF1AnalysisService:
+    # User policy: disable cross-year/relaxed fallback.
+    # Only exact cache hits are allowed; otherwise CLI must execute.
+    _CACHE_FALLBACK_ALLOWED_FUNCTIONS = set()
+
+    _RACE_ALIAS_MAP: Dict[str, List[str]] = {
+        "japan": ["Japanese Grand Prix", "Japanese"],
+        "miami": ["Miami Grand Prix"],
+        "italy": ["Italian Grand Prix", "Italian"],
+        "spain": ["Spanish Grand Prix", "Spanish"],
+        "netherlands": ["Dutch Grand Prix", "Dutch"],
+        "usa": ["United States Grand Prix", "United States"],
+        "united states": ["United States Grand Prix", "USA"],
+        "australia": ["Australian Grand Prix", "Australian"],
+        "austria": ["Austrian Grand Prix", "Austrian"],
+    }
     """簡化版 F1 分析服務 - 專注核心功能"""
 
     def __init__(self):
@@ -92,7 +108,242 @@ class SimpleF1AnalysisService:
         # 使用者需求：直接使用 -f 100 -y [year] -r [race] -s [session] 即可
         # 不需要強制添加 --start-year 和 --end-year 參數
 
+        if "race" in prepared:
+            prepared["race"] = self._sanitize_race_name(prepared.get("race"))
+        if spec.function_id == "13" and raw_params.get("is_fastest_lap") is not None:
+            prepared["is_fastest_lap"] = bool(raw_params.get("is_fastest_lap"))
+
         return prepared
+
+    def _sanitize_race_name(self, race: Any) -> Any:
+        """Normalize GUI race labels like 'Japan (2026-03-29) [Upcoming]'."""
+        if race is None:
+            return race
+        text = str(race).strip()
+        if not text:
+            return text
+
+        text = re.sub(r"\[[^\]]*\]", " ", text)
+        text = re.sub(r"\([^)]*\)", " ", text)
+        text = re.sub(r"\s+", " ", text).strip()
+
+        lowered = text.lower()
+        if lowered.endswith(" grand prix"):
+            text = text[: -len(" grand prix")].strip()
+
+        return text
+
+    def _race_aliases(self, race: Any) -> List[str]:
+        """Generate race aliases for cache lookup compatibility."""
+        base = self._sanitize_race_name(race)
+        if not base:
+            return []
+
+        aliases: List[str] = [str(base)]
+        lowered = str(base).lower()
+
+        mapped = self._RACE_ALIAS_MAP.get(lowered, [])
+        for candidate in mapped:
+            if candidate not in aliases:
+                aliases.append(candidate)
+
+        if not lowered.endswith(" grand prix"):
+            gp = f"{base} Grand Prix"
+            if gp not in aliases:
+                aliases.append(gp)
+
+        underscore_aliases = []
+        for candidate in aliases:
+            underscored = candidate.replace(" ", "_")
+            if underscored not in aliases and underscored not in underscore_aliases:
+                underscore_aliases.append(underscored)
+        aliases.extend(underscore_aliases)
+        return aliases
+
+    def _build_cache_fallback_candidates(
+        self,
+        function_id: str,
+        params: Dict[str, Any],
+    ) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
+        """
+        Build fallback parameter candidates for local cache lookup.
+        Returns (candidate_params, fallback_meta).
+        """
+        if function_id not in self._CACHE_FALLBACK_ALLOWED_FUNCTIONS:
+            return []
+
+        year = params.get("year")
+        race = params.get("race")
+        session = params.get("session")
+        if year is None:
+            return []
+
+        try:
+            year_int = int(year)
+        except Exception:
+            return []
+
+        if race in (None, ""):
+            race_aliases = [None]
+        else:
+            race_aliases = self._race_aliases(race)
+            if not race_aliases:
+                return []
+
+        candidates: List[Tuple[Dict[str, Any], Dict[str, Any]]] = []
+        seen = set()
+        for alias in race_aliases:
+            for fallback_year in range(year_int, 2019, -1):
+                if fallback_year == year_int and alias == params.get("race"):
+                    continue
+                candidate_variants: List[Dict[str, Any]] = []
+                base_candidate = dict(params)
+                base_candidate["year"] = fallback_year
+                if alias is None:
+                    base_candidate.pop("race", None)
+                else:
+                    base_candidate["race"] = alias
+                if session in (None, ""):
+                    base_candidate.pop("session", None)
+                candidate_variants.append(base_candidate)
+
+                if function_id == "13":
+                    d1 = str(base_candidate.get("driver1") or "").strip().upper()
+                    d2 = str(base_candidate.get("driver2") or "").strip().upper()
+                    if d1 and d2 and d1 != d2:
+                        swapped = dict(base_candidate)
+                        swapped["driver1"] = d2
+                        swapped["driver2"] = d1
+                        candidate_variants.append(swapped)
+
+                    # If requested lap has no cache, allow local fallback to fastest-lap JSON.
+                    lap1 = base_candidate.get("lap1", base_candidate.get("lap", 1))
+                    lap2 = base_candidate.get("lap2", lap1)
+                    if str(lap1) != "99" or str(lap2) != "99":
+                        for variant in list(candidate_variants):
+                            fastest_variant = dict(variant)
+                            fastest_variant["lap1"] = 99
+                            fastest_variant["lap2"] = 99
+                            candidate_variants.append(fastest_variant)
+
+                for candidate in candidate_variants:
+                    seen_key = (
+                        candidate.get("year"),
+                        candidate.get("race"),
+                        candidate.get("session"),
+                        candidate.get("driver1"),
+                        candidate.get("driver2"),
+                        candidate.get("lap1", candidate.get("lap")),
+                        candidate.get("lap2"),
+                    )
+                    if seen_key in seen:
+                        continue
+                    seen.add(seen_key)
+                    fallback_meta = {
+                        "requested_year": year_int,
+                        "requested_race": params.get("race"),
+                        "actual_year": candidate.get("year"),
+                        "actual_race": candidate.get("race"),
+                        "actual_session": candidate.get("session"),
+                        "actual_driver1": candidate.get("driver1"),
+                        "actual_driver2": candidate.get("driver2"),
+                        "actual_lap1": candidate.get("lap1", candidate.get("lap")),
+                        "actual_lap2": candidate.get("lap2"),
+                    }
+                    candidates.append((candidate, fallback_meta))
+        return candidates
+
+    async def _try_cache_fallback(
+        self,
+        function_id: str,
+        prepared_params: Dict[str, Any],
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+        """Try local cache fallback candidates in order."""
+        for candidate_params, fallback_meta in self._build_cache_fallback_candidates(function_id, prepared_params):
+            cached_result = await asyncio.to_thread(
+                self.cache_service.search_cached_analysis,
+                function_id,
+                **candidate_params,
+            )
+            if cached_result:
+                return cached_result, fallback_meta
+        return None, None
+
+    async def _try_openf1_exact_generation(
+        self,
+        function_id: str,
+        prepared_params: Dict[str, Any],
+    ) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+        """Generate exact-session JSON from OpenF1 when FastF1/CLI has no data.
+
+        This is not a cross-season fallback. It only writes a JSON file for the
+        exact year/race/session/driver/lap requested, then lets the normal cache
+        scanner load that file.
+        """
+        if str(function_id) not in {"1", "2", "3", "4", "5", "6", "13", "25", "26", "28", "34", "47", "48", "53", "54", "74", "76", "80", "101", "120", "121", "122"}:
+            return None, None
+        try:
+            from core.openf1_exact_generators import generate_exact_json
+
+            output_path = await asyncio.to_thread(generate_exact_json, str(function_id), **prepared_params)
+            if not output_path:
+                return None, None
+            if str(function_id) == "13" and prepared_params.get("is_fastest_lap"):
+                import json
+
+                with open(output_path, "r", encoding="utf-8") as handle:
+                    direct_result = json.load(handle)
+                return direct_result, {
+                    "source": "openf1_exact",
+                    "path": str(output_path),
+                    "message": "OpenF1 exact fastest-lap JSON generated and loaded directly",
+                    "requested_year": prepared_params.get("year"),
+                    "requested_race": prepared_params.get("race"),
+                    "requested_session": prepared_params.get("session"),
+                    "requested_driver1": prepared_params.get("driver1") or prepared_params.get("driver"),
+                    "requested_driver2": prepared_params.get("driver2"),
+                    "requested_lap1": prepared_params.get("lap1") or prepared_params.get("lap_number"),
+                    "requested_lap2": prepared_params.get("lap2"),
+                }
+            cached_result = await asyncio.to_thread(
+                self.cache_service.search_cached_analysis,
+                str(function_id),
+                **prepared_params,
+            )
+            if not cached_result:
+                try:
+                    import json
+
+                    with open(output_path, "r", encoding="utf-8") as handle:
+                        cached_result = json.load(handle)
+                except Exception:
+                    return None, {
+                        "source": "openf1_exact",
+                        "path": str(output_path),
+                        "message": "OpenF1 exact JSON generated but cache scanner did not match it",
+                    }
+                return cached_result, {
+                    "source": "openf1_exact",
+                    "path": str(output_path),
+                    "message": "OpenF1 exact JSON generated and loaded directly",
+                }
+            return cached_result, {
+                "source": "openf1_exact",
+                "path": str(output_path),
+                "requested_year": prepared_params.get("year"),
+                "requested_race": prepared_params.get("race"),
+                "requested_session": prepared_params.get("session"),
+                "requested_driver1": prepared_params.get("driver1") or prepared_params.get("driver"),
+                "requested_driver2": prepared_params.get("driver2"),
+                "requested_lap1": prepared_params.get("lap1") or prepared_params.get("lap_number"),
+                "requested_lap2": prepared_params.get("lap2"),
+            }
+        except Exception as exc:
+            print(f"[SERVICE] WARN OpenF1 exact generation failed for function {function_id}: {exc}")
+            return None, {
+                "source": "openf1_exact",
+                "error": str(exc),
+            }
 
     async def _check_standings_freshness(self, year: int) -> bool:
         """
@@ -309,6 +560,8 @@ class SimpleF1AnalysisService:
             print(f"[SERVICE] 開始分析 {request_id}: 功能 {canonical_id}")
             prepared_params = self._prepare_params(spec, params)
             force_refresh = bool(params.get("force_refresh"))
+            if canonical_id == "13" and prepared_params.get("is_fastest_lap"):
+                force_refresh = True
             
             # 🔄 智慧刷新檢查：Function 97 (Championship Standings) 專用
             if canonical_id == "97" and not force_refresh:
@@ -365,6 +618,32 @@ class SimpleF1AnalysisService:
                         "runtime": self.get_runtime_state(),
                     }
 
+            fallback_cached, fallback_meta = await self._try_cache_fallback(canonical_id, prepared_params)
+            if fallback_cached:
+                execution_time = time.time() - start_time
+                self._metrics["cache_hits"] += 1
+                self._metrics["last_execution_time"] = execution_time
+                self._record_history(
+                    request_id,
+                    canonical_id,
+                    execution_time,
+                    success=True,
+                    source="cache_fallback",
+                    message="cache_fallback_hit",
+                )
+                return {
+                    "success": True,
+                    "message": f"analysis completed via local fallback (function {canonical_id})",
+                    "data": fallback_cached,
+                    "source": "cache_fallback",
+                    "execution_time": f"{execution_time:.3f}s",
+                    "request_id": request_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "function_spec": spec.__dict__,
+                    "fallback": fallback_meta,
+                    "runtime": self.get_runtime_state(),
+                }
+
             task_info = self._start_active_task(request_id, canonical_id, prepared_params)
             cli_result = await self._run_cli_async(request_id, spec, prepared_params)
 
@@ -417,7 +696,75 @@ class SimpleF1AnalysisService:
                         "runtime": self.get_runtime_state(),
                     }
 
-                error_msg = "CLI 執行成功但未找到輸出文件"
+                fallback_cached, fallback_meta = await self._try_cache_fallback(canonical_id, prepared_params)
+                if fallback_cached:
+                    recorded = self._complete_active_task(
+                        request_id,
+                        status="completed",
+                        message="cli_completed_with_cache_fallback",
+                        duration=execution_time,
+                        cli_info=cli_result.get("cli_info", {}),
+                        success=True,
+                        source="cache_fallback",
+                    )
+                    if not recorded:
+                        self._record_history(
+                            request_id,
+                            canonical_id,
+                            execution_time,
+                            success=True,
+                            source="cache_fallback",
+                            message="cli_completed_with_cache_fallback",
+                        )
+                    return {
+                        "success": True,
+                        "message": f"analysis completed via local fallback (function {canonical_id})",
+                        "data": fallback_cached,
+                        "source": "cache_fallback",
+                        "execution_time": f"{execution_time:.3f}s",
+                        "request_id": request_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "function_spec": spec.__dict__,
+                        "cli_info": cli_result.get("cli_info", {}),
+                        "fallback": fallback_meta,
+                        "runtime": self.get_runtime_state(),
+                    }
+
+                exact_generated, exact_meta = await self._try_openf1_exact_generation(canonical_id, prepared_params)
+                if exact_generated:
+                    recorded = self._complete_active_task(
+                        request_id,
+                        status="completed",
+                        message="cli_completed_with_openf1_exact_generation",
+                        duration=execution_time,
+                        cli_info=cli_result.get("cli_info", {}),
+                        success=True,
+                        source="openf1_exact",
+                    )
+                    if not recorded:
+                        self._record_history(
+                            request_id,
+                            canonical_id,
+                            execution_time,
+                            success=True,
+                            source="openf1_exact",
+                            message="cli_completed_with_openf1_exact_generation",
+                        )
+                    return {
+                        "success": True,
+                        "message": f"analysis completed via OpenF1 exact generator (function {canonical_id})",
+                        "data": exact_generated,
+                        "source": "openf1_exact",
+                        "execution_time": f"{execution_time:.3f}s",
+                        "request_id": request_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "function_spec": spec.__dict__,
+                        "cli_info": cli_result.get("cli_info", {}),
+                        "fallback": exact_meta,
+                        "runtime": self.get_runtime_state(),
+                    }
+
+                error_msg = "CLI completed but no output JSON found"
                 recorded = self._complete_active_task(
                     request_id,
                     status="error",
@@ -451,6 +798,72 @@ class SimpleF1AnalysisService:
                 }
 
             error_message = cli_result.get("error", "未知錯誤")
+            fallback_cached, fallback_meta = await self._try_cache_fallback(canonical_id, prepared_params)
+            if fallback_cached:
+                recorded = self._complete_active_task(
+                    request_id,
+                    status="completed",
+                    message="cli_failed_but_cache_fallback_hit",
+                    duration=execution_time,
+                    cli_info=cli_result.get("cli_info", {}),
+                    success=True,
+                    source="cache_fallback",
+                )
+                if not recorded:
+                    self._record_history(
+                        request_id,
+                        canonical_id,
+                        execution_time,
+                        success=True,
+                        source="cache_fallback",
+                        message="cli_failed_but_cache_fallback_hit",
+                    )
+                return {
+                    "success": True,
+                    "message": f"analysis completed via local fallback (function {canonical_id})",
+                    "data": fallback_cached,
+                    "source": "cache_fallback",
+                    "execution_time": f"{execution_time:.3f}s",
+                    "request_id": request_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "function_spec": spec.__dict__,
+                    "cli_info": cli_result.get("cli_info", {}),
+                    "fallback": fallback_meta,
+                    "runtime": self.get_runtime_state(),
+                }
+            exact_generated, exact_meta = await self._try_openf1_exact_generation(canonical_id, prepared_params)
+            if exact_generated:
+                recorded = self._complete_active_task(
+                    request_id,
+                    status="completed",
+                    message="cli_failed_but_openf1_exact_generated",
+                    duration=execution_time,
+                    cli_info=cli_result.get("cli_info", {}),
+                    success=True,
+                    source="openf1_exact",
+                )
+                if not recorded:
+                    self._record_history(
+                        request_id,
+                        canonical_id,
+                        execution_time,
+                        success=True,
+                        source="openf1_exact",
+                        message="cli_failed_but_openf1_exact_generated",
+                    )
+                return {
+                    "success": True,
+                    "message": f"analysis completed via OpenF1 exact generator (function {canonical_id})",
+                    "data": exact_generated,
+                    "source": "openf1_exact",
+                    "execution_time": f"{execution_time:.3f}s",
+                    "request_id": request_id,
+                    "timestamp": datetime.now().isoformat(),
+                    "function_spec": spec.__dict__,
+                    "cli_info": cli_result.get("cli_info", {}),
+                    "fallback": exact_meta,
+                    "runtime": self.get_runtime_state(),
+                }
             recorded = self._complete_active_task(
                 request_id,
                 status="failed",

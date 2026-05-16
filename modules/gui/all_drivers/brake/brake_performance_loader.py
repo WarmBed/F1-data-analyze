@@ -147,6 +147,7 @@ class BrakePerformanceDataLoader(UniversalDataLoader):
             self.register_analysis_type(self.ANALYSIS_TYPE, config)
 
         super().__init__(self.ANALYSIS_TYPE, parent)
+        self._allow_local_fallback = True
 
         self._api_base_url = self._determine_api_base_url()
         self._api_timeout = 45.0

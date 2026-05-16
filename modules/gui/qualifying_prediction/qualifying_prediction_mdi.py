@@ -397,6 +397,11 @@ class QualifyingPredictionMDI(UniversalAnalysisMDI):
         """
         self._logger.error("❌ [QUALIFYING_PRED_MDI] 載入錯誤: %s", error_msg)
         # ✅ 只在狀態標籤顯示錯誤
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self.data_manager:
+            if self.data_manager.load_data(year=self.year, race=self.race):
+                return
+
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('error', '錯誤')}: {error_msg}")
     

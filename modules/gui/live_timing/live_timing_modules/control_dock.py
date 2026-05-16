@@ -940,7 +940,10 @@ class LiveTimingControlDock(QDockWidget):
         event = self.cmb_race.currentData()
         if SEASON_CALENDAR_AVAILABLE and hasattr(event, 'race_key'):
             return event.race_key
-        return self.cmb_race.currentText()
+        value = str(self.cmb_race.currentText() or "").strip()
+        if value and "(" in value and value.endswith(")"):
+            value = value.split("(", 1)[0].strip().rstrip("_- ")
+        return value
     
     def get_selected_session_code(self) -> str:
         """獲取當前選中的會話代碼"""

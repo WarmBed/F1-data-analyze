@@ -216,7 +216,7 @@ class TireAnalysisDataManager(UniversalDataLoader):
             if normalized in {"1", "true", "yes", "on"}:
                 return True, f"環境變數 F1T_ALLOW_TIRE_JSON_FALLBACK={env_value}"
             return False, f"環境變數 F1T_ALLOW_TIRE_JSON_FALLBACK={env_value}"
-        return False, "預設策略 (API 優先，不允許本地回退)"
+        return True, "default-enabled local JSON fallback"
 
     def _is_api_available(self) -> bool:
         available = is_api_available()
@@ -230,8 +230,17 @@ class TireAnalysisDataManager(UniversalDataLoader):
         state = "啟用" if self._allow_local_fallback else "停用"
         self._debug(f"本地 JSON 後備手動設為{state} (原因: {self._fallback_policy_reason})")
 
+    def _normalize_load_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = dict(params)
+        race = str(normalized.get("race") or "").strip()
+        if race and "(" in race and race.endswith(")"):
+            race = race.split("(", 1)[0].strip().rstrip("_- ")
+        normalized["race"] = race
+        return normalized
+
     def load_data_from_local(self, **kwargs) -> bool:
         """Force loading data via the legacy local JSON workflow for diagnostics."""
+        kwargs = self._normalize_load_params(kwargs)
         previous_state = self._allow_local_fallback
         previous_reason = self._fallback_policy_reason
         try:
@@ -245,6 +254,7 @@ class TireAnalysisDataManager(UniversalDataLoader):
 
     def load_data(self, **kwargs) -> bool:
         """載入輪胎策略分析資料，優先透過 API，失敗時視策略回退本地流程。"""
+        kwargs = self._normalize_load_params(kwargs)
         if self.config.data_source != "api":
             return super().load_data(**kwargs)
 
@@ -369,10 +379,13 @@ class TireAnalysisDataManager(UniversalDataLoader):
 
         self._last_data_source = "local-json"
         self._last_api_meta = {}
-        self._debug(f"啟動本地 JSON/CLI 後備流程: {reason}")
-        self.status_changed.emit("使用本地 JSON/CLI 後備載入輪胎策略資料...")
-        self.load_error.emit(f"API 載入失敗，使用本地資料: {reason}")
-        super().load_data(**params)
+        self._debug(f"API failed ({reason}); trying local JSON/CLI fallback")
+        self.status_changed.emit("API failed; loading local fallback...")
+        loaded = bool(super().load_data(**params))
+        if loaded:
+            self.status_changed.emit("Local fallback loaded")
+            return
+        self.load_error.emit(f"API failed and local fallback failed: {reason}")
 
     def _cleanup_api_worker(self, sync_wait: bool = False) -> None:
         """
@@ -996,21 +1009,14 @@ class TireAnalysisUniversal(UniversalAnalysisMDI):
         """更新分析參數"""
         try:
             # 更新當前參數
-            self.update_lap_parameters(
+            return self.update_lap_parameters(
                 year=int(year) if isinstance(year, str) else year,
                 race=race,
                 session=session
             )
             
             # 觸發數據重新載入
-            if hasattr(self, 'data_manager') and self.data_manager:
-                return self.data_manager.load_data(
-                    year=self.current_year,
-                    race=self.current_race,
-                    session=self.current_session
-                )
-            
-            return True
+            # update_lap_parameters already triggers async loading.
             
         except Exception as e:
             self._debug(f"更新分析參數失敗: {str(e)}")

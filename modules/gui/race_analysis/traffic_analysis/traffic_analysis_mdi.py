@@ -61,16 +61,20 @@ class TrafficAnalysisMDI(UniversalAnalysisMDI):
             api_endpoint="/analyze",
             json_pattern="historical_flags_{race}_{years}.json"
         )
+        config.requires_driver_params = False
+        config.requires_lap_params = False
+        config.supports_single_driver = False
+        config.supports_dual_driver = False
+        if "traffic_analysis" not in UniversalAnalysisMDI.MDI_MODULE_TYPES:
+            UniversalAnalysisMDI.register_mdi_module_type("traffic_analysis", config)
         
-        super().__init__(
-            config=config,
-            year=year,
-            race=race,
-            session=session,
-            parent=parent
-        )
-        
+        super().__init__("traffic_analysis", parent=parent)
         self._debug_enabled = True
+        self.current_year = str(year)
+        self.current_race = race
+        self.current_session = session
+        self.initialize_module()
+        
         self._initialize_traffic_module()
         
     def _initialize_traffic_module(self):
@@ -94,7 +98,7 @@ class TrafficAnalysisMDI(UniversalAnalysisMDI):
             TrafficDataLoader 實例
         """
         self._debug(f"[CREATE] {tr('創建 TrafficDataLoader')}")
-        return TrafficDataLoader(debug_enabled=self._debug_enabled)
+        return TrafficDataLoader()
     
     def create_chart_widget(self) -> TrafficAnalysisWidget:
         """創建圖表組件
@@ -170,7 +174,7 @@ class TrafficAnalysisMDI(UniversalAnalysisMDI):
         Args:
             message: 調試訊息
         """
-        if self._debug_enabled:
+        if getattr(self, "_debug_enabled", False):
             logger.debug("[TRAFFIC_MDI] %s", message)
     
     def refresh_data(self):

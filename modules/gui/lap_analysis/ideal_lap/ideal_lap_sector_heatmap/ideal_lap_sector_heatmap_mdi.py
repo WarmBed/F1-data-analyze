@@ -473,6 +473,15 @@ class IdealLapSectorHeatmapMDI(UniversalAnalysisMDI):
 
         self._stop_api_worker()
         self._sync_loader_parameters()
+
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self.data_manager:
+            if self.data_manager.load_data(
+                year=self.current_year,
+                race=self.current_race,
+                session=self.current_session,
+            ):
+                return
         
         # 構建 API 參數
         api_params = {

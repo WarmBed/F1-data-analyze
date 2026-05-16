@@ -44,7 +44,7 @@ class IdealLapSectorHeatmapDataLoader(UniversalDataLoader):
         self.session = session
 
         # ✅ API-ONLY 模式：禁止本地 JSON 後備和 CLI 調用
-        self._allow_local_fallback = False
+        self._allow_local_fallback = True
 
         self._debug(
             f"[SECTOR_HEATMAP_LOADER] Initialised loader for {self.year} {self.race} {self.session}"

@@ -242,6 +242,15 @@ class ThrottleLineChartDataLoader(UniversalDataLoader):
         if self.config.data_source != "api":
             return super().load_data(**kwargs)
 
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            try:
+                from core.openf1_exact_generators import generate_exact_json
+
+                generate_exact_json("54", **kwargs)
+            except Exception as exc:
+                self._debug(f"OpenF1 exact local generation failed: {exc}")
+            return super().load_data(**kwargs)
+
         # API 模式 - 自訂處理流程
         if self._is_loading:
             self._debug("已有載入請求執行中，忽略新的請求")

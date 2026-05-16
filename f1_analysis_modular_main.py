@@ -1643,7 +1643,11 @@ class F1AnalysisModularCLI:
         # 127: Live Timing Traffic Distance 分析 (使用 Live Timing cache，不需 FastF1)
         # 143: FIA 賽季統計分析 (從 FIA 官網抓取 PDF，不需 FastF1)
         # ⚠️ Function 53 (理想圈分析) 需要賽事數據，已從此列表移除
-        data_optional_functions = {"49", "50", "51", "52", "55", "56", "57", "58", "70", "74", "75", "76", "81", "82", "83", "84", "85", "96", "97", "98", "99", "100", "125", "126", "127", "143"}
+        data_optional_functions = {
+            "49", "50", "51", "52", "55", "56", "57", "58",
+            "70", "74", "75", "76", "81", "82", "83", "84", "85",
+            "96", "97", "98", "99", "100", "101", "125", "126", "127", "143"
+        }
 
         print(f"[STATS] 載入參數: Year={year}, Race={race}, Session={session}")
 

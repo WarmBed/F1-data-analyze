@@ -348,7 +348,13 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
     def _resolve_local_fallback_policy(self) -> Tuple[bool, str]:
         """Determine whether local JSON fallback is permitted."""
-        return False, "API-ONLY 模式：本地 JSON 後備已停用"
+        env_value = os.getenv("F1T_ALLOW_TRACK_JSON_FALLBACK")
+        if env_value is not None:
+            normalized = str(env_value).strip().lower()
+            if normalized in {"1", "true", "yes", "on"}:
+                return True, f"env F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
+            return False, f"env F1T_ALLOW_TRACK_JSON_FALLBACK={env_value}"
+        return True, "default-enabled local JSON fallback"
 
     def _is_api_available(self) -> bool:
         available = is_api_available()
@@ -358,18 +364,36 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
     def set_local_fallback_allowed(self, allowed: bool, reason: Optional[str] = None) -> None:
         """Manually toggle local JSON fallback policy."""
-        self._allow_local_fallback = False
-        self._fallback_policy_reason = "API-ONLY 模式：本地 JSON 後備已停用"
-        self._debug("本地 JSON 後備在 API-ONLY 模式下不可啟用")
+        self._allow_local_fallback = bool(allowed)
+        self._fallback_policy_reason = reason or "manual override"
+        state = "enabled" if self._allow_local_fallback else "disabled"
+        self._debug(f"local JSON fallback {state} ({self._fallback_policy_reason})")
+
+    def _normalize_load_params(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        normalized = dict(params)
+        race = str(normalized.get("race") or "").strip()
+        if race and "(" in race and race.endswith(")"):
+            race = race.split("(", 1)[0].strip().rstrip("_- ")
+        normalized["race"] = race
+        return normalized
 
     def load_data_from_local(self, **kwargs) -> bool:
         """Force loading data via legacy local JSON workflow for diagnostics."""
-        self._debug("API-ONLY 模式：已停用本地 JSON 後備流程")
-        self.load_error.emit(tr("api_only_no_local_fallback", "API-ONLY 模式：本地 JSON 後備已停用"))
-        return False
+        fallback_params = self._normalize_load_params(kwargs)
+        self._debug(f"force local fallback load: params={fallback_params}")
+        previous_state = self._allow_local_fallback
+        previous_reason = self._fallback_policy_reason
+        try:
+            self._allow_local_fallback = True
+            self._fallback_policy_reason = "manual force-local call"
+            return bool(super().load_data(**fallback_params))
+        finally:
+            self._allow_local_fallback = previous_state
+            self._fallback_policy_reason = previous_reason
 
     def load_data(self, **kwargs) -> bool:
         """載入賽道分析資料，優先透過 API，失敗時回退本地流程。"""
+        kwargs = self._normalize_load_params(kwargs)
         if self.config.data_source != "api":
             return super().load_data(**kwargs)
 
@@ -393,11 +417,15 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
         try:
             if not self._is_api_available():
-                message = tr("api_offline_api_only", "API 服務未啟動，且本地 JSON 後備已停用")
+                self._is_loading = False
+                if self._allow_local_fallback:
+                    self._debug("API unavailable, using local fallback")
+                    self.status_changed.emit("API unavailable; loading local fallback...")
+                    return bool(super().load_data(**kwargs))
+                message = tr("api_offline_api_only", "API unavailable and local fallback is disabled")
                 self._debug(message)
                 self.status_changed.emit(message)
                 self.load_error.emit(message)
-                self._is_loading = False
                 return False
 
             self._start_api_request(self._pending_params)
@@ -514,10 +542,13 @@ class TrackAnalysisDataManager(UniversalDataLoader):
 
         self._last_data_source = "local-json"
         self._last_api_meta = {}
-        self._debug(f"啟動本地 JSON/CLI 後備流程: {reason}")
-        self.status_changed.emit("使用本地 JSON/CLI 後備載入賽道資料...")
-        self.load_error.emit(f"API 載入失敗，使用本地資料: {reason}")
-        super().load_data(**params)
+        self._debug(f"API failed ({reason}); trying local JSON/CLI fallback")
+        self.status_changed.emit("API failed; loading local fallback...")
+        loaded = bool(super().load_data(**params))
+        if loaded:
+            self.status_changed.emit("Local fallback loaded")
+            return
+        self.load_error.emit(f"API failed and local fallback failed: {reason}")
 
     def _cleanup_api_worker(self) -> None:
         """
@@ -665,6 +696,13 @@ class TrackAnalysisDataManager(UniversalDataLoader):
             # 統一賽道分析資訊
             position_analysis = payload.get("position_analysis") or {}
             track_bounds = position_analysis.get("track_bounds") or payload.get("track_bounds") or {}
+            if isinstance(track_bounds, dict):
+                track_bounds = {
+                    "x_min": track_bounds.get("x_min", track_bounds.get("min_x", 0)),
+                    "x_max": track_bounds.get("x_max", track_bounds.get("max_x", 0)),
+                    "y_min": track_bounds.get("y_min", track_bounds.get("min_y", 0)),
+                    "y_max": track_bounds.get("y_max", track_bounds.get("max_y", 0)),
+                }
             distance_val = position_analysis.get("distance_covered_m") or payload.get("distance_covered")
             total_points = position_analysis.get("total_position_records") or len(records)
 
@@ -1188,7 +1226,11 @@ class TrackAnalysisUniversal(UniversalAnalysisMDI):
         try:
             # 從 session_info 或 params 取得賽事名稱
             session_info = data.get("session_info", {})
-            race_name = session_info.get("race_name") or session_info.get("race") or self.params.get("race", "")
+            race_name = (
+                session_info.get("race_name")
+                or session_info.get("race")
+                or getattr(self, "current_race", "")
+            )
             
             if not race_name:
                 logger.warning("[TRACK_ANALYSIS_MDI] 無法取得賽事名稱，跳過 DRS 載入")

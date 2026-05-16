@@ -88,6 +88,8 @@ class TelemetryApiWorker(QThread):
 
             if self.params.get("force_refresh"):
                 query_params["force_refresh"] = True
+            if self.params.get("is_fastest_lap"):
+                query_params["is_fastest_lap"] = True
 
             # 🔴 添加中斷檢查點 2: HTTP 請求前檢查
             if self.isInterruptionRequested():
@@ -561,7 +563,7 @@ class TelemetryDataLoader(QObject):
             if normalized in {"1", "true", "yes", "on"}:
                 return True, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
             return False, f"環境變數 F1T_ALLOW_TELEMETRY_JSON_FALLBACK={env_value}"
-        return True, "預設策略 (允許本地 JSON 後備)"
+        return False, "預設策略 (禁止跨賽事 JSON 後備，只允許 exact CLI/OpenF1 生成)"
 
     def _is_api_available(self) -> bool:
         available = is_api_available()
@@ -652,12 +654,7 @@ class TelemetryDataLoader(QObject):
         lap1 = params.get('lap1') or params.get('lap') or 1
         lap2 = params.get('lap2') or lap1
         
-        # 🔧 修復：Fastest Lap 模式需要將 lap 設為 99
         is_fastest_lap = params.get('is_fastest_lap', False)
-        if is_fastest_lap:
-            lap1 = 99
-            lap2 = 99
-            self._debug(f"✅ 最速圈模式：lap1={lap1}, lap2={lap2}")
 
         worker_params = {
             "year": params.get('year'),
@@ -667,12 +664,13 @@ class TelemetryDataLoader(QObject):
             "driver2": driver2,
             "lap1": lap1,
             "lap2": lap2,
+            "is_fastest_lap": is_fastest_lap,
             "force_refresh": params.get('force_refresh', False),
             "use_time_axis": params.get('use_time_axis', False)  # ✅ 新增時間軸參數
         }
 
         if is_fastest_lap:
-            self._debug("最速圈模式已啟用，API 將使用 lap=99 請求最速圈數據")
+            self._debug("Fastest lap mode: service will resolve exact fastest lap per driver")
 
         self._api_base_url = self._determine_api_base_url()
         self._debug(f"🚀 呼叫 API: {self._api_base_url}/api/v2/analysis/execute")
@@ -1787,3 +1785,4 @@ def create_telemetry_loader(telemetry_type: str, parent=None) -> TelemetryDataLo
         TelemetryDataLoader: 遙測數據載入器實例
     """
     return TelemetryDataLoader(telemetry_type, parent)
+

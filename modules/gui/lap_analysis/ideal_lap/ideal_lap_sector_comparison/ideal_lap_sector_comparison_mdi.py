@@ -473,6 +473,11 @@ class IdealLapSectorComparisonMDI(UniversalAnalysisMDI):
         logger.debug(f"   參數: {self.year} {self.race} {self.session}")
         
         # 更新狀態標籤
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self.data_manager:
+            if self.data_manager.load_data(year=self.year, race=self.race, session=self.session):
+                return
+
         if hasattr(self, 'lbl_control_status') and self.lbl_control_status:
             self.lbl_control_status.setText("正在從 API 載入數據...")
         

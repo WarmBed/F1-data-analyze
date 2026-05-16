@@ -582,7 +582,7 @@ class AnalysisModuleCreator:
                         current_race = parameter_provider.get_current_race()
                         current_session = parameter_provider.get_current_session()
 
-                        module = TrackAnalysisUniversal(main_window=self)
+                        module = TrackAnalysisUniversal(main_window=self.main_window)
                         module.parameter_provider = parameter_provider
 
                         # 轉換年份為整數，失敗時保持原值

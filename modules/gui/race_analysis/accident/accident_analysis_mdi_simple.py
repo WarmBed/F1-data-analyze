@@ -8,6 +8,7 @@ F1T 事故分析 MDI 模組 (簡化版)
 import sys
 import os
 import json
+import re
 import datetime
 import traceback
 import subprocess
@@ -112,13 +113,14 @@ class AccidentDataManager(QObject):
     def _load_from_local_runtime(self, year: str, race: str, session: str) -> Dict[str, Any]:
         try:
             from core import local_requests as requests
+            normalized_race = self._normalize_race_name(race)
 
             response = requests.post(
                 "http://127.0.0.1:9/api/v2/analysis/execute",
                 params={
-                    "function_id": 8,
+                    "function_id": 6,
                     "year": int(year),
-                    "race": str(race).replace(" ", "_"),
+                    "race": normalized_race,
                     "session": session,
                 },
                 timeout=60,
@@ -139,7 +141,13 @@ class AccidentDataManager(QObject):
     def _load_from_json(self, year: str, race: str, session: str) -> Dict[str, Any]:
         from pathlib import Path
 
-        race_variants = {str(race), str(race).replace(" ", "_"), str(race).replace("_", " ")}
+        race_base = self._normalize_race_name(race)
+        race_variants = {
+            race_base,
+            race_base.replace(" ", "_"),
+            race_base.replace("_", " "),
+            str(race),
+        }
         patterns = []
         for race_name in race_variants:
             patterns.extend([
@@ -159,6 +167,15 @@ class AccidentDataManager(QObject):
                     except Exception as exc:
                         logger.debug("[AccidentDataManager] failed reading %s: %s", path, exc)
         return {}
+
+    @staticmethod
+    def _normalize_race_name(race: Any) -> str:
+        text = str(race or "").strip()
+        if not text:
+            return text
+        text = re.sub(r"\s*\(\d{4}-\d{2}-\d{2}\)\s*$", "", text)
+        text = text.rstrip(" _-")
+        return text
 
     def _to_summary(self, data: Dict[str, Any]) -> Dict[str, Any]:
         payload = data.get("data", data) if isinstance(data, dict) else {}
@@ -216,7 +233,6 @@ class AccidentStatisticsWidget(QWidget):
         layout.setSpacing(10)
         
         # 標題
-        from core.gui_i18n import tr
         title_label = QLabel(f"📊 {tr('accident_statistics_overview', 'Statistics Overview')}")
         title_label.setStyleSheet("font-size: 16px; font-weight: bold; padding: 10px;")
         layout.addWidget(title_label)
@@ -227,7 +243,6 @@ class AccidentStatisticsWidget(QWidget):
         stats_layout.setSpacing(10)
         
         # 創建統計卡片 (簡化版)
-        from core.gui_i18n import tr
         self.total_card = self.create_simple_stats_card(tr("total_incidents_card", "Total Incidents"), "0", "#E3F2FD")
         self.safety_car_card = self.create_simple_stats_card(tr("safety_car_count", "Safety Car"), "0", "#F3E5F5")
         self.red_flag_card = self.create_simple_stats_card(tr("red_flag_count", "Red Flags"), "0", "#FFEBEE")
@@ -366,6 +381,10 @@ class AccidentAnalysisModule(IAnalysisModule):
         self._main_widget = None
         self.tab_widget = None
         self.statistics_widget = None
+        self.distribution_table = None
+        self.severity_table = None
+        self.key_events_text = None
+        self.detail_table = None
         
         # 初始化數據管理器
         self.data_manager = AccidentDataManager(self)
@@ -412,7 +431,6 @@ class AccidentAnalysisModule(IAnalysisModule):
         """)
         
         # 分頁1: 事故統計總覽
-        from core.gui_i18n import tr
         self.statistics_widget = AccidentStatisticsWidget(self.data_manager)
         self.tab_widget.addTab(self.statistics_widget, f"📊 {tr('accident_statistics', 'Accident Statistics')}")
         
@@ -433,6 +451,7 @@ class AccidentAnalysisModule(IAnalysisModule):
             placeholder_layout.addWidget(label)
             self.tab_widget.addTab(placeholder, f"{icon} {tab_title}")
         
+        self._replace_placeholder_tabs()
         layout.addWidget(self.tab_widget)
         
         # 連接分頁切換事件
@@ -442,6 +461,7 @@ class AccidentAnalysisModule(IAnalysisModule):
         """設置信號連接"""
         # 連接統計數據信號
         self.data_manager.statistics_loaded.connect(self.statistics_widget.update_statistics_data)
+        self.data_manager.statistics_loaded.connect(self._update_additional_tabs)
         self.data_manager.statistics_reload_requested.connect(self.reload_statistics_data)
         
         # 連接錯誤信號
@@ -489,6 +509,110 @@ class AccidentAnalysisModule(IAnalysisModule):
         logger.debug(f"[AccidentAnalysisModule] 錯誤: {error_message}")
         QMessageBox.warning(self, tr('accident_analysis_error', 'Accident Analysis Error'), error_message)
     
+    def _replace_placeholder_tabs(self):
+        """Replace under-development placeholders with working local tables."""
+        if self.tab_widget is None or self.statistics_widget is None:
+            return
+        while self.tab_widget.count() > 1:
+            self.tab_widget.removeTab(1)
+
+        self.tab_widget.addTab(
+            self._create_simple_table_tab(
+                tr("accident_distribution_analysis", "Distribution Analysis"),
+                ["Type", "Count", "Ratio"],
+                "distribution_table",
+            ),
+            f"📈 {tr('accident_distribution_analysis', 'Distribution Analysis')}",
+        )
+        self.tab_widget.addTab(
+            self._create_simple_table_tab(
+                tr("accident_severity_level", "Severity Level"),
+                ["Severity", "Count"],
+                "severity_table",
+            ),
+            f"⚠️ {tr('accident_severity_level', 'Severity Level')}",
+        )
+        self.tab_widget.addTab(
+            self._create_key_events_tab(),
+            f"🎯 {tr('accident_key_events', 'Key Events')}",
+        )
+        self.tab_widget.addTab(
+            self._create_simple_table_tab(
+                tr("accident_detailed_list", "Detailed List"),
+                ["Incident Type", "Count"],
+                "detail_table",
+            ),
+            f"📋 {tr('accident_detailed_list', 'Detailed List')}",
+        )
+
+    def _create_simple_table_tab(self, title: str, headers: List[str], attr_name: str) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(8)
+        header = QLabel(title)
+        header.setStyleSheet("font-size: 14px; font-weight: bold;")
+        layout.addWidget(header)
+        table = QTableWidget(0, len(headers))
+        table.setHorizontalHeaderLabels(headers)
+        table.horizontalHeader().setStretchLastSection(True)
+        table.verticalHeader().setVisible(False)
+        table.setAlternatingRowColors(True)
+        layout.addWidget(table)
+        setattr(self, attr_name, table)
+        return tab
+
+    def _create_key_events_tab(self) -> QWidget:
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(12, 12, 12, 12)
+        title = QLabel(tr("accident_key_events", "Key Events"))
+        title.setStyleSheet("font-size: 14px; font-weight: bold;")
+        layout.addWidget(title)
+        self.key_events_text = QTextEdit()
+        self.key_events_text.setReadOnly(True)
+        layout.addWidget(self.key_events_text)
+        return tab
+
+    def _update_additional_tabs(self, data: dict) -> None:
+        incidents = data.get("incidents_by_type", {}) if isinstance(data, dict) else {}
+        if not isinstance(incidents, dict):
+            incidents = {}
+        total = max(int(data.get("total_incidents", 0) or 0), 0) if isinstance(data, dict) else 0
+        rows = sorted(incidents.items(), key=lambda kv: kv[1], reverse=True)
+
+        if self.distribution_table is not None:
+            self.distribution_table.setRowCount(len(rows))
+            for i, (name, count) in enumerate(rows):
+                ratio = (float(count) / total * 100.0) if total > 0 else 0.0
+                self.distribution_table.setItem(i, 0, QTableWidgetItem(str(name)))
+                self.distribution_table.setItem(i, 1, QTableWidgetItem(str(count)))
+                self.distribution_table.setItem(i, 2, QTableWidgetItem(f"{ratio:.1f}%"))
+
+        if self.detail_table is not None:
+            self.detail_table.setRowCount(len(rows))
+            for i, (name, count) in enumerate(rows):
+                self.detail_table.setItem(i, 0, QTableWidgetItem(str(name)))
+                self.detail_table.setItem(i, 1, QTableWidgetItem(str(count)))
+
+        if self.severity_table is not None:
+            high = sum(c for k, c in rows if "collision" in str(k).lower() or "crash" in str(k).lower())
+            medium = sum(c for k, c in rows if "spin" in str(k).lower() or "contact" in str(k).lower())
+            low = max(total - high - medium, 0)
+            severity_rows = [("High", high), ("Medium", medium), ("Low", low)]
+            self.severity_table.setRowCount(len(severity_rows))
+            for i, (label, value) in enumerate(severity_rows):
+                self.severity_table.setItem(i, 0, QTableWidgetItem(label))
+                self.severity_table.setItem(i, 1, QTableWidgetItem(str(value)))
+
+        if self.key_events_text is not None:
+            lines = [f"Total incidents: {total}"]
+            for name, count in rows[:10]:
+                lines.append(f"- {name}: {count}")
+            if not rows:
+                lines.append("- No incident records")
+            self.key_events_text.setPlainText("\n".join(lines))
+
     # ===========================================
     # IAnalysisModule 接口實現 (必需的抽象方法)
     # ===========================================
@@ -524,6 +648,8 @@ class AccidentAnalysisModule(IAnalysisModule):
             
             # 設置初始化狀態
             self.set_initialized(True)
+            if all([self.current_year, self.current_race, self.current_session]):
+                self.load_data()
             
             logger.info(f"[ACCIDENT_MODULE] 模組已初始化，等待參數同步...")
             return True

@@ -13,6 +13,7 @@ Date: 2025-12-03
 """
 
 import os
+import re
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
@@ -399,6 +400,17 @@ class LiveTimingDataManager(QObject):
     # ===========================================
     # 賽事載入/卸載
     # ===========================================
+    def _normalize_race_key(self, race: str) -> str:
+        value = str(race or "").strip()
+        if not value:
+            return value
+        value = re.sub(r"\s*\(\d{4}-\d{2}-\d{2}\)\s*$", "", value)
+        return value.strip().rstrip(" _-")
+
+    def _local_year_candidates(self, requested_year: int) -> List[int]:
+        start = int(requested_year)
+        return list(range(start, 2017, -1))
+
     def load_race(self, year: int, race: str, session: str = "Race", 
                   source_type: str = "local", progress_callback=None) -> bool:
         """
@@ -420,7 +432,9 @@ class LiveTimingDataManager(QObject):
         Returns:
             是否載入成功
         """
-        logger.info("[DATA_MANAGER] 載入賽事: %s %s %s", year, race, session)
+        requested_year = int(year)
+        race = self._normalize_race_key(race)
+        logger.info("[DATA_MANAGER] 載入賽事: %s %s %s", requested_year, race, session)
         
         def _report(percent, msg):
             if progress_callback:
@@ -438,32 +452,45 @@ class LiveTimingDataManager(QObject):
             
             downloader = F1APIDownloader()
             
-            # 檢查 PKL 快取
-            if downloader.is_cache_valid(year, race, session):
-                logger.info("[DATA_MANAGER] 使用 PKL 快取")
-                _report(10, "Loading from PKL cache...")
-                
-                cache_data = downloader.load_cache(year, race, session)
-                if cache_data:
-                    return self._load_from_pkl_cache(cache_data, year, race, session, _report)
-            
+            year_candidates = [requested_year]
+            if source_type == "local":
+                year_candidates = self._local_year_candidates(requested_year)
+
+            # 檢查 PKL 快取（local 模式會自動向前回退年度）
+            for candidate_year in year_candidates:
+                if downloader.is_cache_valid(candidate_year, race, session):
+                    logger.info("[DATA_MANAGER] 使用 PKL 快取: %s %s %s", candidate_year, race, session)
+                    _report(10, f"Loading from PKL cache ({candidate_year})...")
+                    cache_data = downloader.load_cache(candidate_year, race, session)
+                    if cache_data:
+                        return self._load_from_pkl_cache(cache_data, candidate_year, race, session, _report)
+
+            if source_type == "local":
+                for candidate_year in year_candidates:
+                    if self._load_from_legacy_json(candidate_year, race, session, source_type, _report):
+                        return True
+                logger.error(
+                    "[DATA_MANAGER] local mode: no usable PKL/JSON data for %s %s %s",
+                    requested_year,
+                    race,
+                    session,
+                )
+                return False
+
             # PKL 快取不存在，嘗試從官方 API 下載
             logger.info("[DATA_MANAGER] PKL 快取不存在，從官方 API 下載...")
             _report(10, "Downloading from F1 API...")
-            
-            # 使用 F1APIDownloader 下載並處理
             cache_data = downloader.download_and_cache(
-                year, race, session, 
+                requested_year, race, session,
                 force=False,
                 progress_callback=_report
             )
-            
             if cache_data:
-                return self._load_from_pkl_cache(cache_data, year, race, session, _report)
-            
+                return self._load_from_pkl_cache(cache_data, requested_year, race, session, _report)
+
             # ===== 向後相容：舊的本地 JSON 系統 =====
             logger.warning("[DATA_MANAGER] 官方 API 下載失敗，嘗試本地 JSON...")
-            return self._load_from_legacy_json(year, race, session, source_type, _report)
+            return self._load_from_legacy_json(requested_year, race, session, source_type, _report)
             
         except Exception as e:
             logger.exception("[DATA_MANAGER] 載入賽事失敗: %s", e)

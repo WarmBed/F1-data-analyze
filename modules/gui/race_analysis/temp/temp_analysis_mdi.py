@@ -918,21 +918,14 @@ class TempAnalysisUniversal(UniversalAnalysisMDI):
         """更新分析參數"""
         try:
             # 更新當前參數
-            self.update_lap_parameters(
+            return self.update_lap_parameters(
                 year=int(year) if isinstance(year, str) else year,
                 race=race,
                 session=session
             )
             
             # 觸發數據重新載入
-            if hasattr(self, 'data_manager') and self.data_manager:
-                return self.data_manager.load_data(
-                    year=self.current_year,
-                    race=self.current_race,
-                    session=self.current_session
-                )
-            
-            return True
+            # update_lap_parameters already triggers async loading.
             
         except Exception as e:
             self._debug(f"更新分析參數失敗: {str(e)}")

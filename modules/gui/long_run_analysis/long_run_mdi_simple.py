@@ -32,7 +32,6 @@ class LongRunAnalysis(QWidget):
         self.session = str(session or "FP2").upper()
         self._data: Optional[Dict[str, Any]] = None
         self._source_path: Optional[Path] = None
-        self._fallback_source_path: Optional[Path] = None
         self._setup_ui()
         self._load_data()
 
@@ -69,7 +68,6 @@ class LongRunAnalysis(QWidget):
 
     def _load_data(self) -> None:
         self._source_path = None
-        self._fallback_source_path = None
         self._data = None
         for path in self._candidate_paths():
             if not path.exists():
@@ -79,13 +77,23 @@ class LongRunAnalysis(QWidget):
             self._source_path = path
             break
         if self._data is None:
-            fallback = self._find_latest_available_file()
-            if fallback is not None:
-                with fallback.open("r", encoding="utf-8") as handle:
+            self._generate_exact_local_json()
+            for path in self._candidate_paths():
+                if not path.exists():
+                    continue
+                with path.open("r", encoding="utf-8") as handle:
                     self._data = json.load(handle)
-                self._source_path = fallback
-                self._fallback_source_path = fallback
+                self._source_path = path
+                break
         self._populate()
+
+    def _generate_exact_local_json(self) -> None:
+        try:
+            from core.openf1_exact_generators import generate_detailed_laptime_json
+
+            generate_detailed_laptime_json(self.year, self.race, self.session)
+        except Exception as exc:
+            self.status_label.setText(f"Exact local JSON generation failed: {exc}")
 
     def _candidate_paths(self) -> List[Path]:
         race_values = []
@@ -108,28 +116,6 @@ class LongRunAnalysis(QWidget):
                         / f"detailed_laptime_analysis_{self.year}_{race}_{self.session}_all_drivers.json"
                     )
         return paths
-
-    def _find_latest_available_file(self) -> Optional[Path]:
-        roots = [Path.cwd()]
-        module_root = Path(__file__).resolve()
-        for parent in module_root.parents:
-            if (parent / "f1t_gui_main.py").exists():
-                roots.insert(0, parent)
-                break
-
-        candidates: List[Path] = []
-        pattern = f"detailed_laptime_analysis_*_*_{self.session}_all_drivers.json"
-        for root in roots:
-            for folder in ("json", "json_exports"):
-                base = root / folder
-                if not base.exists():
-                    continue
-                candidates.extend(base.glob(pattern))
-
-        if not candidates:
-            return None
-        candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-        return candidates[0]
 
     def _populate(self) -> None:
         lap_data = self._extract_lap_data(self._data)
@@ -166,12 +152,7 @@ class LongRunAnalysis(QWidget):
             f"{self.year} {self.race} {self.session} - {len(lap_data)} drivers, {total_laps} laps"
         )
         source = str(self._source_path) if self._source_path else "unknown"
-        if self._fallback_source_path is not None:
-            self.status_label.setText(
-                f"Loaded fallback local JSON (requested {self.year} {self.race} {self.session}): {source}"
-            )
-        else:
-            self.status_label.setText(f"Loaded local JSON: {source}")
+        self.status_label.setText(f"Loaded local JSON: {source}")
 
     def _append_driver_row(
         self, driver: str, lap_count: int, lap_times: List[float], compounds: List[str], long_run_laps: int

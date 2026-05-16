@@ -165,7 +165,8 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
             cli_function="120",
             file_patterns=[
                 "F120_corner_all_laps_analysis_*.json",
-                "corner_all_laps_analysis_*.json"
+                "corner_all_laps_analysis_*.json",
+                "all_drivers_cornering_analysis_*.json"
             ],
         )
 
@@ -175,7 +176,7 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
         super().__init__(self.ANALYSIS_TYPE, parent)
 
         # ✅ API-ONLY 模式：停用本地 JSON 後備
-        self._allow_local_fallback = False
+        self._allow_local_fallback = True
         self._debug("[CORNER_PERF] ⚠️ API-ONLY 模式已啟用，禁用本地 JSON 讀取")
 
         self._api_base_url = self._determine_api_base_url()
@@ -211,6 +212,9 @@ class CornerPerformanceDataLoader(UniversalDataLoader):
 
         # ✅ API-ONLY 模式：直接調用 API，不檢查本地 JSON
         self._debug(tr("corner_perf_api_only_mode", "⚠️ API-ONLY 模式：強制通過 API 獲取最新資料"))
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self._find_data_file(**kwargs):
+            return super().load_data(**kwargs)
+
         self._fetch_via_api_async(**kwargs)
         return True  # 立即返回，不阻塞
 

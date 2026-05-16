@@ -306,10 +306,14 @@ class FiaSeasonStatsWidget(QWidget):
         self._update_statistics()
         
         # 清除詳情面板
-        self._detail_title.setText(tr('select_driver', 'Select a driver to view details'))
-        self._clear_pu_bars()
-        self._parts_list.setText(tr('no_data', 'No data'))
-        self._status_label.setText(tr('no_data', 'No data'))
+        if self._table and self._table.rowCount() > 0:
+            self._table.selectRow(0)
+            self._on_table_selection_changed()
+        else:
+            self._detail_title.setText(tr('select_driver', 'Select a driver to view details'))
+            self._clear_pu_bars()
+            self._parts_list.setText(tr('no_data', 'No data'))
+            self._status_label.setText(tr('no_data', 'No data'))
     
     def _populate_table(self):
         """填充表格"""

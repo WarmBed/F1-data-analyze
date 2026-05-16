@@ -376,6 +376,11 @@ class RacePredictionMDI(UniversalAnalysisMDI):
     def _on_load_error(self, error_msg: str):
         """資料載入錯誤回調"""
         logger.error("[RACE_PRED_MDI] Load error: %s", error_msg)
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self.data_manager:
+            if self.data_manager.load_data(year=self.year, race=self.race):
+                return
+
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(f"{tr('error', 'Error')}: {error_msg}")
     
@@ -591,6 +596,10 @@ class RacePredictionMDI(UniversalAnalysisMDI):
     
     def _show_error(self, title: str, message: str):
         """顯示錯誤對話框"""
+        import os
+        if os.environ.get("QT_QPA_PLATFORM", "").lower() == "offscreen":
+            logger.error("[RACE_PRED_MDI] %s: %s", title, message)
+            return
         parent = self.chart_widget if hasattr(self, 'chart_widget') else None
         QMessageBox.critical(parent, title, message)
 

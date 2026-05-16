@@ -148,9 +148,11 @@ class TireAnalysisModule(IAnalysisModule):
                 success = self._tire_analysis_core.update_analysis_parameters(
                     year=str(year), race=race, session=session
                 )
-                if success:
-                    logger.info("✅ [tire_MODULE] Parameters updated successfully")
-                    return True
+                if success is False:
+                    logger.warning("Parameter update failed in core module")
+                    return False
+                logger.info("[tire_MODULE] Parameters updated successfully")
+                return True
             
             logger.warning("⚠️ [tire_MODULE] Parameter update failed")
             return False

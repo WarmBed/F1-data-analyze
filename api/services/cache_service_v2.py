@@ -279,6 +279,80 @@ class F1AnalysisCacheServiceV2:
         race_with_underscore = race.replace(" ", "_")
         
         return (race_with_space, race_with_underscore)
+
+    @staticmethod
+    def _has_token(filename_lower: str, token: str) -> bool:
+        token_lower = str(token or "").strip().lower()
+        if not token_lower:
+            return True
+        return (
+            f"_{token_lower}_" in filename_lower
+            or f"_{token_lower}." in filename_lower
+            or filename_lower.endswith(f"_{token_lower}.json")
+        )
+
+    def _matches_sensitive_filename(self, function_id: str, filename: str, **params) -> bool:
+        """
+        Extra strict filename validation for parameter-sensitive analyses.
+        Prevents accidental cache hits from other drivers/laps/races.
+        """
+        fn = filename.lower()
+
+        if function_id == "13":
+            # comparison_telemetry_{driver1}_{driver2}_{year}_{race}_{session}_Lap{lap1}_Lap{lap2}.json
+            d1 = str(params.get("driver1", "")).strip().lower()
+            d2 = str(params.get("driver2", "")).strip().lower() or d1
+            if not d1:
+                return False
+            direct_prefix = f"comparison_telemetry_{d1}_{d2}_"
+            swapped_prefix = f"comparison_telemetry_{d2}_{d1}_"
+            if not (fn.startswith(direct_prefix) or fn.startswith(swapped_prefix)):
+                return False
+
+            lap1 = params.get("lap1", params.get("lap", 1))
+            lap2 = params.get("lap2", lap1)
+            lap1_token = f"lap{lap1}".lower()
+            lap2_token = f"lap{lap2}".lower()
+            # Allow single-lap files only when both laps are equal.
+            if lap1 == lap2:
+                if lap1_token not in fn:
+                    return False
+            else:
+                if lap1_token not in fn or lap2_token not in fn:
+                    return False
+
+            year = params.get("year")
+            if year and not self._has_token(fn, str(year)):
+                return False
+
+            race_space, race_underscore = self._normalize_race(str(params.get("race", "")))
+            if race_space and race_space != "*":
+                if not (self._has_token(fn, race_space) or self._has_token(fn, race_underscore)):
+                    return False
+
+            session = params.get("session")
+            if session and not self._has_token(fn, str(session)):
+                return False
+
+            return True
+
+        if function_id == "28":
+            year = params.get("year")
+            session = params.get("session")
+            race_space, race_underscore = self._normalize_race(str(params.get("race", "")))
+            return (
+                fn.startswith("detailed_laptime_analysis_")
+                and fn.endswith("_all_drivers.json")
+                and (not year or self._has_token(fn, str(year)))
+                and (not session or self._has_token(fn, str(session)))
+                and (
+                    race_space in ("", "*")
+                    or self._has_token(fn, race_space)
+                    or self._has_token(fn, race_underscore)
+                )
+            )
+
+        return True
     
     def _build_exact_paths(self, function_id: str, **params) -> List[str]:
         """
@@ -357,7 +431,7 @@ class F1AnalysisCacheServiceV2:
                     self._stats["direct_hits"] += 1
                     self._stats["cache_hits"] += 1
                     elapsed = time.time() - start_time
-                    print(f"[CACHE_V2] ✅ 直接命中: {os.path.basename(path)} ({elapsed:.3f}s)")
+                    print(f"[CACHE_V2] OK 直接命中: {os.path.basename(path)} ({elapsed:.3f}s)")
                     return self._enhance_result(result, path, "direct")
         
         # 策略 2: 索引搜尋
@@ -365,7 +439,7 @@ class F1AnalysisCacheServiceV2:
         if result:
             self._stats["cache_hits"] += 1
             elapsed = time.time() - start_time
-            print(f"[CACHE_V2] ✅ 索引命中 ({elapsed:.3f}s)")
+            print(f"[CACHE_V2] OK 索引命中 ({elapsed:.3f}s)")
             return result
         
         # 策略 3: Glob 搜尋 (最後手段)
@@ -373,12 +447,12 @@ class F1AnalysisCacheServiceV2:
         if result:
             self._stats["cache_hits"] += 1
             elapsed = time.time() - start_time
-            print(f"[CACHE_V2] ✅ Glob 命中 ({elapsed:.3f}s)")
+            print(f"[CACHE_V2] OK Glob 命中 ({elapsed:.3f}s)")
             return result
         
         self._stats["cache_misses"] += 1
         elapsed = time.time() - start_time
-        print(f"[CACHE_V2] ❌ 未找到緩存 ({elapsed:.3f}s)")
+        print(f"[CACHE_V2] MISS 未找到緩存 ({elapsed:.3f}s)")
         return None
     
     def _search_by_index(self, function_id: str, **params) -> Optional[Dict]:
@@ -436,6 +510,9 @@ class F1AnalysisCacheServiceV2:
                     if session_pattern2.lower() not in filename_lower:
                         continue
             
+            if not self._matches_sensitive_filename(function_id, filename, **params):
+                continue
+
             candidates.append(filepath)
         
         if not candidates:
@@ -470,6 +547,11 @@ class F1AnalysisCacheServiceV2:
                     if year:
                         year_patterns = [f"_{year}_", f"_{year}."]
                         files = [f for f in files if any(p in os.path.basename(f) for p in year_patterns)]
+
+                    files = [
+                        f for f in files
+                        if self._matches_sensitive_filename(function_id, os.path.basename(f), **params)
+                    ]
                     
                     if not files:
                         continue
@@ -484,7 +566,7 @@ class F1AnalysisCacheServiceV2:
                             self._add_to_index(filepath)
                             return self._enhance_result(result, filepath, "glob")
             except Exception as e:
-                print(f"[CACHE_V2] ⚠️ Glob 錯誤: {e}")
+                print(f"[CACHE_V2] WARN Glob 錯誤: {e}")
         
         return None
     
@@ -497,7 +579,7 @@ class F1AnalysisCacheServiceV2:
     
     def _rebuild_index(self):
         """重建檔案索引"""
-        print("[CACHE_V2] 🔄 重建檔案索引...")
+        print("[CACHE_V2] REBUILD 重建檔案索引...")
         start_time = time.time()
         
         self._file_index = {}
@@ -509,7 +591,7 @@ class F1AnalysisCacheServiceV2:
         
         self._index_timestamp = time.time()
         elapsed = time.time() - start_time
-        print(f"[CACHE_V2] ✅ 索引重建完成: {len(self._file_index)} 個檔案 ({elapsed:.3f}s)")
+        print(f"[CACHE_V2] OK 索引重建完成: {len(self._file_index)} 個檔案 ({elapsed:.3f}s)")
     
     def _add_to_index(self, filepath: str):
         """添加單個檔案到索引"""
@@ -527,7 +609,7 @@ class F1AnalysisCacheServiceV2:
             
             return data
         except Exception as e:
-            print(f"[CACHE_V2] ⚠️ 載入失敗: {filepath} - {e}")
+            print(f"[CACHE_V2] WARN 載入失敗: {filepath} - {e}")
             return None
     
     def _enhance_result(self, data: Dict, filepath: str, match_type: str) -> Dict:

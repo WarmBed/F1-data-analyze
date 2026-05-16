@@ -255,6 +255,22 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
                 return False
             
             # 尋找對應的數據檔案
+            if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+                function_id = (
+                    getattr(self.config, "api_function_id", None)
+                    or getattr(self.config, "cli_function", None)
+                    or getattr(self, "CLI_FUNCTION", None)
+                )
+                if function_id:
+                    try:
+                        from core.openf1_exact_generators import generate_exact_json
+
+                        generated_path = generate_exact_json(str(function_id), **kwargs)
+                        if generated_path:
+                            self._debug(f"OpenF1 exact local JSON generated: {generated_path}")
+                    except Exception as exc:
+                        self._debug(f"OpenF1 exact local generation skipped/failed: {exc}")
+
             data_file = self._find_data_file(**kwargs)
             self._debug(f"搜尋結果: {data_file}")
             
@@ -271,7 +287,10 @@ class UniversalDataLoader(QObject, ABC, metaclass=UniversalDataLoaderMeta):
                 self._debug("✅ 找到現有檔案，準備載入")
                 
             # 使用 QTimer 模擬異步載入
-            QTimer.singleShot(10, lambda: self._load_data_file(data_file))
+            if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+                self._load_data_file(data_file)
+            else:
+                QTimer.singleShot(10, lambda: self._load_data_file(data_file))
             return True
             
         except Exception as e:

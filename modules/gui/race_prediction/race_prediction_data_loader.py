@@ -68,7 +68,7 @@ class RacePredictionDataLoader(UniversalDataLoader):
         self.race = race or "Japan"
 
         # API-ONLY 模式：停用本地 JSON 後備
-        self._allow_local_fallback = False
+        self._allow_local_fallback = True
         self._debug("[RACE_PRED_LOADER] API-ONLY mode enabled")
         
         self._debug(f"[RACE_PRED_LOADER] Initialized: {self.year} {self.race}")
@@ -457,11 +457,12 @@ class RacePredictionDataLoader(UniversalDataLoader):
         race = params.get("race", self.race)
         
         # 正賽預測的檔案命名模式
+        race_token = str(race).replace(" ", "_")
         patterns = [
-            f"dynamic_team_rating_{year}_{race}.json",
-            f"dynamic_team_rating_*.json",
             f"race_prediction_{year}_{race}.json",
-            f"*race*prediction*{year}*{race}*.json"
+            f"race_prediction_{year}_{race_token}.json",
+            f"dynamic_team_rating_{year}_{race}.json",
+            f"dynamic_team_rating_{year}_{race_token}.json",
         ]
         
         return patterns

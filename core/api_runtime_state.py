@@ -17,7 +17,7 @@ from datetime import datetime, timedelta, timezone
 from threading import RLock
 from typing import Any, Dict, Optional
 
-from core.runtime_mode import is_api_enabled
+from core.runtime_mode import is_api_enabled, is_local_first
 from core.runtime_status_resolver import RuntimeStatusState, RuntimeStatusView
 
 
@@ -88,6 +88,12 @@ def is_api_available(grace_period: float = 30.0) -> bool:
         grace_period: seconds the cached value remains authoritative before we fall
                       back to an optimistic assumption.
     """
+    # In local-first mode, GUI modules still issue "API-style" requests that
+    # are bridged in-process by core.local_requests. Treat this as available so
+    # modules do not short-circuit before reaching the local bridge.
+    if is_local_first():
+        return True
+
     if not is_api_enabled():
         return False
 
