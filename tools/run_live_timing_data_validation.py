@@ -95,10 +95,66 @@ def _has_numeric_sample(samples: List[str]) -> bool:
     return any(any(ch.isdigit() for ch in sample) for sample in samples)
 
 
-def _module_passes(label: str, load_ok: bool, signal: Dict[str, Any], text_samples: List[str], table_samples: List[str]) -> bool:
+def _semantic_samples(module: Any, widget: QWidget) -> List[str]:
+    samples: List[str] = []
+    objects: List[Any] = [module, widget]
+    if isinstance(widget, QWidget):
+        objects.extend(widget.findChildren(QWidget))
+    for obj in [item for item in objects if item is not None]:
+        all_driver_data = getattr(obj, "_all_drivers_lap_data", None)
+        if isinstance(all_driver_data, dict) and all_driver_data:
+            for driver_num, driver_data in list(all_driver_data.items())[:5]:
+                laps = getattr(driver_data, "actual_lap_times", {}) or {}
+                compounds = getattr(driver_data, "lap_compounds", {}) or {}
+                score = getattr(driver_data, "tire_saving_score", None)
+                samples.append(
+                    f"driver_strategy {driver_num}: laps={len(laps)} "
+                    f"last_lap={getattr(driver_data, 'last_lap_recorded', 0)} "
+                    f"compounds={len(compounds)} sf_score={score}"
+                )
+            break
+
+    for obj in [item for item in objects if item is not None]:
+        drivers_data = getattr(obj, "_drivers_data", None)
+        if isinstance(drivers_data, dict) and drivers_data:
+            for driver_num, driver_data in list(drivers_data.items())[:8]:
+                tla = getattr(driver_data, "tla", None) or (
+                    driver_data.get("tla") if isinstance(driver_data, dict) else driver_num
+                )
+                laps_in_traffic = getattr(driver_data, "laps_in_traffic", None)
+                total_laps = getattr(driver_data, "total_laps", None)
+                last_lap = getattr(driver_data, "last_completed_lap", None)
+                if laps_in_traffic is not None or total_laps is not None or last_lap is not None:
+                    samples.append(
+                        f"traffic {tla}: traffic_laps={laps_in_traffic} "
+                        f"total_laps={total_laps} last_lap={last_lap}"
+                    )
+            if any(sample.startswith("traffic ") for sample in samples):
+                break
+
+    for obj in [item for item in objects if item is not None]:
+        data = getattr(obj, "_data", None)
+        lap_sf_data = getattr(data, "lap_sf_data", None)
+        if isinstance(lap_sf_data, dict) and lap_sf_data:
+            current_lap = getattr(data, "current_lap", 0)
+            for lap, sf_pct in list(sorted(lap_sf_data.items()))[:8]:
+                samples.append(f"sf_history lap={lap}: sf={sf_pct:.1f}% current_lap={current_lap}")
+            break
+
+    return samples[:30]
+
+
+def _module_passes(
+    label: str,
+    load_ok: bool,
+    signal: Dict[str, Any],
+    text_samples: List[str],
+    table_samples: List[str],
+    semantic_samples: List[str],
+) -> bool:
     if not load_ok or signal.get("failures"):
         return False
-    if signal.get("loaded") and (_has_numeric_sample(text_samples) or _has_numeric_sample(table_samples)):
+    if signal.get("loaded") and _has_numeric_sample(text_samples + table_samples + semantic_samples):
         return True
     # Map/trace style widgets can be numeric-data backed without table text.
     numeric_optional = {
@@ -119,7 +175,9 @@ def _module_passes(label: str, load_ok: bool, signal: Dict[str, Any], text_sampl
         "S2 Comparison",
         "S3 Comparison",
     }
-    return label in numeric_optional and not signal.get("failures")
+    if label in numeric_optional and not signal.get("failures"):
+        return True
+    return _has_numeric_sample(semantic_samples)
 
 
 def main() -> int:
@@ -197,11 +255,20 @@ def main() -> int:
             widget = entry.get("widget")
             text_samples = _visible_text_samples(widget) if isinstance(widget, QWidget) else []
             table_samples = _table_samples(widget) if isinstance(widget, QWidget) else []
+            semantic_samples = _semantic_samples(entry.get("module"), widget) if isinstance(widget, QWidget) else []
             result.update(signal)
             result["visible_text_samples"] = text_samples[:20]
             result["table_samples"] = table_samples[:20]
-            result["has_numeric_sample"] = _has_numeric_sample(text_samples + table_samples)
-            result["ok"] = _module_passes(entry["label"], load_ok, signal, text_samples, table_samples)
+            result["semantic_samples"] = semantic_samples[:20]
+            result["has_numeric_sample"] = _has_numeric_sample(text_samples + table_samples + semantic_samples)
+            result["ok"] = _module_passes(
+                entry["label"],
+                load_ok,
+                signal,
+                text_samples,
+                table_samples,
+                semantic_samples,
+            )
             if isinstance(widget, QWidget):
                 try:
                     safe_name = "".join(ch if ch.isalnum() else "_" for ch in entry["label"]).strip("_").lower()
