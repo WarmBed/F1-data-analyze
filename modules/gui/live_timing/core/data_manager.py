@@ -259,7 +259,11 @@ class LiveTimingDataManager(QObject):
         if cls._instance is None:
             cls._instance = cls()
         return cls._instance
-    
+
+    @classmethod
+    def get_instance(cls) -> 'LiveTimingDataManager':
+        return cls.instance()
+
     def _get_display_time(self, raw_time: float) -> float:
         """
         計算顯示時間（減去起跑偏移）
@@ -408,8 +412,7 @@ class LiveTimingDataManager(QObject):
         return value.strip().rstrip(" _-")
 
     def _local_year_candidates(self, requested_year: int) -> List[int]:
-        start = int(requested_year)
-        return list(range(start, 2017, -1))
+        return [int(requested_year)]
 
     def load_race(self, year: int, race: str, session: str = "Race", 
                   source_type: str = "local", progress_callback=None) -> bool:

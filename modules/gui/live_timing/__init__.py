@@ -1,52 +1,60 @@
-"""
-Live Timing 模組總入口
-======================
+"""Lazy public exports for Live Timing GUI modules."""
 
-提供 F1 即時計時功能的模組化實現，包含：
-- 核心數據管理 (LiveTimingDataManager)
-- 數據源 (本地 JSON / 即時 SignalR)
-- 可視化組件 (TrackMap, Ranking, PitWindow 等)
 
-Author: F1T Team
-Date: 2025-12-03
-"""
+_LAZY_EXPORTS = {
+    "LocalLiveF1DataSource": (".core.local_source", "LocalLiveF1DataSource"),
+    "LiveF1DataSource": (".core.local_source", "LiveF1DataSource"),
+    "LivePositionDataProcessor": (".core.position_processor", "LivePositionDataProcessor"),
+    "LiveTimingDataManager": (".core.data_manager", "LiveTimingDataManager"),
+    "BaseLiveTimingMDI": (".core.base_live_mdi", "BaseLiveTimingMDI"),
+    "LiveTimingModuleFactory": (".core.module_factory", "LiveTimingModuleFactory"),
+    "is_live_timing_module": (".core.module_factory", "is_live_timing_module"),
+    "create_live_timing_module": (".core.module_factory", "create_live_timing_module"),
+    "LiveTimingControlPanel": (".live_timing_modules.control_panel", "LiveTimingControlPanel"),
+    "LiveTimingControlDock": (".live_timing_modules.control_dock", "LiveTimingControlDock"),
+    "LiveTimingTrackMap": (".live_timing_modules.track_map", "LiveTimingTrackMap"),
+    "TrackMapWidget": (".live_timing_modules.track_map", "TrackMapWidget"),
+    "LiveTimingRankingTower": (".live_timing_modules.ranking_tower", "LiveTimingRankingTower"),
+    "RankingTableWidget": (".live_timing_modules.ranking_tower", "RankingTableWidget"),
+    "LiveTimingRaceControlMessages": (
+        ".live_timing_modules.race_control_messages",
+        "LiveTimingRaceControlMessages",
+    ),
+    "RaceControlMessagesWidget": (
+        ".live_timing_modules.race_control_messages",
+        "RaceControlMessagesWidget",
+    ),
+}
 
-# Core 模組
-from .core.data_manager import LiveTimingDataManager
-from .core.local_source import LocalLiveF1DataSource, LiveF1DataSource
-from .core.position_processor import LivePositionDataProcessor
-from .core.base_live_mdi import BaseLiveTimingMDI
-from .core.module_factory import (
-    LiveTimingModuleFactory,
-    is_live_timing_module,
-    create_live_timing_module,
-)
 
-# Live Timing Modules
-from .live_timing_modules.control_panel import LiveTimingControlPanel
-from .live_timing_modules.control_dock import LiveTimingControlDock
-from .live_timing_modules.track_map import LiveTimingTrackMap, TrackMapWidget
-from .live_timing_modules.ranking_tower import LiveTimingRankingTower, RankingTableWidget
-from .live_timing_modules.race_control_messages import LiveTimingRaceControlMessages, RaceControlMessagesWidget
+def __getattr__(name):
+    if name not in _LAZY_EXPORTS:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    import importlib
+
+    module_name, attr_name = _LAZY_EXPORTS[name]
+    module = importlib.import_module(module_name, __name__)
+    value = getattr(module, attr_name)
+    globals()[name] = value
+    return value
+
 
 __all__ = [
-    # Core
-    'LiveTimingDataManager',
-    'LocalLiveF1DataSource',
-    'LiveF1DataSource',
-    'LivePositionDataProcessor',
-    'BaseLiveTimingMDI',
-    # Factory
-    'LiveTimingModuleFactory',
-    'is_live_timing_module',
-    'create_live_timing_module',
-    # Modules
-    'LiveTimingControlPanel',
-    'LiveTimingControlDock',
-    'LiveTimingTrackMap',
-    'TrackMapWidget',
-    'LiveTimingRankingTower',
-    'RankingTableWidget',
-    'LiveTimingRaceControlMessages',
-    'RaceControlMessagesWidget',
+    "LiveTimingDataManager",
+    "LocalLiveF1DataSource",
+    "LiveF1DataSource",
+    "LivePositionDataProcessor",
+    "BaseLiveTimingMDI",
+    "LiveTimingModuleFactory",
+    "is_live_timing_module",
+    "create_live_timing_module",
+    "LiveTimingControlPanel",
+    "LiveTimingControlDock",
+    "LiveTimingTrackMap",
+    "TrackMapWidget",
+    "LiveTimingRankingTower",
+    "RankingTableWidget",
+    "LiveTimingRaceControlMessages",
+    "RaceControlMessagesWidget",
 ]

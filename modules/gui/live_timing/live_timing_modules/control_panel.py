@@ -265,7 +265,7 @@ class LiveTimingControlPanel(BaseLiveTimingMDI):
         }
         session_name = session_map.get(session, session)
         
-        success = dm.load_race(year, race, session_name, source_type="local")
+        success = dm.load_race(year, race, session_name, source_type="api")
         
         self.btn_load.setEnabled(True)
         

@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import time
+import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
@@ -23,6 +24,7 @@ from PyQt5.QtWidgets import QApplication, QMessageBox, QTableWidget, QWidget
 
 
 LOG_DIR = ROOT / "logs"
+SCREENSHOT_DIR: Optional[Path] = None
 FAIL_TEXT = (
     "load failed",
     "api request failed",
@@ -189,6 +191,14 @@ def _run_module(name: str, widget: Any, trigger: Callable[[], Any], wait: Callab
     _wait_until(wait, timeout=25.0)
     _process(0.8)
     result = _snapshot(name, visible_widget, extras=[original])
+    if SCREENSHOT_DIR is not None:
+        try:
+            safe_name = "".join(ch if ch.isalnum() else "_" for ch in name).strip("_").lower()
+            screenshot_path = SCREENSHOT_DIR / f"{safe_name}.png"
+            visible_widget.grab().save(str(screenshot_path))
+            result["screenshot"] = str(screenshot_path)
+        except Exception as exc:
+            result["screenshot_error"] = f"{type(exc).__name__}: {exc}"
     if error:
         result["ok"] = False
         result["error"] = error
@@ -205,6 +215,9 @@ def main() -> int:
     args = parser.parse_args()
 
     LOG_DIR.mkdir(parents=True, exist_ok=True)
+    global SCREENSHOT_DIR
+    SCREENSHOT_DIR = args.screenshot.with_suffix("")
+    SCREENSHOT_DIR.mkdir(parents=True, exist_ok=True)
     _patch_message_boxes()
     app = QApplication.instance() or QApplication([])
 
@@ -334,12 +347,24 @@ def main() -> int:
     app.processEvents()
     if results:
         try:
-            fia.grab().save(str(args.screenshot))
+            first_screenshot = next((item.get("screenshot") for item in results if item.get("screenshot")), None)
+            if first_screenshot:
+                shutil.copyfile(first_screenshot, args.screenshot)
+            else:
+                fia.grab().save(str(args.screenshot))
         except Exception:
             pass
 
     ok = all(item.get("ok") for item in results)
-    report = {"ok": ok, "year": args.year, "race": args.race, "session": args.session, "results": results}
+    report = {
+        "ok": ok,
+        "year": args.year,
+        "race": args.race,
+        "session": args.session,
+        "screenshot_dir": str(SCREENSHOT_DIR),
+        "summary_screenshot": str(args.screenshot),
+        "results": results,
+    }
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if ok else 1

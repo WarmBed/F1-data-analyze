@@ -88,7 +88,7 @@ class RaceLoaderThread(QThread):
                 self._year, 
                 self._race_key, 
                 self._session_name, 
-                source_type="local",
+                source_type="api",
                 progress_callback=progress_callback
             )
             
