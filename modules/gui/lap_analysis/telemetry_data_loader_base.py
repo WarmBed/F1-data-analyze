@@ -44,6 +44,7 @@ from PyQt5.QtCore import QObject, pyqtSignal, QTimer, QThread
 from core.api_base_url import resolve_api_base_url
 from core.gui_i18n import tr
 from core.api_runtime_state import is_api_available
+from core.openf1_exact_generators import generate_telemetry_comparison_json
 
 from core.logger import get_logger
 logger = get_logger(__name__)
@@ -671,6 +672,19 @@ class TelemetryDataLoader(QObject):
 
         if is_fastest_lap:
             self._debug("Fastest lap mode: service will resolve exact fastest lap per driver")
+
+        if str(os.getenv("F1T_RUNTIME_MODE", "")).strip().lower() == "local":
+            self._debug("Local runtime mode: loading exact local telemetry data without REST API")
+            previous_state = self._allow_local_fallback
+            previous_reason = self._fallback_policy_reason
+            try:
+                self._allow_local_fallback = True
+                self._fallback_policy_reason = "F1T_RUNTIME_MODE=local exact telemetry generation"
+                self._fallback_to_local("local runtime mode", request_token)
+            finally:
+                self._allow_local_fallback = previous_state
+                self._fallback_policy_reason = previous_reason
+            return
 
         self._api_base_url = self._determine_api_base_url()
         self._debug(f"🚀 呼叫 API: {self._api_base_url}/api/v2/analysis/execute")
@@ -1772,6 +1786,41 @@ class TelemetryDataLoader(QObject):
 
 
 # ========== 向後兼容的輔助方法 ==========
+
+def _generate_exact_telemetry_data_via_cli(self, year: int, race: str, session: str,
+                                           driver1: str, driver2: str = None,
+                                           lap1: int = 1, lap2: int = 1,
+                                           request_token: Optional[int] = None) -> bool:
+    if request_token is not None and request_token != self._active_request_token:
+        self._debug(f"Ignore stale local generation request (token {request_token} != {self._active_request_token})")
+        return False
+    try:
+        params = self.current_session or self._pending_params or {}
+        driver1_norm = self._normalize_driver_code(driver1)
+        driver2_norm = self._normalize_driver_code(driver2) or driver1_norm
+        self._debug("========== exact local telemetry generation ==========")
+        self._debug(f"request: {self.config['display_name']} | {year} {race} {session}")
+        self._debug(f"drivers: {driver1_norm} vs {driver2_norm} | laps: L{lap1} vs L{lap2}")
+        self.status_changed.emit("Generating exact local telemetry JSON...")
+        generated_path = generate_telemetry_comparison_json(
+            int(year),
+            str(race),
+            str(session),
+            driver1_norm,
+            driver2_norm,
+            int(lap1 or 1),
+            int(lap2 or lap1 or 1),
+            bool(params.get("is_fastest_lap", False)),
+        )
+        self._debug(f"Generated exact local telemetry JSON: {generated_path}")
+        return bool(generated_path and os.path.exists(str(generated_path)))
+    except Exception as exc:
+        self._error(f"Exact local telemetry generation failed: {exc}")
+        return False
+
+
+TelemetryDataLoader._generate_telemetry_data_via_cli = _generate_exact_telemetry_data_via_cli
+
 
 def create_telemetry_loader(telemetry_type: str, parent=None) -> TelemetryDataLoader:
     """

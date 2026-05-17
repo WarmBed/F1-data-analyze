@@ -900,7 +900,7 @@ def _interpolate(xs: List[float], ys: List[float], target_xs: List[float]) -> Li
     return output
 
 
-def _stats(values: Iterable[float]) -> Tuple[float, float, float]:
+def _tuple_stats(values: Iterable[float]) -> Tuple[float, float, float]:
     vals = [float(v) for v in values]
     if not vals:
         return 0.0, 0.0, 0.0
@@ -984,8 +984,8 @@ def generate_telemetry_comparison_json(
             "driver1_data": driver1_common,
             "driver2_data": driver2_common,
         }
-        max1, min1, mean1 = _stats(s1[key])
-        max2, min2, mean2 = _stats(s2[key])
+        max1, min1, mean1 = _tuple_stats(s1[key])
+        max2, min2, mean2 = _tuple_stats(s2[key])
         stats[key] = {
             f"{d1}_max": max1,
             f"{d1}_min": min1,
@@ -995,8 +995,8 @@ def generate_telemetry_comparison_json(
             f"{d2}_mean": mean2,
         }
 
-    max_diff, min_diff, mean_diff = _stats(speed_diff)
-    max_gap, min_gap, mean_gap = _stats(distance_gap)
+    max_diff, min_diff, mean_diff = _tuple_stats(speed_diff)
+    max_gap, min_gap, mean_gap = _tuple_stats(distance_gap)
     output = {
         "analysis_type": "two_driver_telemetry_comparison",
         "metadata": {

@@ -219,6 +219,18 @@ def _data_signal(module: Any, widget: Optional[QWidget]) -> Dict[str, Any]:
     plot = {"figures": 0, "lines": 0, "collections": 0, "images": 0, "non_empty_lines": 0}
 
     objects: List[Any] = [module, getattr(module, "data_manager", None), getattr(module, "chart_widget", None)]
+    for attr_name in dir(module):
+        if not (attr_name.endswith("_chart_widget") or attr_name.endswith("_widget")):
+            continue
+        try:
+            candidate = getattr(module, attr_name)
+        except Exception:
+            continue
+        if candidate is not None and candidate not in objects:
+            objects.append(candidate)
+            inner_chart = getattr(candidate, "chart_widget", None)
+            if inner_chart is not None and inner_chart not in objects:
+                objects.append(inner_chart)
     if widget is not None:
         objects.append(widget)
         objects.extend(widget.findChildren(QWidget))
@@ -255,6 +267,20 @@ def _data_signal(module: Any, widget: Optional[QWidget]) -> Dict[str, Any]:
             "speed_data",
             "analysis_data",
             "loaded_data",
+            "current_data",
+            "distance_data",
+            "driver1_brake",
+            "driver2_brake",
+            "driver1_rpm",
+            "driver2_rpm",
+            "driver1_acceleration",
+            "driver2_acceleration",
+            "driver1_speeddiff",
+            "driver2_speeddiff",
+            "driver1_distancediff",
+            "driver2_distancediff",
+            "driver1_timediff",
+            "driver2_timediff",
         ):
             if not hasattr(obj, attr):
                 continue
@@ -299,6 +325,91 @@ def _data_signal(module: Any, widget: Optional[QWidget]) -> Dict[str, Any]:
 
 def _trigger_update(module: Any, year: int, race: str, session: str) -> None:
     module_type = getattr(module, "_factory_module_type", "")
+    telemetry_types = {
+        "speed_analysis",
+        "brake_analysis",
+        "throttle_analysis",
+        "gear_analysis",
+        "rpm_analysis",
+        "acceleration_analysis",
+        "speeddiff_analysis",
+        "distancediff_analysis",
+        "timediff_analysis",
+        "pedal_behavior_analysis",
+    }
+    if module_type in telemetry_types:
+        telemetry_kwargs = {
+            "year": str(year),
+            "race": race,
+            "session": session,
+            "driver1": "NOR",
+            "driver2": "VER",
+            "lap1": 1,
+            "lap2": 1,
+            "is_fastest": False,
+            "is_fastest_lap": False,
+            "use_time_axis": False,
+        }
+        for attr, value in (
+            ("year", year),
+            ("race", race),
+            ("session", session),
+            ("current_year", str(year)),
+            ("current_race", race),
+            ("current_session", session),
+            ("driver1", "NOR"),
+            ("driver2", "VER"),
+            ("lap1", 1),
+            ("lap2", 1),
+        ):
+            try:
+                setattr(module, attr, value)
+            except Exception:
+                pass
+        update_method = getattr(module, "update_lap_parameters", None)
+        if callable(update_method):
+            try:
+                update_method(**telemetry_kwargs)
+            except TypeError:
+                try:
+                    update_method(str(year), race, session, "NOR", "VER", 1, 1, False, False)
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        load_method = getattr(module, "load_data", None)
+        if callable(load_method):
+            try:
+                load_method(**telemetry_kwargs)
+                return
+            except TypeError:
+                try:
+                    load_method(year=str(year), race=race, session=session, driver1="NOR", driver2="VER", lap1=1, lap2=1)
+                    return
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        for method_name in ("update_analysis_parameters", "update_parameters"):
+            method = getattr(module, method_name, None)
+            if not callable(method):
+                continue
+            try:
+                result = method(**telemetry_kwargs)
+                if result is not False:
+                    return
+            except TypeError:
+                try:
+                    result = method(str(year), race, session, "NOR", "VER", 1, 1, False, False)
+                    if result is not False:
+                        return
+                except Exception:
+                    continue
+            except Exception:
+                continue
+
     if module_type in {
         "qualifying_prediction_table",
         "fp2_qualifying_prediction_table",
@@ -395,6 +506,8 @@ def _validate_non_live(path: List[str], main: _DummyMain, timeout: float) -> Dic
     if module is None:
         result.update({"ok": False, "phase": "create", "error": "module factory returned None"})
         return result
+    if not getattr(module, "_factory_module_type", None):
+        setattr(module, "_factory_module_type", module_type)
 
     widget = _get_widget(module)
     if widget is not None:
