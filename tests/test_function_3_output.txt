@@ -1,10 +1,10 @@
-﻿python : C:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-pack
+﻿python : <user-home>\AppData\Local\Programs\Python\Python313\Lib\site-pack
 ages\fastf1\api.py:32: UserWarning: `fastf1.api` will be considered private i
 n future releases and potentially be removed or changed!
 位於 線路:1 字元:1
 + python f1_analysis_modular_main.py -f 3 -y 2025 -r "United States" -s ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    + CategoryInfo          : NotSpecified: (C:\Users\mike2\...ved or change 
+    + CategoryInfo          : NotSpecified: (<user-home>\...ved or change 
    d!:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
  

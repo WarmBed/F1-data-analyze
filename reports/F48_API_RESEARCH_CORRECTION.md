@@ -79,7 +79,7 @@ if hasattr(laps, "pick_driver"):
 
 ### 警告來源
 ```
-C:\Users\mike2\AppData\Local\Programs\Python\Python313\Lib\site-packages\fastf1\core.py:3183: 
+<site-packages>/fastf1\core.py:3183: 
 FutureWarning: pick_driver is deprecated and will be removed in a future release. 
 Use pick_drivers instead.
 ```

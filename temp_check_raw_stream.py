@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-stream_file = Path(r"c:\Users\mike2\OneDrive\Code\F1-data-analyze\team_radio_data\2025\TeamRadio_2025_Abu_Dhabi_R.jsonStream")
+stream_file = Path(r"team_radio_data\2025\TeamRadio_2025_Abu_Dhabi_R.jsonStream")
 
 with open(stream_file, 'r', encoding='utf-8') as f:
     lines = f.readlines()

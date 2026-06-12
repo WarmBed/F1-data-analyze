@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 # 讀取錄製的數據
-data_file = Path(r"c:\Users\mike2\OneDrive\Code\F1-data-analyze\data\live_timing_recordings\raw_20251207_220227.jsonl")
+data_file = Path(r"data\live_timing_recordings\raw_20251207_220227.jsonl")
 
 with open(data_file, 'r', encoding='utf-8') as f:
     content = f.read()

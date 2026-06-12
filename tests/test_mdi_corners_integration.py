@@ -2,7 +2,7 @@
 驗證 Track Analysis MDI 官方彎道整合
 """
 import sys
-sys.path.insert(0, r'c:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 print("=== 驗證 track_analysis_mdi.py 整合 ===\n")
 

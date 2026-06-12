@@ -122,7 +122,7 @@ JA_TRANSLATIONS = {
 def add_japanese_to_translations():
     """為所有翻譯鍵值添加日文"""
     
-    file_path = 'c:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\core\\gui_i18n.py'
+    file_path = 'core\\gui_i18n.py'
     
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()

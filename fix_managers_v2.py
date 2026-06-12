@@ -6,7 +6,7 @@
 import re
 import os
 
-MANAGERS_DIR = r"c:\Users\mike2\OneDrive\Code\F1-data-analyze\windows\managers"
+MANAGERS_DIR = r"windows\managers"
 
 # 需要替換的模式 (排除 self.main_window 開頭的)
 PATTERNS = [

@@ -2,7 +2,7 @@
 簡單測試：驗證 Track Analysis MDI 的官方彎道功能整合
 """
 import sys
-sys.path.insert(0, r'c:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 print("=== Track Analysis MDI 官方彎道整合驗證 ===\n")
 

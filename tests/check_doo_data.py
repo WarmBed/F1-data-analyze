@@ -1,6 +1,6 @@
 import json
 
-json_path = r"C:\Users\mike2\OneDrive\Code\F1-data-analyze\json\all_drivers_straight_line_speed_2025_China_R.json"
+json_path = r"json\all_drivers_straight_line_speed_2025_China_R.json"
 
 with open(json_path, 'r', encoding='utf-8') as f:
     data = json.load(f)

@@ -177,7 +177,7 @@ Start-Process powershell -ArgumentList "-NoProfile", "-Command", "python scripts
 # 4. 動作：「啟動程式」
 #    程式: python.exe
 #    引數: scripts/periodic_update_service.py
-#    起始於: C:\Users\mike2\OneDrive\Code\F1-data-analyze
+#    起始於: <project_root>
 ```
 
 #### **Linux / macOS**

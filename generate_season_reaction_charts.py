@@ -218,7 +218,7 @@ def create_chart(driver_data, metric, title, ylabel, is_speed=False):
 
 
 # Main
-base_dir = Path(r"c:\Users\mike2\OneDrive\Code\F1-data-analyze\json\LiveF1\2025")
+base_dir = Path(r"json\LiveF1\2025")
 race_dirs = sorted([d for d in base_dir.iterdir() if d.is_dir() and d.name.endswith('_Race')])
 
 print(f"Found {len(race_dirs)} races")

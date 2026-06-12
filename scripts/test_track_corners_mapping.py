@@ -2,7 +2,7 @@
 測試 Function 2 的官方彎道映射功能
 """
 import sys
-sys.path.insert(0, 'C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze')
+sys.path.insert(0, '<project_root>')
 
 from CLI_modules.cli.core.base import DataLoader
 from CLI_modules.cli.analyzer.track_position_analysis import run_track_position_analysis

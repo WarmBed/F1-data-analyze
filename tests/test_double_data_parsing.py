@@ -2,7 +2,7 @@
 測試 TrackAnalysisMDI 的雙層 data 解析邏輯
 """
 import sys
-sys.path.insert(0, r'c:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 import json
 

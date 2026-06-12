@@ -35,7 +35,7 @@ F1T 遙測分析模組的 MDI 視窗左上方有三個控制按鈕：**S**、**L
 ```
 
 #### 實現位置
-- 檔案：[windows/widgets/draggable_title_bar.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\windows\widgets\draggable_title_bar.py#L64-L71)
+- 檔案：[windows/widgets/draggable_title_bar.py](windows\widgets\draggable_title_bar.py#L64-L71)
 - 方法：`toggle_x_sync()` (第 340 行)
 
 ---
@@ -80,9 +80,9 @@ F1T 遙測分析模組的 MDI 視窗左上方有三個控制按鈕：**S**、**L
 ```
 
 #### 實現位置
-- 檔案：[windows/widgets/draggable_title_bar.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\windows\widgets\draggable_title_bar.py#L74-L81)
+- 檔案：[windows/widgets/draggable_title_bar.py](windows\widgets\draggable_title_bar.py#L74-L81)
 - 方法：`toggle_individual_linkage()` (第 355 行)
-- 參考：[modules/gui/lap_analysis/linkage/linkage_ui.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\lap_analysis\linkage\linkage_ui.py)
+- 參考：[modules/gui/lap_analysis/linkage/linkage_ui.py](modules\gui\lap_analysis\linkage\linkage_ui.py)
 
 ---
 
@@ -147,7 +147,7 @@ D 按鈕：停用 (X)
    - 重新載入對應的遙測資料
 
 #### 實現位置
-- 檔案：[windows/widgets/draggable_title_bar.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\windows\widgets\draggable_title_bar.py#L84-L91)
+- 檔案：[windows/widgets/draggable_title_bar.py](windows\widgets\draggable_title_bar.py#L84-L91)
 - 方法：`toggle_driver_lap_sync()` (第 360 行)
 - 重載邏輯：`_reload_data_with_main_window_params()` (第 414 行)
 
@@ -259,12 +259,12 @@ self.parent_window.analysis_module.sync_driver_lap_enabled = is_enabled
 ## 📚 相關檔案
 
 ### 核心實現
-- [windows/widgets/draggable_title_bar.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\windows\widgets\draggable_title_bar.py) - 標題欄主實現
-- [modules/gui/lap_analysis/linkage/linkage_ui.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\lap_analysis\linkage\linkage_ui.py) - 連動 UI 組件
-- [windows/managers/lap_linkage_toggler.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\windows\managers\lap_linkage_toggler.py) - 主連動開關
+- [windows/widgets/draggable_title_bar.py](windows\widgets\draggable_title_bar.py) - 標題欄主實現
+- [modules/gui/lap_analysis/linkage/linkage_ui.py](modules\gui\lap_analysis\linkage\linkage_ui.py) - 連動 UI 組件
+- [windows/managers/lap_linkage_toggler.py](windows\managers\lap_linkage_toggler.py) - 主連動開關
 
 ### 遙測模組
-- [modules/gui/telemetry_analysis_mdi.py](c:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\telemetry_analysis_mdi.py) - 遙測分析 MDI 主模組
+- [modules/gui/telemetry_analysis_mdi.py](modules\gui\telemetry_analysis_mdi.py) - 遙測分析 MDI 主模組
 
 ---
 
@@ -358,6 +358,6 @@ D = X (停用車手圈數同步)
 ## 📧 技術支援
 
 如有任何問題或建議，請參考：
-- 專案 README: [README.md](c:\Users\mike2\OneDrive\Code\F1-data-analyze\README.md)
-- 開發指導: [.github/copilot-instructions.md](c:\Users\mike2\OneDrive\Code\F1-data-analyze\.github\copilot-instructions.md)
-- 即時遙測指南: [docs/LIVE_TIMING_MODULE_GUIDE.md](c:\Users\mike2\OneDrive\Code\F1-data-analyze\docs\LIVE_TIMING_MODULE_GUIDE.md)
+- 專案 README: [README.md](README.md)
+- 開發指導: [.github/copilot-instructions.md](.github\copilot-instructions.md)
+- 即時遙測指南: [docs/LIVE_TIMING_MODULE_GUIDE.md](docs\LIVE_TIMING_MODULE_GUIDE.md)

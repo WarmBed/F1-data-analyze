@@ -9,7 +9,7 @@ import re
 import sys
 from pathlib import Path
 
-GUI_MODULES_DIR = Path("c:/Users/mike2/OneDrive/Code/F1-data-analyze/modules/gui")
+GUI_MODULES_DIR = Path("modules/gui")
 EXCLUDE_PATTERNS = ["demo", "test_", "__pycache__"]
 
 LOGGER_IMPORT = "from core.logger import get_logger"

@@ -1,7 +1,7 @@
 import json
 import os
 
-os.chdir(r'c:\Users\mike2\OneDrive\Code\F1-data-analyze')
+os.chdir(r'<project_root>')
 
 results = {"status": "starting"}
 

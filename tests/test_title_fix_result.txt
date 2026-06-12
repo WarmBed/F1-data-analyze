@@ -37,4 +37,4 @@ Details:
 VERIFICATION COMPLETE
 ================================================================================
 
-Results saved to: C:\Users\mike2\OneDrive\Code\F1-data-analyze\test_title_fix_result.txt
+Results saved to: test_title_fix_result.txt

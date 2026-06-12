@@ -20,4 +20,4 @@ Details:
 VERIFICATION COMPLETE
 ================================================================================
 
-Results saved to: C:\Users\mike2\OneDrive\Code\F1-data-analyze\test_straight_speed_title_result.txt
+Results saved to: test_straight_speed_title_result.txt

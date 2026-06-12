@@ -3,7 +3,7 @@
 根據反幻覺編碼五原則 - 必須驗證每個環節
 """
 import sys
-sys.path.insert(0, r'c:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 import json
 

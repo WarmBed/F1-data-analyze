@@ -1,6 +1,6 @@
 from pathlib import Path
 import sys
-sys.path.append(r'C:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.append(r'<project_root>')
 from CLI_modules.cli.prediction.track_specific_trainer_v3 import TrackSpecificTrainerV3
 
 tracks = [

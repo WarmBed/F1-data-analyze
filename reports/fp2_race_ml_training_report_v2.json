@@ -8,7 +8,7 @@
       "success": true,
       "mae": 0.0059115211479365826,
       "r2": 0.9999736547470093,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Sakhir.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Sakhir.pkl"
     },
     "Jeddah": {
       "success": false,
@@ -18,25 +18,25 @@
       "success": true,
       "mae": 0.004965321626514196,
       "r2": 0.9999708533287048,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Melbourne.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Melbourne.pkl"
     },
     "Miami": {
       "success": true,
       "mae": 0.0030178725719451904,
       "r2": 0.9999728202819824,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Miami.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Miami.pkl"
     },
     "Monaco": {
       "success": true,
       "mae": 0.002652696566656232,
       "r2": 0.9999832510948181,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Monaco.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Monaco.pkl"
     },
     "Barcelona": {
       "success": true,
       "mae": 0.005579868331551552,
       "r2": 0.999980092048645,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Barcelona.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Barcelona.pkl"
     },
     "Montréal": {
       "success": false,
@@ -46,55 +46,55 @@
       "success": true,
       "mae": 0.002699752803891897,
       "r2": 0.9999778270721436,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Silverstone.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Silverstone.pkl"
     },
     "Budapest": {
       "success": true,
       "mae": 0.0048387194983661175,
       "r2": 0.9999799132347107,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Budapest.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Budapest.pkl"
     },
     "Zandvoort": {
       "success": true,
       "mae": 0.0041022286750376225,
       "r2": 0.9999755620956421,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Zandvoort.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Zandvoort.pkl"
     },
     "Monza": {
       "success": true,
       "mae": 0.005336481146514416,
       "r2": 0.9999756813049316,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Monza.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Monza.pkl"
     },
     "Marina Bay": {
       "success": true,
       "mae": 0.004519743844866753,
       "r2": 0.9999762177467346,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Marina_Bay.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Marina_Bay.pkl"
     },
     "Suzuka": {
       "success": true,
       "mae": 0.006582701113075018,
       "r2": 0.9999722838401794,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Suzuka.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Suzuka.pkl"
     },
     "Mexico City": {
       "success": true,
       "mae": 0.003867936320602894,
       "r2": 0.9999191164970398,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Mexico_City.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Mexico_City.pkl"
     },
     "Las Vegas": {
       "success": true,
       "mae": 0.005747347604483366,
       "r2": 0.9999743700027466,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Las_Vegas.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Las_Vegas.pkl"
     },
     "Yas Island": {
       "success": true,
       "mae": 0.003633564105257392,
       "r2": 0.9999842047691345,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Yas_Island.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Yas_Island.pkl"
     },
     "Imola": {
       "success": false,
@@ -104,13 +104,13 @@
       "success": true,
       "mae": 0.004465700592845678,
       "r2": 0.999976634979248,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Spa-Francorchamps.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Spa-Francorchamps.pkl"
     },
     "Baku": {
       "success": true,
       "mae": 0.0037056314758956432,
       "r2": 0.9999768733978271,
-      "model_file": "C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze\\models\\fp2_race_ml_v2.0\\Baku.pkl"
+      "model_file": "models\\fp2_race_ml_v2.0\\Baku.pkl"
     }
   },
   "timestamp": "2025-12-13T04:08:22.963580"

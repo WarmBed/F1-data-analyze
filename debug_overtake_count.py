@@ -7,7 +7,7 @@ import json
 import os
 from collections import defaultdict
 
-BASE_DIR = r"c:\Users\mike2\OneDrive\Code\F1-data-analyze\json\LiveF1\2025\Abu_Dhabi_Race"
+BASE_DIR = r"json\LiveF1\2025\Abu_Dhabi_Race"
 
 def load_json(filename):
     path = os.path.join(BASE_DIR, filename)

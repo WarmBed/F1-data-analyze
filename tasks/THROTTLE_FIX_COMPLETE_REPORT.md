@@ -139,7 +139,7 @@ if success:
 ### 語法驗證 ✅
 
 ```powershell
-PS C:\Users\mike2\OneDrive\Code\F1-data-analyze> python -m py_compile modules/gui/lap_analysis/Throttle_analysis/throttle_analysis_mdi.py
+PS <project_root>> python -m py_compile modules/gui/lap_analysis/Throttle_analysis/throttle_analysis_mdi.py
 # 無輸出 = 成功
 ```
 

@@ -160,7 +160,7 @@ grep "def update_cross_event_comparison" acceleration_analysis_mdi.py
 ### 測試結果
 ```powershell
 PS> python -c "from modules.gui.lap_analysis.acceleration_analysis.acceleration_analysis_mdi import accelerationAnalysisModule; print('✅ Acceleration Import 測試通過')"
-[GUI_I18N] 已載入語言設定: en (檔案: C:\Users\mike2\OneDrive\Code\F1-data-analyze\core\gui_language_config.json)
+[GUI_I18N] 已載入語言設定: en (檔案: core\gui_language_config.json)
 [OK] [MODULE_FACTORY] Speed analysis module registered
 ✅ Acceleration 模組 Import 測試通過
 ```

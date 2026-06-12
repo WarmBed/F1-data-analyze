@@ -191,4 +191,4 @@ SPEC 中的路徑 `modules.gui.lap_analysis.speed_analysis.speed_analysis_module
 
 **報告生成時間**：2025-11-05 23:40:00  
 **報告建立者**：GitHub Copilot AI Assistant  
-**專案維護者**：Mike2  
+**專案維護者**：maintainer  

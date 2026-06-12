@@ -2,7 +2,7 @@
 """測試 Function 97 覆寫載入"""
 
 import sys
-sys.path.insert(0, 'C:\\Users\\mike2\\OneDrive\\Code\\F1-data-analyze')
+sys.path.insert(0, '<project_root>')
 
 from CLI_modules.cli.analyzer.championship_standings_analysis import load_driver_overrides
 

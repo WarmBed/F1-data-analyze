@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 # 目標模組目錄
-GUI_MODULES_DIR = Path("c:/Users/mike2/OneDrive/Code/F1-data-analyze/modules/gui")
+GUI_MODULES_DIR = Path("modules/gui")
 
 # 要排除的目錄和檔案模式
 EXCLUDE_PATTERNS = [

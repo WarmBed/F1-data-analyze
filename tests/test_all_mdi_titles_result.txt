@@ -63,4 +63,4 @@ Title update behavior:
   - Titles are REPLACED, not accumulated
 
 ================================================================================
-Results saved to: C:\Users\mike2\OneDrive\Code\F1-data-analyze\test_all_mdi_titles_result.txt
+Results saved to: test_all_mdi_titles_result.txt

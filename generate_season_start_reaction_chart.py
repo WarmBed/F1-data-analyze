@@ -263,7 +263,7 @@ def create_distribution_chart(all_data: dict, metric: str = 't10'):
 
 
 def main():
-    base_dir = Path(r"c:\Users\mike2\OneDrive\Code\F1-data-analyze\json\LiveF1\2025")
+    base_dir = Path(r"json\LiveF1\2025")
     
     print("=" * 60)
     print("2025 全賽季起跑反應分析")

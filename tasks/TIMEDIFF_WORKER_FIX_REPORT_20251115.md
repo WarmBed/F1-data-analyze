@@ -155,7 +155,7 @@ except Exception as e:
 ```powershell
 PS> python -c "from modules.gui.lap_analysis.timediff_analysis.timediff_analysis_mdi import timediffAnalysisModule; print('✅ TimeDiff 模組 Import 測試通過')"
 
-[GUI_I18N] 已載入語言設定: en (檔案: C:\Users\mike2\OneDrive\Code\F1-data-analyze\core\gui_language_config.json)
+[GUI_I18N] 已載入語言設定: en (檔案: core\gui_language_config.json)
 [OK] [MODULE_FACTORY] Speed analysis module registered
 ✅ TimeDiff 模組 Import 測試通過
 

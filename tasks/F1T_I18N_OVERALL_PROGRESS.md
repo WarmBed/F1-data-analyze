@@ -267,7 +267,7 @@ self.status_changed.emit(tr('loading_data', 'Loading data...'))
 
 ### 當前負責人
 - **AI 編程助手**：負責所有翻譯鍵添加和程式碼替換
-- **使用者（mike2）**：負責測試和驗證翻譯正確性
+- **使用者（maintainer）**：負責測試和驗證翻譯正確性
 
 ### 協作流程
 1. AI 完成一個 Phase 的翻譯工作

@@ -8,7 +8,7 @@
 """
 
 import sys
-sys.path.insert(0, r'C:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 def diagnose_set_behavior():
     print("=" * 80)

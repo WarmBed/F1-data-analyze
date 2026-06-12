@@ -1,7 +1,7 @@
 import json
 import os
 
-os.chdir(r'c:\Users\mike2\OneDrive\Code\F1-data-analyze')
+os.chdir(r'<project_root>')
 
 # 載入數據
 with open('json/LiveF1/2025/Abu_Dhabi_Race/CarData.json', 'r', encoding='utf-8') as f:

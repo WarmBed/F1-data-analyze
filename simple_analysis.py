@@ -2,7 +2,7 @@ import json
 import traceback
 
 try:
-    with open(r'c:\Users\mike2\OneDrive\Code\F1-data-analyze\json\LiveF1\2025\Abu_Dhabi_Race\CarData.json', 'r', encoding='utf-8') as f:
+    with open(r'json\LiveF1\2025\Abu_Dhabi_Race\CarData.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
     
     records = data['records']
@@ -71,5 +71,5 @@ except Exception as e:
         "traceback": traceback.format_exc()
     }
 
-with open(r'c:\Users\mike2\OneDrive\Code\F1-data-analyze\result.json', 'w', encoding='utf-8') as f:
+with open(r'result.json', 'w', encoding='utf-8') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)

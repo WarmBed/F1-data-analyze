@@ -6,7 +6,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # 添加專案路徑
-sys.path.insert(0, r'C:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 from CLI_modules.cli.data_loader import UnifiedDataLoader
 import pandas as pd

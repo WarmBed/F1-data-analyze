@@ -5,7 +5,7 @@
 ### 錯誤訊息
 ```
 Traceback (most recent call last):
-  File "C:\Users\mike2\OneDrive\Code\F1-data-analyze/f1t_gui_main.py", line 6715, in _apply_driver_lap_settings
+  File "f1t_gui_main.py", line 6715, in _apply_driver_lap_settings
     year1 = self.main_window.current_year
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'StyleHMainWindow' object has no attribute 'current_year'

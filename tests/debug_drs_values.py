@@ -121,7 +121,7 @@ def analyze_drs_values(pkl_file: str):
 
 if __name__ == "__main__":
     # 預設測試檔案
-    default_pkl = r"C:\Users\mike2\OneDrive\Code\F1-data-analyze\dist\live_timing_cache\2025\Abu_Dhabi_Race.pkl"
+    default_pkl = r"dist\live_timing_cache\2025\Abu_Dhabi_Race.pkl"
     
     if len(sys.argv) > 1:
         pkl_file = sys.argv[1]

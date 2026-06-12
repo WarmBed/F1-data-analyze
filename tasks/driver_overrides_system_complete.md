@@ -17,7 +17,7 @@
 - [x] 包含 2024/2025 範例配置
 - [x] 文件化支援的 team_slug 清單
 
-**檔案位置**：`c:\Users\mike2\OneDrive\Code\F1-data-analyze\config\driver_team_overrides.json`
+**檔案位置**：`config\driver_team_overrides.json`
 
 ---
 

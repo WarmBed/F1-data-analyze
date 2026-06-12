@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, r'C:\Users\mike2\OneDrive\Code\F1-data-analyze')
+sys.path.insert(0, r'<project_root>')
 
 from CLI_modules.cli.prediction.overtake_prediction.data_collector import run_f81_data_collection
 

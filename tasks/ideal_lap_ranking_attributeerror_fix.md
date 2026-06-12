@@ -12,7 +12,7 @@
 ### 錯誤訊息
 ```python
 Traceback (most recent call last):
-  File "C:\Users\mike2\OneDrive\Code\F1-data-analyze\modules\gui\ideal_lap_analysis\ideal_lap_ranking_table\ideal_lap_ranking_table_mdi.py", line 360, in _on_data_loaded
+  File "modules\gui\ideal_lap_analysis\ideal_lap_ranking_table\ideal_lap_ranking_table_mdi.py", line 360, in _on_data_loaded
     self.chart_widget.populate_table(ranking)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'populate_table'
