@@ -1,5 +1,7 @@
 # PITWALL
 
+**English** | [ÁπÅÈ´î‰∏≠Êñá](README.zh-TW.md) | [ÁÆÄ‰Ωì‰∏≠Êñá](README.zh-CN.md) | [Êó•Êú¨Ë™û](README.ja.md)
+
 ## What is this?
 
 PitWall is an **F1 data analysis** and telemetry visualization tool.  
@@ -10,6 +12,42 @@ It allows race engineers, sim racers, and data fans to analyze lap times, thrott
 A professional Formula 1 telemetry analysis workstation providing comprehensive race data analysis capabilities.
 
 ![PITWALL](/images/page01.png)
+
+---
+
+## Getting Started
+
+### Requirements
+
+- Windows 10/11
+- Python 3.10+ (3.13 recommended)
+
+### Installation
+
+```powershell
+git clone https://github.com/WarmBed/F1-data-analyze.git
+cd F1-data-analyze
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Run the GUI
+
+```powershell
+python f1t_gui_main.py
+```
+
+On first use, pick a year / race / session in the toolbar and open analysis modules from the function tree on the left. Telemetry data is downloaded from public F1 sources (FastF1 / OpenF1) and cached locally, so the first load of a session takes a few minutes.
+
+### Build a standalone EXE (optional)
+
+```powershell
+.\setup_venv_build.ps1     # one-time: create the build virtualenv
+python build_exe_gui.py    # build with PyInstaller
+```
+
+Or simply double-click `‰∏ÄÈçµÂª∫ÊßãEXE.bat`. The executable is written to `dist\`.
 
 ---
 
@@ -30,7 +68,7 @@ It includes coordinate conversion logic to map GPS coordinates into on-screen XY
 
 ### 1.3 Pitstop Analysis
 This module provides detailed pitstop analytics with two views: a team summary and a detailed log.
-It calculates each driver°¶s pitstop count, average stationary time, and total pit loss (in/out + stationary). The module includes smart filters to distinguish normal pitstops from drive-throughs, and shows compound changes before/after each stop.
+It calculates each driverÔøΩÔøΩs pitstop count, average stationary time, and total pit loss (in/out + stationary). The module includes smart filters to distinguish normal pitstops from drive-throughs, and shows compound changes before/after each stop.
 
 
 ### 1.4 Accident & Flags Analysis
@@ -43,7 +81,7 @@ Internally, it calculates average lap time and degradation trends per stint, and
 
 ### 1.6 Driver Run Position
 This module plots a position chart for the entire race (position vs lap). It includes special handling for DNFs to keep position calculations correct for cars still running.
-An interactive legend allows quickly filtering drivers for comparison°Xe.g., focusing on the top 3 battle or a tight midfield fight. Data is sourced directly from official timing position-by-lap records.
+An interactive legend allows quickly filtering drivers for comparisonÔøΩXe.g., focusing on the top 3 battle or a tight midfield fight. Data is sourced directly from official timing position-by-lap records.
 
 ### 1.7 Traffic Analysis
 This advanced module quantifies traffic conditions encountered during the race. By computing gaps to cars ahead/behind, it determines whether a driver is in clean air or impacted by dirty air/wake.
@@ -99,7 +137,7 @@ This helps filter pit laps or traffic-impacted laps to reflect true race pace an
 
 ### 3.3 Throttle Corner Analysis
 Combines throttle data with track corners. It computes metrics such as average throttle opening or full-throttle ratio through specific corners, visualized via box plots or line charts.
-This helps evaluate driver confidence, grip conditions, and corner-exit throttle application°Xkey indicators of a driver°¶s cornering limit.
+This helps evaluate driver confidence, grip conditions, and corner-exit throttle applicationÔøΩXkey indicators of a driverÔøΩÔøΩs cornering limit.
 
 ### 3.4 Pedal Behavior Analysis
 ![PITWALL](/images/page16.png)
@@ -121,8 +159,8 @@ This group reconstructs best sector times to explore theoretical performance lim
 ![PITWALL](/images/page05.png)
 
 ### 4.1 Ideal Lap Ranking
-Computes each driver°¶s theoretical best lap time by summing their best S1, S2, and S3 from the session.
-It compares the theoretical time with actual pole time and calculates the °ßpotential gap,°® revealing whether a driver left time on the table due to mistakes or whether the car has hidden performance strengths in specific sectors.
+Computes each driverÔøΩÔøΩs theoretical best lap time by summing their best S1, S2, and S3 from the session.
+It compares the theoretical time with actual pole time and calculates the ÔøΩÔøΩpotential gap,ÔøΩÔøΩ revealing whether a driver left time on the table due to mistakes or whether the car has hidden performance strengths in specific sectors.
 
 ---
 
@@ -141,7 +179,7 @@ These metrics correlate with mechanical grip and braking system effectiveness, s
 
 ### 5.3 Corner Performance Classification
 Classifies corners by speed into low-speed, medium-speed, and high-speed categories, and computes average minimum apex speed per category.
-This reveals balance under different aero-load regimes°Xfor example, a team may be extremely fast in aero-dependent high-speed corners but struggle in mechanical-grip low-speed corners.
+This reveals balance under different aero-load regimesÔøΩXfor example, a team may be extremely fast in aero-dependent high-speed corners but struggle in mechanical-grip low-speed corners.
 
 ![PITWALL](/images/page07.png)
 
@@ -150,10 +188,10 @@ This reveals balance under different aero-load regimes°Xfor example, a team may 
 ## 6. AI Prediction Models
 
 ![PITWALL](/images/page09.png)
-* **FP3/FP2 °˜ Qualifying Prediction**
-    Collects practice lap times, tire compounds, and fuel-load assumptions, then uses regression models to predict each driver°¶s potential fastest qualifying lap.
+* **FP3/FP2 ÔøΩÔøΩ Qualifying Prediction**
+    Collects practice lap times, tire compounds, and fuel-load assumptions, then uses regression models to predict each driverÔøΩÔøΩs potential fastest qualifying lap.
 
-* **Qualifying °˜ Race Prediction**
+* **Qualifying ÔøΩÔøΩ Race Prediction**
     Based on qualifying results and historical overtaking difficulty coefficients for each circuit, it simulates race finishing-position distributions to provide expected-value references for strategy.
 
 ---
@@ -164,12 +202,12 @@ This reveals balance under different aero-load regimes°Xfor example, a team may 
 ![PITWALL](/images/page10.png)
 
 This module combines a track map, elevation chart, and year-by-year flag statistics table. It fetches historical incident locations (X/Y coordinates) and types via API and marks them on the circuit map.
-It also analyzes elevation change to help identify whether incident hotspots are located at blind corners or crested sections. The right panel summarizes Yellow/Red/SC/VSC counts over the last four seasons (2022°V2025) for a macro view of track safety characteristics.
+It also analyzes elevation change to help identify whether incident hotspots are located at blind corners or crested sections. The right panel summarizes Yellow/Red/SC/VSC counts over the last four seasons (2022ÔøΩV2025) for a macro view of track safety characteristics.
 
 ### 7.2 Season Start Reaction
 ![PITWALL](/images/page11.png)
 
-Focuses on drivers°¶ start performance across the season, using 0°V50 km/h acceleration time distribution.
+Focuses on driversÔøΩÔøΩ start performance across the season, using 0ÔøΩV50 km/h acceleration time distribution.
 It uses box plots to show median reaction/performance and stability range (IQR). This filters out extreme cases from rain starts or start incidents, reflecting true average start performance. Team-color styling is supported for easy teammate comparisons.
 
 ---
@@ -225,7 +263,7 @@ It uses box plots to show median reaction/performance and stability range (IQR).
     * `drs_trace`: DRS state
 
 * **Sector Comparison**
-    Compares two drivers°¶ deltas for a selected sector (S1/S2/S3) with a dual-line design that clearly shows where gaps are created.
+    Compares two driversÔøΩÔøΩ deltas for a selected sector (S1/S2/S3) with a dual-line design that clearly shows where gaps are created.
 
 * **SF% History**
     Stint Fuel Saving Percentage history. Positive values indicate pushing; negative values indicate lift-and-coast fuel saving. Color intensity (bright/dark green) indicates magnitude.
@@ -244,7 +282,7 @@ It uses box plots to show median reaction/performance and stability range (IQR).
     Visualizes lap-time distribution across the field. Using fastest lap as a baseline, it plots gaps to the leader on the vertical axis and shows tire compound on the right to reveal group structure and dropped-back drivers.
 
 * **Live Traffic Timeline**
-    Heatmap timeline showing whether each driver is in °ßClean Air°® (green) or °ßTraffic°® (orange) per lap, based on distance to the car ahead.
+    Heatmap timeline showing whether each driver is in ÔøΩÔøΩClean AirÔøΩÔøΩ (green) or ÔøΩÔøΩTrafficÔøΩÔøΩ (orange) per lap, based on distance to the car ahead.
 
 * **Traffic Distance**
     A statistics table quantifying traffic ratio and laps affected. Data is available only in API-only mode from JSON.
