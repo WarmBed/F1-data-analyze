@@ -356,8 +356,15 @@ class QualifyingPredictionDataLoader(UniversalDataLoader):
             if driver.get("predicted_time") == fastest_time:
                 return driver.get("driver")
         return None
-    
     def _generate_data_via_cli(self, **kwargs) -> bool:
+        try:
+            from core.openf1_exact_generators import generate_exact_json
+
+            return bool(generate_exact_json("74", **kwargs))
+        except Exception as exc:
+            self._error(f"OpenF1 exact local generation failed: {exc}")
+            return False
+
         """
         ⚠️ API-ONLY 模式: 禁止 CLI 調用
         
@@ -373,7 +380,6 @@ class QualifyingPredictionDataLoader(UniversalDataLoader):
         self._debug("💡 提示: 請使用 API 獲取預測資料，或手動執行 CLI 訓練模型")
         self._debug("💡 CLI 命令範例: python f1_analysis_modular_main.py -f 73 --trials 500 --track Austria")
         return False
-    
     def _validate_load_parameters(self, params: Dict[str, Any]) -> bool:
         """
         驗證載入參數

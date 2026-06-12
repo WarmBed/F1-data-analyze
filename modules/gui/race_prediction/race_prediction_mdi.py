@@ -418,6 +418,19 @@ class RacePredictionMDI(UniversalAnalysisMDI):
         logger.info("[RACE_PRED_MDI] Starting data load...")
         logger.info("[RACE_PRED_MDI] Parameters: %s %s", self.year, self.race)
         
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self.data_manager:
+            try:
+                result = self.data_manager.load_data(year=self.year, race=self.race)
+                if not result:
+                    raise RuntimeError("Local data loader returned False")
+                if hasattr(self, 'lbl_control_status'):
+                    self.lbl_control_status.setText("Loaded from local JSON")
+                return
+            except Exception as exc:
+                self._logger.exception("Local JSON load failed: %s", exc) if hasattr(self, '_logger') else logger.exception("Local JSON load failed: %s", exc)
+                self._show_error("Load failed", str(exc))
+                return
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("loading_from_api", "Loading from API..."))

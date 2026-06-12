@@ -168,19 +168,33 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
     # ------------------------------------------------------------------
 
     def load_data(self, **kwargs) -> bool:  # type: ignore[override]
-        """Load straight-line speed data, fetching from API when needed."""
+        """Load straight-line speed data, using exact local JSON in local mode."""
 
         if not self._validate_load_parameters(kwargs):
-            self._error(tr("straight_speed_load_param_validation_failed", "載入參數驗證失敗"))
-            self.load_error.emit(tr("straight_speed_load_param_invalid", "載入參數不正確"))
+            self._error("Invalid straight-line speed load parameters")
+            self.load_error.emit("Invalid straight-line speed load parameters")
             return False
+
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            try:
+                from core.openf1_exact_generators import generate_exact_json
+
+                generated_path = generate_exact_json("48", **kwargs)
+                if generated_path:
+                    self._debug(f"OpenF1 exact local JSON generated: {generated_path}")
+            except Exception as exc:
+                self._error(f"OpenF1 exact local generation failed: {exc}")
+                self.load_error.emit(f"OpenF1 exact local generation failed: {exc}")
+                return False
 
         existing = self._find_data_file(**kwargs)
         if not existing:
-            self._debug(tr("straight_speed_no_local_file", "找不到本地直線速度檔案，準備透過 API 取得最新資料"))
-            # ✅ 修復：使用異步 API Worker（不阻塞主 GUI）
+            if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+                self._error("No exact local straight-line speed JSON available")
+                self.load_error.emit("No exact local straight-line speed JSON available")
+                return False
             self._fetch_via_api_async(**kwargs)
-            return True  # 立即返回，不阻塞
+            return True
 
         return super().load_data(**kwargs)
 
@@ -236,7 +250,7 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
 
         # ⚠️ 修正：API 返回的數據可能有多層嵌套，需要遞歸穿透
         # 嘗試找到包含 'driver_speeds' 的層級
-        current = raw_data.get("data")
+        current = raw_data if "driver_speeds" in raw_data else raw_data.get("data")
         max_depth = 20  # 防止無限遞歸
         depth = 0
         
@@ -270,7 +284,7 @@ class StraightLineSpeedDataLoader(UniversalDataLoader):
 
     def _process_data(self, raw_data: Any) -> Dict[str, Any]:
         # ⚠️ 修正：API 返回的數據可能有多層嵌套，需要遞歸穿透找到實際數據
-        current = raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
+        current = raw_data if isinstance(raw_data, dict) and "driver_speeds" in raw_data else raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
         max_depth = 20
         depth = 0
         

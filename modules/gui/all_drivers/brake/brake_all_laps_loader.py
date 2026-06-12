@@ -166,6 +166,23 @@ class BrakeAllLapsDataLoader(UniversalDataLoader):
             return False
 
         # API-ONLY 模式：直接調用 API，不檢查本地 JSON
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            try:
+                from core.openf1_exact_generators import generate_exact_json
+
+                path = generate_exact_json("122", **kwargs)
+                with open(path, "r", encoding="utf-8") as handle:
+                    raw_data = json.load(handle)
+                if not self._validate_data_format(raw_data):
+                    self.load_error.emit(tr("data_format_invalid", "Invalid data format"))
+                    return False
+                processed = self._process_data(raw_data)
+                self.data_loaded.emit(processed)
+                return True
+            except Exception as exc:
+                self._error(f"OpenF1 exact local generation failed: {exc}")
+                self.load_error.emit(str(exc))
+                return False
         self._debug(tr("brake_all_laps_api_only", "API-ONLY mode: Fetching data from API"))
         self._fetch_via_api_async(**kwargs)
         return True  # 立即返回，不阻塞
@@ -201,7 +218,7 @@ class BrakeAllLapsDataLoader(UniversalDataLoader):
             return False
 
         # 嘗試找到包含 'drivers' 的層級（F122 使用 'drivers' 而非 'driver_brakes'）
-        current = raw_data.get("data")
+        current = raw_data if "drivers" in raw_data else raw_data.get("data")
         max_depth = 20  # 防止無限遞歸
         depth = 0
         
@@ -236,7 +253,7 @@ class BrakeAllLapsDataLoader(UniversalDataLoader):
     def _process_data(self, raw_data: Any) -> Dict[str, Any]:
         """處理 F122 數據格式"""
         # 穿透嵌套找到實際數據層
-        current = raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
+        current = raw_data if isinstance(raw_data, dict) and "drivers" in raw_data else raw_data.get("data", {}) if isinstance(raw_data, dict) else {}
         max_depth = 20
         depth = 0
         

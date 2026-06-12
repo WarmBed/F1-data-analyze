@@ -137,7 +137,7 @@ class PedalBehaviorDataManager(UniversalDataLoader):
             pedal_config = AnalysisConfig(
                 display_name="Pedal Behavior Analysis",
                 debug_prefix="PEDAL_DATA",
-                data_source="api",  # API 模式
+                data_source="json",
                 cli_function="54",
                 api_endpoint="/api/v2/analysis/execute",
                 api_function_id=54,
@@ -152,6 +152,8 @@ class PedalBehaviorDataManager(UniversalDataLoader):
             UniversalDataLoader.register_analysis_type("pedal_behavior", pedal_config)
         
         super().__init__(analysis_type="pedal_behavior", parent=parent)
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            self.config.data_source = "json"
         
         # Pedal Behavior 特定屬性
         self.driver_pedal_data: Dict[str, Dict[str, float]] = {}
@@ -200,6 +202,9 @@ class PedalBehaviorDataManager(UniversalDataLoader):
         
         如果 data_source 不是 "api"，則使用父類的本地 JSON 載入邏輯
         """
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            self.config.data_source = "json"
+
         if self.config.data_source != "api":
             return super().load_data(**kwargs)
 
@@ -243,6 +248,17 @@ class PedalBehaviorDataManager(UniversalDataLoader):
             return False
         return True
     
+    def _build_filename_patterns(self, **kwargs) -> List[str]:
+        year = kwargs.get("year", "*")
+        race = str(kwargs.get("race", "*")).replace(" ", "_")
+        session = kwargs.get("session", "*")
+        return [
+            f"driver_throttle_ratio_{year}_{race}_{session}.json",
+            f"throttle_ratio_{year}_{race}_{session}.json",
+            f"driver_throttle_ratio_{year}_*_{session}.json",
+            f"throttle_ratio_{year}_*_{session}.json",
+        ]
+
     def _start_api_request(self, params: Dict[str, Any]) -> None:
         """啟動 API 請求背景執行緒"""
         self._cleanup_api_worker()
@@ -531,14 +547,13 @@ class PedalBehaviorDataManager(UniversalDataLoader):
         return filtered
     
     def _generate_data_via_cli(self, **kwargs) -> bool:
-        """
-        [已禁用] 通過 CLI 生成數據
-        
-        API-ONLY 模式: 此方法已禁用，系統只允許通過 API 獲取數據
-        """
-        self._debug("[API-ONLY] CLI 調用已禁用")
-        self._debug("提示: 請使用 API 獲取 Pedal Behavior 數據")
-        return False
+        try:
+            from core.openf1_exact_generators import generate_exact_json
+
+            return bool(generate_exact_json("54", **kwargs))
+        except Exception as exc:
+            self._error(f"OpenF1 exact local generation failed: {exc}")
+            return False
     
     # ========== 公開 API ==========
     

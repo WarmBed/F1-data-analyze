@@ -444,6 +444,19 @@ class FP2QualifyingPredictionMDI(UniversalAnalysisMDI):
         self._logger.info("[FP2_QUAL_PRED_MDI] 開始載入初始資料...")
         self._logger.info("[FP2_QUAL_PRED_MDI] 參數: %s %s", self.year, self.race)
         
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local" and self.data_manager:
+            try:
+                result = self.data_manager.load_data(year=self.year, race=self.race)
+                if not result:
+                    raise RuntimeError("Local data loader returned False")
+                if hasattr(self, 'lbl_control_status'):
+                    self.lbl_control_status.setText("Loaded from local JSON")
+                return
+            except Exception as exc:
+                self._logger.exception("Local JSON load failed: %s", exc) if hasattr(self, '_logger') else logger.exception("Local JSON load failed: %s", exc)
+                self._show_error("Load failed", str(exc))
+                return
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("loading_from_api", "正在從 API 載入資料..."))
@@ -662,6 +675,10 @@ class FP2QualifyingPredictionMDI(UniversalAnalysisMDI):
             message: 錯誤訊息
         """
         # MDI 不是 QWidget，需要使用 chart_widget 作為 parent
+        import os
+        if os.environ.get("QT_QPA_PLATFORM", "").lower() == "offscreen":
+            self._logger.error("[FP2_QUAL_PRED_MDI] %s: %s", title, message)
+            return
         parent = self.chart_widget if hasattr(self, 'chart_widget') else None
         QMessageBox.critical(parent, title, message)
 

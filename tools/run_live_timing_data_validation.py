@@ -375,4 +375,7 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    exit_code = main()
+    sys.__stdout__.flush()
+    sys.__stderr__.flush()
+    os._exit(exit_code)

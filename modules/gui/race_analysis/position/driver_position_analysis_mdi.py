@@ -348,6 +348,23 @@ class DriverPositionAnalysisMDI(UniversalAnalysisMDI):
         logger.debug("[POSITION_MDI] 🚀 開始載入初始資料...")
         logger.debug(f"[POSITION_MDI] 📋 參數: {self.year} {self.race} {self.session}")
         
+        import json
+        import os
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            try:
+                from core.openf1_exact_generators import generate_exact_json
+
+                path = generate_exact_json("25", year=self.year, race=self.race, session=self.session)
+                with open(path, "r", encoding="utf-8") as handle:
+                    payload = json.load(handle)
+                self._process_position_data(payload)
+                if hasattr(self, 'lbl_control_status'):
+                    self.lbl_control_status.setText("Loaded from local JSON")
+                return
+            except Exception as exc:
+                logger.exception("[POSITION_MDI] Local JSON load failed: %s", exc)
+                self._show_error("Load failed", str(exc))
+                return
         # 更新狀態
         if hasattr(self, 'lbl_control_status'):
             self.lbl_control_status.setText(tr("loading_from_api", "正在從 API 載入資料..."))

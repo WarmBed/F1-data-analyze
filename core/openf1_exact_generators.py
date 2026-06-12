@@ -1508,6 +1508,11 @@ def generate_throttle_ratio_json(year: int, race: str, session: str = "R") -> Pa
                 continue
             full_samples = sum(1 for value in throttles if value >= 99.0)
             ratio = full_samples / len(throttles)
+            brake_values = [bool(row.get("brake")) for row in samples]
+            brake_ratio = sum(1 for value in brake_values if value) / len(brake_values) if brake_values else 0.0
+            coasting_ratio = sum(1 for value in throttles if value < 5.0) / len(throttles)
+            throttle_only_ratio = max(0.0, ratio - brake_ratio)
+            trail_braking_ratio = min(ratio, brake_ratio)
             payload_laps.append(
                 {
                     "lap_number": lap_no,
@@ -1516,7 +1521,13 @@ def generate_throttle_ratio_json(year: int, race: str, session: str = "R") -> Pa
                     "full_throttle_duration_s": ratio * duration,
                     "full_throttle_ratio": ratio,
                     "average_throttle": (sum(throttles) / len(throttles)) / 100.0,
-                    "coasting_duration_s": sum(1 for value in throttles if value < 5.0) / len(throttles) * duration,
+                    "coasting_duration_s": coasting_ratio * duration,
+                    "pedal_states": {
+                        "throttle_only_ratio": throttle_only_ratio,
+                        "brake_only_ratio": brake_ratio,
+                        "trail_braking_ratio": trail_braking_ratio,
+                        "coasting_ratio": coasting_ratio,
+                    },
                     "drs_usage_ratio": None,
                     "ers_deploy_ratio": None,
                     "speed_avg_kmh": _mean([_safe_float(row.get("speed")) for row in samples]),
@@ -1566,7 +1577,7 @@ def generate_throttle_ratio_json(year: int, race: str, session: str = "R") -> Pa
             "thresholds": {"full_throttle_percent": 99.0},
         },
     }
-    path = _ensure_output_dir() / f"throttle_ratio_{int(year)}_{str(race).replace(' ', '_')}_{session}.json"
+    path = _ensure_output_dir() / f"driver_throttle_ratio_{int(year)}_{str(race).replace(' ', '_')}_{session}.json"
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     return path
 

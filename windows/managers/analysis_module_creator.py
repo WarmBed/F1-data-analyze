@@ -2052,6 +2052,54 @@ class AnalysisModuleCreator:
                             
                         return None
                 
+                # 處理多賽季起跑反應模組
+                elif module_type == "season_start_reaction":
+                    try:
+                        from modules.gui.multi_season.season_start_reaction.season_start_reaction_mdi import (
+                            SeasonStartReactionAnalysis,
+                        )
+
+                        current_year = int(parameter_provider.get_current_year()) if parameter_provider else None
+                        module = SeasonStartReactionAnalysis(year=current_year, parent=self.main_window)
+                        return self.main_window._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] Season Start Reaction 模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+
+                # 處理桿位防守統計模組
+                elif module_type == "pole_defense":
+                    try:
+                        from modules.gui.multi_season.pole_defense.pole_defense_mdi import (
+                            PoleDefenseAnalysis,
+                        )
+
+                        current_year = int(parameter_provider.get_current_year()) if parameter_provider else None
+                        module = PoleDefenseAnalysis(year=current_year, parent=self.main_window)
+                        return self.main_window._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] Pole Defense Statistics 模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+
+                # 處理 FIA 賽季統計模組
+                elif module_type == "fia_season_stats":
+                    try:
+                        from modules.gui.multi_season.fia_season_stats.fia_season_stats_mdi import (
+                            FiaSeasonStatsAnalysis,
+                        )
+
+                        current_year = int(parameter_provider.get_current_year()) if parameter_provider else None
+                        module = FiaSeasonStatsAnalysis(year=current_year, parent=self.main_window)
+                        return self.main_window._mark_module_factory_type(module, module_type)
+                    except Exception as e:
+                        logger.error(f"[ERROR] FIA Season Statistics 模組創建失敗: {e}")
+                        import traceback
+                        traceback.print_exc()
+                        return None
+
                 # 處理 Pit Loss Table 模組 (進站時間損失表格)
                 elif module_type == "pit_loss_table":
                     try:

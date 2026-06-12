@@ -761,16 +761,13 @@ class PedalBehaviorAnalysisMDI(UniversalAnalysisMDI):
         if self.control_widget:
             self.control_widget.update_statistics("Data load failed")
         
-        QMessageBox.warning(
-            self.main_widget,
-            tr("Pedal Behavior Analysis") + " - " + tr("Data Load Error"),
-            f"Cannot load pedal behavior data:\n{error_message}\n\n"
-            "Please ensure:\n"
-            "1. API server is running (python refactored_api.py)\n"
-            "2. Or JSON file exists in json/ directory\n"
-            f"   (Run: python f1_analysis_modular_main.py -f 54 -y {self.current_year} -r {self.current_race} -s {self.current_session})",
-            QMessageBox.Ok
-        )
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() != "local":
+            QMessageBox.warning(
+                self.main_widget,
+                tr("Pedal Behavior Analysis") + " - " + tr("Data Load Error"),
+                f"Cannot load pedal behavior data:\n{error_message}",
+                QMessageBox.Ok
+            )
     
     def update_lap_parameters(self, year: str, race: str, session: str, **kwargs) -> bool:
         """更新參數 - 使用 data_manager.load_data() 載入數據（API 優先）"""

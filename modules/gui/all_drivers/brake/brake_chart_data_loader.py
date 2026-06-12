@@ -13,6 +13,8 @@ All Drivers Brake Chart Data Loader
 
 from __future__ import annotations
 
+import json
+import os
 import time
 from typing import Any, Dict, Optional
 
@@ -173,6 +175,21 @@ class BrakeChartDataLoader(QObject):
         self.status_changed.emit(tr("loading_data", "Loading data..."))
         
         # 啟動 API Worker
+        if os.environ.get("F1T_RUNTIME_MODE", "").lower() == "local":
+            try:
+                from core.openf1_exact_generators import generate_exact_json
+
+                path = generate_exact_json("122", year=year, race=race, session=session)
+                with open(path, "r", encoding="utf-8") as handle:
+                    data = json.load(handle)
+                self._cached_data = data
+                self.status_changed.emit(tr("Data loaded successfully"))
+                self.data_loaded.emit(data)
+                return
+            except Exception as exc:
+                logger.exception("Local JSON load failed: %s", exc)
+                self.load_error.emit(str(exc))
+                return
         self._start_api_worker()
     
     def _start_api_worker(self):

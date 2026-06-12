@@ -287,7 +287,9 @@ class AllDriversStraightLineSpeedMDI(UniversalAnalysisMDI):
         Args:
             error_msg: 錯誤訊息
         """
-        QMessageBox.critical(None, tr("load_error", "載入錯誤"), error_msg)
+        self._is_data_loaded = False
+        if hasattr(self, "_error"):
+            self._error(str(error_msg))
     
     @pyqtSlot(str)
     def _on_status_changed(self, status: str):

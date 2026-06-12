@@ -578,12 +578,24 @@ def main() -> int:
     results: List[Dict[str, Any]] = []
     if args.scope == "matrix":
         previous = {}
+        non_live_candidates = [
+            LOG_DIR / f"gui_coverage_non_live_{args.year}_{args.race.lower()}_release.json",
+            LOG_DIR / f"gui_coverage_non_live_{args.year}_{args.race.lower()}.json",
+            LOG_DIR / f"gui_coverage_non_live_{args.year}_{args.race.lower()}_after_fix.json",
+        ]
+        for non_live_report in non_live_candidates:
+            if not non_live_report.exists():
+                continue
+            data = json.loads(non_live_report.read_text(encoding="utf-8"))
+            previous.update({item.get("label"): item for item in data.get("results", [])})
+            break
         direct_report = LOG_DIR / f"direct_gui_validation_{args.year}_{args.race.lower()}_release.json"
         if not direct_report.exists():
             direct_report = LOG_DIR / "direct_gui_validation_2026_japan.json"
         if direct_report.exists():
             data = json.loads(direct_report.read_text(encoding="utf-8"))
-            previous = {item.get("name"): item for item in data.get("results", [])}
+            for item in data.get("results", []):
+                previous.setdefault(item.get("name"), item)
         live_previous = {}
         live_candidates = [
             LOG_DIR / f"live_timing_data_validation_{args.year}_{args.race.lower()}_strict_numeric_after_fix.json",
@@ -609,7 +621,7 @@ def main() -> int:
                     "source": (
                         "live_timing_data_validation"
                         if ok and path and path[0] == "Live Timing"
-                        else "direct_gui_validation"
+                        else "non_live_or_direct_validation"
                         if ok
                         else None
                     ),

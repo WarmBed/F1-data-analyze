@@ -19,6 +19,11 @@ $env:QT_QPA_PLATFORM = "offscreen"
 $env:F1T_RUNTIME_MODE = "local"
 $env:PYTHONIOENCODING = "utf-8"
 
+venv_build\Scripts\python.exe tools\run_gui_coverage_matrix.py `
+  --year 2026 --race Miami --session R `
+  --scope non-live --timeout 4 `
+  --report logs\gui_coverage_non_live_2026_miami_release.json
+
 venv_build\Scripts\python.exe tools\run_direct_gui_validation.py `
   --year 2026 --race Miami --session R `
   --report logs\direct_gui_validation_2026_miami_release.json `
@@ -29,12 +34,19 @@ venv_build\Scripts\python.exe tools\run_live_timing_data_validation.py `
   --report logs\live_timing_data_validation_2026_miami_strict_numeric_after_fix.json `
   --screenshot logs\live_timing_data_validation_2026_miami_strict_numeric_after_fix.png `
   --screenshot-dir logs\live_timing_data_validation_2026_miami_strict_numeric_after_fix
+
+venv_build\Scripts\python.exe tools\run_gui_coverage_matrix.py `
+  --year 2026 --race Miami --session R `
+  --scope matrix `
+  --report logs\gui_coverage_matrix_2026_miami_release.json
 ```
 
 Current verified target:
 
-- Historical/direct GUI: 10/10 modules load real 2026 Miami race data.
+- Historical non-live function tree: 42/42 modules load real 2026 Miami race data.
+- Historical/direct GUI smoke: 10/10 modules load real 2026 Miami race data.
 - Live timing: 28/28 modules load 2026 Miami race replay data with numeric or semantic evidence.
+- Combined matrix: 70/70 function-tree leaves have e2e evidence.
 
 ## Evidence Files
 
@@ -42,6 +54,8 @@ These files are generated locally and must not be committed:
 
 - `logs/direct_gui_validation_2026_miami_release.json`
 - `logs/direct_gui_validation_2026_miami_release.png`
+- `logs/gui_coverage_non_live_2026_miami_release.json`
+- `logs/gui_coverage_matrix_2026_miami_release.json`
 - `logs/live_timing_data_validation_2026_miami_strict_numeric_after_fix.json`
 - `logs/live_timing_data_validation_2026_miami_strict_numeric_after_fix.png`
 - `logs/live_timing_data_validation_2026_miami_strict_numeric_after_fix/`
