@@ -43,11 +43,11 @@ python f1t_gui_main.py
 ### スタンドアロン EXE のビルド（オプション）
 
 ```powershell
-.\setup_venv_build.ps1     # one-time: create the build virtualenv
-python build_exe_gui.py    # build with PyInstaller
+.\build_tools\setup_venv_build.ps1     # one-time: create the build virtualenv
+python build_tools\build_exe_gui.py    # build with PyInstaller
 ```
 
-または `一鍵建構EXE.bat` をダブルクリックするだけでもビルドできます。実行ファイルは `dist\` に出力されます。
+または `build_tools\一鍵建構EXE.bat` をダブルクリックするだけでもビルドできます。実行ファイルは `dist\` に出力されます。
 
 ---
 

@@ -43,11 +43,11 @@ On first use, pick a year / race / session in the toolbar and open analysis modu
 ### Build a standalone EXE (optional)
 
 ```powershell
-.\setup_venv_build.ps1     # one-time: create the build virtualenv
-python build_exe_gui.py    # build with PyInstaller
+.\build_tools\setup_venv_build.ps1     # one-time: create the build virtualenv
+python build_tools\build_exe_gui.py    # build with PyInstaller
 ```
 
-Or simply double-click `一鍵建構EXE.bat`. The executable is written to `dist\`.
+Or simply double-click `build_tools\一鍵建構EXE.bat`. The executable is written to `dist\`.
 
 ---
 

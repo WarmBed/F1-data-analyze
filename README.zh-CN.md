@@ -43,11 +43,11 @@ python f1t_gui_main.py
 ### 构建独立 EXE（可选）
 
 ```powershell
-.\setup_venv_build.ps1     # one-time: create the build virtualenv
-python build_exe_gui.py    # build with PyInstaller
+.\build_tools\setup_venv_build.ps1     # one-time: create the build virtualenv
+python build_tools\build_exe_gui.py    # build with PyInstaller
 ```
 
-或者直接双击 `一鍵建構EXE.bat`。可执行文件将输出到 `dist\`。
+或者直接双击 `build_tools\一鍵建構EXE.bat`。可执行文件将输出到 `dist\`。
 
 ---
 

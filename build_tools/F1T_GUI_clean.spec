@@ -15,7 +15,7 @@ import sys
 from PyInstaller.utils.hooks import collect_submodules
 
 # 導入版本號
-sys.path.insert(0, str(Path(SPECPATH)))
+sys.path.insert(0, str(Path(SPECPATH).parent))
 try:
     from config.version import APP_VERSION
 except ImportError:
@@ -27,7 +27,7 @@ version_str = APP_VERSION
 block_cipher = None
 
 # 項目根目錄
-project_root = Path(SPECPATH)
+project_root = Path(SPECPATH).parent
 
 # Python 標準庫路徑 (用於手動添加 unittest)
 import sysconfig
@@ -588,7 +588,7 @@ excludes = [
 
 # 分析階段
 a = Analysis(
-    ['f1t_gui_main.py'],
+    [str(project_root / 'f1t_gui_main.py')],
     pathex=[str(project_root)],
     binaries=[],
     datas=added_files,

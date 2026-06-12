@@ -28,7 +28,7 @@ except ImportError:
 class EXEBuilderGUI:
     def __init__(self, root):
         self.root = root
-        self.project_root = Path(__file__).parent.absolute()
+        self.project_root = Path(__file__).parent.parent.absolute()
         self.venv_path = self.project_root / "venv_build"
         self.building = False
         
@@ -273,7 +273,7 @@ class EXEBuilderGUI:
                 status_parts.append(f"{'✅' if exists else '❌'} {name}")
         
         # 檢查 spec 檔案
-        if (self.project_root / "F1T_GUI_clean.spec").exists():
+        if (self.project_root / "build_tools" / "F1T_GUI_clean.spec").exists():
             status_parts.append("✅ Spec 檔案存在")
         else:
             status_parts.append("⚠️ Spec 檔案不存在")
@@ -533,7 +533,7 @@ coll = COLLECT(
             self.append_log("\n🔧 執行 PyInstaller...")
             self.append_log("⏳ 這可能需要 3-5 分鐘，請耐心等待...\n")
             
-            spec_file = self.project_root / "F1T_GUI_clean.spec"
+            spec_file = self.project_root / "build_tools" / "F1T_GUI_clean.spec"
             
             if not spec_file.exists():
                 self.append_log("❌ 找不到 F1T_GUI_clean.spec 檔案")

@@ -12,12 +12,12 @@ def rename_build_output():
     # 導入版本號
     try:
         import sys
-        sys.path.insert(0, str(Path(__file__).parent))
+        sys.path.insert(0, str(Path(__file__).parent.parent))
         from config.version import APP_VERSION
     except ImportError:
         APP_VERSION = input("請輸入版本號 (例如 V0.11.1): ").strip()
     
-    project_root = Path(__file__).parent
+    project_root = Path(__file__).parent.parent
     dist_dir = project_root / "dist"
     
     # 檢查是否有 F1T_GUI 資料夾

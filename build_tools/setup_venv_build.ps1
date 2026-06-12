@@ -2,7 +2,7 @@
 # 用法: .\setup_venv_build.ps1
 
 $ErrorActionPreference = "Stop"
-$ProjectRoot = $PSScriptRoot
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
 $VenvPath = "$ProjectRoot\venv_build"
 
 Write-Host "============================================================" -ForegroundColor Cyan

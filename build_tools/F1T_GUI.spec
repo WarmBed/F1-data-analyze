@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['f1t_gui_main.py'],
+    ['../f1t_gui_main.py'],
     pathex=[],
     binaries=[],
     datas=[],
@@ -35,5 +35,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['image\\logo.ico'],
+    icon=['../image\\logo.ico'],
 )
